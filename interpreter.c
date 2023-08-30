@@ -50,13 +50,17 @@ uint64_t sign_extend_32(uint64_t value) {
 }
 
 
-int opcode_to_number_of_arguments(uint64_t opcode);
+// ======================================================================
+// Forward funtion declarations
+// ======================================================================
 
-#define ERROR_INSUFFICIENT_INPUT -1
-#define ERROR_TOO_BIG -2
+int opcode_to_number_of_arguments(uint64_t opcode);
 
 extern unsigned_decode_result decodeULEB128(const uint8_t *p,
                                             const uint8_t *end);
+
+#define ERROR_INSUFFICIENT_INPUT -1
+#define ERROR_TOO_BIG -2
 
 /**
  * This is the main loop of the VM interpreter.

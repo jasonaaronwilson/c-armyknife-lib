@@ -1,3 +1,5 @@
+#include "interpreter.h"
+
 /**
  * This is a simple main routine for the interpreter.
  */

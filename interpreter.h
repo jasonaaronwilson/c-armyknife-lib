@@ -1,5 +1,7 @@
 #ifndef _INTERPRETER_H_
 
+#include <stdint.h>
+
 typedef struct {
   // This is the program counter.
   uint64_t pc;
@@ -20,6 +22,8 @@ typedef struct {
   // cpu_state structure.
   uint64_t register_storage[0];
 } cpu_thread_state;
+
+extern void interpret(cpu_thread_state *state, uint64_t max_instructions);
 
 #endif /* _INTERPRETER_H_ */
 

@@ -17,16 +17,15 @@ this VM.
 
 First the pros:
 
-1) suitable as an intermediate format for a compiler. with an infinite
-number of registers available, it is not necessary to perform register
-allocation.
+1) suitable as an intermediate format for a compiler - with an
+infinite number of registers available, it is not necessary to perform
+register allocation.
 
-2) similar opcodes to wasm which is quite popular and otherwise
-compromises like only allowing immediates with the IMM and FIMM.
+2) similar opcodes to wasm which is becoming quite popular
 
-3) realistic intermediate format that can be easily turned into
-efficient RISC-V or ARM instructions (when the program uses less than
-32 registers).
+3) an intermediate format that can be easily turned into efficient
+RISC-V or ARM instructions (when the program uses less than the number
+of registers on those machines)
 
 Now some cons:
 
@@ -38,14 +37,21 @@ may not be very efficient to turn into actual hardware.
 2) not supported by gcc or llvm (though maybe wasm can be converted to
 the Comet ISA easily).
 
+Some neutral observations:
+
+1) code density was not a primary concern in the design and therefore
+is not likely to be great. OTOH, since instructions are variable
+width, there are some cases where instructions will be shorter than on
+a 32 bit RISC machine.
+
 ## Instruction Format
 
 All instructions are an (unsigned) LEB encoded integer followed by up
 to 3 additional additional LEB encoded instruction fields. By design,
-only a few instructions take constants (not even branches take
+only a few instructions allows constants (not even *branches* take
 immediates).
 
-All opcodes above 4096 are available as user defined opcodes. The
-bottom N bits of the opcode then specifies one of the formats so that
-the instruction can be decoded even if it's name or semantics are
-unknown.
+All opcodes above 4096 (actual value TBD) are available as user
+defined opcodes. The bottom N bits of the opcode then specifies the
+format of the instruction so that the instruction can be decoded even
+if it's name, numbers of registers, etc.

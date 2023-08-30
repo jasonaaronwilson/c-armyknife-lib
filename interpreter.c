@@ -1,14 +1,14 @@
 /**
  * This contains the bulk of the core logic of the VM interpreter.
  */
-#include <stdint.h>
 #include "opcodes.h"
+#include <stdint.h>
 
 typedef struct {
   // This is the program counter.
   uint64_t pc;
 
-  // The number of integer registers that have been allocated to this 
+  // The number of integer registers that have been allocated to this
   uint32_t num_integer_regs;
 
   uint32_t num_fp_regs;
@@ -44,13 +44,14 @@ int opcode_to_number_of_arguments(uint64_t opcode);
 #define ERROR_INSUFFICIENT_INPUT -1
 #define ERROR_TOO_BIG -2
 
-extern unsigned_decode_result decodeULEB128(const uint8_t *p, const uint8_t *end);
+extern unsigned_decode_result decodeULEB128(const uint8_t *p,
+                                            const uint8_t *end);
 extern signed_decode_result decodeSLEB128(const uint8_t *p, const uint8_t *end);
-
+
 /**
  * This is the main loop of the VM interpreter.
  */
-void interpret(cpu_thread_state* state, uint64_t max_instructions) {
+void interpret(cpu_thread_state *state, uint64_t max_instructions) {
   uint64_t num_instructions = 0;
   uint64_t pc = state->pc;
 
@@ -62,11 +63,11 @@ void interpret(cpu_thread_state* state, uint64_t max_instructions) {
     uint64_t opcode = 10;
 
     int num_args = opcode_to_number_of_arguments(opcode);
-    
+
     uint64_t arg0 = 0;
     uint64_t arg1 = 0;
     uint64_t arg2 = 0;
-    
+
     switch (opcode) {
 
     case BRK:
@@ -75,9 +76,6 @@ void interpret(cpu_thread_state* state, uint64_t max_instructions) {
 
     case NOP:
       break;
-
-      
-
     }
 
     num_instructions++;
@@ -86,11 +84,15 @@ void interpret(cpu_thread_state* state, uint64_t max_instructions) {
 
 int opcode_to_number_of_arguments(uint64_t opcode) {
   switch (opcode) {
-  case BRK: return 0;
-  case NOP: return 0;
+  case BRK:
+    return 0;
+  case NOP:
+    return 0;
   // BRZI src_address, jump_src_address, link_tgt
-  case BRZI: return 3;
-  case ADD: return 3;
+  case BRZI:
+    return 3;
+  case ADD:
+    return 3;
   }
 
   return 0;
@@ -103,21 +105,21 @@ unsigned_decode_result decodeULEB128(const uint8_t *p, const uint8_t *end) {
   unsigned Shift = 0;
   do {
     if (p == end) {
-      unsigned_decode_result result = { 0, ERROR_INSUFFICIENT_INPUT };
+      unsigned_decode_result result = {0, ERROR_INSUFFICIENT_INPUT};
       return result;
     }
     uint64_t Slice = *p & 0x7f;
     if ((Shift >= 64 && Slice != 0) || Slice << Shift >> Shift != Slice) {
-      unsigned_decode_result result = { 0, ERROR_TOO_BIG };
+      unsigned_decode_result result = {0, ERROR_TOO_BIG};
       return result;
     }
     Value += Slice << Shift;
     Shift += 7;
   } while (*p++ >= 128);
-  unsigned_decode_result result = { Value, (unsigned)(p - orig_p) };
+  unsigned_decode_result result = {Value, (unsigned)(p - orig_p)};
   return result;
 }
- 
+
 /// Utility function to decode a SLEB128 value.
 signed_decode_result decodeSLEB128(const uint8_t *p, const uint8_t *end) {
   const uint8_t *orig_p = p;
@@ -126,7 +128,7 @@ signed_decode_result decodeSLEB128(const uint8_t *p, const uint8_t *end) {
   uint8_t Byte;
   do {
     if (p == end) {
-      signed_decode_result result = { 0, ERROR_INSUFFICIENT_INPUT };
+      signed_decode_result result = {0, ERROR_INSUFFICIENT_INPUT};
       return result;
     }
     Byte = *p;
@@ -135,7 +137,7 @@ signed_decode_result decodeSLEB128(const uint8_t *p, const uint8_t *end) {
     // able to test very easily at the end of the loop.
     if ((Shift >= 64 && Slice != (Value < 0 ? 0x7f : 0x00)) ||
         (Shift == 63 && Slice != 0 && Slice != 0x7f)) {
-      signed_decode_result result = { 0, ERROR_TOO_BIG };
+      signed_decode_result result = {0, ERROR_TOO_BIG};
       return result;
     }
     Value |= Slice << Shift;
@@ -145,6 +147,6 @@ signed_decode_result decodeSLEB128(const uint8_t *p, const uint8_t *end) {
   // Sign extend negative numbers if needed.
   if (Shift < 64 && (Byte & 0x40))
     Value |= (-1ULL) << Shift;
-  signed_decode_result result = { Value, (p - orig_p) };
+  signed_decode_result result = {Value, (p - orig_p)};
   return result;
 }

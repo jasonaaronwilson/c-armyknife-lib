@@ -1,6 +1,5 @@
 /**
- * This contains the bulk of the core logic of the Comet VM
- * interpreter.
+ * This contains the bulk of the interpreter logic for the Comet VM.
  */
 
 // ======================================================================
@@ -14,9 +13,19 @@
 
 // TODO(jawilson): add alignment check for 16, 32, and 64 bit loads.
 
-#include "opcodes.h"
 #include <stdint.h>
 #include <stdlib.h>
+#include "opcodes.h"
+#include "interpreter.h"
+
+/**
+ * Forward declarations.
+ */
+typedef struct {
+  uint64_t number;
+  // Negative values mean an error occurred.
+  int size;
+} unsigned_decode_result;
 
 // ======================================================================
 // VM Macros
@@ -40,35 +49,6 @@ uint64_t sign_extend_32(uint64_t value) {
   return ((int64_t)(value << 32)) >> 32;
 }
 
-typedef struct {
-  // This is the program counter.
-  uint64_t pc;
-
-  // The number of integer registers that have been allocated to this
-  uint32_t num_integer_regs;
-
-  uint32_t num_fp_regs;
-
-  // This is the actual memory allocated for this virtual
-  // machine. While cpu_state would be unique to each thread, this may
-  // be shared by multiple threads.
-  uint8_t *memory_start;
-  uint8_t *memory_end;
-
-  // Contains storage for the integer and floating point registers
-  // (integer registers come first). Note: this must come last in the
-  // cpu_state structure.
-  uint64_t register_storage[0];
-} cpu_thread_state;
-
-/**
- * Forward declarations.
- */
-typedef struct {
-  uint64_t number;
-  // Negative values mean an error occurred.
-  int size;
-} unsigned_decode_result;
 
 int opcode_to_number_of_arguments(uint64_t opcode);
 
@@ -306,16 +286,28 @@ void interpret(cpu_thread_state *state, uint64_t max_instructions) {
 
 int opcode_to_number_of_arguments(uint64_t opcode) {
   switch (opcode) {
+
   case BRK:
     return 0;
+
   case NOP:
     return 0;
+
   // BRZ src_address, jump_src_address, link_tgt
   case BRZ:
     return 3;
+
   case ADD:
+  case AND:
+  case OR:
+  case SUB:
+  case XOR:
+  case MUL:
     return 3;
+
   case POPCNT:
+  case CTZ:
+  case CLZ:
     return 2;
   }
 

@@ -28,7 +28,7 @@ typedef struct {
 } unsigned_decode_result;
 
 // ======================================================================
-// VM Macros
+// Implementation Macros
 // ======================================================================
 
 #define AS_UINT64(x) ((uint64_t)x)

@@ -75,6 +75,9 @@ void interpret(cpu_thread_state *state, uint64_t max_instructions) {
       return;
     }
 
+    // Make sure that register 0 is still zero after a write.
+    ireg[0] = 0;
+
     unsigned_decode_result opcode_result = decodeULEB128(start + pc, end);
     if (opcode_result.size <= 0) {
       exit(1);
@@ -125,6 +128,13 @@ void interpret(cpu_thread_state *state, uint64_t max_instructions) {
     case NOP:
       break;
 
+    case BRZ:
+      if (!(ireg[arg1])) {
+        ireg[arg3] = pc; // link/return address
+        pc = ireg[arg2];
+      }
+      break;
+
     case MOV:
       ireg[arg2] = ireg[arg1];
       break;
@@ -169,8 +179,8 @@ int opcode_to_number_of_arguments(uint64_t opcode) {
     return 0;
   case NOP:
     return 0;
-  // BRZI src_address, jump_src_address, link_tgt
-  case BRZI:
+  // BRZ src_address, jump_src_address, link_tgt
+  case BRZ:
     return 3;
   case ADD:
     return 3;

@@ -8,8 +8,20 @@
 #define NOP 1
 
 // read a register and if it is zero, perform a relative indirect
-// branch and write the link address to the target register.
-#define BRZI 2
+// branch and write the link address to the target register. This is a
+// very powerful branch instruction since using the zero register as
+// the predicate register makes the branch unconditional, and setting
+// the link register to the zero register throws away a result that
+// isn't needed. The surprising thing is that the branch is always
+// indirect which is because we have IMM and PCIMM to set up the
+// target address (and an assumption that we'll have lots of registers
+// makes naming the target address not contribute to register
+// pressure).
+//
+// This universal branch instruction probably has downsides for
+// hardware implementations but reduces complexity by making things
+// more regular.
+#define BRZ 2
 
 // Load an immediate to an integer register
 #define IMM 3

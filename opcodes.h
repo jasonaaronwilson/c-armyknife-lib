@@ -38,16 +38,16 @@
 
 // Load the logical NOT of an immediate plus the PC address of the
 // begining of this instruction into an integer register
-#define NPCIMM 5
+#define NPCIMM 6
 
 // Load a floating point immediate
-#define FIMM 6
+#define FIMM 7
 
 // move the value in one integer register to another integer register
-#define MOV 7
+#define MOV 8
 
 // move the value in one fp register to another fp register
-#define FMOV 8
+#define FMOV 9
 
 /// Small gap here in case we missed critial opcodes...
 

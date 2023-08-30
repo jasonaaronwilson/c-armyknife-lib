@@ -255,6 +255,16 @@ void interpret(cpu_thread_state *state, uint64_t max_instructions) {
       memory[arg2+7] = (ireg[arg1] >> 56) & 0xff;
       break;
 
+    case CLZ:
+      // TODO: backup implementation
+      ireg[arg2] = __builtin_clz(ireg[arg1]);
+      break;
+
+    case CTZ:
+      // TODO: backup implementation
+      ireg[arg2] = __builtin_ctz(ireg[arg1]);
+      break;
+
     case ADD:
       ireg[arg3] = ireg[arg1] + ireg[arg2];
       break;
@@ -279,6 +289,11 @@ void interpret(cpu_thread_state *state, uint64_t max_instructions) {
       ireg[arg3] = ireg[arg1] << ireg[arg2];
       break;
 
+    case POPCNT:
+      // TODO(jawilson) conditionalize and provide a backup
+      ireg[arg3] = __builtin_popcount(ireg[arg1]);
+      break;
+      
     default:
       // printf?
       exit(1);
@@ -300,6 +315,8 @@ int opcode_to_number_of_arguments(uint64_t opcode) {
     return 3;
   case ADD:
     return 3;
+  case POPCNT:
+    return 2;
   }
 
   return 0;

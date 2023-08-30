@@ -1,7 +1,8 @@
 #ifndef _OPCODES_H_
 
-// break instruction. on posix, the is likely to cause a signal to be
-// raised but the emulator doesn't support this yet.
+// break instruction. on a posix system, this is likely to cause a
+// signal, perhps sigil, to be raised but the emulator doesn't support
+// this yet.
 #define BRK 0
 
 // perform no operation. this is used for padding which may
@@ -28,16 +29,18 @@
 #define IMM 3
 
 // Load the logical NOT of a constant to an integer register. This
-// eliminates the need for another decoding strategy immediates like
-// SLEB or "zig-zag".
+// eliminates the need for another decoding strategy (for example SLEB
+// or "zig-zag" could make sense)
 #define NIMM 4
 
 // Load an immediate plus the PC address of the begining of this
-// instruction into an integer register
+// instruction into an integer register. This instruction will be most
+// used for forward jumps in PIC code.
 #define PCIMM 5
 
 // Load the logical NOT of an immediate plus the PC address of the
-// begining of this instruction into an integer register
+// begining of this instruction into an integer register. This
+// instruction will be most used for backward jumps in PIC code.
 #define NPCIMM 6
 
 // Load a floating point immediate
@@ -78,14 +81,22 @@
 // to form the other bits
 #define LD_S32 22
 
-// load signed 64 doesn't exist because it's already sign extended.
+// NOTE: load signed 64 doesn't exist because sign extension doesn't
+// make sense when the load already has the maximum amount of bits.
 
 // undefined opcode (for now)
 #define UNDEF_23 23
 
+// Store the lowest 8 bits of a register to memory
 #define ST_8 24
+
+// Store the lowest 16 bits of a register to memory
 #define ST_16 25
+
+// Store the lowest 32 bits of a register to memory
 #define ST_32 26
+
+// Store all the bits of a register to memory
 #define ST_64 27
 
 #define FLD_8 28
@@ -156,7 +167,9 @@
 // rotate lower 8 bits bits right
 #define ROTR_8 61
 
-#endif
+#endif /* _OPCODES_H_ */
+
+// TODO: parity?
 
 /*
                 FABS

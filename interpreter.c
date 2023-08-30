@@ -228,6 +228,33 @@ void interpret(cpu_thread_state *state, uint64_t max_instructions) {
                                   AS_UINT64(memory[ireg[arg1 + 3]]) << 24);
       break;
 
+    case ST_8:
+      memory[arg2] = (ireg[arg1] & 0xff);
+      break;
+
+    case ST_16:
+      memory[arg2] = (ireg[arg1]) & 0xff;
+      memory[arg2+1] = (ireg[arg1] >> 8) & 0xff;
+      break;
+
+    case ST_32:
+      memory[arg2] = (ireg[arg1]) & 0xff;
+      memory[arg2+1] = (ireg[arg1] >> 8) & 0xff;
+      memory[arg2+2] = (ireg[arg1] >> 16) & 0xff;
+      memory[arg2+3] = (ireg[arg1] >> 24) & 0xff;
+      break;
+
+    case ST_64:
+      memory[arg2] = (ireg[arg1]) & 0xff;
+      memory[arg2+1] = (ireg[arg1] >> 8) & 0xff;
+      memory[arg2+2] = (ireg[arg1] >> 16) & 0xff;
+      memory[arg2+3] = (ireg[arg1] >> 24) & 0xff;
+      memory[arg2+4] = (ireg[arg1] >> 32) & 0xff;
+      memory[arg2+5] = (ireg[arg1] >> 40) & 0xff;
+      memory[arg2+6] = (ireg[arg1] >> 48) & 0xff;
+      memory[arg2+7] = (ireg[arg1] >> 56) & 0xff;
+      break;
+
     case ADD:
       ireg[arg3] = ireg[arg1] + ireg[arg2];
       break;

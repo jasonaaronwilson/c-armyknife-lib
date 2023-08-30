@@ -78,6 +78,8 @@
 // to form the other bits
 #define LD_S32 22
 
+// load signed 64 doesn't exist because it's already sign extended.
+
 // undefined opcode (for now)
 #define UNDEF_23 23
 

@@ -24,6 +24,22 @@
 
 #define AS_UINT64(x) ((uint64_t)x)
 
+// ======================================================================
+// VM "Inlined" Functions
+// ======================================================================
+
+uint64_t sign_extend_8(uint64_t value) {
+  return ((int64_t)(value << 56)) >> 56;
+}
+
+uint64_t sign_extend_16(uint64_t value) {
+  return ((int64_t)(value << 48)) >> 48;
+}
+
+uint64_t sign_extend_32(uint64_t value) {
+  return ((int64_t)(value << 32)) >> 32;
+}
+
 typedef struct {
   // This is the program counter.
   uint64_t pc;
@@ -192,6 +208,24 @@ void interpret(cpu_thread_state *state, uint64_t max_instructions) {
                    AS_UINT64(memory[ireg[arg1 + 5]]) << 40 |
                    AS_UINT64(memory[ireg[arg1 + 6]]) << 48 |
                    AS_UINT64(memory[ireg[arg1 + 7]]) << 56;
+      break;
+
+    case LD_S8:
+      ireg[arg2] = sign_extend_8(AS_UINT64(memory[ireg[arg1]]));
+      break;
+
+    case LD_S16:
+      // TODO check alignment!
+      ireg[arg2] = sign_extend_16(AS_UINT64(memory[ireg[arg1]]) |
+                                  AS_UINT64(memory[ireg[arg1 + 1]]) << 8);
+      break;
+
+    case LD_S32:
+      // TODO check alignment!
+      ireg[arg2] = sign_extend_32(AS_UINT64(memory[ireg[arg1]]) |
+                                  AS_UINT64(memory[ireg[arg1 + 1]]) << 8 |
+                                  AS_UINT64(memory[ireg[arg1 + 2]]) << 16 |
+                                  AS_UINT64(memory[ireg[arg1 + 3]]) << 24);
       break;
 
     case ADD:

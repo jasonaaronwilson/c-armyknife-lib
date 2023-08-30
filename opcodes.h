@@ -1,6 +1,7 @@
 #ifndef _OPCODES_H_
 
-// break instruction.
+// break instruction. on posix, the is likely to cause a signal to be
+// raised but the emulator doesn't support this yet.
 #define BRK 0
 
 // perform no operation. this is used for padding which may
@@ -23,18 +24,32 @@
 // more regular.
 #define BRZ 2
 
-// Load an immediate to an integer register
+// Load a constant to an integer register
 #define IMM 3
+
+// Load the logical NOT of a constant to an integer register. This
+// eliminates the need for another decoding strategy immediates like
+// SLEB or "zig-zag".
+#define NIMM 4
 
 // Load an immediate plus the PC address of the begining of this
 // instruction into an integer register
-#define PCIMM 4
+#define PCIMM 5
+
+// Load the logical NOT of an immediate plus the PC address of the
+// begining of this instruction into an integer register
+#define NPCIMM 5
 
 // Load a floating point immediate
-#define FIMM 5
+#define FIMM 6
 
-// move the value in one integer register to another
-#define MOV 6
+// move the value in one integer register to another integer register
+#define MOV 7
+
+// move the value in one fp register to another fp register
+#define FMOV 8
+
+/// Small gap here in case we missed critial opcodes...
 
 // load 8 bits from the address in the source register and clear all
 // other bits

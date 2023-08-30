@@ -55,3 +55,6 @@ All opcodes above 4096 (actual value TBD) are available as user
 defined opcodes. The bottom N bits of the opcode then specifies the
 format of the instruction so that the instruction can be decoded even
 if it's name, numbers of registers, etc.
+
+Order of instruction arguements always follows from source, then a
+target, and finally a constant.

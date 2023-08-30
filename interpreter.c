@@ -135,6 +135,14 @@ void interpret(cpu_thread_state *state, uint64_t max_instructions) {
       }
       break;
 
+    case IMM:
+      ireg[arg1] = arg2;
+      break;
+
+    case NIMM:
+      ireg[arg1] = ~arg2;
+      break;
+
     case MOV:
       ireg[arg2] = ireg[arg1];
       break;

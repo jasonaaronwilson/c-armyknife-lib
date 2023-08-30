@@ -1,8 +1,19 @@
 /**
  * This contains the bulk of the core logic of the VM interpreter.
  */
+
+// ======================================================================
+// Performance vs Safety Parameters
+// ======================================================================
+
+// TODO(jawilson): do this for integer and floating point registers
+#ifndef CHECK_MAX_REGISTERS
+#define CHECK_MAX_REGISTERS 1
+#endif
+
 #include "opcodes.h"
 #include <stdint.h>
+#include <stdlib.h>
 
 typedef struct {
   // This is the program counter.
@@ -16,7 +27,8 @@ typedef struct {
   // This is the actual memory allocated for this virtual
   // machine. While cpu_state would be unique to each thread, this may
   // be shared by multiple threads.
-  uint8_t memory;
+  uint8_t *memory_start;
+  uint8_t *memory_end;
 
   // Contains storage for the integer and floating point registers
   // (integer registers come first). Note: this must come last in the
@@ -54,19 +66,55 @@ extern signed_decode_result decodeSLEB128(const uint8_t *p, const uint8_t *end);
 void interpret(cpu_thread_state *state, uint64_t max_instructions) {
   uint64_t num_instructions = 0;
   uint64_t pc = state->pc;
+  uint8_t *start = state->memory_start;
+  uint8_t *end = state->memory_end;
+  uint64_t *ireg = &state->register_storage[0];
 
   while (1) {
-    if (num_instructions == max_instructions) {
+    if (num_instructions >= max_instructions) {
       return;
     }
 
-    uint64_t opcode = 10;
+    unsigned_decode_result opcode_result = decodeULEB128(start + pc, end);
+    if (opcode_result.size <= 0) {
+      exit(1);
+    }
+    pc += opcode_result.size;
+    uint64_t opcode = opcode_result.number;
 
     int num_args = opcode_to_number_of_arguments(opcode);
 
-    uint64_t arg0 = 0;
     uint64_t arg1 = 0;
+    if (num_args > 0) {
+      unsigned_decode_result arg_result = decodeULEB128(start + pc, end);
+      if (arg_result.size <= 0) {
+        exit(1);
+      }
+      pc += arg_result.size;
+      arg1 = arg_result.number;
+    }
+
     uint64_t arg2 = 0;
+    if (num_args > 1) {
+      unsigned_decode_result arg_result = decodeULEB128(start + pc, end);
+      if (arg_result.size <= 0) {
+        exit(1);
+      }
+      pc += arg_result.size;
+      arg2 = arg_result.number;
+    }
+
+    uint64_t arg3 = 0;
+    if (num_args > 2) {
+      unsigned_decode_result arg_result = decodeULEB128(start + pc, end);
+      if (arg_result.size <= 0) {
+        exit(1);
+      }
+      pc += arg_result.size;
+      arg3 = arg_result.number;
+    }
+
+    // HERE MAX REG CHECK
 
     switch (opcode) {
 
@@ -75,6 +123,39 @@ void interpret(cpu_thread_state *state, uint64_t max_instructions) {
       return;
 
     case NOP:
+      break;
+
+    case MOV:
+      ireg[arg2] = ireg[arg1];
+      break;
+
+    case ADD:
+      ireg[arg3] = ireg[arg1] + ireg[arg2];
+      break;
+
+    case SUB:
+      ireg[arg3] = ireg[arg1] - ireg[arg2];
+      break;
+
+    case AND:
+      ireg[arg3] = ireg[arg1] & ireg[arg2];
+      break;
+
+    case OR:
+      ireg[arg3] = ireg[arg1] | ireg[arg2];
+      break;
+
+    case XOR:
+      ireg[arg3] = ireg[arg1] ^ ireg[arg2];
+      break;
+
+    case SHL:
+      ireg[arg3] = ireg[arg1] << ireg[arg2];
+      break;
+
+    default:
+      // printf?
+      exit(1);
       break;
     }
 

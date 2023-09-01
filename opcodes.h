@@ -167,6 +167,8 @@
 // rotate lower 8 bits bits right
 #define ROTR_8 61
 
+#define LAST_OPCODE 256
+
 #endif /* _OPCODES_H_ */
 
 // TODO: parity?

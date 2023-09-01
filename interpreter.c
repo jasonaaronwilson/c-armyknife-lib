@@ -2,6 +2,8 @@
  * This contains the bulk of the interpreter logic for the Comet VM.
  */
 
+#include "uleb128.h"
+
 // ======================================================================
 // Compile Time Parameters
 // ======================================================================
@@ -17,15 +19,6 @@
 #include "opcodes.h"
 #include <stdint.h>
 #include <stdlib.h>
-
-/**
- * Forward declarations.
- */
-typedef struct {
-  uint64_t number;
-  // Negative values mean an error occurred.
-  int size;
-} unsigned_decode_result;
 
 // ======================================================================
 // Implementation Macros
@@ -57,9 +50,6 @@ int opcode_to_number_of_arguments(uint64_t opcode);
 
 extern unsigned_decode_result decodeULEB128(const uint8_t *p,
                                             const uint8_t *end);
-
-#define ERROR_INSUFFICIENT_INPUT -1
-#define ERROR_TOO_BIG -2
 
 /**
  * This is the main loop of the VM interpreter.
@@ -315,26 +305,4 @@ int opcode_to_number_of_arguments(uint64_t opcode) {
   }
 
   return 0;
-}
-
-/// Utility function to decode a ULEB128 value.
-unsigned_decode_result decodeULEB128(const uint8_t *p, const uint8_t *end) {
-  const uint8_t *orig_p = p;
-  uint64_t Value = 0;
-  unsigned Shift = 0;
-  do {
-    if (p == end) {
-      unsigned_decode_result result = {0, ERROR_INSUFFICIENT_INPUT};
-      return result;
-    }
-    uint64_t Slice = *p & 0x7f;
-    if ((Shift >= 64 && Slice != 0) || Slice << Shift >> Shift != Slice) {
-      unsigned_decode_result result = {0, ERROR_TOO_BIG};
-      return result;
-    }
-    Value += Slice << Shift;
-    Shift += 7;
-  } while (*p++ >= 128);
-  unsigned_decode_result result = {Value, (unsigned)(p - orig_p)};
-  return result;
 }

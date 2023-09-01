@@ -1,15 +1,21 @@
 all: comet-vm
 
-comet-vm: opcodes.h interpreter.h interpreter.c main.c
-	# gcc interpreter.c main.c
-	# stat --format=%s a.out
-	clang interpreter.c main.c
+CC = clang
+
+SRC_C = interpreter.c uleb128.c printer.c main.c 
+SRC_H = interpreter.h uleb128.h opcodes.h printer.h
+
+comet-vm: ${SRC_C} ${SRC_H}
+	${CC} ${SRC_C}
 	stat --format=%s a.out
 
 format:
-	clang-format -i opcodes.h interpreter.c main.c
+	clang-format -i ${SRC_C} ${SRC_H}
 
-diff:
+clean:
+	rm -rf *~ a.out
+
+diff: clean
 	git difftool HEAD
 
 

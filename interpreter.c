@@ -13,10 +13,10 @@
 
 // TODO(jawilson): add alignment check for 16, 32, and 64 bit loads.
 
+#include "interpreter.h"
+#include "opcodes.h"
 #include <stdint.h>
 #include <stdlib.h>
-#include "opcodes.h"
-#include "interpreter.h"
 
 /**
  * Forward declarations.
@@ -48,7 +48,6 @@ uint64_t sign_extend_16(uint64_t value) {
 uint64_t sign_extend_32(uint64_t value) {
   return ((int64_t)(value << 32)) >> 32;
 }
-
 
 // ======================================================================
 // Forward funtion declarations
@@ -218,25 +217,25 @@ void interpret(cpu_thread_state *state, uint64_t max_instructions) {
 
     case ST_16:
       memory[arg2] = (ireg[arg1]) & 0xff;
-      memory[arg2+1] = (ireg[arg1] >> 8) & 0xff;
+      memory[arg2 + 1] = (ireg[arg1] >> 8) & 0xff;
       break;
 
     case ST_32:
       memory[arg2] = (ireg[arg1]) & 0xff;
-      memory[arg2+1] = (ireg[arg1] >> 8) & 0xff;
-      memory[arg2+2] = (ireg[arg1] >> 16) & 0xff;
-      memory[arg2+3] = (ireg[arg1] >> 24) & 0xff;
+      memory[arg2 + 1] = (ireg[arg1] >> 8) & 0xff;
+      memory[arg2 + 2] = (ireg[arg1] >> 16) & 0xff;
+      memory[arg2 + 3] = (ireg[arg1] >> 24) & 0xff;
       break;
 
     case ST_64:
       memory[arg2] = (ireg[arg1]) & 0xff;
-      memory[arg2+1] = (ireg[arg1] >> 8) & 0xff;
-      memory[arg2+2] = (ireg[arg1] >> 16) & 0xff;
-      memory[arg2+3] = (ireg[arg1] >> 24) & 0xff;
-      memory[arg2+4] = (ireg[arg1] >> 32) & 0xff;
-      memory[arg2+5] = (ireg[arg1] >> 40) & 0xff;
-      memory[arg2+6] = (ireg[arg1] >> 48) & 0xff;
-      memory[arg2+7] = (ireg[arg1] >> 56) & 0xff;
+      memory[arg2 + 1] = (ireg[arg1] >> 8) & 0xff;
+      memory[arg2 + 2] = (ireg[arg1] >> 16) & 0xff;
+      memory[arg2 + 3] = (ireg[arg1] >> 24) & 0xff;
+      memory[arg2 + 4] = (ireg[arg1] >> 32) & 0xff;
+      memory[arg2 + 5] = (ireg[arg1] >> 40) & 0xff;
+      memory[arg2 + 6] = (ireg[arg1] >> 48) & 0xff;
+      memory[arg2 + 7] = (ireg[arg1] >> 56) & 0xff;
       break;
 
     case CLZ:
@@ -277,7 +276,7 @@ void interpret(cpu_thread_state *state, uint64_t max_instructions) {
       // TODO(jawilson) conditionalize and provide a backup
       ireg[arg3] = __builtin_popcount(ireg[arg1]);
       break;
-      
+
     default:
       // printf?
       exit(1);

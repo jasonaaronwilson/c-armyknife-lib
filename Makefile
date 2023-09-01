@@ -1,7 +1,9 @@
 all: comet-vm
 
 comet-vm: opcodes.h interpreter.h interpreter.c main.c
-	gcc interpreter.c main.c
+	# gcc interpreter.c main.c
+	# stat --format=%s a.out
+	clang interpreter.c main.c
 	stat --format=%s a.out
 
 format:

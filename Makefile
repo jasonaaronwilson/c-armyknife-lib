@@ -2,8 +2,8 @@ all: comet-vm
 
 CC = clang
 
-SRC_C = interpreter.c uleb128.c printer.c main.c 
-SRC_H = interpreter.h uleb128.h opcodes.h printer.h
+SRC_C = interpreter.c uleb128.c printer.c instruction-info.c main.c
+SRC_H = interpreter.h uleb128.h opcodes.h instruction-info.h printer.h 
 
 comet-vm: ${SRC_C} ${SRC_H}
 	${CC} ${SRC_C}

@@ -12,20 +12,9 @@ typedef struct {
 } instruction_info;
 
 extern uint8_t is_initialized;
-extern instruction_info info[LAST_OPCODE];
+extern instruction_info instruction_info_array[LAST_OPCODE];
 
 extern void init_instruction_info();
-
-inline instruction_info *get_info(uint64_t opcode) {
-  if (!is_initialized) {
-    init_instruction_info();
-  }
-  if (opcode <= LAST_OPCODE) {
-    return &info[opcode];
-  } else {
-    // TODO(jawilson): create a better error mechanism...
-    exit(1);
-  }
-}
+extern instruction_info *get_instruction_info(uint64_t opcode);
 
 #endif /* _INSTRUCTION_INFO_ */

@@ -1,4 +1,5 @@
 #include "interpreter.h"
+#include "printer.h"
 #include <stdlib.h>
 
 /**
@@ -24,7 +25,7 @@ int main(int argc, char **argv) {
   // Single step
 
   while (1) {
-    // print_instructions(state->memory_start, 1);
+    print_instructions(state->memory_start, state->pc, 1);
     interpret(state, 1);
   }
 

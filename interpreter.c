@@ -147,124 +147,124 @@ void interpret(cpu_thread_state *state, uint64_t max_instructions) {
       break;
 
     case MOV:
-      ireg[arg2] = ireg[arg1];
+      ireg[arg1] = ireg[arg2];
       break;
 
       //// MEMORY instructions are CURRENTLY alignment carefree and
       //// little endian.
 
     case LD_U8:
-      ireg[arg2] = AS_UINT64(memory[ireg[arg1]]);
+      ireg[arg1] = AS_UINT64(memory[ireg[arg2]]);
       break;
 
     case LD_U16:
       // TODO check alignment!
-      ireg[arg2] = AS_UINT64(memory[ireg[arg1]]) |
-                   AS_UINT64(memory[ireg[arg1 + 1]]) << 8;
+      ireg[arg1] = AS_UINT64(memory[ireg[arg2]]) |
+                   AS_UINT64(memory[ireg[arg2 + 1]]) << 8;
       break;
 
     case LD_U32:
       // TODO check alignment!
-      ireg[arg2] = AS_UINT64(memory[ireg[arg1]]) |
-                   AS_UINT64(memory[ireg[arg1 + 1]]) << 8 |
-                   AS_UINT64(memory[ireg[arg1 + 2]]) << 16 |
-                   AS_UINT64(memory[ireg[arg1 + 3]]) << 24;
+      ireg[arg1] = AS_UINT64(memory[ireg[arg2]]) |
+                   AS_UINT64(memory[ireg[arg2 + 1]]) << 8 |
+                   AS_UINT64(memory[ireg[arg2 + 2]]) << 16 |
+                   AS_UINT64(memory[ireg[arg2 + 3]]) << 24;
       break;
 
     case LD_U64:
       // TODO check alignment!
-      ireg[arg2] = AS_UINT64(memory[ireg[arg1]]) |
-                   AS_UINT64(memory[ireg[arg1 + 1]]) << 8 |
-                   AS_UINT64(memory[ireg[arg1 + 2]]) << 16 |
-                   AS_UINT64(memory[ireg[arg1 + 3]]) << 24 |
-                   AS_UINT64(memory[ireg[arg1 + 4]]) << 32 |
-                   AS_UINT64(memory[ireg[arg1 + 5]]) << 40 |
-                   AS_UINT64(memory[ireg[arg1 + 6]]) << 48 |
-                   AS_UINT64(memory[ireg[arg1 + 7]]) << 56;
+      ireg[arg1] = AS_UINT64(memory[ireg[arg2]]) |
+                   AS_UINT64(memory[ireg[arg2 + 1]]) << 8 |
+                   AS_UINT64(memory[ireg[arg2 + 2]]) << 16 |
+                   AS_UINT64(memory[ireg[arg2 + 3]]) << 24 |
+                   AS_UINT64(memory[ireg[arg2 + 4]]) << 32 |
+                   AS_UINT64(memory[ireg[arg2 + 5]]) << 40 |
+                   AS_UINT64(memory[ireg[arg2 + 6]]) << 48 |
+                   AS_UINT64(memory[ireg[arg2 + 7]]) << 56;
       break;
 
     case LD_S8:
-      ireg[arg2] = sign_extend_8(AS_UINT64(memory[ireg[arg1]]));
+      ireg[arg2] = sign_extend_8(AS_UINT64(memory[ireg[arg2]]));
       break;
 
     case LD_S16:
       // TODO check alignment!
-      ireg[arg2] = sign_extend_16(AS_UINT64(memory[ireg[arg1]]) |
-                                  AS_UINT64(memory[ireg[arg1 + 1]]) << 8);
+      ireg[arg2] = sign_extend_16(AS_UINT64(memory[ireg[arg2]]) |
+                                  AS_UINT64(memory[ireg[arg2 + 1]]) << 8);
       break;
 
     case LD_S32:
       // TODO check alignment!
-      ireg[arg2] = sign_extend_32(AS_UINT64(memory[ireg[arg1]]) |
-                                  AS_UINT64(memory[ireg[arg1 + 1]]) << 8 |
-                                  AS_UINT64(memory[ireg[arg1 + 2]]) << 16 |
-                                  AS_UINT64(memory[ireg[arg1 + 3]]) << 24);
+      ireg[arg2] = sign_extend_32(AS_UINT64(memory[ireg[arg2]]) |
+                                  AS_UINT64(memory[ireg[arg2 + 1]]) << 8 |
+                                  AS_UINT64(memory[ireg[arg2 + 2]]) << 16 |
+                                  AS_UINT64(memory[ireg[arg2 + 3]]) << 24);
       break;
 
     case ST_8:
-      memory[arg2] = (ireg[arg1] & 0xff);
+      memory[arg2] = (ireg[arg2] & 0xff);
       break;
 
     case ST_16:
-      memory[arg2] = (ireg[arg1]) & 0xff;
-      memory[arg2 + 1] = (ireg[arg1] >> 8) & 0xff;
+      memory[arg2] = (ireg[arg2]) & 0xff;
+      memory[arg2 + 1] = (ireg[arg2] >> 8) & 0xff;
       break;
 
     case ST_32:
-      memory[arg2] = (ireg[arg1]) & 0xff;
-      memory[arg2 + 1] = (ireg[arg1] >> 8) & 0xff;
-      memory[arg2 + 2] = (ireg[arg1] >> 16) & 0xff;
-      memory[arg2 + 3] = (ireg[arg1] >> 24) & 0xff;
+      memory[arg2] = (ireg[arg2]) & 0xff;
+      memory[arg2 + 1] = (ireg[arg2] >> 8) & 0xff;
+      memory[arg2 + 2] = (ireg[arg2] >> 16) & 0xff;
+      memory[arg2 + 3] = (ireg[arg2] >> 24) & 0xff;
       break;
 
     case ST_64:
-      memory[arg2] = (ireg[arg1]) & 0xff;
-      memory[arg2 + 1] = (ireg[arg1] >> 8) & 0xff;
-      memory[arg2 + 2] = (ireg[arg1] >> 16) & 0xff;
-      memory[arg2 + 3] = (ireg[arg1] >> 24) & 0xff;
-      memory[arg2 + 4] = (ireg[arg1] >> 32) & 0xff;
-      memory[arg2 + 5] = (ireg[arg1] >> 40) & 0xff;
-      memory[arg2 + 6] = (ireg[arg1] >> 48) & 0xff;
-      memory[arg2 + 7] = (ireg[arg1] >> 56) & 0xff;
+      memory[arg2] = (ireg[arg2]) & 0xff;
+      memory[arg2 + 1] = (ireg[arg2] >> 8) & 0xff;
+      memory[arg2 + 2] = (ireg[arg2] >> 16) & 0xff;
+      memory[arg2 + 3] = (ireg[arg2] >> 24) & 0xff;
+      memory[arg2 + 4] = (ireg[arg2] >> 32) & 0xff;
+      memory[arg2 + 5] = (ireg[arg2] >> 40) & 0xff;
+      memory[arg2 + 6] = (ireg[arg2] >> 48) & 0xff;
+      memory[arg2 + 7] = (ireg[arg2] >> 56) & 0xff;
       break;
 
     case CLZ:
       // TODO: backup implementation
-      ireg[arg2] = __builtin_clz(ireg[arg1]);
+      ireg[arg2] = __builtin_clz(ireg[arg2]);
       break;
 
     case CTZ:
       // TODO: backup implementation
-      ireg[arg2] = __builtin_ctz(ireg[arg1]);
+      ireg[arg2] = __builtin_ctz(ireg[arg2]);
       break;
 
     case ADD:
-      ireg[arg3] = ireg[arg1] + ireg[arg2];
+      ireg[arg3] = ireg[arg2] + ireg[arg3];
       break;
 
     case SUB:
-      ireg[arg3] = ireg[arg1] - ireg[arg2];
+      ireg[arg3] = ireg[arg2] - ireg[arg3];
       break;
 
     case AND:
-      ireg[arg3] = ireg[arg1] & ireg[arg2];
+      ireg[arg3] = ireg[arg2] & ireg[arg3];
       break;
 
     case OR:
-      ireg[arg3] = ireg[arg1] | ireg[arg2];
+      ireg[arg3] = ireg[arg2] | ireg[arg3];
       break;
 
     case XOR:
-      ireg[arg3] = ireg[arg1] ^ ireg[arg2];
+      ireg[arg3] = ireg[arg2] ^ ireg[arg3];
       break;
 
     case SHL:
-      ireg[arg3] = ireg[arg1] << ireg[arg2];
+      ireg[arg3] = ireg[arg2] << ireg[arg3];
       break;
 
     case POPCNT:
       // TODO(jawilson) conditionalize and provide a backup
-      ireg[arg3] = __builtin_popcount(ireg[arg1]);
+      ireg[arg1] = __builtin_popcount(ireg[arg3]);
       break;
 
     default:

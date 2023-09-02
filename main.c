@@ -1,6 +1,10 @@
-#include "interpreter.h"
-#include "printer.h"
 #include <stdlib.h>
+
+#include "interpreter.h"
+#include "opcodes.h"
+#include "printer.h"
+
+void add_sample_program(cpu_thread_state *state, uint64_t address);
 
 /**
  * This is a simple main routine for the interpreter.
@@ -22,12 +26,21 @@ int main(int argc, char **argv) {
   state->memory_start = malloc(memory_amount);
   state->memory_end = state->memory_start + memory_amount;
 
-  // Single step
+  add_sample_program(state, 0);
 
-  while (1) {
+  // Single step N times
+
+  for (int i = 0; i < 2; i++) {
     print_instructions(state->memory_start, state->pc, 1);
     interpret(state, 1);
   }
 
   exit(0);
+}
+
+void add_sample_program(cpu_thread_state *state, uint64_t address) {
+  state->memory_start[address++] = MOV;
+  state->memory_start[address++] = GR1;
+  state->memory_start[address++] = GR0;
+  state->memory_start[address++] = BRK;
 }

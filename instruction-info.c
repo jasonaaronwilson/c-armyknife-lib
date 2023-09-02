@@ -9,6 +9,9 @@ void init_instruction_info() {
   instruction_info_array[BRK].opcode_name = "brk";
   instruction_info_array[BRK].number_of_arguments = 0;
 
+  instruction_info_array[MOV].opcode_name = "mov";
+  instruction_info_array[MOV].number_of_arguments = 2;
+
   is_initialized = 1;
 }
 

@@ -169,6 +169,43 @@
 
 #define LAST_OPCODE 256
 
+// Absolutely unnecessary definitions that may make it easier to read
+// some source code.
+
+#define GR0 0
+#define GR1 1
+#define GR2 2
+#define GR3 3
+#define GR4 4
+#define GR5 5
+#define GR6 6
+#define GR7 7
+#define GR8 8
+#define GR9 9
+#define GR10 10
+#define GR11 11
+#define GR12 12
+#define GR13 13
+#define GR14 14
+#define GR15 15
+
+#define FP0 0
+#define FP1 1
+#define FP2 2
+#define FP3 3
+#define FP4 4
+#define FP5 5
+#define FP6 6
+#define FP7 7
+#define FP8 8
+#define FP9 9
+#define FP10 10
+#define FP11 11
+#define FP12 12
+#define FP13 13
+#define FP14 14
+#define FP15 15
+
 #endif /* _OPCODES_H_ */
 
 // TODO: parity?

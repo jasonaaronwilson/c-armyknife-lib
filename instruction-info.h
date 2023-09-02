@@ -9,6 +9,7 @@
 typedef struct {
   char *opcode_name;
   uint8_t number_of_arguments; // includes "targets"
+  uint8_t is_fp;
 } instruction_info;
 
 extern uint8_t is_initialized;

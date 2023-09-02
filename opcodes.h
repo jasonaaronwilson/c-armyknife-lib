@@ -28,20 +28,21 @@
 // Load a constant to an integer register
 #define IMM 3
 
-// Load the logical NOT of a constant to an integer register. This
-// eliminates the need for another decoding strategy (for example SLEB
-// or "zig-zag" could make sense)
-#define NIMM 4
+// Load the negative (two's complement) of a constant to an integer
+// register. This eliminates the need for another decoding strategy
+// (for example SLEB or "zig-zag")
+#define SIMM 4
 
 // Load an immediate plus the PC address of the begining of this
 // instruction into an integer register. This instruction will be most
 // used for forward jumps in PIC code.
 #define PCIMM 5
 
-// Load the logical NOT of an immediate plus the PC address of the
-// begining of this instruction into an integer register. This
-// instruction will be most used for backward jumps in PIC code.
-#define NPCIMM 6
+// Load the negative (two's complement) of an immediate plus the PC
+// address of the begining of this instruction into an integer
+// register. This instruction will be most used for backward jumps in
+// PIC code.
+#define SPCIMM 6
 
 // Load a floating point immediate
 #define FIMM 7

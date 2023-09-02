@@ -2,6 +2,7 @@
  * This contains the bulk of the interpreter logic for the Comet VM.
  */
 
+#include "instruction-info.h"
 #include "uleb128.h"
 
 // ======================================================================
@@ -116,8 +117,6 @@ void interpret(cpu_thread_state *state, uint64_t max_instructions) {
     switch (opcode) {
 
     case BRK:
-      // FIXME
-      pc = -1;
       return;
 
     case NOP:
@@ -134,15 +133,15 @@ void interpret(cpu_thread_state *state, uint64_t max_instructions) {
       ireg[arg1] = arg2;
       break;
 
-    case NIMM:
-      ireg[arg1] = ~arg2;
+    case SIMM:
+      ireg[arg1] = -arg2;
       break;
 
     case PCIMM:
       ireg[arg1] = start_pc + arg2;
       break;
 
-    case NPCIMM:
+    case SPCIMM:
       ireg[arg1] = start_pc + ~arg2;
       break;
 
@@ -273,36 +272,13 @@ void interpret(cpu_thread_state *state, uint64_t max_instructions) {
       break;
     }
 
+    state->pc = pc;
+
     num_instructions++;
   }
 }
 
 int opcode_to_number_of_arguments(uint64_t opcode) {
-  switch (opcode) {
-
-  case BRK:
-    return 0;
-
-  case NOP:
-    return 0;
-
-  // BRZ src_address, jump_src_address, link_tgt
-  case BRZ:
-    return 3;
-
-  case ADD:
-  case AND:
-  case OR:
-  case SUB:
-  case XOR:
-  case MUL:
-    return 3;
-
-  case POPCNT:
-  case CTZ:
-  case CLZ:
-    return 2;
-  }
-
-  return 0;
+  instruction_info *info = get_instruction_info(opcode);
+  return info->number_of_arguments;
 }

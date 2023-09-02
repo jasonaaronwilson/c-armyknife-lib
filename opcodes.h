@@ -1,28 +1,44 @@
 #ifndef _OPCODES_H_
 
-// break instruction. on a posix system, this is likely to cause a
-// signal, perhps sigil, to be raised but the emulator doesn't support
-// this yet.
+// break instruction.
+//
+// On a posix system, this is likely to cause a signal, perhps sigil,
+// to be raised but the emulator doesn't support this yet.
 #define BRK 0
 
-// perform no operation. this is used for padding which may
-// occasionally be desired.
+// Do nothing except advance the PC.
+//
+// This is used for padding which may occasionally be desired. While
+// larger NOP instructions could be composed by say "mov gr0,gr0" (3
+// bytes), or say "IMM gr0,X" (where X could 8 or my bytes), just
+// using more NOPs is the preferred way of padding for clarity and
+// performance.
 #define NOP 1
 
-// read a register and if it is zero, perform a relative indirect
-// branch and write the link address to the target register. This is a
+// read a register and if it is zero, perform an indirect branch. In
+// all cases, write the link address to the target register. This is a
 // very powerful branch instruction since using the zero register as
-// the predicate register makes the branch unconditional, and setting
-// the link register to the zero register throws away a result that
-// isn't needed. The surprising thing is that the branch is always
-// indirect which is because we have IMM and PCIMM to set up the
-// target address (and an assumption that we'll have lots of registers
-// makes naming the target address not contribute to register
-// pressure).
+// the predicate register makes the branch unconditional, and sending
+// the link address to gr0 makes the branch more like "jmp" than a
+// "call" instruction.
 //
 // This universal branch instruction probably has downsides for
 // hardware implementations but reduces complexity by making things
-// more regular.
+// more regular for "software".
+//
+// Let's use an example:
+//
+// brz gr0,gr12,gr19
+//
+// Using gr0 as the target register makes this more like a "branch"
+// than a "call". The "CPU" will read gr12 and compare it with
+// zero. So if gr12 is zero, we branch to the address in gr19, and if
+// not, obviously we just keep executing instructions and possibly
+// some IMM/PCIMM instructions were not needed. (Shrug Emoji)
+//
+// Note: the destination register is ALWAYS written even if the branch
+// isn't taken. This is a non-performant way to learn the address of
+// the next instruction since you can use PCIMM/SPCIMM.
 #define BRZ 2
 
 // Load a constant to an integer register

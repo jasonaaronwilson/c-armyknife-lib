@@ -18,5 +18,9 @@ clean:
 diff: clean
 	git difftool HEAD
 
+how-big:
+	cat ${SRC_C} ${SRC_H} | wc --lines
+
+
 
 

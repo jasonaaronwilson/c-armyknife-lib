@@ -266,6 +266,10 @@ void interpret(cpu_thread_state *state, uint64_t max_instructions) {
       ireg[arg1] = __builtin_popcount(ireg[arg3]);
       break;
 
+    case MUL:
+      ireg[arg1] = ireg[arg2] * ireg[arg3];
+      break;
+
     default:
       // printf?
       exit(1);

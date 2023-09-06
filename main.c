@@ -76,6 +76,15 @@ void add_sample_program(cpu_thread_state *state, uint64_t address) {
   state->memory_start[address++] = GR2;
   state->memory_start[address++] = GR0;
 
+  state->memory_start[address++] = IMM;
+  state->memory_start[address++] = GR5;
+  state->memory_start[address++] = 3;
+
+  state->memory_start[address++] = MUL;
+  state->memory_start[address++] = GR3;
+  state->memory_start[address++] = GR1;
+  state->memory_start[address++] = GR5;
+
   state->memory_start[address++] = MOV;
   state->memory_start[address++] = GR1;
   state->memory_start[address++] = GR0;

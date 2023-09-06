@@ -183,58 +183,58 @@ void interpret(cpu_thread_state *state, uint64_t max_instructions) {
       break;
 
     case LD_S8:
-      ireg[arg2] = sign_extend_8(AS_UINT64(memory[ireg[arg2]]));
+      ireg[arg1] = sign_extend_8(AS_UINT64(memory[ireg[arg2]]));
       break;
 
     case LD_S16:
       // TODO check alignment!
-      ireg[arg2] = sign_extend_16(AS_UINT64(memory[ireg[arg2]]) |
+      ireg[arg1] = sign_extend_16(AS_UINT64(memory[ireg[arg2]]) |
                                   AS_UINT64(memory[ireg[arg2 + 1]]) << 8);
       break;
 
     case LD_S32:
       // TODO check alignment!
-      ireg[arg2] = sign_extend_32(AS_UINT64(memory[ireg[arg2]]) |
+      ireg[arg1] = sign_extend_32(AS_UINT64(memory[ireg[arg2]]) |
                                   AS_UINT64(memory[ireg[arg2 + 1]]) << 8 |
                                   AS_UINT64(memory[ireg[arg2 + 2]]) << 16 |
                                   AS_UINT64(memory[ireg[arg2 + 3]]) << 24);
       break;
 
     case ST_8:
-      memory[arg2] = (ireg[arg2] & 0xff);
+      memory[arg1] = (ireg[arg2] & 0xff);
       break;
 
     case ST_16:
-      memory[arg2] = (ireg[arg2]) & 0xff;
-      memory[arg2 + 1] = (ireg[arg2] >> 8) & 0xff;
+      memory[arg1] = (ireg[arg2]) & 0xff;
+      memory[arg1 + 1] = (ireg[arg2] >> 8) & 0xff;
       break;
 
     case ST_32:
-      memory[arg2] = (ireg[arg2]) & 0xff;
-      memory[arg2 + 1] = (ireg[arg2] >> 8) & 0xff;
-      memory[arg2 + 2] = (ireg[arg2] >> 16) & 0xff;
-      memory[arg2 + 3] = (ireg[arg2] >> 24) & 0xff;
+      memory[arg1] = (ireg[arg2]) & 0xff;
+      memory[arg1 + 1] = (ireg[arg2] >> 8) & 0xff;
+      memory[arg1 + 2] = (ireg[arg2] >> 16) & 0xff;
+      memory[arg1 + 3] = (ireg[arg2] >> 24) & 0xff;
       break;
 
     case ST_64:
-      memory[arg2] = (ireg[arg2]) & 0xff;
-      memory[arg2 + 1] = (ireg[arg2] >> 8) & 0xff;
-      memory[arg2 + 2] = (ireg[arg2] >> 16) & 0xff;
-      memory[arg2 + 3] = (ireg[arg2] >> 24) & 0xff;
-      memory[arg2 + 4] = (ireg[arg2] >> 32) & 0xff;
-      memory[arg2 + 5] = (ireg[arg2] >> 40) & 0xff;
-      memory[arg2 + 6] = (ireg[arg2] >> 48) & 0xff;
-      memory[arg2 + 7] = (ireg[arg2] >> 56) & 0xff;
+      memory[arg1] = (ireg[arg2]) & 0xff;
+      memory[arg1 + 1] = (ireg[arg2] >> 8) & 0xff;
+      memory[arg1 + 2] = (ireg[arg2] >> 16) & 0xff;
+      memory[arg1 + 3] = (ireg[arg2] >> 24) & 0xff;
+      memory[arg1 + 4] = (ireg[arg2] >> 32) & 0xff;
+      memory[arg1 + 5] = (ireg[arg2] >> 40) & 0xff;
+      memory[arg1 + 6] = (ireg[arg2] >> 48) & 0xff;
+      memory[arg1 + 7] = (ireg[arg2] >> 56) & 0xff;
       break;
 
     case CLZ:
       // TODO: backup implementation
-      ireg[arg2] = __builtin_clz(ireg[arg2]);
+      ireg[arg1] = __builtin_clz(ireg[arg2]);
       break;
 
     case CTZ:
       // TODO: backup implementation
-      ireg[arg2] = __builtin_ctz(ireg[arg2]);
+      ireg[arg1] = __builtin_ctz(ireg[arg2]);
       break;
 
     case ADD:
@@ -263,7 +263,7 @@ void interpret(cpu_thread_state *state, uint64_t max_instructions) {
 
     case POPCNT:
       // TODO(jawilson) conditionalize and provide a backup
-      ireg[arg1] = __builtin_popcount(ireg[arg3]);
+      ireg[arg1] = __builtin_popcount(ireg[arg2]);
       break;
 
     case MUL:

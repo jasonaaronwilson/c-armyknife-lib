@@ -4,23 +4,28 @@
 //
 // On a posix system, this is likely to cause a signal, perhps sigil,
 // to be raised but the emulator doesn't support this yet.
+//
+// In the very olden times, debuggers would physically write a BREAK
+// instruction to perform break-points but we'll provide a better way.
 #define BRK 0
 
 // Do nothing except advance the PC.
 //
 // This is used for padding which may occasionally be desired. While
 // larger NOP instructions could be composed by say "mov gr0,gr0" (3
-// bytes), or say "IMM gr0,X" (where X could 8 or my bytes), just
-// using more NOPs is the preferred way of padding for clarity and
-// performance.
+// bytes), or say "IMM gr0,X" (where X could can be be as small as 1
+// byte or as large as 64/7 bytes (9 bytes)), just using more NOPs is
+// the preferred way of padding for clarity and performance.
 #define NOP 1
 
-// read a register and if it is zero, perform an indirect branch. In
-// all cases, write the link address to the target register. This is a
-// very powerful branch instruction since using the zero register as
-// the predicate register makes the branch unconditional, and sending
-// the link address to gr0 makes the branch more like "jmp" than a
-// "call" instruction.
+// read a register and if it is zero, perform an indirect branch.
+//
+// In all cases, write the link address to the target register.
+//
+// This is a very powerful branch instruction since using the zero
+// register as the predicate register makes the branch unconditional,
+// and sending the link address to gr0 makes the branch more like
+// "jmp" than a "call" instruction.
 //
 // This universal branch instruction probably has downsides for
 // hardware implementations but reduces complexity by making things
@@ -37,11 +42,14 @@
 // some IMM/PCIMM instructions were not needed. (Shrug Emoji)
 //
 // Note: the destination register is ALWAYS written even if the branch
-// isn't taken. This is a non-performant way to learn the address of
-// the next instruction since you can use PCIMM/SPCIMM.
+// isn't taken (which is why gr0 will often be the written
+// register).
+//
+// In most cases, PCIMM/SPCIMM is superior to an intentionally not
+// taken branch if your code needs to figure out relative addresses.
 #define BRZ 2
 
-// Load a constant to an integer register
+// Load a constant to an integer register from the instruction stream.
 #define IMM 3
 
 // Load the negative (two's complement) of a constant to an integer

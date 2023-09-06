@@ -30,6 +30,7 @@ int main(int argc, char **argv) {
 
   // Single step N times
   for (int i = 0; i < 3; i++) {
+    print_registers(state, 16, 16);
     print_instructions(state->memory_start, state->pc, 1);
     interpret(state, 1);
   }

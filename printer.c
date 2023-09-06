@@ -18,7 +18,7 @@ uint64_t print_instructions(const uint8_t *memory, uint64_t address,
 }
 
 uint64_t print_instruction(const uint8_t *memory, uint64_t address) {
-  fprintf(stderr, "0x%" PRIx64, address);
+  fprintf(stderr, "%08lx", (address & 0xfff));
 
   // FIXME(jawilson): end address
   unsigned_decode_result opcode =
@@ -91,4 +91,23 @@ uint64_t print_instruction(const uint8_t *memory, uint64_t address) {
   }
 
   return address;
+}
+
+void print_registers(cpu_thread_state *state, int num_gr_registers,
+                     int num_fp_registers) {
+  for (int i = 0; i < num_gr_registers; i++) {
+    if ((i > 0) && ((i & 3) == 0)) {
+      fprintf(stderr, "\n");
+    } else if (i > 0) {
+      fprintf(stderr, " ");
+    }
+    fprintf(stderr, "gr%02d ", i);
+    fprintf(stderr, "%08lx", ((state->register_storage[i]) >> 32) & 0xffffffff);
+    fprintf(stderr, "%08lx", (state->register_storage[i]) & 0xffffffff);
+  }
+  fprintf(stderr, "\n");
+
+  // TODO(jawilson): print out floating point registers too.
+  for (int i = 0; i < num_fp_registers; i++) {
+  }
 }

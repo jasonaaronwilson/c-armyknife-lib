@@ -28,11 +28,15 @@ int main(int argc, char **argv) {
 
   add_sample_program(state, 0);
 
-  // Single step N times
-  for (int i = 0; i < 4; i++) {
+  // Single step until we have a BRK instruction
+  while (1) {
+    uint64_t before_pc = state->pc;
     print_instructions(state->memory_start, state->pc, 1);
     interpret(state, 1);
     print_registers(state, 16, 16);
+    if ((before_pc == state->pc) && (state->memory_start[state->pc] == 0)) {
+      break;
+    }
   }
 
   exit(0);
@@ -51,6 +55,26 @@ void add_sample_program(cpu_thread_state *state, uint64_t address) {
   state->memory_start[address++] = GR3;
   state->memory_start[address++] = GR1;
   state->memory_start[address++] = GR1;
+
+  state->memory_start[address++] = SUB;
+  state->memory_start[address++] = GR3;
+  state->memory_start[address++] = GR1;
+  state->memory_start[address++] = GR1;
+
+  state->memory_start[address++] = AND;
+  state->memory_start[address++] = GR3;
+  state->memory_start[address++] = GR2;
+  state->memory_start[address++] = GR2;
+
+  state->memory_start[address++] = XOR;
+  state->memory_start[address++] = GR3;
+  state->memory_start[address++] = GR2;
+  state->memory_start[address++] = GR2;
+
+  state->memory_start[address++] = OR;
+  state->memory_start[address++] = GR3;
+  state->memory_start[address++] = GR2;
+  state->memory_start[address++] = GR0;
 
   state->memory_start[address++] = MOV;
   state->memory_start[address++] = GR1;

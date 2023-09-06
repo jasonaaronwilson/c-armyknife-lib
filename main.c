@@ -29,10 +29,10 @@ int main(int argc, char **argv) {
   add_sample_program(state, 0);
 
   // Single step N times
-  for (int i = 0; i < 3; i++) {
-    print_registers(state, 16, 16);
+  for (int i = 0; i < 4; i++) {
     print_instructions(state->memory_start, state->pc, 1);
     interpret(state, 1);
+    print_registers(state, 16, 16);
   }
 
   exit(0);
@@ -46,6 +46,11 @@ void add_sample_program(cpu_thread_state *state, uint64_t address) {
   state->memory_start[address++] = IMM;
   state->memory_start[address++] = GR1;
   state->memory_start[address++] = 42;
+
+  state->memory_start[address++] = ADD;
+  state->memory_start[address++] = GR3;
+  state->memory_start[address++] = GR1;
+  state->memory_start[address++] = GR1;
 
   state->memory_start[address++] = MOV;
   state->memory_start[address++] = GR1;

@@ -238,27 +238,27 @@ void interpret(cpu_thread_state *state, uint64_t max_instructions) {
       break;
 
     case ADD:
-      ireg[arg3] = ireg[arg2] + ireg[arg3];
+      ireg[arg1] = ireg[arg2] + ireg[arg3];
       break;
 
     case SUB:
-      ireg[arg3] = ireg[arg2] - ireg[arg3];
+      ireg[arg1] = ireg[arg2] - ireg[arg3];
       break;
 
     case AND:
-      ireg[arg3] = ireg[arg2] & ireg[arg3];
+      ireg[arg1] = ireg[arg2] & ireg[arg3];
       break;
 
     case OR:
-      ireg[arg3] = ireg[arg2] | ireg[arg3];
+      ireg[arg1] = ireg[arg2] | ireg[arg3];
       break;
 
     case XOR:
-      ireg[arg3] = ireg[arg2] ^ ireg[arg3];
+      ireg[arg1] = ireg[arg2] ^ ireg[arg3];
       break;
 
     case SHL:
-      ireg[arg3] = ireg[arg2] << ireg[arg3];
+      ireg[arg1] = ireg[arg2] << ireg[arg3];
       break;
 
     case POPCNT:

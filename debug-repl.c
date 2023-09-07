@@ -5,10 +5,24 @@
 #include "debug-repl.h"
 #include "interpreter.h"
 #include "printer.h"
+#include "symbol-table.h"
 #include "tokenizer.h"
 
 int starts_with(char *str1, char *str2) {
   return strncmp(str1, str2, strlen(str2)) == 0;
+}
+
+uint64_t parse_address(cpu_thread_state *state, char *str) {
+  if (str[0] == '%') {
+    // FIXME
+    return 42;
+  }
+  symbol sym = find_symbol_by_name(state->symbols, str);
+  if (sym.name != NULL) {
+    return sym.value;
+  }
+  // FIXME parse here!
+  return 0;
 }
 
 /**
@@ -62,7 +76,15 @@ void debug_repl(cpu_thread_state *state) {
       // }
     } else if (starts_with(command, "disassemble") ||
                starts_with(command, "dis")) {
-      print_instructions(state->memory, state->pc, 16);
+      uint64_t address = state->pc;
+      if (token_list_length(tokens) > 1) {
+        address = parse_address(state, token_list_get(tokens, 1));
+      }
+      uint64_t end_address = address + 16;
+      if (token_list_length(tokens) > 2) {
+        end_address = parse_address(state, token_list_get(tokens, 2));
+      }
+      print_instructions(state->memory, address, end_address);
     } else if (starts_with(command, "examine") || starts_with(command, "x")) {
       print_data(state->memory, state->pc, state->pc + 16);
     } else {

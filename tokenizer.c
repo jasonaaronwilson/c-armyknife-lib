@@ -61,7 +61,7 @@ char *token_list_get(token_list *head, int position) {
   }
 }
 
-int token_list_length(token_list *head, int position) {
+int token_list_length(token_list *head) {
   int result = 0;
   while (head != NULL) {
     result++;

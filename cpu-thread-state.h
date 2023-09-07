@@ -2,6 +2,7 @@
 #define _CPU_THREAD_STATE_
 
 #include "paged-memory.h"
+#include "symbol-table.h"
 #include <stdint.h>
 
 typedef struct {
@@ -10,6 +11,9 @@ typedef struct {
 
   // A sparse memory space.
   paged_memory *memory;
+
+  // Symbols associated with paged_memory
+  symbol_table *symbols;
 
   // The number of integer registers that have been allocated for this
   // thread

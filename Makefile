@@ -22,12 +22,12 @@ format:
 	clang-format -i ${SRC_C} ${SRC_H}
 
 clean:
-	rm -rf *~ a.out
+	rm -rf *~ a.out TAGS
 
 diff: clean
 	git difftool HEAD
 
-how-big:
+how-big: clean
 	cat ${SRC_C} ${SRC_H} | wc --lines
 
 tags:

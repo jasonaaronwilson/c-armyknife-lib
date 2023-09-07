@@ -1,5 +1,10 @@
 #include "assembler.h"
 
+/**
+ * This is an interface for compiling a single instruction statement
+ * to "memory" or updating the symbol table for a label.
+ */
+
 #include "opcodes.h"
 
 typedef struct {
@@ -9,8 +14,8 @@ typedef struct {
 
 tokenizer_result tokenize(const char *str);
 
-uint64_t assemble(char **statements, uint8_t *memory_start,
-                  uint64_t memory_length, uint64_t memory_start_address) {
-  memory_start[0] = BRK;
-  return 1;
+assembly_result assemble(paged_memory *memory, uint64_t address,
+                         void *symbol_table, char *statement) {
+  assembly_result result = {address, address, 0, 0};
+  return result;
 }

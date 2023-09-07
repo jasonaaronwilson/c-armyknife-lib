@@ -1,10 +1,17 @@
 #ifndef _ASSEMBLER_H_
 #define _ASSEMBLER_H_
 
+#include "paged-memory.h"
 #include <stdint.h>
 
-// Returns the number of bytes assembled.
-extern uint64_t assemble(char **statements, uint8_t *memory_start,
-                         uint64_t memory_length, uint64_t memory_start_address);
+typedef struct {
+  uint64_t address_start;
+  uint64_t address_end;
+  int symbols_unknown;
+  int symbols_modified;
+} assembly_result;
+
+extern assembly_result assemble(paged_memory *memory, uint64_t addresss,
+                                void *symbol_table, char *statement);
 
 #endif /* _ASSEMBLER_H_ */

@@ -1,5 +1,6 @@
 #include <stdlib.h>
 
+#include "fatal-error.h"
 #include "paged-memory.h"
 
 /**
@@ -76,7 +77,7 @@ uint8_t load8(paged_memory *memory, uint64_t address) {
   uint64_t page_number = address >> PAGE_SHIFT;
   uint8_t *data = page_data_of(memory, page_number);
   if (!data) {
-    exit(-1);
+    fatal_error(ERROR_MEMORY_READ);
   }
   return data[address & PAGE_MASK];
 }
@@ -85,7 +86,7 @@ void store8(paged_memory *memory, uint64_t address, uint8_t value) {
   uint64_t page_number = address >> PAGE_SHIFT;
   uint8_t *data = page_data_of(memory, page_number);
   if (!data) {
-    exit(-1);
+    fatal_error(ERROR_MEMORY_WRITE);
   }
   data[address & PAGE_MASK] = value;
 }

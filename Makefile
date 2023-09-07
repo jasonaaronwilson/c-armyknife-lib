@@ -8,9 +8,11 @@ SRC_C = interpreter.c \
 	instruction-info.c \
 	assembler.c \
 	main.c \
-	paged-memory.c
+	paged-memory.c \
+	fatal-error.c
 
-SRC_H = interpreter.h uleb128.h opcodes.h instruction-info.h paged-memory.h printer.h cpu-thread-state.h assembler.h 
+SRC_H = interpreter.h \
+	uleb128.h opcodes.h instruction-info.h paged-memory.h printer.h cpu-thread-state.h assembler.h fatal-error.h
 
 comet-vm: ${SRC_C} ${SRC_H}
 	${CC} ${SRC_C}
@@ -28,6 +30,5 @@ diff: clean
 how-big:
 	cat ${SRC_C} ${SRC_H} | wc --lines
 
-
-
-
+tags:
+	etags ${SRC_C} ${SRC_H}

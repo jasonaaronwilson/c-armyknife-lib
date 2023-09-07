@@ -1,4 +1,5 @@
 #include "instruction-info.h"
+#include "fatal-error.h"
 
 uint8_t is_initialized;
 instruction_info instruction_info_array[LAST_OPCODE];
@@ -108,7 +109,6 @@ instruction_info *get_instruction_info(uint64_t opcode) {
   if (opcode <= LAST_OPCODE) {
     return &instruction_info_array[opcode];
   } else {
-    // TODO(jawilson): create a better error mechanism...
-    exit(1);
+    fatal_error(ERROR_OPCODE_UNKNOWN);
   }
 }

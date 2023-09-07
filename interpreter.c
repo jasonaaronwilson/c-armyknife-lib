@@ -16,6 +16,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 
+#include "fatal-error.h"
 #include "instruction-info.h"
 #include "interpreter.h"
 #include "opcodes.h"
@@ -72,7 +73,7 @@ void interpret(cpu_thread_state *state, uint64_t max_instructions) {
 
     unsigned_decode_result opcode_result = decodeULEB128(memory, pc);
     if (opcode_result.size <= 0) {
-      exit(1);
+      fatal_error(ERROR_OPCODE_DECODE_ERROR);
     }
     pc += opcode_result.size;
     uint64_t opcode = opcode_result.number;
@@ -83,7 +84,7 @@ void interpret(cpu_thread_state *state, uint64_t max_instructions) {
     if (num_args > 0) {
       unsigned_decode_result arg_result = decodeULEB128(memory, pc);
       if (arg_result.size <= 0) {
-        exit(1);
+        fatal_error(ERROR_ARG_DECODE_ERROR);
       }
       pc += arg_result.size;
       arg1 = arg_result.number;
@@ -93,7 +94,7 @@ void interpret(cpu_thread_state *state, uint64_t max_instructions) {
     if (num_args > 1) {
       unsigned_decode_result arg_result = decodeULEB128(memory, pc);
       if (arg_result.size <= 0) {
-        exit(1);
+        fatal_error(ERROR_ARG_DECODE_ERROR);
       }
       pc += arg_result.size;
       arg2 = arg_result.number;
@@ -103,7 +104,7 @@ void interpret(cpu_thread_state *state, uint64_t max_instructions) {
     if (num_args > 2) {
       unsigned_decode_result arg_result = decodeULEB128(memory, pc);
       if (arg_result.size <= 0) {
-        exit(1);
+        fatal_error(ERROR_ARG_DECODE_ERROR);
       }
       pc += arg_result.size;
       arg3 = arg_result.number;
@@ -237,8 +238,7 @@ void interpret(cpu_thread_state *state, uint64_t max_instructions) {
       break;
 
     default:
-      // printf?
-      exit(1);
+      fatal_error(ERROR_UNIMLEMENTED_OPCODE);
       break;
     }
 

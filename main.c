@@ -1,8 +1,8 @@
 #include <stdlib.h>
 
-#include "paged-memory.h"
 #include "interpreter.h"
 #include "opcodes.h"
+#include "paged-memory.h"
 #include "printer.h"
 
 void add_sample_program(cpu_thread_state *state, uint64_t address);

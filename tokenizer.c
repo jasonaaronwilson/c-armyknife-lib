@@ -1,11 +1,39 @@
-#include "tokenizer.h"
-#include "fatal-error.h"
 #include <stdlib.h>
+#include <string.h>
 
-token_list *token_list_append(token_list *head, char *data) {
+#include "fatal-error.h"
+#include "tokenizer.h"
+
+token_list *tokenize(const char *str, const char *delimiters) {
+  token_list *result = NULL;
+  char token_data[1024];
+  int cpos = 0;
+  for (int i = 0; (i < strlen(str)); i++) {
+    char ch = str[i];
+    // FIXME(jawilson): look at all delimiters!
+    if (ch == delimiters[0]) {
+      token_data[cpos++] = 0;
+      if (strlen(token_data) > 0) {
+        result = token_list_append(result, token_data);
+      }
+      cpos = 0;
+    } else {
+      token_data[cpos++] = ch;
+    }
+  }
+  token_data[cpos++] = 0;
+  if (strlen(token_data) > 0) {
+    result = token_list_append(result, token_data);
+  }
+  cpos = 0;
+
+  return result;
+}
+
+token_list *token_list_append(token_list *head, const char *data) {
   token_list *node = (token_list *)(malloc(sizeof(token_list)));
   node->next = NULL;
-  node->data = data;
+  node->data = strdup(data);
   if (head == NULL) {
     return node;
   }

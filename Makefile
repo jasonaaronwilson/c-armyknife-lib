@@ -10,6 +10,7 @@ SRC_C = assembler.c \
 	main.c \
 	paged-memory.c \
 	printer.c \
+	symbol-table.c \
 	tokenizer.c \
 	uleb128.c
 
@@ -22,6 +23,7 @@ SRC_H = assembler.h \
 	opcodes.h \
 	paged-memory.h \
 	printer.h \
+	symbol-table.h \
 	tokenizer.h \
 	uleb128.h
 

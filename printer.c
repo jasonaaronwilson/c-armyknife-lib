@@ -18,7 +18,7 @@ uint64_t print_instructions(paged_memory *memory, uint64_t address,
 }
 
 uint64_t print_instruction(paged_memory *memory, uint64_t address) {
-  fprintf(stderr, "%08lx", (address & 0xfff));
+  fprintf(stderr, "%08lx", (address & 0xffffffff));
 
   unsigned_decode_result opcode = decodeULEB128(memory, address);
   address += opcode.size;
@@ -107,5 +107,13 @@ void print_registers(cpu_thread_state *state, int num_gr_registers,
 
   // TODO(jawilson): print out floating point registers too.
   for (int i = 0; i < num_fp_registers; i++) {
+  }
+}
+
+void print_data(paged_memory *memory, uint64_t start_address,
+                uint64_t end_address) {
+  for (uint64_t address = start_address; address < end_address; address++) {
+    fprintf(stderr, "%08lx %02x\n", (address & 0xffffffff),
+            load8(memory, address));
   }
 }

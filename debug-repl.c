@@ -14,9 +14,11 @@ int starts_with(char *str1, char *str2) {
  * Enter a debug repl. The repl should eventually understand the
  * following commands:
  *
- * assemble [optional-address]
- * disassemble [optional-start-address] [optional-end-address]
- * dump [optional-start-address] [optional-end-address]
+ * address symbol-name
+ * assemble [optional-address/symbol-name]
+ * break address/symbol-name
+ * disassemble [optional-start-address/symbol] [optional-end-address/symbol]
+ * examine [optional-start-address/symbol] [optional-end-address/symbol]
  * next [optional-count]
  * continue
  */
@@ -40,8 +42,10 @@ void debug_repl(cpu_thread_state *state) {
       // if ((before_pc == state->pc) && (load8(state->memory, state->pc) == 0))
       // { break;
       // }
-    } else if (starts_with(line, "disassemble")) {
+    } else if (starts_with(line, "disassemble") || starts_with(line, "dis")) {
       print_instructions(state->memory, state->pc, 16);
+    } else if (starts_with(line, "examine") || starts_with(line, "x")) {
+      print_data(state->memory, state->pc, state->pc + 16);
     } else {
       fprintf(stderr, "Uknown debug command. Ignoring.\n");
     }

@@ -94,7 +94,10 @@ uint16_t load16(paged_memory *memory, uint64_t address) {
          (AS_UINT16(load8(memory, address + 1)) << 8);
 }
 
-void store16(paged_memory *memory, uint64_t address, uint16_t value) {}
+void store16(paged_memory *memory, uint64_t address, uint16_t value) {
+  store8(memory, address, value & 0xff);
+  store8(memory, address + 1, (value >> 8) & 0xff);
+}
 
 uint32_t load32(paged_memory *memory, uint64_t address) {
   return AS_UINT32(load8(memory, address)) |
@@ -103,7 +106,12 @@ uint32_t load32(paged_memory *memory, uint64_t address) {
          (AS_UINT32(load8(memory, address + 3)) << 24);
 }
 
-void store32(paged_memory *memory, uint64_t address, uint32_t value) {}
+void store32(paged_memory *memory, uint64_t address, uint32_t value) {
+  store8(memory, address, value & 0xff);
+  store8(memory, address + 1, (value >> 8) & 0xff);
+  store8(memory, address + 2, (value >> 16) & 0xff);
+  store8(memory, address + 3, (value >> 24) & 0xff);
+}
 
 uint64_t load64(paged_memory *memory, uint64_t address) {
   return AS_UINT64(load8(memory, address)) |
@@ -116,4 +124,13 @@ uint64_t load64(paged_memory *memory, uint64_t address) {
          (AS_UINT64(load8(memory, address + 7)) << 56);
 }
 
-void store64(paged_memory *memory, uint64_t address, uint64_t value) {}
+void store64(paged_memory *memory, uint64_t address, uint64_t value) {
+  store8(memory, address, value & 0xff);
+  store8(memory, address + 1, (value >> 8) & 0xff);
+  store8(memory, address + 2, (value >> 16) & 0xff);
+  store8(memory, address + 3, (value >> 24) & 0xff);
+  store8(memory, address + 4, (value >> 32) & 0xff);
+  store8(memory, address + 5, (value >> 40) & 0xff);
+  store8(memory, address + 6, (value >> 48) & 0xff);
+  store8(memory, address + 7, (value >> 56) & 0xff);
+}

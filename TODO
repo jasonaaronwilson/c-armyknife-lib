@@ -1,7 +1,6 @@
 # TODO
 
-1. implement a debugger/vm repl
-   -- C backtrace, also need to setjmp longjmp so we can continue after errors?
+1. call repl debugger on fatal error?
 2. repl commands assemble, disassemble, next, continue, assemble-and-execute "", help
 3. more complex sample program without assembler?
 4. zero things after malloc

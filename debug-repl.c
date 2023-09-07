@@ -30,7 +30,17 @@ void debug_repl(cpu_thread_state *state) {
 
     fgets(line, sizeof(line), stdin);
 
-    if (starts_with(line, "terminate")) {
+    if (starts_with(line, "help")) {
+      fprintf(stderr, "This is a debugger repl. The available commands are:\n");
+      fprintf(stderr, "  address\n");
+      fprintf(stderr, "  assemble\n");
+      fprintf(stderr, "  break\n");
+      fprintf(stderr, "  continue\n");
+      fprintf(stderr, "  disassemble\n");
+      fprintf(stderr, "  examine\n");
+      fprintf(stderr, "  next\n");
+      fprintf(stderr, "  unbreak\n");
+    } else if (starts_with(line, "terminate")) {
       fprintf(stderr, "The debugger has terminated execution. Exiting...\n");
       exit(0);
     } else if (starts_with(line, "step")) {

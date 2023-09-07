@@ -40,6 +40,8 @@ void debug_repl(cpu_thread_state *state) {
       // if ((before_pc == state->pc) && (load8(state->memory, state->pc) == 0))
       // { break;
       // }
+    } else if (starts_with(line, "disassemble")) {
+      print_instructions(state->memory, state->pc, 16);
     } else {
       fprintf(stderr, "Uknown debug command. Ignoring.\n");
     }

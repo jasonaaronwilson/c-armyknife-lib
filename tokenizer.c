@@ -2,6 +2,7 @@
 #include <string.h>
 
 #include "fatal-error.h"
+#include "string-util.h"
 #include "tokenizer.h"
 
 token_list *tokenize(const char *str, const char *delimiters) {
@@ -10,8 +11,7 @@ token_list *tokenize(const char *str, const char *delimiters) {
   int cpos = 0;
   for (int i = 0; (i < strlen(str)); i++) {
     char ch = str[i];
-    // FIXME(jawilson): look at all delimiters!
-    if (ch == delimiters[0]) {
+    if (string_contains(delimiters, ch)) {
       token_data[cpos++] = 0;
       if (strlen(token_data) > 0) {
         result = token_list_append(result, token_data);

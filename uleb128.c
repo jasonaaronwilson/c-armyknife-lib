@@ -3,23 +3,25 @@
 /**
  * Utility function to decode a ULEB128 value.
  */
-unsigned_decode_result decodeULEB128(const uint8_t *p, const uint8_t *end) {
-  const uint8_t *orig_p = p;
-  uint64_t Value = 0;
-  unsigned Shift = 0;
+unsigned_decode_result decodeULEB128(paged_memory *memory, uint64_t address) {
+  uint64_t orig_address = address;
+  uint64_t value = 0;
+  unsigned shift = 0;
   do {
-    if (p == end) {
+    /*
+    if (address == end) {
       unsigned_decode_result result = {0, ERROR_INSUFFICIENT_INPUT};
       return result;
     }
-    uint64_t Slice = *p & 0x7f;
-    if ((Shift >= 64 && Slice != 0) || Slice << Shift >> Shift != Slice) {
+    */
+    uint64_t slice = load8(memory, address) & 0x7f;
+    if ((shift >= 64 && slice != 0) || slice << shift >> shift != slice) {
       unsigned_decode_result result = {0, ERROR_TOO_BIG};
       return result;
     }
-    Value += Slice << Shift;
-    Shift += 7;
-  } while (*p++ >= 128);
-  unsigned_decode_result result = {Value, (unsigned)(p - orig_p)};
+    value += slice << shift;
+    shift += 7;
+  } while (load8(memory, address++) >= 128);
+  unsigned_decode_result result = {value, (unsigned)(address - orig_address)};
   return result;
 }

@@ -1,5 +1,6 @@
 #include <stdlib.h>
 
+#include "paged-memory.h"
 #include "interpreter.h"
 #include "opcodes.h"
 #include "printer.h"
@@ -14,7 +15,7 @@ int main(int argc, char **argv) {
   int number_of_int_registers = 4096;
   int number_of_fp_registers = 4096;
   uint64_t memory_amount = 4096 * 128;
-  uint64_t start_pc = 0x0;
+  uint64_t start_pc = PAGE_SIZE;
 
   cpu_thread_state *state = (cpu_thread_state *)(malloc(
       sizeof(cpu_thread_state) + number_of_int_registers * 8 +
@@ -23,18 +24,20 @@ int main(int argc, char **argv) {
   state->pc = start_pc;
   state->num_integer_regs = number_of_int_registers;
   state->num_fp_regs = number_of_fp_registers;
-  state->memory_start = malloc(memory_amount);
-  state->memory_end = state->memory_start + memory_amount;
+  // Don't put anything on the first page so that random reads and
+  // writes will fail to addresses near "NULL".
+  state->memory = allocate_page(0, PAGE_SIZE);
 
   add_sample_program(state, 0);
 
   // Single step until we have a BRK instruction
   while (1) {
     uint64_t before_pc = state->pc;
-    print_instructions(state->memory_start, state->pc, 1);
+    print_instructions(state->memory, state->pc, 1);
     interpret(state, 1);
     print_registers(state, 16, 16);
-    if ((before_pc == state->pc) && (state->memory_start[state->pc] == 0)) {
+    // might need is_mapped...
+    if ((before_pc == state->pc) && (load8(state->memory, state->pc) == 0)) {
       break;
     }
   }
@@ -43,6 +46,7 @@ int main(int argc, char **argv) {
 }
 
 void add_sample_program(cpu_thread_state *state, uint64_t address) {
+  /*
   state->memory_start[address++] = SIMM;
   state->memory_start[address++] = GR2;
   state->memory_start[address++] = 42;
@@ -89,5 +93,7 @@ void add_sample_program(cpu_thread_state *state, uint64_t address) {
   state->memory_start[address++] = GR1;
   state->memory_start[address++] = GR0;
 
-  state->memory_start[address++] = BRK;
+  */
+
+  store8(state->memory, address++, BRK);
 }

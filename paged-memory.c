@@ -42,6 +42,7 @@ uint8_t *page_data_of(paged_memory *memory, uint64_t page_number) {
     if (memory->page_number == page_number) {
       return memory->data;
     }
+    memory = memory->next;
   }
   return 0;
 }

@@ -2,9 +2,6 @@
  * This contains the bulk of the interpreter logic for the Comet VM.
  */
 
-#include "instruction-info.h"
-#include "uleb128.h"
-
 // ======================================================================
 // Compile Time Parameters
 // ======================================================================
@@ -16,10 +13,14 @@
 
 // TODO(jawilson): add alignment check for 16, 32, and 64 bit loads.
 
-#include "interpreter.h"
-#include "opcodes.h"
 #include <stdint.h>
 #include <stdlib.h>
+
+#include "instruction-info.h"
+#include "interpreter.h"
+#include "opcodes.h"
+#include "paged-memory.h"
+#include "uleb128.h"
 
 // ======================================================================
 // Implementation Macros
@@ -49,17 +50,13 @@ uint64_t sign_extend_32(uint64_t value) {
 
 int opcode_to_number_of_arguments(uint64_t opcode);
 
-extern unsigned_decode_result decodeULEB128(const uint8_t *p,
-                                            const uint8_t *end);
-
 /**
  * This is the main loop of the VM interpreter.
  */
 void interpret(cpu_thread_state *state, uint64_t max_instructions) {
   uint64_t num_instructions = 0;
   uint64_t pc = state->pc;
-  uint8_t *memory = state->memory_start;
-  uint8_t *end = state->memory_end;
+  paged_memory *memory = state->memory;
   uint64_t *ireg = &state->register_storage[0];
 
   while (1) {
@@ -73,7 +70,7 @@ void interpret(cpu_thread_state *state, uint64_t max_instructions) {
 
     uint64_t start_pc = pc;
 
-    unsigned_decode_result opcode_result = decodeULEB128(memory + pc, end);
+    unsigned_decode_result opcode_result = decodeULEB128(memory, pc);
     if (opcode_result.size <= 0) {
       exit(1);
     }
@@ -84,7 +81,7 @@ void interpret(cpu_thread_state *state, uint64_t max_instructions) {
 
     uint64_t arg1 = 0;
     if (num_args > 0) {
-      unsigned_decode_result arg_result = decodeULEB128(memory + pc, end);
+      unsigned_decode_result arg_result = decodeULEB128(memory, pc);
       if (arg_result.size <= 0) {
         exit(1);
       }
@@ -94,7 +91,7 @@ void interpret(cpu_thread_state *state, uint64_t max_instructions) {
 
     uint64_t arg2 = 0;
     if (num_args > 1) {
-      unsigned_decode_result arg_result = decodeULEB128(memory + pc, end);
+      unsigned_decode_result arg_result = decodeULEB128(memory, pc);
       if (arg_result.size <= 0) {
         exit(1);
       }
@@ -104,7 +101,7 @@ void interpret(cpu_thread_state *state, uint64_t max_instructions) {
 
     uint64_t arg3 = 0;
     if (num_args > 2) {
-      unsigned_decode_result arg_result = decodeULEB128(memory + pc, end);
+      unsigned_decode_result arg_result = decodeULEB128(memory, pc);
       if (arg_result.size <= 0) {
         exit(1);
       }
@@ -153,78 +150,47 @@ void interpret(cpu_thread_state *state, uint64_t max_instructions) {
       //// little endian.
 
     case LD_U8:
-      ireg[arg1] = AS_UINT64(memory[ireg[arg2]]);
+      ireg[arg1] = AS_UINT64(load8(memory, ireg[arg2]));
       break;
 
     case LD_U16:
-      // TODO check alignment!
-      ireg[arg1] = AS_UINT64(memory[ireg[arg2]]) |
-                   AS_UINT64(memory[ireg[arg2 + 1]]) << 8;
+      ireg[arg1] = AS_UINT64(load16(memory, ireg[arg2]));
       break;
 
     case LD_U32:
-      // TODO check alignment!
-      ireg[arg1] = AS_UINT64(memory[ireg[arg2]]) |
-                   AS_UINT64(memory[ireg[arg2 + 1]]) << 8 |
-                   AS_UINT64(memory[ireg[arg2 + 2]]) << 16 |
-                   AS_UINT64(memory[ireg[arg2 + 3]]) << 24;
+      ireg[arg1] = AS_UINT64(load32(memory, ireg[arg2]));
       break;
 
     case LD_U64:
-      // TODO check alignment!
-      ireg[arg1] = AS_UINT64(memory[ireg[arg2]]) |
-                   AS_UINT64(memory[ireg[arg2 + 1]]) << 8 |
-                   AS_UINT64(memory[ireg[arg2 + 2]]) << 16 |
-                   AS_UINT64(memory[ireg[arg2 + 3]]) << 24 |
-                   AS_UINT64(memory[ireg[arg2 + 4]]) << 32 |
-                   AS_UINT64(memory[ireg[arg2 + 5]]) << 40 |
-                   AS_UINT64(memory[ireg[arg2 + 6]]) << 48 |
-                   AS_UINT64(memory[ireg[arg2 + 7]]) << 56;
+      ireg[arg1] = load64(memory, ireg[arg2]);
       break;
 
     case LD_S8:
-      ireg[arg1] = sign_extend_8(AS_UINT64(memory[ireg[arg2]]));
+      ireg[arg1] = sign_extend_8(load8(memory, ireg[arg2]));
       break;
 
     case LD_S16:
-      // TODO check alignment!
-      ireg[arg1] = sign_extend_16(AS_UINT64(memory[ireg[arg2]]) |
-                                  AS_UINT64(memory[ireg[arg2 + 1]]) << 8);
+      ireg[arg1] = sign_extend_16(load16(memory, ireg[arg2]));
       break;
 
     case LD_S32:
-      // TODO check alignment!
-      ireg[arg1] = sign_extend_32(AS_UINT64(memory[ireg[arg2]]) |
-                                  AS_UINT64(memory[ireg[arg2 + 1]]) << 8 |
-                                  AS_UINT64(memory[ireg[arg2 + 2]]) << 16 |
-                                  AS_UINT64(memory[ireg[arg2 + 3]]) << 24);
+      ireg[arg1] = sign_extend_32(load32(memory, ireg[arg2]));
       break;
 
     case ST_8:
-      memory[arg1] = (ireg[arg2] & 0xff);
+      store8(memory, ireg[arg1], ireg[arg2] & 0xff);
       break;
 
     case ST_16:
-      memory[arg1] = (ireg[arg2]) & 0xff;
-      memory[arg1 + 1] = (ireg[arg2] >> 8) & 0xff;
+      store16(memory, ireg[arg1], ireg[arg2] & 0xffff);
       break;
 
     case ST_32:
-      memory[arg1] = (ireg[arg2]) & 0xff;
-      memory[arg1 + 1] = (ireg[arg2] >> 8) & 0xff;
-      memory[arg1 + 2] = (ireg[arg2] >> 16) & 0xff;
-      memory[arg1 + 3] = (ireg[arg2] >> 24) & 0xff;
+      store32(memory, ireg[arg1], ireg[arg2] & 0xffffffff);
       break;
 
     case ST_64:
-      memory[arg1] = (ireg[arg2]) & 0xff;
-      memory[arg1 + 1] = (ireg[arg2] >> 8) & 0xff;
-      memory[arg1 + 2] = (ireg[arg2] >> 16) & 0xff;
-      memory[arg1 + 3] = (ireg[arg2] >> 24) & 0xff;
-      memory[arg1 + 4] = (ireg[arg2] >> 32) & 0xff;
-      memory[arg1 + 5] = (ireg[arg2] >> 40) & 0xff;
-      memory[arg1 + 6] = (ireg[arg2] >> 48) & 0xff;
-      memory[arg1 + 7] = (ireg[arg2] >> 56) & 0xff;
+      store64(memory, ireg[arg1], ireg[arg2]);
       break;
 
     case CLZ:

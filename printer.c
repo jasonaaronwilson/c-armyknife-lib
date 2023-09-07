@@ -7,9 +7,9 @@
 #include "uleb128.h"
 
 // Forward Declaration
-uint64_t print_instruction(const uint8_t *memory, uint64_t address);
+uint64_t print_instruction(paged_memory *memory, uint64_t address);
 
-uint64_t print_instructions(const uint8_t *memory, uint64_t address,
+uint64_t print_instructions(paged_memory *memory, uint64_t address,
                             uint64_t number_of_instructions) {
   while (number_of_instructions-- > 0) {
     address = print_instruction(memory, address);
@@ -17,12 +17,10 @@ uint64_t print_instructions(const uint8_t *memory, uint64_t address,
   return address;
 }
 
-uint64_t print_instruction(const uint8_t *memory, uint64_t address) {
+uint64_t print_instruction(paged_memory *memory, uint64_t address) {
   fprintf(stderr, "%08lx", (address & 0xfff));
 
-  // FIXME(jawilson): end address
-  unsigned_decode_result opcode =
-      decodeULEB128(memory + address, memory + address + 16);
+  unsigned_decode_result opcode = decodeULEB128(memory, address);
   address += opcode.size;
 
   unsigned_decode_result arg1;
@@ -32,15 +30,15 @@ uint64_t print_instruction(const uint8_t *memory, uint64_t address) {
   instruction_info *info = get_instruction_info(opcode.number);
 
   if (info->number_of_arguments >= 1) {
-    arg1 = decodeULEB128(memory + address, memory + address + 16);
+    arg1 = decodeULEB128(memory, address);
     address += arg1.size;
   }
   if (info->number_of_arguments >= 2) {
-    arg2 = decodeULEB128(memory + address, memory + address + 16);
+    arg2 = decodeULEB128(memory, address);
     address += arg2.size;
   }
   if (info->number_of_arguments >= 3) {
-    arg3 = decodeULEB128(memory + address, memory + address + 16);
+    arg3 = decodeULEB128(memory, address);
     address += arg3.size;
   }
 

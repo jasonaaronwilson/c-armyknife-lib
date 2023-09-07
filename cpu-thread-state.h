@@ -1,22 +1,23 @@
 #ifndef _CPU_THREAD_STATE_
 #define _CPU_THREAD_STATE_
 
+#include "paged-memory.h"
 #include <stdint.h>
 
 typedef struct {
   // This is the program counter.
   uint64_t pc;
 
-  // The number of integer registers that have been allocated to this
+  // A sparse memory space.
+  paged_memory *memory;
+
+  // The number of integer registers that have been allocated for this
+  // thread
   uint32_t num_integer_regs;
 
+  // The number of floating point registers that have been allocated
+  // for this thread
   uint32_t num_fp_regs;
-
-  // This is the actual memory allocated for this virtual
-  // machine. While cpu_state would be unique to each thread, this may
-  // be shared by multiple threads.
-  uint8_t *memory_start;
-  uint8_t *memory_end;
 
   // Contains storage for the integer and floating point registers
   // (integer registers come first). Note: this must come last in the

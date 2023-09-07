@@ -3,6 +3,8 @@
 
 #include <stdint.h>
 
+#include "paged-memory.h"
+
 #define ERROR_INSUFFICIENT_INPUT -1
 #define ERROR_TOO_BIG -2
 
@@ -15,7 +17,7 @@ typedef struct {
   int size;
 } unsigned_decode_result;
 
-extern unsigned_decode_result decodeULEB128(const uint8_t *p,
-                                            const uint8_t *end);
+extern unsigned_decode_result decodeULEB128(paged_memory *memory,
+                                            uint64_t address);
 
 #endif /* _ULEB128_H_ */

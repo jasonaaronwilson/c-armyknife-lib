@@ -32,6 +32,11 @@
  * aligned and the current machine is little-endian.
  */
 
+#define AS_UINT8(x) ((uint8_t)x)
+#define AS_UINT16(x) ((uint16_t)x)
+#define AS_UINT32(x) ((uint32_t)x)
+#define AS_UINT64(x) ((uint64_t)x)
+
 uint8_t *page_data_of(paged_memory *memory, uint64_t page_number) {
   while (memory) {
     if (memory->page_number == page_number) {
@@ -66,18 +71,49 @@ paged_memory *allocate_page(paged_memory *memory, uint64_t address) {
   return memory;
 }
 
-uint8_t load8(paged_memory *memory, uint64_t address) { return 0; }
+uint8_t load8(paged_memory *memory, uint64_t address) {
+  uint64_t page_number = address >> PAGE_SHIFT;
+  uint8_t *data = page_data_of(memory, page_number);
+  if (!data) {
+    exit(-1);
+  }
+  return data[address & PAGE_MASK];
+}
 
-void store8(paged_memory *memory, uint64_t address, uint8_t value) {}
+void store8(paged_memory *memory, uint64_t address, uint8_t value) {
+  uint64_t page_number = address >> PAGE_SHIFT;
+  uint8_t *data = page_data_of(memory, page_number);
+  if (!data) {
+    exit(-1);
+  }
+  data[address & PAGE_MASK] = value;
+}
 
-uint16_t load16(paged_memory *memory, uint64_t address) { return 0; }
+uint16_t load16(paged_memory *memory, uint64_t address) {
+  return AS_UINT16(load8(memory, address)) |
+         (AS_UINT16(load8(memory, address + 1)) << 8);
+}
 
 void store16(paged_memory *memory, uint64_t address, uint16_t value) {}
 
-uint32_t load32(paged_memory *memory, uint64_t address) { return 0; }
+uint32_t load32(paged_memory *memory, uint64_t address) {
+  return AS_UINT32(load8(memory, address)) |
+         (AS_UINT32(load8(memory, address + 1)) << 8) |
+         (AS_UINT32(load8(memory, address + 2)) << 16) |
+         (AS_UINT32(load8(memory, address + 3)) << 24);
+}
 
 void store32(paged_memory *memory, uint64_t address, uint32_t value) {}
 
-uint64_t load64(paged_memory *memory, uint64_t address) { return 0; }
+uint64_t load64(paged_memory *memory, uint64_t address) {
+  return AS_UINT64(load8(memory, address)) |
+         (AS_UINT64(load8(memory, address + 1)) << 8) |
+         (AS_UINT64(load8(memory, address + 2)) << 16) |
+         (AS_UINT64(load8(memory, address + 3)) << 24) |
+         (AS_UINT64(load8(memory, address + 4)) << 32) |
+         (AS_UINT64(load8(memory, address + 5)) << 40) |
+         (AS_UINT64(load8(memory, address + 6)) << 48) |
+         (AS_UINT64(load8(memory, address + 7)) << 56);
+}
 
 void store64(paged_memory *memory, uint64_t address, uint64_t value) {}

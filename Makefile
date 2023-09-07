@@ -3,6 +3,7 @@ all: comet-vm
 CC = clang
 
 SRC_C = assembler.c \
+	debug-repl.c \
 	fatal-error.c \
 	instruction-info.c \
 	interpreter.c \
@@ -12,6 +13,7 @@ SRC_C = assembler.c \
 	uleb128.c
 
 SRC_H = assembler.h \
+	debug-repl.h \
 	cpu-thread-state.h \
 	fatal-error.h \
 	instruction-info.h \

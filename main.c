@@ -1,5 +1,6 @@
 #include <stdlib.h>
 
+#include "debug-repl.h"
 #include "interpreter.h"
 #include "opcodes.h"
 #include "paged-memory.h"
@@ -41,6 +42,8 @@ int main(int argc, char **argv) {
       break;
     }
   }
+
+  debug_repl(state);
 
   exit(0);
 }

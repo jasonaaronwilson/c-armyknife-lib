@@ -2,17 +2,24 @@ all: comet-vm
 
 CC = clang
 
-SRC_C = interpreter.c \
-	uleb128.c \
-	printer.c \
+SRC_C = assembler.c \
+	fatal-error.c \
 	instruction-info.c \
-	assembler.c \
+	interpreter.c \
 	main.c \
 	paged-memory.c \
-	fatal-error.c
+	printer.c \
+	uleb128.c
 
-SRC_H = interpreter.h \
-	uleb128.h opcodes.h instruction-info.h paged-memory.h printer.h cpu-thread-state.h assembler.h fatal-error.h
+SRC_H = assembler.h \
+	cpu-thread-state.h \
+	fatal-error.h \
+	instruction-info.h \
+	interpreter.h \
+	opcodes.h \
+	paged-memory.h \
+	printer.h \
+	uleb128.h
 
 comet-vm: ${SRC_C} ${SRC_H}
 	${CC} ${SRC_C}

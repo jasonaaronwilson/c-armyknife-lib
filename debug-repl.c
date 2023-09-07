@@ -5,12 +5,13 @@
 #include "debug-repl.h"
 #include "interpreter.h"
 #include "printer.h"
+#include "string-util.h"
 #include "symbol-table.h"
 #include "tokenizer.h"
 
-int starts_with(char *str1, char *str2) {
-  return strncmp(str1, str2, strlen(str2)) == 0;
-}
+// int string_starts_with(char *str1, char *str2) {
+//  return strncmp(str1, str2, strlen(str2)) == 0;
+// }
 
 uint64_t parse_address(cpu_thread_state *state, char *str) {
   if (str[0] == '%') {
@@ -48,8 +49,9 @@ void debug_repl(cpu_thread_state *state) {
     token_list *tokens = tokenize(line, " ");
     char *command = token_list_get(tokens, 0);
 
-    if (starts_with(command, "help")) {
+    if (string_starts_with(command, "help")) {
       fprintf(stderr, "This is a debugger repl. The available commands are:\n");
+      fprintf(stderr, "  add-address\n");
       fprintf(stderr, "  address\n");
       fprintf(stderr, "  assemble\n");
       fprintf(stderr, "  break\n");
@@ -62,10 +64,10 @@ void debug_repl(cpu_thread_state *state) {
       fprintf(stderr, "  step\n");
       fprintf(stderr, "  terminate\n");
       fprintf(stderr, "  unbreak\n");
-    } else if (starts_with(command, "terminate")) {
+    } else if (string_starts_with(command, "terminate")) {
       fprintf(stderr, "The debugger has terminated execution. Exiting...\n");
       exit(0);
-    } else if (starts_with(command, "step")) {
+    } else if (string_starts_with(command, "step")) {
       uint64_t before_pc = state->pc;
       print_instructions(state->memory, state->pc, 1);
       interpret(state, 1);
@@ -74,8 +76,8 @@ void debug_repl(cpu_thread_state *state) {
       // if ((before_pc == state->pc) && (load8(state->memory, state->pc) == 0))
       // { break;
       // }
-    } else if (starts_with(command, "disassemble") ||
-               starts_with(command, "dis")) {
+    } else if (string_starts_with(command, "disassemble") ||
+               string_starts_with(command, "dis")) {
       uint64_t address = state->pc;
       if (token_list_length(tokens) > 1) {
         address = parse_address(state, token_list_get(tokens, 1));
@@ -85,7 +87,8 @@ void debug_repl(cpu_thread_state *state) {
         end_address = parse_address(state, token_list_get(tokens, 2));
       }
       print_instructions(state->memory, address, end_address);
-    } else if (starts_with(command, "examine") || starts_with(command, "x")) {
+    } else if (string_starts_with(command, "examine") ||
+               string_starts_with(command, "x")) {
       print_data(state->memory, state->pc, state->pc + 16);
     } else {
       fprintf(stderr, "Uknown debug command. Ignoring.\n");

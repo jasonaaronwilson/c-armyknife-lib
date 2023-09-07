@@ -18,9 +18,9 @@ uint64_t parse_address(cpu_thread_state *state, char *str) {
     // FIXME
     return 42;
   }
-  symbol sym = find_symbol_by_name(state->symbols, str);
-  if (sym.name != NULL) {
-    return sym.value;
+  symbol *sym = find_symbol_by_name(state->symbols, str);
+  if (!string_is_null_or_empty(sym->name)) {
+    return sym->value;
   }
   // FIXME parse here!
   return 0;

@@ -11,8 +11,8 @@ int starts_with(char *str1, char *str2) {
 }
 
 /**
- * Enter a debug repl. The repl should eventually understand the
- * following commands:
+ * Enter a debug repl. The list of available commands is available
+ * below in the implementation of "help".
  *
  * address symbol-name
  * assemble [optional-address/symbol-name]
@@ -38,7 +38,9 @@ void debug_repl(cpu_thread_state *state) {
       fprintf(stderr, "  continue\n");
       fprintf(stderr, "  disassemble\n");
       fprintf(stderr, "  examine\n");
+      fprintf(stderr, "  load\n");
       fprintf(stderr, "  next\n");
+      fprintf(stderr, "  save\n");
       fprintf(stderr, "  unbreak\n");
     } else if (starts_with(line, "terminate")) {
       fprintf(stderr, "The debugger has terminated execution. Exiting...\n");

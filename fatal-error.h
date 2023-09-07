@@ -9,6 +9,7 @@
 #define ERROR_OPCODE_DECODE_ERROR 5
 #define ERROR_ARG_DECODE_ERROR 6
 #define ERROR_UNIMLEMENTED_OPCODE 7
+#define ERROR_TOKEN_LIST_GET 8
 
 extern _Noreturn void fatal_error(int error_code);
 

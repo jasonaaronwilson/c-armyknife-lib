@@ -10,6 +10,7 @@ SRC_C = assembler.c \
 	main.c \
 	paged-memory.c \
 	printer.c \
+	tokenizer.c \
 	uleb128.c
 
 SRC_H = assembler.h \
@@ -21,6 +22,7 @@ SRC_H = assembler.h \
 	opcodes.h \
 	paged-memory.h \
 	printer.h \
+	tokenizer.h \
 	uleb128.h
 
 comet-vm: ${SRC_C} ${SRC_H}

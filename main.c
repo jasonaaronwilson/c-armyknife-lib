@@ -31,6 +31,12 @@ int main(int argc, char **argv) {
 
   add_sample_program(state, PAGE_SIZE);
 
+  char *debug = getenv("COMET_VM_DEBUG");
+  if (debug != NULL) {
+    debug_repl(state);
+    exit(0);
+  }
+
   // Single step until we have a BRK instruction
   while (1) {
     uint64_t before_pc = state->pc;
@@ -44,7 +50,6 @@ int main(int argc, char **argv) {
   }
 
   debug_repl(state);
-
   exit(0);
 }
 

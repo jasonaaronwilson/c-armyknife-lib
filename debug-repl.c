@@ -3,6 +3,8 @@
 #include <string.h>
 
 #include "debug-repl.h"
+#include "interpreter.h"
+#include "printer.h"
 
 int starts_with(char *str1, char *str2) {
   return strncmp(str1, str2, strlen(str2)) == 0;
@@ -29,6 +31,15 @@ void debug_repl(cpu_thread_state *state) {
     if (starts_with(line, "terminate")) {
       fprintf(stderr, "The debugger has terminated execution. Exiting...\n");
       exit(0);
+    } else if (starts_with(line, "step")) {
+      uint64_t before_pc = state->pc;
+      print_instructions(state->memory, state->pc, 1);
+      interpret(state, 1);
+      print_registers(state, 16, 16);
+      // might need is_mapped...
+      // if ((before_pc == state->pc) && (load8(state->memory, state->pc) == 0))
+      // { break;
+      // }
     } else {
       fprintf(stderr, "Uknown debug command. Ignoring.\n");
     }

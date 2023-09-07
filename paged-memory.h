@@ -5,8 +5,8 @@
 
 // 64K pages are neither large nor small.
 #define PAGE_SHIFT 16
-#define PAGE_SIZE ((uint64_t) << PAGE_SHIFT)
-#define PAGE_MASK (PAGE_SIZE - 1)
+#define PAGE_SIZE (1 << PAGE_SHIFT)
+#define PAGE_MASK (((uint64_t)PAGE_SIZE) - 1)
 
 // Dead simple but slow implementation sufficient for small
 // programs. Only paged_memory.c may access the members of this
@@ -17,7 +17,8 @@ typedef struct paged_memory_S {
   uint8_t *data;
 } paged_memory;
 
-extern paged_memory* allocate_page(paged_memory *memory, uint64_t address);
+extern int is_address_mapped(paged_memory *memory, uint64_t address);
+extern paged_memory *allocate_page(paged_memory *memory, uint64_t address);
 extern uint8_t load8(paged_memory *memory, uint64_t address);
 extern void store8(paged_memory *memory, uint64_t address, uint8_t value);
 extern uint16_t load16(paged_memory *memory, uint64_t address);

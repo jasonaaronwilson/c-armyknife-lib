@@ -1,6 +1,5 @@
 # TODO
 
-0. clean up debug repl!
 1. get assembler working in multiple instruction mode and handle forward labels
 2. call repl debugger on fatal error?
 3. breakpoints!

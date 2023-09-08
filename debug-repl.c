@@ -29,16 +29,15 @@ uint64_t parse_address(cpu_thread_state *state, char *str) {
 
 void debug_help_command(token_list *tokens) {
   fprintf(stderr, "This is a debugger repl. The available commands are:\n");
-  fprintf(stderr, "  add-address\n");
+  fprintf(stderr, "  add-address\n"); // TODO(jawilson)
   fprintf(stderr, "  address\n");
   fprintf(stderr, "  assemble\n");
-  fprintf(stderr, "  break\n");
-  fprintf(stderr, "  continue\n");
+  fprintf(stderr, "  break\n");    // TODO(jawilson)
+  fprintf(stderr, "  continue\n"); // TODO(jawilson)
   fprintf(stderr, "  disassemble\n");
   fprintf(stderr, "  examine\n");
-  fprintf(stderr, "  load\n");
-  fprintf(stderr, "  next\n");
-  fprintf(stderr, "  save\n");
+  fprintf(stderr, "  load\n"); // TODO(jawilson)
+  fprintf(stderr, "  save\n"); // TODO(jawilson)
   fprintf(stderr, "  step\n");
   fprintf(stderr, "  symbols\n");
   fprintf(stderr, "  terminate\n");
@@ -51,9 +50,15 @@ void debug_terminate_command(token_list *tokens) {
 }
 
 void debug_step_command(cpu_thread_state *state, token_list *tokens) {
+  uint64_t amount = 1;
+  if (token_list_length(tokens) >= 2) {
+    amount = string_parse_uint64(token_list_get(tokens, 1));
+  }
   uint64_t before_pc = state->pc;
-  print_instructions(state->memory, state->pc, 1);
-  interpret(state, 1);
+  interpret(state, amount);
+  if (amount == 1) {
+    print_instructions(state->memory, before_pc, 1);
+  }
   print_registers(state, 16, 16);
   // might need is_mapped...
   // if ((before_pc == state->pc) && (load8(state->memory, state->pc) == 0))
@@ -124,7 +129,6 @@ void debug_examine_command(cpu_thread_state *state, token_list *tokens) {
  * break address/symbol-name
  * disassemble [optional-start-address/symbol] [optional-end-address/symbol]
  * examine [optional-start-address/symbol] [optional-end-address/symbol]
- * next [optional-count]
  * continue
  */
 void debug_repl(cpu_thread_state *state) {

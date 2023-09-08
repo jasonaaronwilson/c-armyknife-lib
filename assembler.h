@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 
+#include "array.h"
 #include "paged-memory.h"
 #include "symbol-table.h"
 
@@ -14,5 +15,9 @@ typedef struct {
 
 extern assembly_result assemble(paged_memory *memory, uint64_t addresss,
                                 symbol_table *symbols, char *statement);
+extern assembly_result assemble_statements(paged_memory *memory,
+                                           uint64_t addresss,
+                                           symbol_table *symbols,
+                                           array *statements);
 
 #endif /* _ASSEMBLER_H_ */

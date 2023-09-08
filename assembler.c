@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "array.h"
 #include "assembler.h"
 #include "fatal-error.h"
 #include "instruction-info.h"
@@ -34,6 +35,28 @@ uint64_t parse_argument(uint8_t type, symbol_table *symbols, char *str) {
   }
   // TODO(jawilson): error!
   return 0;
+}
+
+assembly_result assemble_statements(paged_memory *memory, uint64_t address,
+                                    symbol_table *symbols, array *statements) {
+  uint64_t start_address = address;
+
+  while (1) {
+    address = start_address;
+    for (int i = 0; i < array_length(statements); i++) {
+      assembly_result result =
+          assemble(memory, address, symbols, (char *)array_get(statements, i));
+      address = result.address_end;
+      symbols = result.symbols;
+    }
+    if (!is_dirty(symbols)) {
+      break;
+    }
+  }
+
+  assembly_result result = make_assembly_result(symbols, start_address);
+  result.address_end = address;
+  return result;
 }
 
 assembly_result assemble(paged_memory *memory, uint64_t address,

@@ -44,3 +44,14 @@ symbol *find_symbol_by_value(symbol_table *table, uint64_t value) {
 
   return NULL;
 }
+
+uint8_t is_dirty(symbol_table *table) {
+  while (table) {
+    if (table->sym.value != table->sym.previous_value) {
+      return 1;
+    }
+    table = table->next;
+  }
+
+  return 0;
+}

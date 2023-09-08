@@ -86,7 +86,7 @@ char *string_duplicate(const char *src) {
     return NULL;
   }
   int len = strlen(src) + 1;
-  char *result = (char *) malloc_bytes(len);
+  char *result = (char *)malloc_bytes(len);
   memcpy(result, src, len);
 
   return result;

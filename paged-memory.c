@@ -2,6 +2,7 @@
 
 #include "fatal-error.h"
 #include "paged-memory.h"
+#include "allocate.h"
 
 /**
  * This is an abstraction for holding the virtualized main memory
@@ -62,7 +63,7 @@ int is_address_mapped(paged_memory *memory, uint64_t address) {
  */
 paged_memory *allocate_page(paged_memory *memory, uint64_t address) {
   if (!is_address_mapped(memory, address)) {
-    paged_memory *result = (paged_memory *)(malloc(sizeof(paged_memory)));
+    paged_memory *result = malloc_struct(paged_memory);
     // TODO(jawilson): check result isn't null
     result->next = memory;
     result->page_number = address >> PAGE_SHIFT;

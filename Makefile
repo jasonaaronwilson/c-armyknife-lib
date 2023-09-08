@@ -2,7 +2,8 @@ all: comet-vm
 
 CC = clang
 
-SRC_C = assembler.c \
+SRC_C = allocate.c \
+	assembler.c \
 	debug-repl.c \
 	fatal-error.c \
 	instruction-info.c \
@@ -15,7 +16,8 @@ SRC_C = assembler.c \
 	tokenizer.c \
 	uleb128.c
 
-SRC_H = assembler.h \
+SRC_H = allocate.h \
+	assembler.h \
 	debug-repl.h \
 	cpu-thread-state.h \
 	fatal-error.h \

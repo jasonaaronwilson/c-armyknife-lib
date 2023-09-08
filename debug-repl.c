@@ -88,7 +88,7 @@ void debug_assemble_command(cpu_thread_state *state, token_list *tokens) {
     if (string_equal(line, "\n")) {
       break;
     }
-    array_add(statements, (uint64_t)string_duplicate(line));
+    statements = array_add(statements, (uint64_t)string_duplicate(line));
   }
 
   assembly_result asm_result =

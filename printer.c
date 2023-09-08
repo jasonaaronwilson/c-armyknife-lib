@@ -17,76 +17,53 @@ uint64_t print_instructions(paged_memory *memory, uint64_t address,
   return address;
 }
 
+void print_instruction_argument(uint8_t type, uint64_t value) {
+  switch (type) {
+  case ARG_TYPE_GR:
+    fprintf(stderr, "r%lu", value & 0xffffffff);
+    break;
+  case ARG_TYPE_FP:
+    fprintf(stderr, "f%lu", value & 0xffffffff);
+    break;
+  case ARG_TYPE_IMM:
+    fprintf(stderr, "0x%" PRIx64, value);
+    break;
+  }
+}
+
 uint64_t print_instruction(paged_memory *memory, uint64_t address) {
   fprintf(stderr, "%08lx", (address & 0xffffffff));
 
   unsigned_decode_result opcode = decodeULEB128(memory, address);
   address += opcode.size;
 
-  unsigned_decode_result arg1;
-  unsigned_decode_result arg2;
-  unsigned_decode_result arg3;
-
   instruction_info *info = find_instruction_info_by_opcode(opcode.number);
 
+  // TODO(jawilson): check result...
+
+  fprintf(stderr, "    %s", info->opcode_name);
+
   if (info->number_of_arguments >= 1) {
-    arg1 = decodeULEB128(memory, address);
-    address += arg1.size;
-  }
-  if (info->number_of_arguments >= 2) {
-    arg2 = decodeULEB128(memory, address);
-    address += arg2.size;
-  }
-  if (info->number_of_arguments >= 3) {
-    arg3 = decodeULEB128(memory, address);
-    address += arg3.size;
+    fprintf(stderr, " ");
+    unsigned_decode_result arg = decodeULEB128(memory, address);
+    address += arg.size;
+    print_instruction_argument(info->arg0_type, arg.number);
   }
 
-  if (opcode.number == IMM) {
-    fprintf(stderr, "    %s gr%lu,0x%" PRIx64 "\n", info->opcode_name,
-            arg1.number, arg2.number);
-  } else if (opcode.number == SIMM) {
-    fprintf(stderr, "    %s gr%lu,0x%" PRIx64 "\n", info->opcode_name,
-            arg1.number, arg2.number);
-  } else if (info->is_fp) {
-    switch (info->number_of_arguments) {
-    case 0:
-      fprintf(stderr, "    %s\n", info->opcode_name);
-      break;
-    case 1:
-      fprintf(stderr, "    %s fp%lu\n", info->opcode_name, arg1.number);
-      break;
-    case 2:
-      fprintf(stderr, "    %s fp%lu,fp%lu\n", info->opcode_name, arg1.number,
-              arg2.number);
-      break;
-    case 3:
-      fprintf(stderr, "    %s fp%lu,fp%lu,fp%lu\n", info->opcode_name,
-              arg1.number, arg2.number, arg3.number);
-      break;
-    default:
-      break;
-    }
-  } else {
-    switch (info->number_of_arguments) {
-    case 0:
-      fprintf(stderr, "    %s\n", info->opcode_name);
-      break;
-    case 1:
-      fprintf(stderr, "    %s gr%lu\n", info->opcode_name, arg1.number);
-      break;
-    case 2:
-      fprintf(stderr, "    %s gr%lu,gr%lu\n", info->opcode_name, arg1.number,
-              arg2.number);
-      break;
-    case 3:
-      fprintf(stderr, "    %s gr%lu,gr%lu,gr%lu\n", info->opcode_name,
-              arg1.number, arg2.number, arg3.number);
-      break;
-    default:
-      break;
-    }
+  if (info->number_of_arguments >= 2) {
+    fprintf(stderr, ",");
+    unsigned_decode_result arg = decodeULEB128(memory, address);
+    address += arg.size;
+    print_instruction_argument(info->arg1_type, arg.number);
   }
+
+  if (info->number_of_arguments >= 3) {
+    fprintf(stderr, ",");
+    unsigned_decode_result arg = decodeULEB128(memory, address);
+    address += arg.size;
+    print_instruction_argument(info->arg2_type, arg.number);
+  }
+  fprintf(stderr, "\n");
 
   return address;
 }

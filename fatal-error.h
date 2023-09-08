@@ -11,6 +11,8 @@
 #define ERROR_UNIMLEMENTED_OPCODE 7
 #define ERROR_TOKEN_LIST_GET 8
 
-extern _Noreturn void fatal_error(int error_code);
+extern _Noreturn void fatal_error_impl(char *file, int line, int error_code);
+
+#define fatal_error(code) fatal_error_impl(__FILE__, __LINE__, code)
 
 #endif /* _FATAL_ERROR_ */

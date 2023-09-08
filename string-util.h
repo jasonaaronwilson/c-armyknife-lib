@@ -11,5 +11,6 @@ extern int string_contains(const char *str, const char ch);
 extern uint64_t string_to_uint64(const char *str);
 extern uint64_t string_hash(const char *str);
 extern char *string_substring(const char *str, int start, int end);
+extern uint64_t string_parse_uint64(const char *string);
 
 #endif /* _STRING_UTIL_H_ */

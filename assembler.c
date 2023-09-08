@@ -66,22 +66,14 @@ assembly_result make_assembly_result(symbol_table *symbols, uint64_t address) {
   return empty_statement_result;
 }
 
-uint64_t parse_uint64(const char *string) {
-  uint64_t integer = 0;
-  uint64_t digit;
+// TODO(jawilson): argument types!
 
-  while (*string != '\0') {
-    digit = *string - '0';
-    integer = integer * 10 + digit;
-    string++;
-  }
-
-  return integer;
-}
-
+// We don't need % to signify registers because immediates, and hence
+// non-registers, can only appear in a particular position of the
+// "immediate instructions".
 uint64_t parse_argument(symbol_table *symbols, char *str) {
-  if (string_starts_with(str, "%gr")) {
-    return parse_uint64(&str[3]);
+  if (string_starts_with(str, "gr")) {
+    return string_parse_uint64(&str[2]);
   }
-  return parse_uint64(str);
+  return string_parse_uint64(str);
 }

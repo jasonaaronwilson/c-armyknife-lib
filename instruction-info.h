@@ -6,11 +6,18 @@
 
 #include "opcodes.h"
 
+#define ARG_TYPE_NONE 0
+#define ARG_TYPE_GR 1
+#define ARG_TYPE_FP 2
+#define ARG_TYPE_IMM 3
+
 typedef struct {
   char *opcode_name;
   uint64_t opcode_value;
   uint8_t number_of_arguments; // includes "targets"
-  uint8_t is_fp;
+  uint8_t arg0_type;
+  uint8_t arg1_type;
+  uint8_t arg2_type;
 } instruction_info;
 
 extern uint8_t is_initialized;

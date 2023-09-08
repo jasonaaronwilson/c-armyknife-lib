@@ -2,6 +2,8 @@
  * This contains the bulk of the interpreter logic for the Comet VM.
  */
 
+#include <stdio.h>
+
 // ======================================================================
 // Compile Time Parameters
 // ======================================================================
@@ -238,6 +240,7 @@ void interpret(cpu_thread_state *state, uint64_t max_instructions) {
       break;
 
     default:
+      fprintf(stderr, "opcode is %d\n", opcode);
       fatal_error(ERROR_UNIMLEMENTED_OPCODE);
       break;
     }

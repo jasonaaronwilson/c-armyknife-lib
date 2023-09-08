@@ -62,3 +62,16 @@ char *string_substring(const char *str, int start, int end) {
   result[result_size] = '\0';
   return result;
 }
+
+uint64_t string_parse_uint64(const char *string) {
+  uint64_t integer = 0;
+  uint64_t digit;
+
+  while (*string != '\0') {
+    digit = *string - '0';
+    integer = integer * 10 + digit;
+    string++;
+  }
+
+  return integer;
+}

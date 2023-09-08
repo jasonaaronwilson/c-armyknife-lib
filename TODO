@@ -1,5 +1,6 @@
 # TODO
 
+1. add argument types (GR, FP, immediate)
 1. call repl debugger on fatal error?
 2. DONE: string tokenizer for repl and assembler
 3. breakpoints!

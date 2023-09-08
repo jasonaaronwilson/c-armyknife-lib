@@ -5,49 +5,70 @@
 uint8_t is_initialized;
 instruction_info instruction_info_array[LAST_OPCODE];
 
-void add_instruction_info(char *opcode_name, int opcode_number, int num_args) {
+void add_instruction_info_0(char *opcode_name, int opcode_number) {
   instruction_info_array[opcode_number].opcode_name = opcode_name;
   instruction_info_array[opcode_number].opcode_value = opcode_number;
-  instruction_info_array[opcode_number].number_of_arguments = num_args;
+  instruction_info_array[opcode_number].number_of_arguments = 0;
+}
+
+void add_instruction_info_1(char *opcode_name, int opcode_number,
+                            uint8_t arg0_type) {
+  add_instruction_info_0(opcode_name, opcode_number);
+  instruction_info_array[opcode_number].arg0_type = arg0_type;
+  instruction_info_array[opcode_number].number_of_arguments = 1;
+}
+
+void add_instruction_info_2(char *opcode_name, int opcode_number,
+                            uint8_t arg0_type, uint8_t arg1_type) {
+  add_instruction_info_1(opcode_name, opcode_number, arg0_type);
+  instruction_info_array[opcode_number].arg1_type = arg1_type;
+  instruction_info_array[opcode_number].number_of_arguments = 2;
+}
+
+void add_instruction_info_3(char *opcode_name, int opcode_number,
+                            uint8_t arg0_type, uint8_t arg1_type,
+                            uint8_t arg2_type) {
+  add_instruction_info_2(opcode_name, opcode_number, arg0_type, arg1_type);
+  instruction_info_array[opcode_number].arg2_type = arg2_type;
+  instruction_info_array[opcode_number].number_of_arguments = 3;
 }
 
 void init_instruction_info() {
   for (int i = 0; i <= LAST_OPCODE; i++) {
-    instruction_info_array[i].opcode_name = "unknown";
-    instruction_info_array[i].number_of_arguments = 0;
+    add_instruction_info_0("unknown", i);
   }
 
-  add_instruction_info("brk", BRK, 0);
-  add_instruction_info("nop", NOP, 0);
-  add_instruction_info("brz", BRZ, 3);
-  add_instruction_info("imm", IMM, 2);
-  add_instruction_info("simm", SIMM, 2);
-  add_instruction_info("mov", MOV, 2);
-  add_instruction_info("ldu8", LD_U8, 2);
-  add_instruction_info("ldu16", LD_U16, 2);
-  add_instruction_info("ldu32", LD_U32, 2);
-  add_instruction_info("ldu64", LD_U64, 2);
-  add_instruction_info("lds8", LD_S8, 2);
-  add_instruction_info("lds16", LD_S16, 2);
-  add_instruction_info("lds32", LD_S32, 2);
-  // add_instruction_info("lds64", LD_S64, 2);
+  add_instruction_info_0("brk", BRK);
+  add_instruction_info_0("nop", NOP);
+  add_instruction_info_3("brz", BRZ, ARG_TYPE_GR, ARG_TYPE_GR, ARG_TYPE_GR);
+  add_instruction_info_2("imm", IMM, ARG_TYPE_GR, ARG_TYPE_IMM);
+  add_instruction_info_2("simm", SIMM, ARG_TYPE_GR, ARG_TYPE_IMM);
+  add_instruction_info_2("mov", MOV, ARG_TYPE_GR, ARG_TYPE_GR);
 
-  add_instruction_info("clz", CLZ, 2);
-  add_instruction_info("ctz", CTZ, 2);
-  add_instruction_info("popcnt", POPCNT, 2);
-  add_instruction_info("add", ADD, 3);
-  add_instruction_info("sub", SUB, 3);
-  add_instruction_info("mul", MUL, 3);
-  add_instruction_info("div_u", DIV_U, 3);
-  add_instruction_info("div_s", DIV_S, 3);
-  add_instruction_info("rem_u", REM_U, 3);
-  add_instruction_info("rem_s", REM_S, 3);
-  add_instruction_info("and", AND, 3);
-  add_instruction_info("or", OR, 3);
-  add_instruction_info("xor", XOR, 3);
-  add_instruction_info("shl", SHL, 3);
-  add_instruction_info("shr_u", SHR_U, 3);
-  add_instruction_info("shr_s", SHR_S, 3);
+  add_instruction_info_2("ldu8", LD_U8, ARG_TYPE_GR, ARG_TYPE_GR);
+  add_instruction_info_2("ldu16", LD_U16, ARG_TYPE_GR, ARG_TYPE_GR);
+  add_instruction_info_2("ldu32", LD_U32, ARG_TYPE_GR, ARG_TYPE_GR);
+  add_instruction_info_2("ldu64", LD_U64, ARG_TYPE_GR, ARG_TYPE_GR);
+  add_instruction_info_2("lds8", LD_S8, ARG_TYPE_GR, ARG_TYPE_GR);
+  add_instruction_info_2("lds16", LD_S16, ARG_TYPE_GR, ARG_TYPE_GR);
+  add_instruction_info_2("lds32", LD_S32, ARG_TYPE_GR, ARG_TYPE_GR);
+
+  add_instruction_info_2("clz", CLZ, ARG_TYPE_GR, ARG_TYPE_GR);
+  add_instruction_info_2("ctz", CTZ, ARG_TYPE_GR, ARG_TYPE_GR);
+  add_instruction_info_2("popcnt", POPCNT, ARG_TYPE_GR, ARG_TYPE_GR);
+  add_instruction_info_3("add", ADD, ARG_TYPE_GR, ARG_TYPE_GR, ARG_TYPE_GR);
+  add_instruction_info_3("sub", SUB, ARG_TYPE_GR, ARG_TYPE_GR, ARG_TYPE_GR);
+  add_instruction_info_3("mul", MUL, ARG_TYPE_GR, ARG_TYPE_GR, ARG_TYPE_GR);
+  add_instruction_info_3("div_u", DIV_U, ARG_TYPE_GR, ARG_TYPE_GR, ARG_TYPE_GR);
+  add_instruction_info_3("div_s", DIV_S, ARG_TYPE_GR, ARG_TYPE_GR, ARG_TYPE_GR);
+  add_instruction_info_3("rem_u", REM_U, ARG_TYPE_GR, ARG_TYPE_GR, ARG_TYPE_GR);
+  add_instruction_info_3("rem_s", REM_S, ARG_TYPE_GR, ARG_TYPE_GR, ARG_TYPE_GR);
+  add_instruction_info_3("and", AND, ARG_TYPE_GR, ARG_TYPE_GR, ARG_TYPE_GR);
+  add_instruction_info_3("or", OR, ARG_TYPE_GR, ARG_TYPE_GR, ARG_TYPE_GR);
+  add_instruction_info_3("xor", XOR, ARG_TYPE_GR, ARG_TYPE_GR, ARG_TYPE_GR);
+  add_instruction_info_3("shl", SHL, ARG_TYPE_GR, ARG_TYPE_GR, ARG_TYPE_GR);
+  add_instruction_info_3("shr_u", SHR_U, ARG_TYPE_GR, ARG_TYPE_GR, ARG_TYPE_GR);
+  add_instruction_info_3("shr_s", SHR_S, ARG_TYPE_GR, ARG_TYPE_GR, ARG_TYPE_GR);
 
   is_initialized = 1;
 }

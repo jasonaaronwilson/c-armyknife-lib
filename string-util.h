@@ -12,5 +12,6 @@ extern uint64_t string_to_uint64(const char *str);
 extern uint64_t string_hash(const char *str);
 extern char *string_substring(const char *str, int start, int end);
 extern uint64_t string_parse_uint64(const char *string);
+extern char *string_duplicate(const char *src);
 
 #endif /* _STRING_UTIL_H_ */

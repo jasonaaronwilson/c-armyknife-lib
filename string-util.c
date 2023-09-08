@@ -76,3 +76,14 @@ uint64_t string_parse_uint64(const char *string) {
 
   return integer;
 }
+
+char *string_duplicate(const char *src) {
+  if (src == NULL) {
+    return NULL;
+  }
+  int len = strlen(src) + 1;
+  char *result = (char *) malloc_bytes(len);
+  memcpy(result, src, len);
+
+  return result;
+}

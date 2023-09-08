@@ -35,7 +35,7 @@ token_list *token_list_append(token_list *head, const char *data) {
   fprintf(stderr, "DEBUG token_list_append - '%s'\n", data);
   token_list *node = malloc_struct(token_list);
   node->next = NULL;
-  node->data = strdup(data);
+  node->data = string_duplicate(data);
   if (head == NULL) {
     return node;
   }

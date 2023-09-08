@@ -11,7 +11,7 @@ symbol_table *add_symbol(symbol_table *table, const char *name,
   if (sym == NULL) {
     symbol_table *result = malloc_struct(symbol_table);
     result->next = table;
-    result->sym.name = strdup(name);
+    result->sym.name = string_duplicate(name);
     result->sym.value = value;
     result->sym.previous_value = value - 1;
     return result;

@@ -249,6 +249,6 @@ void interpret(cpu_thread_state *state, uint64_t max_instructions) {
 }
 
 int opcode_to_number_of_arguments(uint64_t opcode) {
-  instruction_info *info = get_instruction_info(opcode);
+  instruction_info *info = find_instruction_info_by_opcode(opcode);
   return info->number_of_arguments;
 }

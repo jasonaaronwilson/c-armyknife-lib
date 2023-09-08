@@ -103,7 +103,7 @@ void init_instruction_info() {
   is_initialized = 1;
 }
 
-instruction_info *get_instruction_info(uint64_t opcode) {
+instruction_info *find_instruction_info_by_opcode(uint64_t opcode) {
   if (!is_initialized) {
     init_instruction_info();
   }

@@ -27,7 +27,7 @@ uint64_t print_instruction(paged_memory *memory, uint64_t address) {
   unsigned_decode_result arg2;
   unsigned_decode_result arg3;
 
-  instruction_info *info = get_instruction_info(opcode.number);
+  instruction_info *info = find_instruction_info_by_opcode(opcode.number);
 
   if (info->number_of_arguments >= 1) {
     arg1 = decodeULEB128(memory, address);

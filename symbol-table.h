@@ -6,6 +6,7 @@
 typedef struct {
   const char *name;
   uint64_t value;
+  uint64_t previous_value;
 } symbol;
 
 typedef struct symbol_table_S {

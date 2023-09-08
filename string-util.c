@@ -1,8 +1,10 @@
-#include "string-util.h"
+#include <stdlib.h>
 #include <string.h>
 
-int string_is_null_or_empty(const char *str1) {
-  return (str1 == NULL) || (strlen(str1) == 0);
+#include "string-util.h"
+
+int string_is_null_or_empty(const char *str) {
+  return (str == NULL) || (strlen(str) == 0);
 }
 
 int string_equal(const char *str1, const char *str2) {
@@ -31,8 +33,8 @@ int string_contains(const char *str, char ch) {
   if (string_is_null_or_empty(str)) {
     return 0;
   }
-  while (*str++) {
-    if (*str == ch) {
+  for (int i = 0; i < strlen(str); i++) {
+    if (str[i] == ch) {
       return 1;
     }
   }
@@ -48,4 +50,15 @@ uint64_t string_to_uint64(const char *str) {
 uint64_t string_hash(const char *str) {
   // FIXME
   return 0;
+}
+
+char *string_substring(const char *str, int start, int end) {
+  // TODO(jawilson): check length of str...
+  int result_size = end - start + 1;
+  char *result = (char *)(malloc(result_size));
+  for (int i = start; (i < end); i++) {
+    result[i - start] = str[i];
+  }
+  result[result_size] = '\0';
+  return result;
 }

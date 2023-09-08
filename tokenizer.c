@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -12,7 +13,7 @@ token_list *tokenize(const char *str, const char *delimiters) {
   for (int i = 0; (i < strlen(str)); i++) {
     char ch = str[i];
     if (string_contains(delimiters, ch)) {
-      token_data[cpos++] = 0;
+      token_data[cpos++] = '\0';
       if (strlen(token_data) > 0) {
         result = token_list_append(result, token_data);
       }
@@ -21,16 +22,16 @@ token_list *tokenize(const char *str, const char *delimiters) {
       token_data[cpos++] = ch;
     }
   }
-  token_data[cpos++] = 0;
+  token_data[cpos++] = '\0';
   if (strlen(token_data) > 0) {
     result = token_list_append(result, token_data);
   }
-  cpos = 0;
 
   return result;
 }
 
 token_list *token_list_append(token_list *head, const char *data) {
+  fprintf(stderr, "DEBUG token_list_append - '%s'\n", data);
   token_list *node = (token_list *)(malloc(sizeof(token_list)));
   node->next = NULL;
   node->data = strdup(data);
@@ -55,7 +56,8 @@ char *token_list_get(token_list *head, int position) {
     position--;
   }
   if (head == NULL) {
-    fatal_error(ERROR_TOKEN_LIST_GET);
+    // fatal_error(ERROR_TOKEN_LIST_GET);
+    return NULL;
   } else {
     return head->data;
   }

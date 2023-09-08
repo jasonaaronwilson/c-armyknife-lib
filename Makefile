@@ -30,7 +30,7 @@ SRC_H = assembler.h \
 	uleb128.h
 
 comet-vm: ${SRC_C} ${SRC_H}
-	${CC} ${SRC_C}
+	${CC} -g ${SRC_C}
 	stat --format=%s a.out
 
 format:

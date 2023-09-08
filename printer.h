@@ -14,4 +14,6 @@ extern void print_registers(cpu_thread_state *state, int num_gr_registers,
 extern void print_data(paged_memory *memory, uint64_t start_address,
                        uint64_t end_address);
 
+extern void print_symbol_table(symbol_table *symbols);
+
 #endif /* _PRINTER_H_ */

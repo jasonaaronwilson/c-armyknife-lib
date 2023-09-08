@@ -9,8 +9,6 @@
 typedef struct {
   uint64_t address_start;
   uint64_t address_end;
-  int symbols_unknown;
-  int symbols_modified;
   symbol_table *symbols;
 } assembly_result;
 

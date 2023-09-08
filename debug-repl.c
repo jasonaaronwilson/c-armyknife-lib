@@ -63,6 +63,7 @@ void debug_repl(cpu_thread_state *state) {
       fprintf(stderr, "  next\n");
       fprintf(stderr, "  save\n");
       fprintf(stderr, "  step\n");
+      fprintf(stderr, "  symbols\n");
       fprintf(stderr, "  terminate\n");
       fprintf(stderr, "  unbreak\n");
     } else if (string_starts_with(command, "terminate")) {
@@ -99,6 +100,11 @@ void debug_repl(cpu_thread_state *state) {
           assemble(state->memory, state->pc, state->symbols, line);
       state->symbols = asm_result.symbols;
     } else if (string_starts_with(command, "address")) {
+      if (token_list_length(tokens) < 2) {
+        fprintf(stderr, "Error: not enough arguments (got %d tokens)",
+                token_list_length(tokens));
+        continue;
+      }
       char *symbol_name = token_list_get(tokens, 1);
       symbol *sym = find_symbol_by_name(state->symbols, symbol_name);
       if (sym != NULL) {
@@ -107,6 +113,8 @@ void debug_repl(cpu_thread_state *state) {
       } else {
         fprintf(stderr, "%s was not found.\n", symbol_name);
       }
+    } else if (string_starts_with(command, "symbols")) {
+      print_symbol_table(state->symbols);
     } else {
       fprintf(stderr, "Uknown debug command. Ignoring.\n");
     }

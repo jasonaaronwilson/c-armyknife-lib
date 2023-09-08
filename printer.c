@@ -117,3 +117,10 @@ void print_data(paged_memory *memory, uint64_t start_address,
             load8(memory, address));
   }
 }
+
+void print_symbol_table(symbol_table *symbols) {
+  while (symbols) {
+    fprintf(stderr, "%08lx %s\n", symbols->sym.value, symbols->sym.name);
+    symbols = symbols->next;
+  }
+}

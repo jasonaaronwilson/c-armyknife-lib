@@ -2,6 +2,7 @@
 #include <string.h>
 
 #include "assembler.h"
+#include "fatal-error.h"
 #include "instruction-info.h"
 #include "string-util.h"
 #include "tokenizer.h"
@@ -15,7 +16,25 @@
 #include "opcodes.h"
 
 assembly_result make_assembly_result(symbol_table *symbols, uint64_t address);
-uint64_t parse_argument(symbol_table *symbols, char *str);
+
+uint64_t parse_imm_argument(symbol_table *symbols, char *str);
+uint64_t parse_gr_argument(char *str);
+uint64_t parse_fp_argument(char *str);
+
+uint64_t parse_argument(uint8_t type, symbol_table *symbols, char *str) {
+  switch (type) {
+  case ARG_TYPE_GR:
+    return parse_gr_argument(str);
+
+  case ARG_TYPE_FP:
+    return parse_fp_argument(str);
+
+  case ARG_TYPE_IMM:
+    return parse_imm_argument(symbols, str);
+  }
+  // TODO(jawilson): error!
+  return 0;
+}
 
 assembly_result assemble(paged_memory *memory, uint64_t address,
                          symbol_table *symbols, char *statement) {
@@ -49,8 +68,20 @@ assembly_result assemble(paged_memory *memory, uint64_t address,
   }
 
   address += encodeULEB128(memory, address, info->opcode_value);
-  for (int i = 0; i < info->number_of_arguments; i++) {
-    uint64_t value = parse_argument(symbols, token_list_get(tokens, i + 1));
+
+  if (info->number_of_arguments >= 1) {
+    uint64_t value =
+        parse_argument(info->arg0_type, symbols, token_list_get(tokens, 1));
+    address += encodeULEB128(memory, address, value);
+  }
+  if (info->number_of_arguments >= 2) {
+    uint64_t value =
+        parse_argument(info->arg1_type, symbols, token_list_get(tokens, 2));
+    address += encodeULEB128(memory, address, value);
+  }
+  if (info->number_of_arguments >= 3) {
+    uint64_t value =
+        parse_argument(info->arg2_type, symbols, token_list_get(tokens, 3));
     address += encodeULEB128(memory, address, value);
   }
 
@@ -66,14 +97,24 @@ assembly_result make_assembly_result(symbol_table *symbols, uint64_t address) {
   return empty_statement_result;
 }
 
-// TODO(jawilson): argument types!
-
-// We don't need % to signify registers because immediates, and hence
-// non-registers, can only appear in a particular position of the
-// "immediate instructions".
-uint64_t parse_argument(symbol_table *symbols, char *str) {
-  if (string_starts_with(str, "gr")) {
-    return string_parse_uint64(&str[2]);
+uint64_t parse_imm_argument(symbol_table *symbols, char *str) {
+  if (str[0] >= '0' && str[0] <= '9') {
+    string_parse_uint64(str);
   }
-  return string_parse_uint64(str);
+  symbol *sym = find_symbol_by_name(symbols, str);
+  return sym->value;
+}
+
+uint64_t parse_gr_argument(char *str) {
+  if (!string_starts_with(str, "r")) {
+    fatal_error(ERROR_EXPECTED_GENERAL_REGISTER);
+  }
+  return string_parse_uint64(&str[1]);
+}
+
+uint64_t parse_fp_argument(char *str) {
+  if (!string_starts_with(str, "f")) {
+    fatal_error(ERROR_EXPECTED_FLOATING_REGISTER);
+  }
+  return string_parse_uint64(&str[1]);
 }

@@ -10,6 +10,8 @@
 #define ERROR_ARG_DECODE_ERROR 6
 #define ERROR_UNIMLEMENTED_OPCODE 7
 #define ERROR_TOKEN_LIST_GET 8
+#define ERROR_EXPECTED_GENERAL_REGISTER 9
+#define ERROR_EXPECTED_FLOATING_REGISTER 10
 
 extern _Noreturn void fatal_error_impl(char *file, int line, int error_code);
 

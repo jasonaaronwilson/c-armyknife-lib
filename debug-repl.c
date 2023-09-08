@@ -47,7 +47,7 @@ void debug_repl(cpu_thread_state *state) {
 
     fgets(line, sizeof(line), stdin);
 
-    token_list *tokens = tokenize(line, " ");
+    token_list *tokens = tokenize(line, " \n");
     char *command = token_list_get(tokens, 0);
 
     if (string_starts_with(command, "help")) {
@@ -98,6 +98,15 @@ void debug_repl(cpu_thread_state *state) {
       assembly_result asm_result =
           assemble(state->memory, state->pc, state->symbols, line);
       state->symbols = asm_result.symbols;
+    } else if (string_starts_with(command, "address")) {
+      char *symbol_name = token_list_get(tokens, 1);
+      symbol *sym = find_symbol_by_name(state->symbols, symbol_name);
+      if (sym != NULL) {
+        fprintf(stderr, "address of %s is 0x%08x\n", sym->name,
+                (uint32_t)sym->value);
+      } else {
+        fprintf(stderr, "%s was not found.\n", symbol_name);
+      }
     } else {
       fprintf(stderr, "Uknown debug command. Ignoring.\n");
     }

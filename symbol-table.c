@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "allocate.h"
 #include "string-util.h"
 #include "symbol-table.h"
 
@@ -8,7 +9,7 @@ symbol_table *add_symbol(symbol_table *table, const char *name,
                          uint64_t value) {
   symbol *sym = find_symbol_by_name(table, name);
   if (sym == NULL) {
-    symbol_table *result = (symbol_table *)(malloc(sizeof(symbol_table)));
+    symbol_table *result = malloc_struct(symbol_table);
     result->next = table;
     result->sym.name = strdup(name);
     result->sym.value = value;

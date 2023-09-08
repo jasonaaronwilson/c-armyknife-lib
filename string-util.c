@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "allocate.h"
 #include "string-util.h"
 
 int string_is_null_or_empty(const char *str) {
@@ -55,7 +56,7 @@ uint64_t string_hash(const char *str) {
 char *string_substring(const char *str, int start, int end) {
   // TODO(jawilson): check length of str...
   int result_size = end - start + 1;
-  char *result = (char *)(malloc(result_size));
+  char *result = (char *)(malloc_bytes(result_size));
   for (int i = start; (i < end); i++) {
     result[i - start] = str[i];
   }

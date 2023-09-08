@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "allocate.h"
 #include "fatal-error.h"
 #include "string-util.h"
 #include "tokenizer.h"
@@ -32,7 +33,7 @@ token_list *tokenize(const char *str, const char *delimiters) {
 
 token_list *token_list_append(token_list *head, const char *data) {
   fprintf(stderr, "DEBUG token_list_append - '%s'\n", data);
-  token_list *node = (token_list *)(malloc(sizeof(token_list)));
+  token_list *node = malloc_struct(token_list);
   node->next = NULL;
   node->data = strdup(data);
   if (head == NULL) {

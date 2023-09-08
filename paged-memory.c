@@ -1,8 +1,8 @@
 #include <stdlib.h>
 
+#include "allocate.h"
 #include "fatal-error.h"
 #include "paged-memory.h"
-#include "allocate.h"
 
 /**
  * This is an abstraction for holding the virtualized main memory
@@ -67,7 +67,7 @@ paged_memory *allocate_page(paged_memory *memory, uint64_t address) {
     // TODO(jawilson): check result isn't null
     result->next = memory;
     result->page_number = address >> PAGE_SHIFT;
-    result->data = (uint8_t *)(malloc(PAGE_SIZE));
+    result->data = malloc_bytes(PAGE_SIZE);
     // TODO(jawilson): check data isn't null and also memset to 0
     return result;
   }

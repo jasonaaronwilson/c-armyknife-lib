@@ -1,28 +1,24 @@
 # TODO
 
-1. DONE add argument types (GR, FP, immediate)
-1. call repl debugger on fatal error?
-2. DONE: string tokenizer for repl and assembler
+0. clean up debug repl!
+1. get assembler working in multiple instruction mode and handle forward labels
+2. call repl debugger on fatal error?
 3. breakpoints!
-4. zero things after malloc
-5. DONE: implement a symbol table
-6. get assembler working in single instruction mode
-7. get assembler working in multiple instruction mode
-8. load binary program from file, save binary program to file
-9. watchpoints (see if the value of an address changes?)
-10. finish all integer instructions
-11. finish fp instructions
-12. comparisons?
-13. mmx instructions?
-14. all documented repl commands complete and tested?
-15. tests -- feed in a repl script that uses the assembler
-16. syscall (some can simply pass through to real syscall!)
-17. performance measurements
-18. implement more performant paged memory
-19. make examine smarter (maybe do ASCII conversion on the right hand
+4. load binary program from file, save binary program to file
+5. watchpoints (see if the value of an address changes?)
+6. finish all integer instructions
+7. finish fp instructions
+8. comparisons?
+9. mmx instructions?
+10. all documented repl commands complete and tested?
+11. tests -- feed in a repl script that uses the assembler
+12. syscall (some can simply pass through to real syscall!)
+13. performance measurements
+14. implement more performant paged memory
+15. make examine smarter (maybe do ASCII conversion on the right hand
     side)
-20. make sure we can crash via fuzzing or something?
-21. minmal language backend targeting comet-vm
-22. compile_x86, compile_riscv, and compile_arm - take *assembly*
+16. make sure we can crash via fuzzing or something?
+17. minmal language backend targeting comet-vm
+18. compile_x86, compile_riscv, and compile_arm - take *assembly*
     syntax for these architectures and assemble to comet byte codes.
 

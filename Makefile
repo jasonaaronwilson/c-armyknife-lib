@@ -3,6 +3,7 @@ all: comet-vm
 CC = clang
 
 SRC_C = allocate.c \
+	array.c \
 	assembler.c \
 	debug-repl.c \
 	fatal-error.c \
@@ -17,6 +18,7 @@ SRC_C = allocate.c \
 	uleb128.c
 
 SRC_H = allocate.h \
+	array.h \
 	assembler.h \
 	debug-repl.h \
 	cpu-thread-state.h \

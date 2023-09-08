@@ -20,4 +20,4 @@
 17. minmal language backend targeting comet-vm
 18. compile_x86, compile_riscv, and compile_arm - take *assembly*
     syntax for these architectures and assemble to comet byte codes.
-
+19. console mode for the debugger

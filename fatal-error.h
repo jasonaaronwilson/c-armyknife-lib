@@ -12,6 +12,7 @@
 #define ERROR_TOKEN_LIST_GET 8
 #define ERROR_EXPECTED_GENERAL_REGISTER 9
 #define ERROR_EXPECTED_FLOATING_REGISTER 10
+#define ERROR_ARRAY_ACCESS_OUT_OF_BOUNDS 11
 
 extern _Noreturn void fatal_error_impl(char *file, int line, int error_code);
 

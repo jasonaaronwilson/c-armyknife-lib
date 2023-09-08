@@ -77,6 +77,10 @@ uint64_t string_parse_uint64(const char *string) {
   return integer;
 }
 
+/**
+ * Just like strdup except NULL is a valid source argument and we use
+ * malloc_bytes which checks the return result from malloc.
+ */
 char *string_duplicate(const char *src) {
   if (src == NULL) {
     return NULL;

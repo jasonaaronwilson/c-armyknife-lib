@@ -39,12 +39,12 @@ void debug_help_command(token_list *tokens) {
   fprintf(stderr, "  load\n"); // TODO(jawilson)
   fprintf(stderr, "  save\n"); // TODO(jawilson)
   fprintf(stderr, "  step\n");
+  fprintf(stderr, "  quit\n");
   fprintf(stderr, "  symbols\n");
-  fprintf(stderr, "  terminate\n");
   fprintf(stderr, "  unbreak\n");
 }
 
-void debug_terminate_command(token_list *tokens) {
+void debug_quit_command(token_list *tokens) {
   fprintf(stderr, "The debugger has terminated execution. Exiting...\n");
   exit(0);
 }
@@ -157,8 +157,8 @@ void debug_repl(cpu_thread_state *state) {
 
     if (string_equal(command, "help")) {
       debug_help_command(tokens);
-    } else if (string_equal(command, "terminate")) {
-      debug_terminate_command(tokens);
+    } else if (string_equal(command, "quit")) {
+      debug_quit_command(tokens);
     } else if (string_equal(command, "step")) {
       debug_step_command(state, tokens);
     } else if (string_equal(command, "disassemble") ||

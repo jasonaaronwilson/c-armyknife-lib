@@ -125,7 +125,11 @@ uint64_t parse_imm_argument(symbol_table *symbols, char *str) {
     string_parse_uint64(str);
   }
   symbol *sym = find_symbol_by_name(symbols, str);
-  return sym->value;
+  if (sym) {
+    return sym->value;
+  } else {
+    return 0;
+  }
 }
 
 uint64_t parse_gr_argument(char *str) {

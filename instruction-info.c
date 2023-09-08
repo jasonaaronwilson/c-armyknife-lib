@@ -6,7 +6,7 @@ uint8_t is_initialized;
 instruction_info instruction_info_array[LAST_OPCODE];
 
 void add_instruction_info(char *opcode_name, int opcode_number, int num_args) {
-  instruction_info_array[opcode_number].opcode_name = "brk";
+  instruction_info_array[opcode_number].opcode_name = opcode_name;
   instruction_info_array[opcode_number].opcode_value = opcode_number;
   instruction_info_array[opcode_number].number_of_arguments = num_args;
 }

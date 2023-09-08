@@ -1,3 +1,4 @@
+#include "paged-memory.h"
 #include "uleb128.h"
 
 /**
@@ -24,4 +25,18 @@ unsigned_decode_result decodeULEB128(paged_memory *memory, uint64_t address) {
   } while (load8(memory, address++) >= 128);
   unsigned_decode_result result = {value, (unsigned)(address - orig_address)};
   return result;
+}
+
+unsigned encodeULEB128(paged_memory *memory, uint64_t value, uint64_t address) {
+  uint64_t orig_address = address;
+  do {
+    uint8_t byte = value & 0x7f;
+    value >>= 7;
+    if (value != 0) {
+      byte |= 0x80; // Mark this byte to show that more bytes will follow.
+    }
+    store8(memory, address++, byte);
+  } while (value != 0);
+
+  return (unsigned)(address - orig_address);
 }

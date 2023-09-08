@@ -19,8 +19,7 @@ typedef struct {
 
 extern unsigned_decode_result decodeULEB128(paged_memory *memory,
                                             uint64_t address);
-extern unsigned encodeULEB128(paged_memory *memory,
-                              uint64_t address,
+extern unsigned encodeULEB128(paged_memory *memory, uint64_t address,
                               uint64_t value);
 
 #endif /* _ULEB128_H_ */

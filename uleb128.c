@@ -1,5 +1,5 @@
-#include "paged-memory.h"
 #include "uleb128.h"
+#include "paged-memory.h"
 
 /**
  * Utility function to decode a ULEB128 value.

@@ -71,11 +71,11 @@ void debug_disassemble_command(cpu_thread_state *state, token_list *tokens) {
   if (token_list_length(tokens) > 1) {
     address = parse_address(state, token_list_get(tokens, 1));
   }
-  uint64_t end_address = address + 16;
+  uint64_t number_of_instructions = 16;
   if (token_list_length(tokens) > 2) {
-    end_address = parse_address(state, token_list_get(tokens, 2));
+    number_of_instructions = string_parse_uint64(token_list_get(tokens, 2));
   }
-  print_instructions(state->memory, address, end_address);
+  print_instructions(state->memory, address, number_of_instructions);
 }
 
 void debug_assemble_command(cpu_thread_state *state, token_list *tokens) {

@@ -99,6 +99,7 @@ void debug_repl(cpu_thread_state *state) {
       assembly_result asm_result =
           assemble(state->memory, state->pc, state->symbols, line);
       state->symbols = asm_result.symbols;
+      fprintf(stderr, "instruction is %lu bytes long\n", (asm_result.address_end - asm_result.address_start));
     } else if (string_starts_with(command, "address")) {
       if (token_list_length(tokens) < 2) {
         fprintf(stderr, "Error: not enough arguments (got %d tokens)",

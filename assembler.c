@@ -5,6 +5,7 @@
 #include "instruction-info.h"
 #include "string-util.h"
 #include "tokenizer.h"
+#include "uleb128.h"
 
 /**
  * This is an interface for compiling a single instruction statement
@@ -46,6 +47,10 @@ assembly_result assemble(paged_memory *memory, uint64_t address,
     return result;
   }
 
+  address += encodeULEB128(memory, address, info->opcode_value);
+  // TODO(jawilson): process each argument!
+
+  result.address_end = address;
   return result;
 }
 

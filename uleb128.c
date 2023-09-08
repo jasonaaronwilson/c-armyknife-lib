@@ -27,7 +27,7 @@ unsigned_decode_result decodeULEB128(paged_memory *memory, uint64_t address) {
   return result;
 }
 
-unsigned encodeULEB128(paged_memory *memory, uint64_t value, uint64_t address) {
+unsigned encodeULEB128(paged_memory *memory, uint64_t address, uint64_t value) {
   uint64_t orig_address = address;
   do {
     uint8_t byte = value & 0x7f;

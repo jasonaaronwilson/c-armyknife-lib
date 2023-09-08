@@ -8,6 +8,7 @@
 
 typedef struct {
   char *opcode_name;
+  uint64_t opcode_value;
   uint8_t number_of_arguments; // includes "targets"
   uint8_t is_fp;
 } instruction_info;

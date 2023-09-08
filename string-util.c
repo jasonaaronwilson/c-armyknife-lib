@@ -16,6 +16,17 @@ int string_starts_with(const char *str1, const char *str2) {
   return strncmp(str1, str2, strlen(str2)) == 0;
 }
 
+int string_ends_with(const char *str1, const char *str2) {
+  size_t len1 = strlen(str1);
+  size_t len2 = strlen(str2);
+
+  if (len2 > len1) {
+    return 0;
+  }
+
+  return strcmp(str1 + (len1 - len2), str2) == 0;
+}
+
 int string_contains(const char *str, char ch) {
   if (string_is_null_or_empty(str)) {
     return 0;

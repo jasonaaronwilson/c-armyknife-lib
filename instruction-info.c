@@ -1,5 +1,6 @@
 #include "instruction-info.h"
 #include "fatal-error.h"
+#include "string-util.h"
 
 uint8_t is_initialized;
 instruction_info instruction_info_array[LAST_OPCODE];
@@ -111,4 +112,18 @@ instruction_info *get_instruction_info(uint64_t opcode) {
   } else {
     fatal_error(ERROR_OPCODE_UNKNOWN);
   }
+}
+
+instruction_info *find_instruction_info_by_name(const char *name) {
+  if (!is_initialized) {
+    init_instruction_info();
+  }
+
+  for (int i = 0; i < LAST_OPCODE; i++) {
+    if (string_equal(instruction_info_array[i].opcode_name, name)) {
+      return &instruction_info_array[i];
+    }
+  }
+
+  return NULL;
 }

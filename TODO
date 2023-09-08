@@ -1,10 +1,10 @@
 # TODO
 
 1. call repl debugger on fatal error?
-2. string tokenizer for repl and assembler
+2. DONE: string tokenizer for repl and assembler
 3. breakpoints!
 4. zero things after malloc
-5. implement a symbol table
+5. DONE: implement a symbol table
 6. get assembler working in single instruction mode
 7. get assembler working in multiple instruction mode
 8. load binary program from file, save binary program to file
@@ -22,3 +22,6 @@
     side)
 20. make sure we can crash via fuzzing or something?
 21. minmal language backend targeting comet-vm
+22. compile_x86, compile_riscv, and compile_arm - take *assembly*
+    syntax for these architectures and assemble to comet byte codes.
+

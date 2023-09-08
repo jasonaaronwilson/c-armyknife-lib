@@ -35,6 +35,10 @@ assembly_result assemble(paged_memory *memory, uint64_t address,
     return result;
   }
 
+  if (string_starts_with(opcode, ".")) {
+    fprintf(stderr, "WARNING: ignoring directive '%s'\n", opcode);
+  }
+
   instruction_info *info = find_instruction_info_by_name(opcode);
 
   return result;

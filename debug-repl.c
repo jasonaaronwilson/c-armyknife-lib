@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "assembler.h"
 #include "debug-repl.h"
 #include "interpreter.h"
 #include "printer.h"
@@ -90,6 +91,13 @@ void debug_repl(cpu_thread_state *state) {
     } else if (string_starts_with(command, "examine") ||
                string_starts_with(command, "x")) {
       print_data(state->memory, state->pc, state->pc + 16);
+    } else if (string_starts_with(command, "assemble")) {
+      fprintf(stderr, "(assembler) ");
+      // TODO(jawilson): get address
+      fgets(line, sizeof(line), stdin);
+      assembly_result asm_result =
+          assemble(state->memory, state->pc, state->symbols, line);
+      state->symbols = asm_result.symbols;
     } else {
       fprintf(stderr, "Uknown debug command. Ignoring.\n");
     }

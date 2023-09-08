@@ -80,14 +80,27 @@ void debug_disassemble_command(cpu_thread_state *state, token_list *tokens) {
 
 void debug_assemble_command(cpu_thread_state *state, token_list *tokens) {
   char line[1024];
-  fprintf(stderr, "(assembler) ");
-  // TODO(jawilson): get address
-  fgets(line, sizeof(line), stdin);
+  array *statements = make_array(8);
+
+  while (1) {
+    fprintf(stderr, "(assembler) ");
+    fgets(line, sizeof(line), stdin);
+    if (string_equal(line, "\n")) {
+      break;
+    }
+    array_add(statements, (uint64_t)string_duplicate(line));
+  }
+
   assembly_result asm_result =
-      assemble(state->memory, state->pc, state->symbols, line);
+      assemble_statements(state->memory, state->pc, state->symbols, statements);
   state->symbols = asm_result.symbols;
-  fprintf(stderr, "instruction is %lu bytes long\n",
+  fprintf(stderr, "assemble fragment is %lu bytes long\n",
           (asm_result.address_end - asm_result.address_start));
+
+  for (int i = 0; i < array_length(statements); i++) {
+    free((void *)array_get(statements, i));
+  }
+  free(statements);
 }
 
 void debug_address_command(cpu_thread_state *state, token_list *tokens) {

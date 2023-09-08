@@ -15,6 +15,7 @@
 #include "opcodes.h"
 
 assembly_result make_assembly_result(symbol_table *symbols, uint64_t address);
+uint64_t parse_argument(symbol_table *symbols, char *str);
 
 assembly_result assemble(paged_memory *memory, uint64_t address,
                          symbol_table *symbols, char *statement) {
@@ -48,7 +49,10 @@ assembly_result assemble(paged_memory *memory, uint64_t address,
   }
 
   address += encodeULEB128(memory, address, info->opcode_value);
-  // TODO(jawilson): process each argument!
+  for (int i = 0; i < info->number_of_arguments; i++) {
+    uint64_t value = parse_argument(symbols, token_list_get(tokens, i + 1));
+    address += encodeULEB128(memory, address, value);
+  }
 
   result.address_end = address;
   return result;
@@ -60,4 +64,24 @@ assembly_result make_assembly_result(symbol_table *symbols, uint64_t address) {
   empty_statement_result.address_end = address;
   empty_statement_result.symbols = symbols;
   return empty_statement_result;
+}
+
+uint64_t parse_uint64(const char *string) {
+  uint64_t integer = 0;
+  uint64_t digit;
+
+  while (*string != '\0') {
+    digit = *string - '0';
+    integer = integer * 10 + digit;
+    string++;
+  }
+
+  return integer;
+}
+
+uint64_t parse_argument(symbol_table *symbols, char *str) {
+  if (string_starts_with(str, "%gr")) {
+    return parse_uint64(&str[3]);
+  }
+  return parse_uint64(str);
 }

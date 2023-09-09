@@ -15,17 +15,17 @@ typedef struct paged_memory_S {
   struct paged_memory_S* next;
   uint64_t page_number;
   uint8_t* data;
-} paged_memory;
+} paged_memory_t;
 
-extern int is_address_mapped(paged_memory* memory, uint64_t address);
-extern paged_memory* allocate_page(paged_memory* memory, uint64_t address);
-extern uint8_t load8(paged_memory* memory, uint64_t address);
-extern void store8(paged_memory* memory, uint64_t address, uint8_t value);
-extern uint16_t load16(paged_memory* memory, uint64_t address);
-extern void store16(paged_memory* memory, uint64_t address, uint16_t value);
-extern uint32_t load32(paged_memory* memory, uint64_t address);
-extern void store32(paged_memory* memory, uint64_t address, uint32_t value);
-extern uint64_t load64(paged_memory* memory, uint64_t address);
-extern void store64(paged_memory* memory, uint64_t address, uint64_t value);
+extern int is_address_mapped(paged_memory_t* memory, uint64_t address);
+extern paged_memory_t* allocate_page(paged_memory_t* memory, uint64_t address);
+extern uint8_t load8(paged_memory_t* memory, uint64_t address);
+extern void store8(paged_memory_t* memory, uint64_t address, uint8_t value);
+extern uint16_t load16(paged_memory_t* memory, uint64_t address);
+extern void store16(paged_memory_t* memory, uint64_t address, uint16_t value);
+extern uint32_t load32(paged_memory_t* memory, uint64_t address);
+extern void store32(paged_memory_t* memory, uint64_t address, uint32_t value);
+extern uint64_t load64(paged_memory_t* memory, uint64_t address);
+extern void store64(paged_memory_t* memory, uint64_t address, uint64_t value);
 
 #endif

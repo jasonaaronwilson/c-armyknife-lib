@@ -4,7 +4,7 @@
 /**
  * Utility function to decode a ULEB128 value.
  */
-unsigned_decode_result decodeULEB128(paged_memory* memory, uint64_t address) {
+unsigned_decode_result decodeULEB128(paged_memory_t* memory, uint64_t address) {
   uint64_t orig_address = address;
   uint64_t value = 0;
   unsigned shift = 0;
@@ -27,7 +27,8 @@ unsigned_decode_result decodeULEB128(paged_memory* memory, uint64_t address) {
   return result;
 }
 
-unsigned encodeULEB128(paged_memory* memory, uint64_t address, uint64_t value) {
+unsigned encodeULEB128(paged_memory_t* memory, uint64_t address,
+                       uint64_t value) {
   uint64_t orig_address = address;
   do {
     uint8_t byte = value & 0x7f;

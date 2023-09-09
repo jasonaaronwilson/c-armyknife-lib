@@ -59,7 +59,7 @@ int opcode_to_number_of_arguments(uint64_t opcode);
 void interpret(cpu_thread_state_t* state, uint64_t max_instructions) {
   uint64_t num_instructions = 0;
   uint64_t pc = state->pc;
-  paged_memory* memory = state->memory;
+  paged_memory_t* memory = state->memory;
   uint64_t* ireg = &state->register_storage[0];
 
   while (1) {

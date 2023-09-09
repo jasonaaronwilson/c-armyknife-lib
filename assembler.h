@@ -13,9 +13,9 @@ typedef struct {
   symbol_table* symbols;
 } assembly_result_t;
 
-extern assembly_result_t assemble(paged_memory* memory, uint64_t addresss,
+extern assembly_result_t assemble(paged_memory_t* memory, uint64_t addresss,
                                   symbol_table* symbols, char* statement);
-extern assembly_result_t assemble_statements(paged_memory* memory,
+extern assembly_result_t assemble_statements(paged_memory_t* memory,
                                              uint64_t addresss,
                                              symbol_table* symbols,
                                              array_t* statements);

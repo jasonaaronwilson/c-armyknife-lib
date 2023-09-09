@@ -10,7 +10,7 @@ typedef struct {
   uint64_t pc;
 
   // A sparse memory space.
-  paged_memory* memory;
+  paged_memory_t* memory;
 
   // Symbols associated with paged_memory
   symbol_table* symbols;

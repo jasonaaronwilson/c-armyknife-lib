@@ -37,7 +37,7 @@ uint64_t parse_argument(uint8_t type, symbol_table* symbols, char* str) {
   return 0;
 }
 
-assembly_result_t assemble_statements(paged_memory* memory, uint64_t address,
+assembly_result_t assemble_statements(paged_memory_t* memory, uint64_t address,
                                       symbol_table* symbols,
                                       array_t* statements) {
   uint64_t start_address = address;
@@ -60,7 +60,7 @@ assembly_result_t assemble_statements(paged_memory* memory, uint64_t address,
   return result;
 }
 
-assembly_result_t assemble(paged_memory* memory, uint64_t address,
+assembly_result_t assemble(paged_memory_t* memory, uint64_t address,
                            symbol_table* symbols, char* statement) {
 
   assembly_result_t result = make_assembly_result(symbols, address);

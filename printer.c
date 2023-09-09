@@ -7,9 +7,9 @@
 #include "uleb128.h"
 
 // Forward Declaration
-uint64_t print_instruction(paged_memory* memory, uint64_t address);
+uint64_t print_instruction(paged_memory_t* memory, uint64_t address);
 
-uint64_t print_instructions(paged_memory* memory, uint64_t address,
+uint64_t print_instructions(paged_memory_t* memory, uint64_t address,
                             uint64_t number_of_instructions) {
   while (number_of_instructions-- > 0) {
     address = print_instruction(memory, address);
@@ -31,7 +31,7 @@ void print_instruction_argument(uint8_t type, uint64_t value) {
   }
 }
 
-uint64_t print_instruction(paged_memory* memory, uint64_t address) {
+uint64_t print_instruction(paged_memory_t* memory, uint64_t address) {
   fprintf(stderr, "%08lx", (address & 0xffffffff));
 
   unsigned_decode_result opcode = decodeULEB128(memory, address);
@@ -87,7 +87,7 @@ void print_registers(cpu_thread_state_t* state, int num_gr_registers,
   }
 }
 
-void print_data(paged_memory* memory, uint64_t start_address,
+void print_data(paged_memory_t* memory, uint64_t start_address,
                 uint64_t end_address) {
   for (uint64_t address = start_address; address < end_address; address++) {
     fprintf(stderr, "%08lx %02x\n", (address & 0xffffffff),

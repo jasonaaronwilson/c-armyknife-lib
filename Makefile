@@ -38,14 +38,14 @@ SRC_H = allocate.h \
 	uleb128.h
 
 comet-vm: ${SRC_C} ${SRC_H}
-	${CC} -g ${SRC_C}
-	stat --format=%s a.out
+	${CC} -g ${SRC_C} -o comet-vm
+	stat --format=%s comet-vm
 
 format:
 	clang-format -i ${SRC_C} ${SRC_H}
 
 clean:
-	rm -rf *~ a.out TAGS test-data/*~
+	rm -rf *~ a.out TAGS test-data/*~ comet-vm
 
 diff: clean
 	git difftool HEAD
@@ -55,3 +55,7 @@ how-big: clean
 
 tags:
 	etags ${SRC_C} ${SRC_H}
+
+test:
+	./test-data/nop-test.sh
+

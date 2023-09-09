@@ -64,6 +64,10 @@ assembly_result assemble(paged_memory* memory, uint64_t address,
 
   assembly_result result = make_assembly_result(symbols, address);
 
+  if (string_starts_with(statement, "#")) {
+    return result;
+  }
+
   token_list* tokens = tokenize(statement, " ,\n");
 
   if (tokens == NULL) {

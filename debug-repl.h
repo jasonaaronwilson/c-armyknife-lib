@@ -3,6 +3,6 @@
 
 #include "cpu-thread-state.h"
 
-extern void debug_repl(cpu_thread_state *state);
+extern void debug_repl(cpu_thread_state* state);
 
 #endif /* _DEBUG_REPL_ */

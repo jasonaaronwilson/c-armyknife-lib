@@ -12,7 +12,7 @@
 #define ARG_TYPE_IMM 3
 
 typedef struct {
-  char *opcode_name;
+  char* opcode_name;
   uint64_t opcode_value;
   uint8_t number_of_arguments; // includes "targets"
   uint8_t arg0_type;
@@ -25,7 +25,7 @@ extern instruction_info instruction_info_array[LAST_OPCODE];
 
 extern void init_instruction_info();
 // TODO(jawilson): rename
-extern instruction_info *find_instruction_info_by_opcode(uint64_t opcode);
-extern instruction_info *find_instruction_info_by_name(const char *name);
+extern instruction_info* find_instruction_info_by_opcode(uint64_t opcode);
+extern instruction_info* find_instruction_info_by_name(const char* name);
 
 #endif /* _INSTRUCTION_INFO_ */

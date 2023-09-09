@@ -7,19 +7,19 @@
 #include "paged-memory.h"
 #include "printer.h"
 
-void add_sample_program(cpu_thread_state *state, uint64_t address);
+void add_sample_program(cpu_thread_state* state, uint64_t address);
 
 /**
  * This is a simple main routine for the interpreter.
  */
-int main(int argc, char **argv) {
+int main(int argc, char** argv) {
 
   int number_of_int_registers = 4096;
   int number_of_fp_registers = 4096;
   uint64_t memory_amount = 4096 * 128;
   uint64_t start_pc = PAGE_SIZE;
 
-  cpu_thread_state *state = (cpu_thread_state *)(malloc_bytes(
+  cpu_thread_state* state = (cpu_thread_state*)(malloc_bytes(
       sizeof(cpu_thread_state) + number_of_int_registers * 8
       + number_of_fp_registers * 8));
 
@@ -32,7 +32,7 @@ int main(int argc, char **argv) {
 
   add_sample_program(state, PAGE_SIZE);
 
-  char *debug = getenv("COMET_VM_DEBUG");
+  char* debug = getenv("COMET_VM_DEBUG");
   if (debug != NULL) {
     debug_repl(state);
     exit(0);
@@ -54,7 +54,7 @@ int main(int argc, char **argv) {
   exit(0);
 }
 
-void add_sample_program(cpu_thread_state *state, uint64_t address) {
+void add_sample_program(cpu_thread_state* state, uint64_t address) {
   /*
   state->memory_start[address++] = SIMM;
   state->memory_start[address++] = GR2;

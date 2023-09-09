@@ -39,7 +39,7 @@
 #define AS_UINT32(x) ((uint32_t)x)
 #define AS_UINT64(x) ((uint64_t)x)
 
-uint8_t *page_data_of(paged_memory *memory, uint64_t page_number) {
+uint8_t* page_data_of(paged_memory* memory, uint64_t page_number) {
   while (memory) {
     if (memory->page_number == page_number) {
       return memory->data;
@@ -52,7 +52,7 @@ uint8_t *page_data_of(paged_memory *memory, uint64_t page_number) {
 /**
  * Determine if a mapping exists for a given address.
  */
-int is_address_mapped(paged_memory *memory, uint64_t address) {
+int is_address_mapped(paged_memory* memory, uint64_t address) {
   return page_data_of(memory, address >> PAGE_SHIFT) != 0;
 }
 
@@ -61,9 +61,9 @@ int is_address_mapped(paged_memory *memory, uint64_t address) {
  * paged_memory* object may be returned (even in cases where it is
  * already mapped).
  */
-paged_memory *allocate_page(paged_memory *memory, uint64_t address) {
+paged_memory* allocate_page(paged_memory* memory, uint64_t address) {
   if (!is_address_mapped(memory, address)) {
-    paged_memory *result = malloc_struct(paged_memory);
+    paged_memory* result = malloc_struct(paged_memory);
     // TODO(jawilson): check result isn't null
     result->next = memory;
     result->page_number = address >> PAGE_SHIFT;
@@ -74,49 +74,49 @@ paged_memory *allocate_page(paged_memory *memory, uint64_t address) {
   return memory;
 }
 
-uint8_t load8(paged_memory *memory, uint64_t address) {
+uint8_t load8(paged_memory* memory, uint64_t address) {
   uint64_t page_number = address >> PAGE_SHIFT;
-  uint8_t *data = page_data_of(memory, page_number);
+  uint8_t* data = page_data_of(memory, page_number);
   if (!data) {
     fatal_error(ERROR_MEMORY_READ);
   }
   return data[address & PAGE_MASK];
 }
 
-void store8(paged_memory *memory, uint64_t address, uint8_t value) {
+void store8(paged_memory* memory, uint64_t address, uint8_t value) {
   uint64_t page_number = address >> PAGE_SHIFT;
-  uint8_t *data = page_data_of(memory, page_number);
+  uint8_t* data = page_data_of(memory, page_number);
   if (!data) {
     fatal_error(ERROR_MEMORY_WRITE);
   }
   data[address & PAGE_MASK] = value;
 }
 
-uint16_t load16(paged_memory *memory, uint64_t address) {
+uint16_t load16(paged_memory* memory, uint64_t address) {
   return AS_UINT16(load8(memory, address))
          | (AS_UINT16(load8(memory, address + 1)) << 8);
 }
 
-void store16(paged_memory *memory, uint64_t address, uint16_t value) {
+void store16(paged_memory* memory, uint64_t address, uint16_t value) {
   store8(memory, address, value & 0xff);
   store8(memory, address + 1, (value >> 8) & 0xff);
 }
 
-uint32_t load32(paged_memory *memory, uint64_t address) {
+uint32_t load32(paged_memory* memory, uint64_t address) {
   return AS_UINT32(load8(memory, address))
          | (AS_UINT32(load8(memory, address + 1)) << 8)
          | (AS_UINT32(load8(memory, address + 2)) << 16)
          | (AS_UINT32(load8(memory, address + 3)) << 24);
 }
 
-void store32(paged_memory *memory, uint64_t address, uint32_t value) {
+void store32(paged_memory* memory, uint64_t address, uint32_t value) {
   store8(memory, address, value & 0xff);
   store8(memory, address + 1, (value >> 8) & 0xff);
   store8(memory, address + 2, (value >> 16) & 0xff);
   store8(memory, address + 3, (value >> 24) & 0xff);
 }
 
-uint64_t load64(paged_memory *memory, uint64_t address) {
+uint64_t load64(paged_memory* memory, uint64_t address) {
   return AS_UINT64(load8(memory, address))
          | (AS_UINT64(load8(memory, address + 1)) << 8)
          | (AS_UINT64(load8(memory, address + 2)) << 16)
@@ -127,7 +127,7 @@ uint64_t load64(paged_memory *memory, uint64_t address) {
          | (AS_UINT64(load8(memory, address + 7)) << 56);
 }
 
-void store64(paged_memory *memory, uint64_t address, uint64_t value) {
+void store64(paged_memory* memory, uint64_t address, uint64_t value) {
   store8(memory, address, value & 0xff);
   store8(memory, address + 1, (value >> 8) & 0xff);
   store8(memory, address + 2, (value >> 16) & 0xff);

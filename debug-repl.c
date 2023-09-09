@@ -14,12 +14,12 @@
 //  return strncmp(str1, str2, strlen(str2)) == 0;
 // }
 
-uint64_t parse_address(cpu_thread_state *state, char *str) {
+uint64_t parse_address(cpu_thread_state* state, char* str) {
   if (str[0] == '%') {
     // FIXME
     return 42;
   }
-  symbol *sym = find_symbol_by_name(state->symbols, str);
+  symbol* sym = find_symbol_by_name(state->symbols, str);
   if (!string_is_null_or_empty(sym->name)) {
     return sym->value;
   }
@@ -27,7 +27,7 @@ uint64_t parse_address(cpu_thread_state *state, char *str) {
   return 0;
 }
 
-void debug_help_command(token_list *tokens) {
+void debug_help_command(token_list* tokens) {
   fprintf(stderr, "This is a debugger repl. The available commands are:\n");
   fprintf(stderr, "  add-address\n"); // TODO(jawilson)
   fprintf(stderr, "  address\n");
@@ -44,12 +44,12 @@ void debug_help_command(token_list *tokens) {
   fprintf(stderr, "  unbreak\n");
 }
 
-void debug_quit_command(token_list *tokens) {
+void debug_quit_command(token_list* tokens) {
   fprintf(stderr, "The debugger has terminated execution. Exiting...\n");
   exit(0);
 }
 
-void debug_step_command(cpu_thread_state *state, token_list *tokens) {
+void debug_step_command(cpu_thread_state* state, token_list* tokens) {
   uint64_t amount = 1;
   if (token_list_length(tokens) >= 2) {
     amount = string_parse_uint64(token_list_get(tokens, 1));
@@ -66,7 +66,7 @@ void debug_step_command(cpu_thread_state *state, token_list *tokens) {
   // }
 }
 
-void debug_disassemble_command(cpu_thread_state *state, token_list *tokens) {
+void debug_disassemble_command(cpu_thread_state* state, token_list* tokens) {
   uint64_t address = state->pc;
   if (token_list_length(tokens) > 1) {
     address = parse_address(state, token_list_get(tokens, 1));
@@ -78,9 +78,9 @@ void debug_disassemble_command(cpu_thread_state *state, token_list *tokens) {
   print_instructions(state->memory, address, number_of_instructions);
 }
 
-void debug_assemble_command(cpu_thread_state *state, token_list *tokens) {
+void debug_assemble_command(cpu_thread_state* state, token_list* tokens) {
   char line[1024];
-  array *statements = make_array(8);
+  array* statements = make_array(8);
 
   while (1) {
     fprintf(stderr, "(assembler) ");
@@ -98,19 +98,19 @@ void debug_assemble_command(cpu_thread_state *state, token_list *tokens) {
           (asm_result.address_end - asm_result.address_start));
 
   for (int i = 0; i < array_length(statements); i++) {
-    free((void *)array_get(statements, i));
+    free((void*)array_get(statements, i));
   }
   free(statements);
 }
 
-void debug_address_command(cpu_thread_state *state, token_list *tokens) {
+void debug_address_command(cpu_thread_state* state, token_list* tokens) {
   if (token_list_length(tokens) < 2) {
     fprintf(stderr, "Error: not enough arguments (got %d tokens)",
             token_list_length(tokens));
     return;
   }
-  char *symbol_name = token_list_get(tokens, 1);
-  symbol *sym = find_symbol_by_name(state->symbols, symbol_name);
+  char* symbol_name = token_list_get(tokens, 1);
+  symbol* sym = find_symbol_by_name(state->symbols, symbol_name);
   if (sym != NULL) {
     fprintf(stderr, "address of %s is 0x%08x\n", sym->name,
             (uint32_t)sym->value);
@@ -119,7 +119,7 @@ void debug_address_command(cpu_thread_state *state, token_list *tokens) {
   }
 }
 
-void debug_examine_command(cpu_thread_state *state, token_list *tokens) {
+void debug_examine_command(cpu_thread_state* state, token_list* tokens) {
   uint64_t start_address = state->pc;
   if (token_list_length(tokens) >= 2) {
     // TODO(jawilson): allow symbols!
@@ -144,7 +144,7 @@ void debug_examine_command(cpu_thread_state *state, token_list *tokens) {
  * examine [optional-start-address/symbol] [optional-end-address/symbol]
  * continue
  */
-void debug_repl(cpu_thread_state *state) {
+void debug_repl(cpu_thread_state* state) {
   char line[1024];
 
   while (1) {
@@ -152,8 +152,8 @@ void debug_repl(cpu_thread_state *state) {
 
     fgets(line, sizeof(line), stdin);
 
-    token_list *tokens = tokenize(line, " \n");
-    char *command = token_list_get(tokens, 0);
+    token_list* tokens = tokenize(line, " \n");
+    char* command = token_list_get(tokens, 0);
 
     if (string_equal(command, "help")) {
       debug_help_command(tokens);

@@ -5,27 +5,27 @@
 uint8_t is_initialized;
 instruction_info instruction_info_array[LAST_OPCODE];
 
-void add_instruction_info_0(char *opcode_name, int opcode_number) {
+void add_instruction_info_0(char* opcode_name, int opcode_number) {
   instruction_info_array[opcode_number].opcode_name = opcode_name;
   instruction_info_array[opcode_number].opcode_value = opcode_number;
   instruction_info_array[opcode_number].number_of_arguments = 0;
 }
 
-void add_instruction_info_1(char *opcode_name, int opcode_number,
+void add_instruction_info_1(char* opcode_name, int opcode_number,
                             uint8_t arg0_type) {
   add_instruction_info_0(opcode_name, opcode_number);
   instruction_info_array[opcode_number].arg0_type = arg0_type;
   instruction_info_array[opcode_number].number_of_arguments = 1;
 }
 
-void add_instruction_info_2(char *opcode_name, int opcode_number,
+void add_instruction_info_2(char* opcode_name, int opcode_number,
                             uint8_t arg0_type, uint8_t arg1_type) {
   add_instruction_info_1(opcode_name, opcode_number, arg0_type);
   instruction_info_array[opcode_number].arg1_type = arg1_type;
   instruction_info_array[opcode_number].number_of_arguments = 2;
 }
 
-void add_instruction_info_3(char *opcode_name, int opcode_number,
+void add_instruction_info_3(char* opcode_name, int opcode_number,
                             uint8_t arg0_type, uint8_t arg1_type,
                             uint8_t arg2_type) {
   add_instruction_info_2(opcode_name, opcode_number, arg0_type, arg1_type);
@@ -73,7 +73,7 @@ void init_instruction_info() {
   is_initialized = 1;
 }
 
-instruction_info *find_instruction_info_by_opcode(uint64_t opcode) {
+instruction_info* find_instruction_info_by_opcode(uint64_t opcode) {
   if (!is_initialized) {
     init_instruction_info();
   }
@@ -84,7 +84,7 @@ instruction_info *find_instruction_info_by_opcode(uint64_t opcode) {
   }
 }
 
-instruction_info *find_instruction_info_by_name(const char *name) {
+instruction_info* find_instruction_info_by_name(const char* name) {
   if (!is_initialized) {
     init_instruction_info();
   }

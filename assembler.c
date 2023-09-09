@@ -16,13 +16,13 @@
 
 #include "opcodes.h"
 
-assembly_result make_assembly_result(symbol_table *symbols, uint64_t address);
+assembly_result make_assembly_result(symbol_table* symbols, uint64_t address);
 
-uint64_t parse_imm_argument(symbol_table *symbols, char *str);
-uint64_t parse_gr_argument(char *str);
-uint64_t parse_fp_argument(char *str);
+uint64_t parse_imm_argument(symbol_table* symbols, char* str);
+uint64_t parse_gr_argument(char* str);
+uint64_t parse_fp_argument(char* str);
 
-uint64_t parse_argument(uint8_t type, symbol_table *symbols, char *str) {
+uint64_t parse_argument(uint8_t type, symbol_table* symbols, char* str) {
   switch (type) {
   case ARG_TYPE_GR:
     return parse_gr_argument(str);
@@ -37,15 +37,15 @@ uint64_t parse_argument(uint8_t type, symbol_table *symbols, char *str) {
   return 0;
 }
 
-assembly_result assemble_statements(paged_memory *memory, uint64_t address,
-                                    symbol_table *symbols, array *statements) {
+assembly_result assemble_statements(paged_memory* memory, uint64_t address,
+                                    symbol_table* symbols, array* statements) {
   uint64_t start_address = address;
 
   while (1) {
     address = start_address;
     for (int i = 0; i < array_length(statements); i++) {
-      assembly_result result = assemble(memory, address, symbols,
-                                        (char *)array_get(statements, i));
+      assembly_result result
+          = assemble(memory, address, symbols, (char*)array_get(statements, i));
       address = result.address_end;
       symbols = result.symbols;
     }
@@ -59,20 +59,20 @@ assembly_result assemble_statements(paged_memory *memory, uint64_t address,
   return result;
 }
 
-assembly_result assemble(paged_memory *memory, uint64_t address,
-                         symbol_table *symbols, char *statement) {
+assembly_result assemble(paged_memory* memory, uint64_t address,
+                         symbol_table* symbols, char* statement) {
 
   assembly_result result = make_assembly_result(symbols, address);
 
-  token_list *tokens = tokenize(statement, " ,\n");
+  token_list* tokens = tokenize(statement, " ,\n");
 
   if (tokens == NULL) {
     return result;
   }
 
-  char *opcode = token_list_get(tokens, 0);
+  char* opcode = token_list_get(tokens, 0);
   if (string_ends_with(opcode, ":")) {
-    char *label_name = string_substring(opcode, 0, strlen(opcode) - 1);
+    char* label_name = string_substring(opcode, 0, strlen(opcode) - 1);
     fprintf(stderr, "DEBUG symbol name is '%s'\n", label_name);
     result.symbols = add_symbol(symbols, label_name, address);
     free(label_name);
@@ -84,7 +84,7 @@ assembly_result assemble(paged_memory *memory, uint64_t address,
     return result;
   }
 
-  instruction_info *info = find_instruction_info_by_name(opcode);
+  instruction_info* info = find_instruction_info_by_name(opcode);
   if (info == NULL) {
     fprintf(stderr, "WARNING: opcode not found '%s'\n", opcode);
     return result;
@@ -112,7 +112,7 @@ assembly_result assemble(paged_memory *memory, uint64_t address,
   return result;
 }
 
-assembly_result make_assembly_result(symbol_table *symbols, uint64_t address) {
+assembly_result make_assembly_result(symbol_table* symbols, uint64_t address) {
   assembly_result empty_statement_result;
   empty_statement_result.address_start = address;
   empty_statement_result.address_end = address;
@@ -120,11 +120,11 @@ assembly_result make_assembly_result(symbol_table *symbols, uint64_t address) {
   return empty_statement_result;
 }
 
-uint64_t parse_imm_argument(symbol_table *symbols, char *str) {
+uint64_t parse_imm_argument(symbol_table* symbols, char* str) {
   if (str[0] >= '0' && str[0] <= '9') {
     string_parse_uint64(str);
   }
-  symbol *sym = find_symbol_by_name(symbols, str);
+  symbol* sym = find_symbol_by_name(symbols, str);
   if (sym) {
     return sym->value;
   } else {
@@ -132,14 +132,14 @@ uint64_t parse_imm_argument(symbol_table *symbols, char *str) {
   }
 }
 
-uint64_t parse_gr_argument(char *str) {
+uint64_t parse_gr_argument(char* str) {
   if (!string_starts_with(str, "r")) {
     fatal_error(ERROR_EXPECTED_GENERAL_REGISTER);
   }
   return string_parse_uint64(&str[1]);
 }
 
-uint64_t parse_fp_argument(char *str) {
+uint64_t parse_fp_argument(char* str) {
   if (!string_starts_with(str, "f")) {
     fatal_error(ERROR_EXPECTED_FLOATING_REGISTER);
   }

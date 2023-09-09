@@ -7,9 +7,9 @@
 #include "uleb128.h"
 
 // Forward Declaration
-uint64_t print_instruction(paged_memory *memory, uint64_t address);
+uint64_t print_instruction(paged_memory* memory, uint64_t address);
 
-uint64_t print_instructions(paged_memory *memory, uint64_t address,
+uint64_t print_instructions(paged_memory* memory, uint64_t address,
                             uint64_t number_of_instructions) {
   while (number_of_instructions-- > 0) {
     address = print_instruction(memory, address);
@@ -31,13 +31,13 @@ void print_instruction_argument(uint8_t type, uint64_t value) {
   }
 }
 
-uint64_t print_instruction(paged_memory *memory, uint64_t address) {
+uint64_t print_instruction(paged_memory* memory, uint64_t address) {
   fprintf(stderr, "%08lx", (address & 0xffffffff));
 
   unsigned_decode_result opcode = decodeULEB128(memory, address);
   address += opcode.size;
 
-  instruction_info *info = find_instruction_info_by_opcode(opcode.number);
+  instruction_info* info = find_instruction_info_by_opcode(opcode.number);
 
   // TODO(jawilson): check result...
 
@@ -68,7 +68,7 @@ uint64_t print_instruction(paged_memory *memory, uint64_t address) {
   return address;
 }
 
-void print_registers(cpu_thread_state *state, int num_gr_registers,
+void print_registers(cpu_thread_state* state, int num_gr_registers,
                      int num_fp_registers) {
   for (int i = 0; i < num_gr_registers; i++) {
     if ((i > 0) && ((i & 3) == 0)) {
@@ -87,7 +87,7 @@ void print_registers(cpu_thread_state *state, int num_gr_registers,
   }
 }
 
-void print_data(paged_memory *memory, uint64_t start_address,
+void print_data(paged_memory* memory, uint64_t start_address,
                 uint64_t end_address) {
   for (uint64_t address = start_address; address < end_address; address++) {
     fprintf(stderr, "%08lx %02x\n", (address & 0xffffffff),
@@ -95,7 +95,7 @@ void print_data(paged_memory *memory, uint64_t start_address,
   }
 }
 
-void print_symbol_table(symbol_table *symbols) {
+void print_symbol_table(symbol_table* symbols) {
   while (symbols) {
     fprintf(stderr, "%08lx %s\n", symbols->sym.value, symbols->sym.name);
     symbols = symbols->next;

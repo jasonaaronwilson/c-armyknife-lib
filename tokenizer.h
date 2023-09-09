@@ -2,14 +2,14 @@
 #define _TOKENIZER_H_
 
 typedef struct token_list_S {
-  struct token_list_S *next;
-  char *data;
+  struct token_list_S* next;
+  char* data;
 } token_list;
 
-extern token_list *tokenize(const char *str, const char *delimiters);
-extern token_list *token_list_append(token_list *head, const char *data);
-extern void token_list_free_all(token_list *head);
-extern char *token_list_get(token_list *head, int position);
-extern int token_list_length(token_list *head);
+extern token_list* tokenize(const char* str, const char* delimiters);
+extern token_list* token_list_append(token_list* head, const char* data);
+extern void token_list_free_all(token_list* head);
+extern char* token_list_get(token_list* head, int position);
+extern int token_list_length(token_list* head);
 
 #endif /* _TOKENIZER_H_ */

@@ -10,10 +10,10 @@ typedef struct {
   uint64_t pc;
 
   // A sparse memory space.
-  paged_memory *memory;
+  paged_memory* memory;
 
   // Symbols associated with paged_memory
-  symbol_table *symbols;
+  symbol_table* symbols;
 
   // The number of integer registers that have been allocated for this
   // thread

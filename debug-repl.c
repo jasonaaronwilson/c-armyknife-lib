@@ -81,6 +81,8 @@ void debug_disassemble_command(cpu_thread_state* state, token_list* tokens) {
   print_instructions(state->memory, address, number_of_instructions);
 }
 
+// TODO(jawilson): refactor to share code with assemble-file
+
 void debug_assemble_command(cpu_thread_state* state, token_list* tokens) {
   char line[1024];
   array_t* statements = make_array(8);
@@ -94,8 +96,8 @@ void debug_assemble_command(cpu_thread_state* state, token_list* tokens) {
     statements = array_add(statements, (uint64_t) string_duplicate(line));
   }
 
-  assembly_result asm_result = assemble_statements(state->memory, state->pc,
-                                                   state->symbols, statements);
+  assembly_result_t asm_result = assemble_statements(
+      state->memory, state->pc, state->symbols, statements);
   state->symbols = asm_result.symbols;
   fprintf(stderr, "assemble fragment is %lu bytes long\n",
           (asm_result.address_end - asm_result.address_start));
@@ -135,8 +137,8 @@ void debug_assemble_file_command(cpu_thread_state* state, token_list* tokens) {
 
   free(contents);
 
-  assembly_result asm_result = assemble_statements(state->memory, state->pc,
-                                                   state->symbols, statements);
+  assembly_result_t asm_result = assemble_statements(
+      state->memory, state->pc, state->symbols, statements);
   state->symbols = asm_result.symbols;
   fprintf(stderr, "assemble fragment is %lu bytes long\n",
           (asm_result.address_end - asm_result.address_start));

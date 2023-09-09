@@ -16,7 +16,7 @@
 
 #include "opcodes.h"
 
-assembly_result make_assembly_result(symbol_table* symbols, uint64_t address);
+assembly_result_t make_assembly_result(symbol_table* symbols, uint64_t address);
 
 uint64_t parse_imm_argument(symbol_table* symbols, char* str);
 uint64_t parse_gr_argument(char* str);
@@ -37,16 +37,16 @@ uint64_t parse_argument(uint8_t type, symbol_table* symbols, char* str) {
   return 0;
 }
 
-assembly_result assemble_statements(paged_memory* memory, uint64_t address,
-                                    symbol_table* symbols,
-                                    array_t* statements) {
+assembly_result_t assemble_statements(paged_memory* memory, uint64_t address,
+                                      symbol_table* symbols,
+                                      array_t* statements) {
   uint64_t start_address = address;
 
   while (1) {
     address = start_address;
     for (int i = 0; i < array_length(statements); i++) {
-      assembly_result result = assemble(memory, address, symbols,
-                                        (char*) array_get(statements, i));
+      assembly_result_t result = assemble(memory, address, symbols,
+                                          (char*) array_get(statements, i));
       address = result.address_end;
       symbols = result.symbols;
     }
@@ -55,15 +55,15 @@ assembly_result assemble_statements(paged_memory* memory, uint64_t address,
     }
   }
 
-  assembly_result result = make_assembly_result(symbols, start_address);
+  assembly_result_t result = make_assembly_result(symbols, start_address);
   result.address_end = address;
   return result;
 }
 
-assembly_result assemble(paged_memory* memory, uint64_t address,
-                         symbol_table* symbols, char* statement) {
+assembly_result_t assemble(paged_memory* memory, uint64_t address,
+                           symbol_table* symbols, char* statement) {
 
-  assembly_result result = make_assembly_result(symbols, address);
+  assembly_result_t result = make_assembly_result(symbols, address);
 
   if (string_starts_with(statement, "#")) {
     return result;
@@ -117,8 +117,9 @@ assembly_result assemble(paged_memory* memory, uint64_t address,
   return result;
 }
 
-assembly_result make_assembly_result(symbol_table* symbols, uint64_t address) {
-  assembly_result empty_statement_result;
+assembly_result_t make_assembly_result(symbol_table* symbols,
+                                       uint64_t address) {
+  assembly_result_t empty_statement_result;
   empty_statement_result.address_start = address;
   empty_statement_result.address_end = address;
   empty_statement_result.symbols = symbols;

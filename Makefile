@@ -5,6 +5,7 @@ CC = clang
 SRC_C = allocate.c \
 	array.c \
 	assembler.c \
+	byte-array.c \
 	debug-repl.c \
 	fatal-error.c \
 	instruction-info.c \
@@ -20,6 +21,7 @@ SRC_C = allocate.c \
 SRC_H = allocate.h \
 	array.h \
 	assembler.h \
+	byte-array.h \
 	debug-repl.h \
 	cpu-thread-state.h \
 	fatal-error.h \

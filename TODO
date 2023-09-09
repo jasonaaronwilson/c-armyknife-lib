@@ -1,6 +1,17 @@
 # TODO
 
-1. get assembler working in multiple instruction mode and handle forward labels
+Cleanups that aren't important but help keep the style nice.
+
+* make all defined types end with _t
+* reimplement token_list using 'array'
+* reimplement symbol tables using 'array'
+* search for FIXME and TODOs and try to fix any that are easy
+* implement some assembler directives like .text and .data .file .line .global?
+* parse hexidecimal
+* print hexidecimal? 2,4,8,16 digits?
+* comparison opcodes
+
+1. after load, implement command line parsing
 2. call repl debugger on fatal error?
 3. breakpoints!
 4. load binary program from file, save binary program to file

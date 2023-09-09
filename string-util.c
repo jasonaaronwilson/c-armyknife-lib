@@ -42,12 +42,6 @@ int string_contains(const char* str, char ch) {
   return 0;
 }
 
-// accept 0x,0b prefixes and even a negative sign
-uint64_t string_to_uint64(const char* str) {
-  // FIXME
-  return 0;
-}
-
 uint64_t string_hash(const char* str) {
   // FIXME
   return 0;
@@ -64,7 +58,7 @@ char* string_substring(const char* str, int start, int end) {
   return result;
 }
 
-uint64_t string_parse_uint64(const char* string) {
+uint64_t string_parse_uint64_dec(const char* string) {
   uint64_t integer = 0;
   uint64_t digit;
 
@@ -75,6 +69,55 @@ uint64_t string_parse_uint64(const char* string) {
   }
 
   return integer;
+}
+
+uint64_t string_parse_uint64_hex(const char* string) {
+  uint64_t integer = 0;
+  uint64_t digit;
+
+  int i = 0;
+  if (string[i] == '0' && (string[i + 1] == 'x' || string[i + 1] == 'X')) {
+    i += 2;
+  }
+
+  while (string[i] != '\0') {
+    digit = string[i] - '0';
+    if (digit > 9) {
+      digit = string[i] - 'a' + 10;
+    }
+    integer = integer * 16 + digit;
+    i++;
+  }
+
+  return integer;
+}
+
+uint64_t string_parse_uint64_bin(const char* string) {
+  uint64_t integer = 0;
+  uint64_t digit;
+
+  int i = 0;
+  if (string[i] == '0' && (string[i + 1] == 'b' || string[i + 1] == 'B')) {
+    i += 2;
+  }
+
+  while (string[i] != '\0') {
+    digit = string[i] - '0';
+    integer = integer * 2 + digit;
+    i++;
+  }
+
+  return integer;
+}
+
+uint64_t string_parse_uint64(const char* string) {
+  if (string_starts_with(string, "0x")) {
+    return string_parse_uint64_hex(string);
+  } else if (string_starts_with(string, "0b")) {
+    return string_parse_uint64_bin(string);
+  } else {
+    return string_parse_uint64_dec(string);
+  }
 }
 
 /**

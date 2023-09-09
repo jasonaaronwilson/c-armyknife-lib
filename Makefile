@@ -10,6 +10,7 @@ SRC_C = allocate.c \
 	fatal-error.c \
 	instruction-info.c \
 	interpreter.c \
+	io.c \
 	main.c \
 	paged-memory.c \
 	printer.c \
@@ -27,6 +28,7 @@ SRC_H = allocate.h \
 	fatal-error.h \
 	instruction-info.h \
 	interpreter.h \
+	io.h \
 	opcodes.h \
 	paged-memory.h \
 	printer.h \

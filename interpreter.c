@@ -73,7 +73,7 @@ void interpret(cpu_thread_state_t* state, uint64_t max_instructions) {
 
     uint64_t start_pc = pc;
 
-    unsigned_decode_result opcode_result = decodeULEB128(memory, pc);
+    unsigned_decode_result_t opcode_result = decodeULEB128(memory, pc);
     if (opcode_result.size <= 0) {
       fatal_error(ERROR_OPCODE_DECODE_ERROR);
     }
@@ -84,7 +84,7 @@ void interpret(cpu_thread_state_t* state, uint64_t max_instructions) {
 
     uint64_t arg1 = 0;
     if (num_args > 0) {
-      unsigned_decode_result arg_result = decodeULEB128(memory, pc);
+      unsigned_decode_result_t arg_result = decodeULEB128(memory, pc);
       if (arg_result.size <= 0) {
         fatal_error(ERROR_ARG_DECODE_ERROR);
       }
@@ -94,7 +94,7 @@ void interpret(cpu_thread_state_t* state, uint64_t max_instructions) {
 
     uint64_t arg2 = 0;
     if (num_args > 1) {
-      unsigned_decode_result arg_result = decodeULEB128(memory, pc);
+      unsigned_decode_result_t arg_result = decodeULEB128(memory, pc);
       if (arg_result.size <= 0) {
         fatal_error(ERROR_ARG_DECODE_ERROR);
       }
@@ -104,7 +104,7 @@ void interpret(cpu_thread_state_t* state, uint64_t max_instructions) {
 
     uint64_t arg3 = 0;
     if (num_args > 2) {
-      unsigned_decode_result arg_result = decodeULEB128(memory, pc);
+      unsigned_decode_result_t arg_result = decodeULEB128(memory, pc);
       if (arg_result.size <= 0) {
         fatal_error(ERROR_ARG_DECODE_ERROR);
       }

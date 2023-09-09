@@ -16,13 +16,14 @@
 
 #include "opcodes.h"
 
-assembly_result_t make_assembly_result(symbol_table* symbols, uint64_t address);
+assembly_result_t make_assembly_result(symbol_table_t* symbols,
+                                       uint64_t address);
 
-uint64_t parse_imm_argument(symbol_table* symbols, char* str);
+uint64_t parse_imm_argument(symbol_table_t* symbols, char* str);
 uint64_t parse_gr_argument(char* str);
 uint64_t parse_fp_argument(char* str);
 
-uint64_t parse_argument(uint8_t type, symbol_table* symbols, char* str) {
+uint64_t parse_argument(uint8_t type, symbol_table_t* symbols, char* str) {
   switch (type) {
   case ARG_TYPE_GR:
     return parse_gr_argument(str);
@@ -38,7 +39,7 @@ uint64_t parse_argument(uint8_t type, symbol_table* symbols, char* str) {
 }
 
 assembly_result_t assemble_statements(paged_memory_t* memory, uint64_t address,
-                                      symbol_table* symbols,
+                                      symbol_table_t* symbols,
                                       array_t* statements) {
   uint64_t start_address = address;
 
@@ -61,7 +62,7 @@ assembly_result_t assemble_statements(paged_memory_t* memory, uint64_t address,
 }
 
 assembly_result_t assemble(paged_memory_t* memory, uint64_t address,
-                           symbol_table* symbols, char* statement) {
+                           symbol_table_t* symbols, char* statement) {
 
   assembly_result_t result = make_assembly_result(symbols, address);
 
@@ -69,7 +70,7 @@ assembly_result_t assemble(paged_memory_t* memory, uint64_t address,
     return result;
   }
 
-  token_list* tokens = tokenize(statement, " ,\n");
+  token_list_t* tokens = tokenize(statement, " ,\n");
 
   if (tokens == NULL) {
     return result;
@@ -117,7 +118,7 @@ assembly_result_t assemble(paged_memory_t* memory, uint64_t address,
   return result;
 }
 
-assembly_result_t make_assembly_result(symbol_table* symbols,
+assembly_result_t make_assembly_result(symbol_table_t* symbols,
                                        uint64_t address) {
   assembly_result_t empty_statement_result;
   empty_statement_result.address_start = address;
@@ -126,11 +127,11 @@ assembly_result_t make_assembly_result(symbol_table* symbols,
   return empty_statement_result;
 }
 
-uint64_t parse_imm_argument(symbol_table* symbols, char* str) {
+uint64_t parse_imm_argument(symbol_table_t* symbols, char* str) {
   if (str[0] >= '0' && str[0] <= '9') {
     return string_parse_uint64(str);
   }
-  symbol* sym = find_symbol_by_name(symbols, str);
+  symbol_t* sym = find_symbol_by_name(symbols, str);
   if (sym) {
     return sym->value;
   } else {

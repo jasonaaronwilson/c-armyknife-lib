@@ -13,7 +13,7 @@ typedef struct {
   paged_memory_t* memory;
 
   // Symbols associated with paged_memory
-  symbol_table* symbols;
+  symbol_table_t* symbols;
 
   // The number of integer registers that have been allocated for this
   // thread

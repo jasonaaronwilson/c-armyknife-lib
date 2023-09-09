@@ -15,10 +15,10 @@ typedef struct {
   uint64_t number;
   // Negative values mean an error occurred.
   int size;
-} unsigned_decode_result;
+} unsigned_decode_result_t;
 
-extern unsigned_decode_result decodeULEB128(paged_memory_t* memory,
-                                            uint64_t address);
+extern unsigned_decode_result_t decodeULEB128(paged_memory_t* memory,
+                                              uint64_t address);
 extern unsigned encodeULEB128(paged_memory_t* memory, uint64_t address,
                               uint64_t value);
 

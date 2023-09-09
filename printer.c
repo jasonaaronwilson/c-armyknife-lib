@@ -34,7 +34,7 @@ void print_instruction_argument(uint8_t type, uint64_t value) {
 uint64_t print_instruction(paged_memory_t* memory, uint64_t address) {
   fprintf(stderr, "%08lx", (address & 0xffffffff));
 
-  unsigned_decode_result opcode = decodeULEB128(memory, address);
+  unsigned_decode_result_t opcode = decodeULEB128(memory, address);
   address += opcode.size;
 
   instruction_info_t* info = find_instruction_info_by_opcode(opcode.number);
@@ -45,21 +45,21 @@ uint64_t print_instruction(paged_memory_t* memory, uint64_t address) {
 
   if (info->number_of_arguments >= 1) {
     fprintf(stderr, " ");
-    unsigned_decode_result arg = decodeULEB128(memory, address);
+    unsigned_decode_result_t arg = decodeULEB128(memory, address);
     address += arg.size;
     print_instruction_argument(info->arg0_type, arg.number);
   }
 
   if (info->number_of_arguments >= 2) {
     fprintf(stderr, ",");
-    unsigned_decode_result arg = decodeULEB128(memory, address);
+    unsigned_decode_result_t arg = decodeULEB128(memory, address);
     address += arg.size;
     print_instruction_argument(info->arg1_type, arg.number);
   }
 
   if (info->number_of_arguments >= 3) {
     fprintf(stderr, ",");
-    unsigned_decode_result arg = decodeULEB128(memory, address);
+    unsigned_decode_result_t arg = decodeULEB128(memory, address);
     address += arg.size;
     print_instruction_argument(info->arg2_type, arg.number);
   }
@@ -95,7 +95,7 @@ void print_data(paged_memory_t* memory, uint64_t start_address,
   }
 }
 
-void print_symbol_table(symbol_table* symbols) {
+void print_symbol_table(symbol_table_t* symbols) {
   while (symbols) {
     fprintf(stderr, "%08lx %s\n", symbols->sym.value, symbols->sym.name);
     symbols = symbols->next;

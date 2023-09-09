@@ -93,8 +93,8 @@ void store8(paged_memory *memory, uint64_t address, uint8_t value) {
 }
 
 uint16_t load16(paged_memory *memory, uint64_t address) {
-  return AS_UINT16(load8(memory, address)) |
-         (AS_UINT16(load8(memory, address + 1)) << 8);
+  return AS_UINT16(load8(memory, address))
+         | (AS_UINT16(load8(memory, address + 1)) << 8);
 }
 
 void store16(paged_memory *memory, uint64_t address, uint16_t value) {
@@ -103,10 +103,10 @@ void store16(paged_memory *memory, uint64_t address, uint16_t value) {
 }
 
 uint32_t load32(paged_memory *memory, uint64_t address) {
-  return AS_UINT32(load8(memory, address)) |
-         (AS_UINT32(load8(memory, address + 1)) << 8) |
-         (AS_UINT32(load8(memory, address + 2)) << 16) |
-         (AS_UINT32(load8(memory, address + 3)) << 24);
+  return AS_UINT32(load8(memory, address))
+         | (AS_UINT32(load8(memory, address + 1)) << 8)
+         | (AS_UINT32(load8(memory, address + 2)) << 16)
+         | (AS_UINT32(load8(memory, address + 3)) << 24);
 }
 
 void store32(paged_memory *memory, uint64_t address, uint32_t value) {
@@ -117,14 +117,14 @@ void store32(paged_memory *memory, uint64_t address, uint32_t value) {
 }
 
 uint64_t load64(paged_memory *memory, uint64_t address) {
-  return AS_UINT64(load8(memory, address)) |
-         (AS_UINT64(load8(memory, address + 1)) << 8) |
-         (AS_UINT64(load8(memory, address + 2)) << 16) |
-         (AS_UINT64(load8(memory, address + 3)) << 24) |
-         (AS_UINT64(load8(memory, address + 4)) << 32) |
-         (AS_UINT64(load8(memory, address + 5)) << 40) |
-         (AS_UINT64(load8(memory, address + 6)) << 48) |
-         (AS_UINT64(load8(memory, address + 7)) << 56);
+  return AS_UINT64(load8(memory, address))
+         | (AS_UINT64(load8(memory, address + 1)) << 8)
+         | (AS_UINT64(load8(memory, address + 2)) << 16)
+         | (AS_UINT64(load8(memory, address + 3)) << 24)
+         | (AS_UINT64(load8(memory, address + 4)) << 32)
+         | (AS_UINT64(load8(memory, address + 5)) << 40)
+         | (AS_UINT64(load8(memory, address + 6)) << 48)
+         | (AS_UINT64(load8(memory, address + 7)) << 56);
 }
 
 void store64(paged_memory *memory, uint64_t address, uint64_t value) {

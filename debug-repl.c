@@ -91,8 +91,8 @@ void debug_assemble_command(cpu_thread_state *state, token_list *tokens) {
     statements = array_add(statements, (uint64_t)string_duplicate(line));
   }
 
-  assembly_result asm_result =
-      assemble_statements(state->memory, state->pc, state->symbols, statements);
+  assembly_result asm_result = assemble_statements(state->memory, state->pc,
+                                                   state->symbols, statements);
   state->symbols = asm_result.symbols;
   fprintf(stderr, "assemble fragment is %lu bytes long\n",
           (asm_result.address_end - asm_result.address_start));
@@ -161,11 +161,11 @@ void debug_repl(cpu_thread_state *state) {
       debug_quit_command(tokens);
     } else if (string_equal(command, "step")) {
       debug_step_command(state, tokens);
-    } else if (string_equal(command, "disassemble") ||
-               string_starts_with(command, "dis")) {
+    } else if (string_equal(command, "disassemble")
+               || string_starts_with(command, "dis")) {
       debug_disassemble_command(state, tokens);
-    } else if (string_equal(command, "examine") ||
-               string_starts_with(command, "x")) {
+    } else if (string_equal(command, "examine")
+               || string_starts_with(command, "x")) {
       debug_examine_command(state, tokens);
     } else if (string_equal(command, "assemble")) {
       debug_assemble_command(state, tokens);

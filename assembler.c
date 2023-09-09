@@ -44,8 +44,8 @@ assembly_result assemble_statements(paged_memory *memory, uint64_t address,
   while (1) {
     address = start_address;
     for (int i = 0; i < array_length(statements); i++) {
-      assembly_result result =
-          assemble(memory, address, symbols, (char *)array_get(statements, i));
+      assembly_result result = assemble(memory, address, symbols,
+                                        (char *)array_get(statements, i));
       address = result.address_end;
       symbols = result.symbols;
     }
@@ -93,18 +93,18 @@ assembly_result assemble(paged_memory *memory, uint64_t address,
   address += encodeULEB128(memory, address, info->opcode_value);
 
   if (info->number_of_arguments >= 1) {
-    uint64_t value =
-        parse_argument(info->arg0_type, symbols, token_list_get(tokens, 1));
+    uint64_t value
+        = parse_argument(info->arg0_type, symbols, token_list_get(tokens, 1));
     address += encodeULEB128(memory, address, value);
   }
   if (info->number_of_arguments >= 2) {
-    uint64_t value =
-        parse_argument(info->arg1_type, symbols, token_list_get(tokens, 2));
+    uint64_t value
+        = parse_argument(info->arg1_type, symbols, token_list_get(tokens, 2));
     address += encodeULEB128(memory, address, value);
   }
   if (info->number_of_arguments >= 3) {
-    uint64_t value =
-        parse_argument(info->arg2_type, symbols, token_list_get(tokens, 3));
+    uint64_t value
+        = parse_argument(info->arg2_type, symbols, token_list_get(tokens, 3));
     address += encodeULEB128(memory, address, value);
   }
 

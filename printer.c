@@ -68,7 +68,7 @@ uint64_t print_instruction(paged_memory* memory, uint64_t address) {
   return address;
 }
 
-void print_registers(cpu_thread_state* state, int num_gr_registers,
+void print_registers(cpu_thread_state_t* state, int num_gr_registers,
                      int num_fp_registers) {
   for (int i = 0; i < num_gr_registers; i++) {
     if ((i > 0) && ((i & 3) == 0)) {

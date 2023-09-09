@@ -27,6 +27,6 @@ typedef struct {
   // (integer registers come first). Note: this must come last in the
   // cpu_state structure.
   uint64_t register_storage[0];
-} cpu_thread_state;
+} cpu_thread_state_t;
 
 #endif /* _CPU_THREAD_STATE_ */

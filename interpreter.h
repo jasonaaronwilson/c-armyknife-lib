@@ -3,6 +3,6 @@
 
 #include "cpu-thread-state.h"
 
-extern void interpret(cpu_thread_state* state, uint64_t max_instructions);
+extern void interpret(cpu_thread_state_t* state, uint64_t max_instructions);
 
 #endif /* _INTERPRETER_H_ */

@@ -34,10 +34,10 @@
  * aligned and the current machine is little-endian.
  */
 
-#define AS_UINT8(x) ((uint8_t)x)
-#define AS_UINT16(x) ((uint16_t)x)
-#define AS_UINT32(x) ((uint32_t)x)
-#define AS_UINT64(x) ((uint64_t)x)
+#define AS_UINT8(x) ((uint8_t) x)
+#define AS_UINT16(x) ((uint16_t) x)
+#define AS_UINT32(x) ((uint32_t) x)
+#define AS_UINT64(x) ((uint64_t) x)
 
 uint8_t* page_data_of(paged_memory* memory, uint64_t page_number) {
   while (memory) {

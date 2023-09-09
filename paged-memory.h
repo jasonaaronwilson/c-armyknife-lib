@@ -6,7 +6,7 @@
 // 64K pages are neither large nor small.
 #define PAGE_SHIFT 16
 #define PAGE_SIZE (1 << PAGE_SHIFT)
-#define PAGE_MASK (((uint64_t)PAGE_SIZE) - 1)
+#define PAGE_MASK (((uint64_t) PAGE_SIZE) - 1)
 
 // Dead simple but slow implementation sufficient for small
 // programs. Only paged_memory.c may access the members of this

@@ -56,7 +56,7 @@ uint64_t string_hash(const char* str) {
 char* string_substring(const char* str, int start, int end) {
   // TODO(jawilson): check length of str...
   int result_size = end - start + 1;
-  char* result = (char*)(malloc_bytes(result_size));
+  char* result = (char*) (malloc_bytes(result_size));
   for (int i = start; (i < end); i++) {
     result[i - start] = str[i];
   }
@@ -86,7 +86,7 @@ char* string_duplicate(const char* src) {
     return NULL;
   }
   int len = strlen(src) + 1;
-  char* result = (char*)malloc_bytes(len);
+  char* result = (char*) malloc_bytes(len);
   memcpy(result, src, len);
 
   return result;

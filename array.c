@@ -5,7 +5,7 @@
 #include "fatal-error.h"
 
 array* make_array(uint32_t initial_capacity) {
-  array* result = (array*)(malloc_bytes(8 * initial_capacity + sizeof(array)));
+  array* result = (array*) (malloc_bytes(8 * initial_capacity + sizeof(array)));
   result->capacity = initial_capacity;
   return result;
 }

@@ -88,7 +88,7 @@ void debug_assemble_command(cpu_thread_state* state, token_list* tokens) {
     if (string_equal(line, "\n")) {
       break;
     }
-    statements = array_add(statements, (uint64_t)string_duplicate(line));
+    statements = array_add(statements, (uint64_t) string_duplicate(line));
   }
 
   assembly_result asm_result = assemble_statements(state->memory, state->pc,
@@ -98,7 +98,7 @@ void debug_assemble_command(cpu_thread_state* state, token_list* tokens) {
           (asm_result.address_end - asm_result.address_start));
 
   for (int i = 0; i < array_length(statements); i++) {
-    free((void*)array_get(statements, i));
+    free((void*) array_get(statements, i));
   }
   free(statements);
 }
@@ -113,7 +113,7 @@ void debug_address_command(cpu_thread_state* state, token_list* tokens) {
   symbol* sym = find_symbol_by_name(state->symbols, symbol_name);
   if (sym != NULL) {
     fprintf(stderr, "address of %s is 0x%08x\n", sym->name,
-            (uint32_t)sym->value);
+            (uint32_t) sym->value);
   } else {
     fprintf(stderr, "%s was not found.\n", symbol_name);
   }

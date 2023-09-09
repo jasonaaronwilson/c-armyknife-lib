@@ -3,4 +3,7 @@ Language: Cpp
 BasedOnStyle: LLVM
 BreakBeforeBinaryOperators: All
 PointerAlignment: Left
-
+AlwaysBreakBeforeMultilineStrings: true
+IndentWrappedFunctionNames: true
+MaxEmptyLinesToKeep: 2
+SpaceAfterCStyleCast: true

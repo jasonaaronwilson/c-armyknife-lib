@@ -23,7 +23,7 @@ unsigned_decode_result decodeULEB128(paged_memory* memory, uint64_t address) {
     value += slice << shift;
     shift += 7;
   } while (load8(memory, address++) >= 128);
-  unsigned_decode_result result = {value, (unsigned)(address - orig_address)};
+  unsigned_decode_result result = {value, (unsigned) (address - orig_address)};
   return result;
 }
 
@@ -38,5 +38,5 @@ unsigned encodeULEB128(paged_memory* memory, uint64_t address, uint64_t value) {
     store8(memory, address++, byte);
   } while (value != 0);
 
-  return (unsigned)(address - orig_address);
+  return (unsigned) (address - orig_address);
 }

@@ -44,8 +44,8 @@ assembly_result assemble_statements(paged_memory* memory, uint64_t address,
   while (1) {
     address = start_address;
     for (int i = 0; i < array_length(statements); i++) {
-      assembly_result result
-          = assemble(memory, address, symbols, (char*)array_get(statements, i));
+      assembly_result result = assemble(memory, address, symbols,
+                                        (char*) array_get(statements, i));
       address = result.address_end;
       symbols = result.symbols;
     }

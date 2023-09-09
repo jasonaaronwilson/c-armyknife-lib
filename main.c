@@ -19,7 +19,7 @@ int main(int argc, char** argv) {
   uint64_t memory_amount = 4096 * 128;
   uint64_t start_pc = PAGE_SIZE;
 
-  cpu_thread_state* state = (cpu_thread_state*)(malloc_bytes(
+  cpu_thread_state* state = (cpu_thread_state*) (malloc_bytes(
       sizeof(cpu_thread_state) + number_of_int_registers * 8
       + number_of_fp_registers * 8));
 

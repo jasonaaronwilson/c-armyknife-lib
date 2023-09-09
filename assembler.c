@@ -38,7 +38,8 @@ uint64_t parse_argument(uint8_t type, symbol_table* symbols, char* str) {
 }
 
 assembly_result assemble_statements(paged_memory* memory, uint64_t address,
-                                    symbol_table* symbols, array* statements) {
+                                    symbol_table* symbols,
+                                    array_t* statements) {
   uint64_t start_address = address;
 
   while (1) {

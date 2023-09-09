@@ -83,7 +83,7 @@ void debug_disassemble_command(cpu_thread_state* state, token_list* tokens) {
 
 void debug_assemble_command(cpu_thread_state* state, token_list* tokens) {
   char line[1024];
-  array* statements = make_array(8);
+  array_t* statements = make_array(8);
 
   while (1) {
     fprintf(stderr, "(assembler) ");
@@ -107,7 +107,7 @@ void debug_assemble_command(cpu_thread_state* state, token_list* tokens) {
 }
 
 void debug_assemble_file_command(cpu_thread_state* state, token_list* tokens) {
-  array* statements = make_array(8);
+  array_t* statements = make_array(8);
 
   byte_array_t* contents = make_byte_array(1024);
   contents

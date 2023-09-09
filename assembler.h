@@ -18,6 +18,6 @@ extern assembly_result assemble(paged_memory* memory, uint64_t addresss,
 extern assembly_result assemble_statements(paged_memory* memory,
                                            uint64_t addresss,
                                            symbol_table* symbols,
-                                           array* statements);
+                                           array_t* statements);
 
 #endif /* _ASSEMBLER_H_ */

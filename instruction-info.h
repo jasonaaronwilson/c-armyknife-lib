@@ -18,14 +18,14 @@ typedef struct {
   uint8_t arg0_type;
   uint8_t arg1_type;
   uint8_t arg2_type;
-} instruction_info;
+} instruction_info_t;
 
 extern uint8_t is_initialized;
-extern instruction_info instruction_info_array[LAST_OPCODE];
+extern instruction_info_t instruction_info_array[LAST_OPCODE];
 
 extern void init_instruction_info();
 // TODO(jawilson): rename
-extern instruction_info* find_instruction_info_by_opcode(uint64_t opcode);
-extern instruction_info* find_instruction_info_by_name(const char* name);
+extern instruction_info_t* find_instruction_info_by_opcode(uint64_t opcode);
+extern instruction_info_t* find_instruction_info_by_name(const char* name);
 
 #endif /* _INSTRUCTION_INFO_ */

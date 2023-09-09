@@ -89,7 +89,7 @@ assembly_result_t assemble(paged_memory* memory, uint64_t address,
     return result;
   }
 
-  instruction_info* info = find_instruction_info_by_name(opcode);
+  instruction_info_t* info = find_instruction_info_by_name(opcode);
   if (info == NULL) {
     fprintf(stderr, "WARNING: opcode not found '%s'\n", opcode);
     return result;

@@ -37,7 +37,7 @@ uint64_t print_instruction(paged_memory* memory, uint64_t address) {
   unsigned_decode_result opcode = decodeULEB128(memory, address);
   address += opcode.size;
 
-  instruction_info* info = find_instruction_info_by_opcode(opcode.number);
+  instruction_info_t* info = find_instruction_info_by_opcode(opcode.number);
 
   // TODO(jawilson): check result...
 

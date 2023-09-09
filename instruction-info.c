@@ -3,7 +3,7 @@
 #include "string-util.h"
 
 uint8_t is_initialized;
-instruction_info instruction_info_array[LAST_OPCODE];
+instruction_info_t instruction_info_array[LAST_OPCODE];
 
 void add_instruction_info_0(char* opcode_name, int opcode_number) {
   instruction_info_array[opcode_number].opcode_name = opcode_name;
@@ -73,7 +73,7 @@ void init_instruction_info() {
   is_initialized = 1;
 }
 
-instruction_info* find_instruction_info_by_opcode(uint64_t opcode) {
+instruction_info_t* find_instruction_info_by_opcode(uint64_t opcode) {
   if (!is_initialized) {
     init_instruction_info();
   }
@@ -84,7 +84,7 @@ instruction_info* find_instruction_info_by_opcode(uint64_t opcode) {
   }
 }
 
-instruction_info* find_instruction_info_by_name(const char* name) {
+instruction_info_t* find_instruction_info_by_name(const char* name) {
   if (!is_initialized) {
     init_instruction_info();
   }

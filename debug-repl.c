@@ -124,7 +124,7 @@ void debug_assemble_file_command(cpu_thread_state* state, token_list* tokens) {
       }
     }
     if (i > line_start) {
-      char* str = (char*) byte_array_substring(contents, line_start, i);
+      char* str = (char*) byte_array_c_substring(contents, line_start, i);
       if (str == NULL) {
         fatal_error(ERROR_UKNOWN);
       }

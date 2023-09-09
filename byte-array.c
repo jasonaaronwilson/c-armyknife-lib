@@ -21,7 +21,8 @@ uint8_t byte_array_get(byte_array_t* arr, uint64_t position) {
   }
 }
 
-uint8_t* byte_array_substring(byte_array_t* arr, uint64_t start, uint64_t end) {
+uint8_t* byte_array_c_substring(byte_array_t* arr, uint64_t start,
+                                uint64_t end) {
   // Add one extra byte for a NUL string terminator byte
   uint8_t* result = (malloc_bytes(end - start + 1));
   for (int i = start; i < end; i++) {

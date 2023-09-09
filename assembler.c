@@ -126,7 +126,7 @@ assembly_result make_assembly_result(symbol_table* symbols, uint64_t address) {
 
 uint64_t parse_imm_argument(symbol_table* symbols, char* str) {
   if (str[0] >= '0' && str[0] <= '9') {
-    string_parse_uint64(str);
+    return string_parse_uint64(str);
   }
   symbol* sym = find_symbol_by_name(symbols, str);
   if (sym) {

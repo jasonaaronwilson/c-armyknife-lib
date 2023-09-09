@@ -1,3 +1,10 @@
+/**
+ * @file assembler.c
+ *
+ * This is an interface for compiling a single instruction statement
+ * to "memory" or updating the symbol table for a label.
+ */
+
 #include <stdio.h>
 #include <string.h>
 
@@ -8,11 +15,6 @@
 #include "string-util.h"
 #include "tokenizer.h"
 #include "uleb128.h"
-
-/**
- * This is an interface for compiling a single instruction statement
- * to "memory" or updating the symbol table for a label.
- */
 
 #include "opcodes.h"
 

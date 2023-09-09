@@ -1,3 +1,9 @@
+/**
+ * @file printer.c
+ *
+ * This file contains all kinds of routines print stuff.
+ */
+
 #include <inttypes.h>
 #include <stdio.h>
 

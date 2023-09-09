@@ -1,3 +1,9 @@
+/**
+ * @file string-util.c
+ *
+ * This contains additional string function to operate on "strings".
+ */
+
 #include <stdlib.h>
 #include <string.h>
 

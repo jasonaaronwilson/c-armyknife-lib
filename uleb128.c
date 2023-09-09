@@ -1,3 +1,10 @@
+/**
+ * @file uleb.c
+ *
+ * This contains routines to decode and encode ULEB128 numbers (though
+ * it only works on paged_memory_t.
+ */
+
 #include "uleb128.h"
 #include "paged-memory.h"
 
@@ -28,7 +35,9 @@ unsigned_decode_result_t decodeULEB128(paged_memory_t* memory,
       = {value, (unsigned) (address - orig_address)};
   return result;
 }
-
+/**
+ * Utility function to encode a ULEB128 value.
+ */
 unsigned encodeULEB128(paged_memory_t* memory, uint64_t address,
                        uint64_t value) {
   uint64_t orig_address = address;

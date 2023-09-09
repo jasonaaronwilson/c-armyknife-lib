@@ -1,3 +1,10 @@
+/**
+ * @file allocate.c
+ *
+ * This file contains wrappers around malloc to make it more
+ * convenient and possibly safer.
+ */
+
 #include <stdlib.h>
 #include <string.h>
 

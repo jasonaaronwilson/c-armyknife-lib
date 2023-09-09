@@ -1,3 +1,10 @@
+/**
+ * @file instruction-info.c
+ *
+ * This file contains routines to get information about an instruction
+ * from the opcode number or the opcode name.
+ */
+
 #include "instruction-info.h"
 #include "fatal-error.h"
 #include "string-util.h"

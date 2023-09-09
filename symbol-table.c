@@ -1,3 +1,9 @@
+/**
+ * @file symbol-table.c
+ *
+ * This contains the implementation of a symbol table.
+ */
+
 #include <stdlib.h>
 #include <string.h>
 

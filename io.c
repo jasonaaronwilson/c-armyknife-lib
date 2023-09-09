@@ -1,3 +1,10 @@
+/**
+ * @file io.c
+ *
+ * This contains routines to read the contents of a file or write a
+ * new file.
+ */
+
 #include <stdio.h>
 
 #include "byte-array.h"

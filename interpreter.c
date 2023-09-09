@@ -1,5 +1,7 @@
 /**
- * This contains the bulk of the interpreter logic for the Comet VM.
+ * @file interpreter.c
+ *
+ * This contains the interpreter for the Comet VM.
  */
 
 #include <stdio.h>

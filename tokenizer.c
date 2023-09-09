@@ -1,3 +1,10 @@
+/**
+ * @file tokenizer.c
+ *
+ * This contains a routine to split a string into a series of tokens
+ * seperated via delimiters.
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

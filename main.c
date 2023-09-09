@@ -30,10 +30,10 @@ int main(int argc, char** argv) {
   // writes will fail to addresses near "NULL".
   state->memory = allocate_page(0, PAGE_SIZE);
 
-  add_sample_program(state, PAGE_SIZE);
+  // add_sample_program(state, PAGE_SIZE);
 
   char* debug = getenv("COMET_VM_DEBUG");
-  if (debug != NULL) {
+  if (debug != NULL || 1) {
     debug_repl(state);
     exit(0);
   }

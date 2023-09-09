@@ -21,6 +21,15 @@ uint8_t byte_array_get(byte_array_t* arr, uint64_t position) {
   }
 }
 
+uint8_t* byte_array_substring(byte_array_t* arr, uint64_t start, uint64_t end) {
+  // Add one extra byte for a NUL string terminator byte
+  uint8_t* result = (malloc_bytes(end - start + 1));
+  for (int i = start; i < end; i++) {
+    result[i - start] = arr->elements[i];
+  }
+  return result;
+}
+
 byte_array_t* byte_array_append_byte(byte_array_t* arr, uint8_t element) {
   if (arr->length < arr->capacity) {
     arr->elements[arr->length] = element;
@@ -29,9 +38,10 @@ byte_array_t* byte_array_append_byte(byte_array_t* arr, uint8_t element) {
   } else {
     byte_array_t* result = make_byte_array(arr->capacity * 2);
     for (int i = 0; i < arr->length; i++) {
-      byte_array_append_byte(result, byte_array_get(arr, i));
+      result = byte_array_append_byte(result, byte_array_get(arr, i));
     }
     free(arr);
+
     return result;
   }
 }
@@ -39,7 +49,7 @@ byte_array_t* byte_array_append_byte(byte_array_t* arr, uint8_t element) {
 byte_array_t* byte_array_append_bytes(byte_array_t* arr, uint8_t* bytes,
                                       uint64_t n_bytes) {
   for (int i = 0; i < n_bytes; i++) {
-    arr = byte_array_append_byte(arr, bytes[n_bytes]);
+    arr = byte_array_append_byte(arr, bytes[i]);
   }
   return arr;
 }

@@ -3,8 +3,11 @@
 #include <string.h>
 
 #include "assembler.h"
+#include "byte-array.h"
 #include "debug-repl.h"
+#include "fatal-error.h"
 #include "interpreter.h"
+#include "io.h"
 #include "printer.h"
 #include "string-util.h"
 #include "symbol-table.h"
@@ -103,6 +106,48 @@ void debug_assemble_command(cpu_thread_state* state, token_list* tokens) {
   free(statements);
 }
 
+void debug_assemble_file_command(cpu_thread_state* state, token_list* tokens) {
+  array* statements = make_array(8);
+
+  byte_array_t* contents = make_byte_array(1024);
+  contents
+      = byte_array_append_file_contents(contents, token_list_get(tokens, 1));
+
+  uint64_t line_start = 0;
+  while (line_start < byte_array_length(contents)) {
+    int i = line_start;
+    for (; (i < byte_array_length(contents)); i++) {
+      uint8_t byte = byte_array_get(contents, i);
+      if (byte == '\n') {
+        i++;
+        break;
+      }
+    }
+    if (i > line_start) {
+      char* str = (char*) byte_array_substring(contents, line_start, i);
+      if (str == NULL) {
+        fatal_error(ERROR_UKNOWN);
+      }
+      statements = array_add(statements, (uint64_t) str);
+      line_start = i;
+    }
+  }
+
+  free(contents);
+
+  assembly_result asm_result = assemble_statements(state->memory, state->pc,
+                                                   state->symbols, statements);
+  state->symbols = asm_result.symbols;
+  fprintf(stderr, "assemble fragment is %lu bytes long\n",
+          (asm_result.address_end - asm_result.address_start));
+
+  for (int i = 0; i < array_length(statements); i++) {
+    free((void*) array_get(statements, i));
+  }
+
+  free(statements);
+}
+
 void debug_address_command(cpu_thread_state* state, token_list* tokens) {
   if (token_list_length(tokens) < 2) {
     fprintf(stderr, "Error: not enough arguments (got %d tokens)",
@@ -173,6 +218,8 @@ void debug_repl(cpu_thread_state* state) {
       debug_address_command(state, tokens);
     } else if (string_equal(command, "symbols")) {
       print_symbol_table(state->symbols);
+    } else if (string_equal(command, "assemble-file")) {
+      debug_assemble_file_command(state, tokens);
     } else {
       fprintf(stderr, "Uknown debug command. Ignoring.\n");
     }

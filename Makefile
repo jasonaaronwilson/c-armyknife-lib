@@ -64,3 +64,7 @@ TESTS = ./test-data/nop-test.sh \
 test: comet-vm
 	./run-tests.sh ${TESTS}
 
+docs:
+	doxygen
+
+

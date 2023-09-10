@@ -2,13 +2,15 @@
 
 Cleanups that aren't important but help keep the style nice.
 
-* reimplement symbol tables using 'array'
+* try using doxygen
+* comparison opcodes
 * search for FIXME and TODOs and try to fix any that are easy
 * implement some assembler directives like .text and .data .file .line .global?
 * print hexidecimal? 2,4,8,16 digits?
-* comparison opcodes
+* reimplement symbol tables using 'array'
 
-1. after load, implement command line parsing
+
+1. implement command line parsing
 2. call repl debugger on fatal error?
 3. breakpoints!
 4. load binary program from file, save binary program to file
@@ -30,3 +32,6 @@ Cleanups that aren't important but help keep the style nice.
 18. compile_x86, compile_riscv, and compile_arm - take *assembly*
     syntax for these architectures and assemble to comet byte codes.
 19. console mode for the debugger
+20. implement a "linker" and a "binary" format using the core-archive
+    format (so probably add a C reader and writer library inside
+    core-archive first).

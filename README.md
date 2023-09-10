@@ -13,6 +13,24 @@ register machine but because it supports essentially unlimited numbers
 of registers, it can also serve as a compiler intermediate language -
 one that can be executed with this VM.
 
+## Status
+
+2023-09-09T23:53:56-04:00
+
+The basics have been worked out - there is an interpreter, a simple
+built-in debugger (with some support to make testing easier), an
+assembler, a disassembler, some basic amount of testing, a set of
+conventions for the source code is worked out, a small support library
+to make C bearable for "low-performance" cases is done, etc.
+
+The current lines of source in *.[ch] is about 2257 lines (including
+comment lines) though the ratio of documentation to code will probably
+grow. I'm hoping that comet-vm will contains less than 5K lines of
+code when it reaches version "1.0".
+
+(BTW, use date --iso-8601=seconds to get a consistent format for
+dates when updating the status).
+
 ## Why?
 
 This is mostly a fun project, part of my "what if things were actually
@@ -183,3 +201,137 @@ I have now publicly disclosed the idea of using sequences of ULEB
 numbers to create an ISA. I have not nor will I apply for a patent
 (nor should it be granted based on wide-spread dissemination of this
 information).
+
+# Developer Information
+
+This will be moved into it's own file well before anyone else develops
+for comet-vm.
+
+## Style Guide
+
+### C code formatting
+
+All C source code is expected to be formatted with clang-format and
+pass tests (just use make test though occasionally a breaking change
+may be submitted since I am currently a solo developer). A
+_clang-format file is provided along with a rule "make format" to
+automatically apply this format. It's probably useful to first run
+"make format" before editing any code to make sure no sweeping deltas
+exist (may imply a different version of clang-format).
+
+The current C style is based off of clang's LLVM style guide with a
+few changes (including it's default line length, often a source of
+style disagreement).
+
+```
+---
+Language: Cpp
+BasedOnStyle: LLVM
+BreakBeforeBinaryOperators: All
+PointerAlignment: Left
+AlwaysBreakBeforeMultilineStrings: true
+IndentWrappedFunctionNames: true
+MaxEmptyLinesToKeep: 2
+SpaceAfterCStyleCast: true
+```
+
+Some of these changes are consistent with WEBKIT's style guide so I'm
+not the only one that likes code to look like this. I also like parts
+of the WEBKIT style guide such as not using abbreviation.
+
+The most noticeable deviation from LLVM style is breaking before
+binary operators (even "=") instead of after. My justification is that
+breaking after operators, while possibly removing a few lines from a
+large code base, is less readable. My brain has been trained to look
+at code from left to right and a line at a time AND also in chunks
+scanning from left to right to understand at a glance the logic and
+putting operators first means I can understand a chunk better
+especially if there are chained "&&" and "||" which dramatically
+effect control flow.
+
+Pointer alignment just means I prefer "char*<SPACE>foo" to
+"char<SPACE>*foo". Again this is based on my own brain, not science,
+and there is a strong argument that with multiple variable
+declarations in one statement, this is the wrong choice however I also
+prefer to see each declaration as it's own statement so that advantage
+doesn't fully apply. Each variable declaration should be on it's own
+and also provide a default value (I wish C guaranteed that everything
+was zeroed).
+
+Adding a space after a C style cast also looks better to my eyes
+though I feel less strongly about this than the above changes to LLVM
+style.
+
+### Naming
+
+All names should be as desciptive as possible so abbreviations are
+frowned upon. Most names should be *all lower case* (and obviously "_"
+is meant to be used to seperate words, i.e., "snake case"). Sometimes
+it feels like folks like the shortest names possible and the fewest
+characters possible. While longer names probably have a minuscule
+impact on executable size and possibly even execution time, like debug
+information, it's very useful. In terms of execution speed, if the
+length of an identifer changes the speed of a program once it has been
+"linked", something is amiss.
+
+All types we define in comet source code end in "_t" and additionally
+"typedef" is used so that these types don't need the struct qualifier
+(for self-recursive struct, say a next pointer, we use the suffix "_S"
+and then use "struct foo_S" to handle it but the _S version should not
+escape the typedef. Eliminating the struct qualifier makes it a bit
+easier to abstract types without changing lines and lines of code. The
+"_t" suffix I mostly use because of "<stdint.h>" which is usage is
+very pervasive in comet (especially uint64_t) and I want as much
+consistency as possible. BTW, the benefits of a short type name, say
+u64 instead of uint64_t are dubious at best. While most programmers
+(and large language models) will understand the shorter names, there
+is only a slight gain in source code density and maybe even a slight
+decrease in readability, at least for me. The solution to code not
+fitting onto a small screen or something like that is to just refactor
+the code into smaller functions. Both gcc and clang do many
+optimizations that makes this almost a non-concern (for example, they
+seem to inline small leaf procedures even without the inline
+keyword). More importantly, small well named chunks of code are easier
+to read.
+
+Note that file names should use "-" instead of "_".
+
+### Header Files
+
+Header files which only need to be included once should be guarded by
+something like this:
+
+```C
+#ifndef _FATAL_ERROR_
+#define _FATAL_ERROR_
+
+...
+#endif /* _FATAL_ERROR_ */
+```
+
+This is so standard that if a header file has different meanings when
+included multiple times (such as when folks use the C pre-processor
+for generic programming and such), then this should be documented at
+the top of the header file.
+
+Most files will include from both the C standard library as well as
+"self-includes" which should be grouped into two independent "blocks",
+the "standard library includes" coming first, followed by a blank
+line, followed by "self includes" and both should be independently
+sorted (which clang-format does automatically).
+
+### Documentation Comments
+
+We are currently using javadoc style comments, which is luckily
+understood by doxygen, for files and function (implementations). Since
+defining more than one type in a header file is often a mistake though
+in some case this is OK, we can document "types" in the implementation
+file making header inclusion a bit faster. Mostly I consider header
+files to be nuisance after programming in Java for so long and a big
+header file is a bad code smell. javadoc style comments are probably a
+bit longer than using "///" but after so much Java programming, my
+brain likes the look of javadoc style comments and when I'm scanning
+code, they help me identify "breaks". (One annoying thing about
+clang-format is that it throws away page breaks, aka "CTRL-L" which I
+actually kind of like (I learned this from a much better programmer
+than me)).

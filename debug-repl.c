@@ -211,15 +211,15 @@ void debug_print_register_command(cpu_thread_state_t* state,
  * value.
  */
 void debug_expect_register_command(cpu_thread_state_t* state,
-                                  token_list_t* tokens) {
+                                   token_list_t* tokens) {
   char* register_name = token_list_get(tokens, 1);
   if (string_starts_with(register_name, "r")) {
     uint64_t reg_num = parse_gr_argument(register_name);
     uint64_t expected = string_parse_uint64(token_list_get(tokens, 2));
     uint64_t value = state->register_storage[reg_num];
     if (value != expected) {
-      fprintf(stderr, "FAIL: expected %s to be %d but was %d\n",
-              register_name, value, expected);
+      fprintf(stderr, "FAIL: expected %s to be %d but was %d\n", register_name,
+              value, expected);
       exit(ERROR_DEBUGGER_EXPECT_FAILURE);
     }
   }

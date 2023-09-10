@@ -18,7 +18,8 @@ Cleanups that aren't important but help keep the style nice.
 8. comparisons?
 9. mmx instructions?
 10. all documented repl commands complete and tested?
-11. tests -- feed in a repl script that uses the assembler
+11. tests -- these should now be pretty easy to write. each opcode
+    should get at least one test
 12. syscall (some can simply pass through to real syscall!)
 13. performance measurements
 14. implement more performant paged memory

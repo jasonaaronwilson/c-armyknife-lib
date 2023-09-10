@@ -20,4 +20,7 @@ extern assembly_result_t assemble_statements(paged_memory_t* memory,
                                              symbol_table_t* symbols,
                                              array_t* statements);
 
+extern uint64_t parse_gr_argument(char* str);
+extern uint64_t parse_fp_argument(char* str);
+
 #endif /* _ASSEMBLER_H_ */

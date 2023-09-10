@@ -194,6 +194,18 @@ void debug_examine_command(cpu_thread_state_t* state, token_list_t* tokens) {
   print_data(state->memory, start_address, start_address + amount);
 }
 
+void debug_print_register_command(cpu_thread_state_t* state,
+                                  token_list_t* tokens) {
+  char* register_name = token_list_get(tokens, 1);
+  if (string_starts_with(register_name, "r")) {
+    uint64_t reg_num = parse_gr_argument(register_name);
+    print_gr_register_name_and_value(state, reg_num);
+    fprintf(stderr, "\n");
+  } else {
+    fprintf(stderr, "register named %s was not understood.\n", register_name);
+  }
+}
+
 /**
  * Enter a debug repl. The list of available commands is available
  * below in the implementation of "help".
@@ -236,6 +248,8 @@ void debug_repl(cpu_thread_state_t* state) {
       print_symbol_table(state->symbols);
     } else if (string_equal(command, "assemble-file")) {
       debug_assemble_file_command(state, tokens);
+    } else if (string_equal(command, "print-register")) {
+      debug_print_register_command(state, tokens);
     } else {
       fprintf(stderr, "Uknown debug command. Ignoring.\n");
     }

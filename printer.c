@@ -74,6 +74,12 @@ uint64_t print_instruction(paged_memory_t* memory, uint64_t address) {
   return address;
 }
 
+void print_gr_register_name_and_value(cpu_thread_state_t* state, uint64_t reg_number) {
+  fprintf(stderr, "r%02d ", reg_number);
+  fprintf(stderr, "%08lx", ((state->register_storage[reg_number]) >> 32) & 0xffffffff);
+  fprintf(stderr, "%08lx", (state->register_storage[reg_number]) & 0xffffffff);
+}
+
 void print_registers(cpu_thread_state_t* state, int num_gr_registers,
                      int num_fp_registers) {
   for (int i = 0; i < num_gr_registers; i++) {
@@ -82,9 +88,7 @@ void print_registers(cpu_thread_state_t* state, int num_gr_registers,
     } else if (i > 0) {
       fprintf(stderr, " ");
     }
-    fprintf(stderr, "gr%02d ", i);
-    fprintf(stderr, "%08lx", ((state->register_storage[i]) >> 32) & 0xffffffff);
-    fprintf(stderr, "%08lx", (state->register_storage[i]) & 0xffffffff);
+    print_gr_register_name_and_value(state, i);
   }
   fprintf(stderr, "\n");
 

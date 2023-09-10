@@ -16,4 +16,6 @@ extern void print_data(paged_memory_t* memory, uint64_t start_address,
 
 extern void print_symbol_table(symbol_table_t* symbols);
 
+extern void print_gr_register_name_and_value(cpu_thread_state_t* state, uint64_t reg_number);
+
 #endif /* _PRINTER_H_ */

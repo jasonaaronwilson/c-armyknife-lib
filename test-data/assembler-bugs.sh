@@ -1,0 +1,3 @@
+#!/bin/bash
+
+echo TODO(jawilson): the assembler should reject illegal instructions...

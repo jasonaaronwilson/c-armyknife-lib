@@ -1,6 +1,10 @@
 all: comet-vm
 
 CC = clang
+#CC = gcc
+
+# debug information
+CC_FLAGS=-g -rdynamic
 
 SRC_C = allocate.c \
 	array.c \
@@ -38,7 +42,7 @@ SRC_H = allocate.h \
 	uleb128.h
 
 comet-vm: ${SRC_C} ${SRC_H}
-	${CC} -g ${SRC_C} -o comet-vm
+	${CC} ${CC_FLAGS} ${SRC_C} -o comet-vm
 	stat --format=%s comet-vm
 
 format:

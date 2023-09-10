@@ -1,7 +1,6 @@
 #!/bin/bash
 
 start=$(date +%s%N)  # get current timestamp with nanoseconds
-## echo "START" $start
 
 success=0
 failure=0
@@ -11,7 +10,7 @@ for arg in "$@"
 do
     echo "Running: $arg"
     $arg
-    if [ $? -eq 0 ] || [ "$arg" == "./output-dir/panic-test" ]; then
+    if [ $? -eq 0 ] ; then
         ((success++))
     else
         ((failure++))

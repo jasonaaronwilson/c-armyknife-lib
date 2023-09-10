@@ -45,7 +45,7 @@ format:
 	clang-format -i ${SRC_C} ${SRC_H}
 
 clean:
-	rm -rf *~ a.out TAGS test-data/*~ comet-vm
+	rm -rf *~ a.out TAGS test-data/*~ comet-vm doxygen-docs
 
 diff: clean
 	git difftool HEAD

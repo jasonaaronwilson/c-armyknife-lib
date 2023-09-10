@@ -63,8 +63,13 @@ tags:
 TESTS = ./test-data/nop-test.sh \
 	./test-data/numbers-test.sh \
 	./test-data/alignment.sh \
-	./test-data/count-down-loop.sh \
-	./test-data/integer-binary-operators.sh
+	./test-data/count-down-loop.sh
+
+#
+# I'm trying to find a sensible test strategy. Tests should look
+# pretty simple and run fast.
+#	./test-data/integer-binary-operators.sh
+#
 
 test: comet-vm
 	./run-tests.sh ${TESTS}

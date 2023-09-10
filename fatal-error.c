@@ -7,6 +7,8 @@
  *
  * In this case C's macros are paying off as the file and line number
  * are easy to obtain.
+ *
+ * TODO(jawilson): command line flag to be quieter...
  */
 
 #include <execinfo.h>
@@ -99,7 +101,7 @@ void print_error_code_name(int error_code) {
       fprintf(stderr, "%s", "ERROR_DEBUGGER_EXPECT_FAILURE");
       break;
     default:
-      fprintf(stderr, "%s", "(non handled error code translatiob)");
+      fprintf(stderr, "%s", "(non handled error code translation)");
       break;
     }
     fprintf(stderr, " ***");

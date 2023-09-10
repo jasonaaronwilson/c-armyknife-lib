@@ -105,7 +105,7 @@ void debug_assemble_command(cpu_thread_state_t* state, token_list_t* tokens) {
   while (1) {
     fprintf(stderr, "(assembler) ");
     fgets(line, sizeof(line), stdin);
-    if (string_equal(line, "\n")) {
+    if (string_equal(line, "\n") || string_starts_with(line, "#end-assemble")) {
       break;
     }
     statements = array_add(statements, (uint64_t) string_duplicate(line));
@@ -247,6 +247,10 @@ void debug_repl(cpu_thread_state_t* state) {
     fgets(line, sizeof(line), stdin);
 
     token_list_t* tokens = tokenize(line, " \n");
+    if (token_list_length(tokens) == 0) {
+      continue;
+    }
+
     char* command = token_list_get(tokens, 0);
 
     if (string_equal(command, "help")) {

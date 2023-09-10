@@ -2,6 +2,7 @@
 
 Cleanups that aren't important but help keep the style nice.
 
+* make the debug repl a lisp (varname if let set! etc.)
 * what to do about _start?
 * comparison opcodes
 * search for FIXME and TODOs and try to fix any that are easy

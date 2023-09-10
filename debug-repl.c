@@ -1,3 +1,9 @@
+/**
+ * @file debug-repl.c
+ *
+ * This file implements the repl for the built-in debugger.
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -13,23 +19,22 @@
 #include "symbol-table.h"
 #include "tokenizer.h"
 
-// int string_starts_with(char *str1, char *str2) {
-//  return strncmp(str1, str2, strlen(str2)) == 0;
-// }
-
+/**
+ * Parse an address for a command.
+ *
+ * Currently address must be either a constant number or a symbol.
+ */
 uint64_t parse_address(cpu_thread_state_t* state, char* str) {
-  if (str[0] == '%') {
-    // FIXME
-    return 42;
-  }
   symbol_t* sym = find_symbol_by_name(state->symbols, str);
   if (!string_is_null_or_empty(sym->name)) {
     return sym->value;
   }
-  // FIXME parse here!
-  return 0;
+  return string_parse_uint64(str);
 }
 
+/**
+ * Show help for the debugger.
+ */
 void debug_help_command(token_list_t* tokens) {
   fprintf(stderr, "This is a debugger repl. The available commands are:\n");
   fprintf(stderr, "  add-address\n"); // TODO(jawilson)
@@ -47,11 +52,18 @@ void debug_help_command(token_list_t* tokens) {
   fprintf(stderr, "  unbreak\n");
 }
 
+/**
+ * Exit the VM.
+ */
 void debug_quit_command(token_list_t* tokens) {
   fprintf(stderr, "The debugger has terminated execution. Exiting...\n");
   exit(0);
 }
 
+/**
+ * Step one instruction by default. If an argument provided, it is
+ * used to determine how many instructions to step.
+ */
 void debug_step_command(cpu_thread_state_t* state, token_list_t* tokens) {
   uint64_t amount = 1;
   if (token_list_length(tokens) >= 2) {

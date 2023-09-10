@@ -12,11 +12,10 @@
 #include "assembler.h"
 #include "fatal-error.h"
 #include "instruction-info.h"
+#include "opcodes.h"
 #include "string-util.h"
 #include "tokenizer.h"
 #include "uleb128.h"
-
-#include "opcodes.h"
 
 assembly_result_t make_assembly_result(symbol_table_t* symbols,
                                        uint64_t address);
@@ -79,16 +78,25 @@ assembly_result_t assemble(paged_memory_t* memory, uint64_t address,
   }
 
   char* opcode = token_list_get(tokens, 0);
+
+  if (string_starts_with(opcode, ".")) {
+    if (string_equal(opcode, ".align")) {
+      char* amount_str = token_list_get(tokens, 1);
+      uint64_t amount = string_parse_uint64(amount_str);
+      while ((address % amount) != 0) {
+        encodeULEB128(memory, address++, NOP);
+      }
+      result.address_end = address;
+      return result;
+    }
+    fatal_error(ERROR_UNKNOWN_ASSEMBLER_DIRECTIVE);
+  }
+
   if (string_ends_with(opcode, ":")) {
     char* label_name = string_substring(opcode, 0, strlen(opcode) - 1);
     fprintf(stderr, "DEBUG symbol name is '%s'\n", label_name);
     result.symbols = add_symbol(symbols, label_name, address);
     free(label_name);
-    return result;
-  }
-
-  if (string_starts_with(opcode, ".")) {
-    fprintf(stderr, "WARNING: ignoring directive '%s'\n", opcode);
     return result;
   }
 

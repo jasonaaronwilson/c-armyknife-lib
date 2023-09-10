@@ -2,7 +2,6 @@
 
 Cleanups that aren't important but help keep the style nice.
 
-* reimplement token_list using 'array'
 * reimplement symbol tables using 'array'
 * search for FIXME and TODOs and try to fix any that are easy
 * implement some assembler directives like .text and .data .file .line .global?

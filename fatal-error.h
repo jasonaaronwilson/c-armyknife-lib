@@ -14,6 +14,7 @@
 #define ERROR_EXPECTED_FLOATING_REGISTER 10
 #define ERROR_ARRAY_ACCESS_OUT_OF_BOUNDS 11
 #define ERROR_UNKNOWN_ASSEMBLER_DIRECTIVE 12
+#define ERROR_DEBUGGER_EXPECT_FAILURE 13
 
 extern _Noreturn void fatal_error_impl(char* file, int line, int error_code);
 

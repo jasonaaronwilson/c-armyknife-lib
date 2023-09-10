@@ -207,6 +207,25 @@ void debug_print_register_command(cpu_thread_state_t* state,
 }
 
 /**
+ * Exit the process immediately with if the register is not the expected
+ * value.
+ */
+void debug_expect_register_command(cpu_thread_state_t* state,
+                                  token_list_t* tokens) {
+  char* register_name = token_list_get(tokens, 1);
+  if (string_starts_with(register_name, "r")) {
+    uint64_t reg_num = parse_gr_argument(register_name);
+    uint64_t expected = string_parse_uint64(token_list_get(tokens, 2));
+    uint64_t value = state->register_storage[reg_num];
+    if (value != expected) {
+      fprintf(stderr, "FAIL: expected %s to be %d but was %d\n",
+              register_name, value, expected);
+      exit(ERROR_DEBUGGER_EXPECT_FAILURE);
+    }
+  }
+}
+
+/**
  * Enter a debug repl. The list of available commands is available
  * below in the implementation of "help".
  *
@@ -250,6 +269,8 @@ void debug_repl(cpu_thread_state_t* state) {
       debug_assemble_file_command(state, tokens);
     } else if (string_equal(command, "print-register")) {
       debug_print_register_command(state, tokens);
+    } else if (string_equal(command, "expect-register")) {
+      debug_expect_register_command(state, tokens);
     } else {
       fprintf(stderr, "Uknown debug command. Ignoring.\n");
     }

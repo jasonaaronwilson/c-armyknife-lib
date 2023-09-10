@@ -5,3 +5,6 @@
   disassemble
   quit
 EOF
+
+exec $(dirname "$0")/pass-fail.sh $0 $?
+

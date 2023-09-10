@@ -124,7 +124,7 @@ void interpret(cpu_thread_state_t* state, uint64_t max_instructions) {
     case NOP:
       break;
 
-    case BRZ: {
+    case OPCODE_BRZ: {
       uint64_t link_reg = arg1;
       uint64_t test_reg = arg2;
       uint64_t taken_address_reg = arg3;
@@ -135,113 +135,113 @@ void interpret(cpu_thread_state_t* state, uint64_t max_instructions) {
       break;
     }
 
-    case IMM:
+    case OPCODE_IMM:
       ireg[arg1] = arg2;
       break;
 
-    case SIMM:
+    case OPCODE_SIMM:
       ireg[arg1] = -arg2;
       break;
 
-    case PCIMM:
+    case OPCODE_PCIMM:
       ireg[arg1] = start_pc + arg2;
       break;
 
-    case SPCIMM:
+    case OPCODE_SPCIMM:
       ireg[arg1] = start_pc + ~arg2;
       break;
 
-    case MOV:
+    case OPCODE_MOV:
       ireg[arg1] = ireg[arg2];
       break;
 
       //// MEMORY instructions are CURRENTLY alignment carefree and
       //// little endian.
 
-    case LD_U8:
+    case OPCODE_LD_U8:
       ireg[arg1] = AS_UINT64(load8(memory, ireg[arg2]));
       break;
 
-    case LD_U16:
+    case OPCODE_LD_U16:
       ireg[arg1] = AS_UINT64(load16(memory, ireg[arg2]));
       break;
 
-    case LD_U32:
+    case OPCODE_LD_U32:
       ireg[arg1] = AS_UINT64(load32(memory, ireg[arg2]));
       break;
 
-    case LD_U64:
+    case OPCODE_LD_U64:
       ireg[arg1] = load64(memory, ireg[arg2]);
       break;
 
-    case LD_S8:
+    case OPCODE_LD_S8:
       ireg[arg1] = sign_extend_8(load8(memory, ireg[arg2]));
       break;
 
-    case LD_S16:
+    case OPCODE_LD_S16:
       ireg[arg1] = sign_extend_16(load16(memory, ireg[arg2]));
       break;
 
-    case LD_S32:
+    case OPCODE_LD_S32:
       ireg[arg1] = sign_extend_32(load32(memory, ireg[arg2]));
       break;
 
-    case ST_8:
+    case OPCODE_ST_8:
       store8(memory, ireg[arg1], ireg[arg2] & 0xff);
       break;
 
-    case ST_16:
+    case OPCODE_ST_16:
       store16(memory, ireg[arg1], ireg[arg2] & 0xffff);
       break;
 
-    case ST_32:
+    case OPCODE_ST_32:
       store32(memory, ireg[arg1], ireg[arg2] & 0xffffffff);
       break;
 
-    case ST_64:
+    case OPCODE_ST_64:
       store64(memory, ireg[arg1], ireg[arg2]);
       break;
 
-    case CLZ:
+    case OPCODE_CLZ:
       // TODO: backup implementation
       ireg[arg1] = __builtin_clz(ireg[arg2]);
       break;
 
-    case CTZ:
+    case OPCODE_CTZ:
       // TODO: backup implementation
       ireg[arg1] = __builtin_ctz(ireg[arg2]);
       break;
 
-    case ADD:
+    case OPCODE_ADD:
       ireg[arg1] = ireg[arg2] + ireg[arg3];
       break;
 
-    case SUB:
+    case OPCODE_SUB:
       ireg[arg1] = ireg[arg2] - ireg[arg3];
       break;
 
-    case AND:
+    case OPCODE_AND:
       ireg[arg1] = ireg[arg2] & ireg[arg3];
       break;
 
-    case OR:
+    case OPCODE_OR:
       ireg[arg1] = ireg[arg2] | ireg[arg3];
       break;
 
-    case XOR:
+    case OPCODE_XOR:
       ireg[arg1] = ireg[arg2] ^ ireg[arg3];
       break;
 
-    case SHL:
+    case OPCODE_SHL:
       ireg[arg1] = ireg[arg2] << ireg[arg3];
       break;
 
-    case POPCNT:
+    case OPCODE_POPCNT:
       // TODO(jawilson) conditionalize and provide a backup
       ireg[arg1] = __builtin_popcount(ireg[arg2]);
       break;
 
-    case MUL:
+    case OPCODE_MUL:
       ireg[arg1] = ireg[arg2] * ireg[arg3];
       break;
 

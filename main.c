@@ -54,62 +54,16 @@ int main(int argc, char** argv) {
   exit(0);
 }
 
-void add_sample_program(cpu_thread_state_t* state, uint64_t address) {
-  /*
-  state->memory_start[address++] = SIMM;
-  state->memory_start[address++] = GR2;
-  state->memory_start[address++] = 42;
-  */
+#if 0
 
-  store8(state->memory, address++, IMM);
+// If really necessary, you can easily put some code into memory like
+// so...
+
+void add_sample_program(cpu_thread_state_t* state, uint64_t address) {
+  store8(state->memory, address++, OPCODE_IMM);
   store8(state->memory, address++, R1);
   store8(state->memory, address++, 42);
 
-  store8(state->memory, address++, ADD);
-  store8(state->memory, address++, R3);
-  store8(state->memory, address++, R1);
-  store8(state->memory, address++, R1);
-
-  /*
-  state->memory_start[address++] = ADD;
-  state->memory_start[address++] = GR3;
-  state->memory_start[address++] = GR1;
-  state->memory_start[address++] = GR1;
-
-  state->memory_start[address++] = SUB;
-  state->memory_start[address++] = GR3;
-  state->memory_start[address++] = GR1;
-  state->memory_start[address++] = GR1;
-
-  state->memory_start[address++] = AND;
-  state->memory_start[address++] = GR3;
-  state->memory_start[address++] = GR2;
-  state->memory_start[address++] = GR2;
-
-  state->memory_start[address++] = XOR;
-  state->memory_start[address++] = GR3;
-  state->memory_start[address++] = GR2;
-  state->memory_start[address++] = GR2;
-
-  state->memory_start[address++] = OR;
-  state->memory_start[address++] = GR3;
-  state->memory_start[address++] = GR2;
-  state->memory_start[address++] = GR0;
-
-  state->memory_start[address++] = IMM;
-  state->memory_start[address++] = GR5;
-  state->memory_start[address++] = 3;
-
-  state->memory_start[address++] = MUL;
-  state->memory_start[address++] = GR3;
-  state->memory_start[address++] = GR1;
-  state->memory_start[address++] = GR5;
-
-  state->memory_start[address++] = MOV;
-  state->memory_start[address++] = GR1;
-  state->memory_start[address++] = GR0;
-
-  */
-
   store8(state->memory, address++, BRK);
 }
+#endif

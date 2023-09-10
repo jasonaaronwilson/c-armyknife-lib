@@ -21,7 +21,7 @@ typedef struct {
 } instruction_info_t;
 
 extern uint8_t is_initialized;
-extern instruction_info_t instruction_info_array[LAST_OPCODE];
+extern instruction_info_t instruction_info_array[OPCODE_LAST_OPCODE];
 
 extern void init_instruction_info();
 // TODO(jawilson): rename

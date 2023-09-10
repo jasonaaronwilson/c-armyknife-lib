@@ -94,7 +94,6 @@ assembly_result_t assemble(paged_memory_t* memory, uint64_t address,
 
   if (string_ends_with(opcode, ":")) {
     char* label_name = string_substring(opcode, 0, strlen(opcode) - 1);
-    fprintf(stderr, "DEBUG symbol name is '%s'\n", label_name);
     result.symbols = add_symbol(symbols, label_name, address);
     free(label_name);
     return result;

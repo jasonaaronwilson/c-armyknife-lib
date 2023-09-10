@@ -56,9 +56,11 @@ how-big: clean
 tags:
 	etags ${SRC_C} ${SRC_H}
 
-test: comet-vm
-	./test-data/nop-test.sh
-	./test-data/numbers-test.sh
-	./test-data/alignment.sh
+TESTS = ./test-data/nop-test.sh \
+	./test-data/numbers-test.sh \
+	./test-data/alignment.sh \
 	./test-data/count-down-loop.sh
+
+test: comet-vm
+	./run-tests.sh ${TESTS}
 

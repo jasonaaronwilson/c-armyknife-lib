@@ -14,8 +14,13 @@
 #include "string-util.h"
 #include "tokenizer.h"
 
+/**
+ * Tokenize a string.
+ *
+ * Delimiters terminate the current token and are thrown away.
+ */
 token_list_t* tokenize(const char* str, const char* delimiters) {
-  token_list_t* result = NULL;
+  token_list_t* result = make_array(4);
   char token_data[1024];
   int cpos = 0;
   for (int i = 0; (i < strlen(str)); i++) {
@@ -38,19 +43,11 @@ token_list_t* tokenize(const char* str, const char* delimiters) {
   return result;
 }
 
+/**
+ * Add a *copy* of the string named data to the token list.
+ */
 token_list_t* token_list_append(token_list_t* head, const char* data) {
-  token_list_t* node = malloc_struct(token_list_t);
-  node->next = NULL;
-  node->data = string_duplicate(data);
-  if (head == NULL) {
-    return node;
-  }
-  token_list_t* lst = head;
-  while (lst->next != NULL) {
-    lst = lst->next;
-  }
-  lst->next = node;
-  return head;
+  return array_add(head, (uint64_t) string_duplicate(data));
 }
 
 void token_list_free_all(token_list_t* head) {
@@ -58,23 +55,7 @@ void token_list_free_all(token_list_t* head) {
 }
 
 char* token_list_get(token_list_t* head, int position) {
-  while (position > 0 && head != NULL) {
-    head = head->next;
-    position--;
-  }
-  if (head == NULL) {
-    // fatal_error(ERROR_TOKEN_LIST_GET);
-    return NULL;
-  } else {
-    return head->data;
-  }
+  return (char*) array_get(head, position);
 }
 
-int token_list_length(token_list_t* head) {
-  int result = 0;
-  while (head != NULL) {
-    result++;
-    head = head->next;
-  }
-  return result;
-}
+int token_list_length(token_list_t* head) { return array_length(head); }

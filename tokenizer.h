@@ -1,10 +1,9 @@
 #ifndef _TOKENIZER_H_
 #define _TOKENIZER_H_
 
-typedef struct token_list_S {
-  struct token_list_S* next;
-  char* data;
-} token_list_t;
+#include "array.h"
+
+typedef array_t token_list_t;
 
 extern token_list_t* tokenize(const char* str, const char* delimiters);
 extern token_list_t* token_list_append(token_list_t* head, const char* data);

@@ -5,17 +5,21 @@
 
 /home/jasonaaronwilson/src/comet-vm/comet-vm <<EOF
 assemble
+#
 # First set up a bunch of immediates in the lower registers.
+#
 imm r1,15
-# FIXME putting something illegal like just "imm" crashes stuff...
-# Now 
+step 1
+#
+# Now peform a bunch of operations checking their results
+#
 add r32,r1,r1
-#
-#
-# The blank line below exits the assembler back the the debugger's repl.
-
-step 2
+step 1
 expect-register r32 30
+#
+# Finally we are done. Note that the black line below is necessary to
+# exit the assembler.
+
 quit
 EOF
 

@@ -56,7 +56,7 @@ void debug_help_command(token_list_t* tokens) {
  * Exit the VM.
  */
 void debug_quit_command(token_list_t* tokens) {
-  fprintf(stderr, "The debugger has terminated execution. Exiting...\n");
+  fprintf(stderr, "The debugger executed the quit command. Exiting...\n");
   exit(0);
 }
 

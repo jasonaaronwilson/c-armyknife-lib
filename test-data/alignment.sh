@@ -6,5 +6,6 @@
   quit
 EOF
 
-exec $(dirname "$0")/pass-fail.sh $0 $?
+EXIT_CODE=$?
+exec $(dirname "$0")/pass-fail.sh $0 ${EXIT_CODE}
 

@@ -59,7 +59,8 @@ tags:
 TESTS = ./test-data/nop-test.sh \
 	./test-data/numbers-test.sh \
 	./test-data/alignment.sh \
-	./test-data/count-down-loop.sh
+	./test-data/count-down-loop.sh \
+	./test-data/integer-binary-operators.sh
 
 test: comet-vm
 	./run-tests.sh ${TESTS}

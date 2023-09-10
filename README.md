@@ -144,6 +144,14 @@ Except for details like minimizing instruction length (or rather,
 leaving just enough space so the linker can insert the proper
 constants), you can now assemble instructions for comet.
 
+## Planned Features
+
+1) User defined "microcode" (no recompilation necessary to have user
+   defined opcodes)
+2) in conjunction with #1, provide some number of instructions that
+   are closer to common architectures.
+3) time traveling debugger
+
 ## Intellectual Property
 
 I'm by no means an expert in this area of law.

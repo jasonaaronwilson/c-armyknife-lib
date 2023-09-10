@@ -60,3 +60,5 @@ test: comet-vm
 	./test-data/nop-test.sh
 	./test-data/numbers-test.sh
 	./test-data/alignment.sh
+	./test-data/count-down-loop.sh
+

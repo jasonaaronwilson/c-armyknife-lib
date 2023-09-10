@@ -62,13 +62,13 @@ void add_sample_program(cpu_thread_state_t* state, uint64_t address) {
   */
 
   store8(state->memory, address++, IMM);
-  store8(state->memory, address++, GR1);
+  store8(state->memory, address++, R1);
   store8(state->memory, address++, 42);
 
   store8(state->memory, address++, ADD);
-  store8(state->memory, address++, GR3);
-  store8(state->memory, address++, GR1);
-  store8(state->memory, address++, GR1);
+  store8(state->memory, address++, R3);
+  store8(state->memory, address++, R1);
+  store8(state->memory, address++, R1);
 
   /*
   state->memory_start[address++] = ADD;

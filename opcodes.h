@@ -12,19 +12,20 @@
 // Do nothing except advance the PC.
 //
 // This is used for padding which may occasionally be desired. While
-// larger NOP instructions could be composed by say "mov gr0,gr0" (3
-// bytes), or say "IMM gr0,X" (where X could can be be as small as 1
+// larger NOP instructions could be composed by say "mov r0,r0" (3
+// bytes), or say "IMM r0,X" (where X could can be be as small as 1
 // byte or as large as 64/7 bytes (9 bytes)), just using more NOPs is
 // the preferred way of padding for clarity and performance.
 #define NOP 1
 
 // read a register and if it is zero, perform an indirect branch.
 //
-// In all cases, write the link address to the target register.
+// In the taken case, write the link address to the target register
+// (which is often r0 to throw the link address away).
 //
 // This is a very powerful branch instruction since using the zero
 // register as the predicate register makes the branch unconditional,
-// and sending the link address to gr0 makes the branch more like
+// and sending the link address to r0 makes the branch more like
 // "jmp" than a "call" instruction.
 //
 // This universal branch instruction probably has downsides for
@@ -33,16 +34,16 @@
 //
 // Let's use an example:
 //
-// brz gr0,gr12,gr19
+// brz r0,r12,r19
 //
-// Using gr0 as the target register makes this more like a "branch"
-// than a "call". The "CPU" will read gr12 and compare it with
-// zero. So if gr12 is zero, we branch to the address in gr19, and if
+// Using r0 as the target register makes this more like a "branch"
+// than a "call". The "CPU" will read r12 and compare it with
+// zero. So if r12 is zero, we branch to the address in r19, and if
 // not, obviously we just keep executing instructions and possibly
 // some IMM/PCIMM instructions were not needed. (Shrug Emoji)
 //
 // Note: the destination register is ALWAYS written even if the branch
-// isn't taken (which is why gr0 will often be the written
+// isn't taken (which is why r0 will often be the written
 // register).
 //
 // In most cases, PCIMM/SPCIMM is superior to an intentionally not
@@ -197,22 +198,22 @@
 // Absolutely unnecessary definitions that may make it easier to read
 // some source code.
 
-#define GR0 0
-#define GR1 1
-#define GR2 2
-#define GR3 3
-#define GR4 4
-#define GR5 5
-#define GR6 6
-#define GR7 7
-#define GR8 8
-#define GR9 9
-#define GR10 10
-#define GR11 11
-#define GR12 12
-#define GR13 13
-#define GR14 14
-#define GR15 15
+#define R0 0
+#define R1 1
+#define R2 2
+#define R3 3
+#define R4 4
+#define R5 5
+#define R6 6
+#define R7 7
+#define R8 8
+#define R9 9
+#define R10 10
+#define R11 11
+#define R12 12
+#define R13 13
+#define R14 14
+#define R15 15
 
 #define FP0 0
 #define FP1 1

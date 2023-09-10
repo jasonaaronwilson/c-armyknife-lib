@@ -124,12 +124,16 @@ void interpret(cpu_thread_state_t* state, uint64_t max_instructions) {
     case NOP:
       break;
 
-    case BRZ:
-      if (!(ireg[arg1])) {
-        ireg[arg3] = pc; // link/return address
-        pc = ireg[arg2];
+    case BRZ: {
+      uint64_t link_reg = arg1;
+      uint64_t test_reg = arg2;
+      uint64_t taken_address_reg = arg3;
+      if (ireg[test_reg]) {
+        ireg[link_reg] = pc; // link/return address
+        pc = ireg[taken_address_reg];
       }
       break;
+    }
 
     case IMM:
       ireg[arg1] = arg2;

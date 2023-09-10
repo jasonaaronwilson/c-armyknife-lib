@@ -183,4 +183,3 @@ I have now publicly disclosed the idea of using sequences of ULEB
 numbers to create an ISA. I have not nor will I apply for a patent
 (nor should it be granted based on wide-spread dissemination of this
 information).
-

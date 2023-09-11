@@ -8,8 +8,7 @@ typedef struct {
   tagged_reference_t tail;
 } pair_t;
 
-extern pair_t* make_tagged_pair(tagged_reference_t head,
-                                tagged_reference_t tail);
+extern pair_t* make_pair(tagged_reference_t head, tagged_reference_t tail);
 
 extern uint64_t tagged_pair_list_length(pair_t* head);
 extern tagged_reference_t tagged_pair_list_get(pair_t* head, uint64_t index);

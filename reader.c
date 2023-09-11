@@ -46,7 +46,7 @@ tagged_reference_t read(const char* str, uint64_t start) {
         reference.data = result;
         return reference;
       } else {
-        result = tagged_pair_list_append(result, make_tagged_pair(child, NIL));
+        result = tagged_pair_list_append(result, make_pair(child, NIL));
       }
     }
   } else if (str[start] == ')') {

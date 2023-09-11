@@ -13,7 +13,7 @@
 #include "fatal-error.h"
 #include "pair.h"
 
-pair_t* make_tagged_pair(tagged_reference_t head, tagged_reference_t tail) {
+pair_t* make_pair(tagged_reference_t head, tagged_reference_t tail) {
   pair_t* result = malloc_struct(pair_t);
   result->head = head;
   result->tail = tail;

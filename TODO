@@ -9,6 +9,7 @@ Cleanups that aren't important but help keep the style nice.
 * implement some assembler directives like .text and .data .file .line .global?
 * print hexidecimal? 2,4,8,16 digits?
 * reimplement symbol tables using 'array'
+* why not use macros for casts for all types? as_string, etc.
 
 
 1. implement command line parsing

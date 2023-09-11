@@ -49,7 +49,7 @@ format:
 	clang-format -i ${SRC_C} ${SRC_H}
 
 clean:
-	rm -rf *~ a.out TAGS test-data/*~ comet-vm doxygen-docs
+	rm -rf *~ a.out TAGS tests/*~ test-data/*~ comet-vm doxygen-docs
 
 diff: clean
 	git difftool HEAD
@@ -60,15 +60,15 @@ how-big: clean
 tags:
 	etags ${SRC_C} ${SRC_H}
 
-TESTS = ./test-data/nop-test.sh \
-	./test-data/numbers-test.sh \
-	./test-data/alignment.sh \
-	./test-data/count-down-loop.sh
+TESTS = ./tests/nop-test.sh \
+	./tests/numbers-test.sh \
+	./tests/alignment.sh \
+	./tests/count-down-loop.sh
 
 #
 # I'm trying to find a sensible test strategy. Tests should look
 # pretty simple and run fast.
-#	./test-data/integer-binary-operators.sh
+#	./tests/integer-binary-operators.sh
 #
 
 test: comet-vm

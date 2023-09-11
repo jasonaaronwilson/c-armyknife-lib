@@ -1,7 +1,7 @@
 #!/bin/bash
 
 /home/jasonaaronwilson/src/comet-vm/comet-vm <<EOF
-  assemble-file /home/jasonaaronwilson/src/comet-vm/test-data/count-down-loop.s
+  assemble-file /home/jasonaaronwilson/src/comet-vm/tests/count-down-loop.s
   disassemble
   step
   step

@@ -1,8 +1,10 @@
 #!/bin/bash
 
+## TODO(jawilson): 
+
 /home/jasonaaronwilson/src/comet-vm/comet-vm <<EOF
-  assemble-file /home/jasonaaronwilson/src/comet-vm/test-data/alignment.s
-  disassemble
+  assemble-file /home/jasonaaronwilson/src/comet-vm/tests/nop.s
+  step
   quit
 EOF
 

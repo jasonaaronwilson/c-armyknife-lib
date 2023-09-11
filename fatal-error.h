@@ -18,6 +18,7 @@
 #define ERROR_ILLEGAL_LIST_INDEX 14
 #define ERROR_CANT_EVAL_EMPTY_EXPRESSION 15
 #define ERROR_VARIABLE_NOT_FOUND 16
+#define ERROR_REFERENCE_NOT_EXPECTED_TYPE 17
 
 extern _Noreturn void fatal_error_impl(char* file, int line, int error_code);
 

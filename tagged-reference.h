@@ -22,7 +22,7 @@ typedef struct {
 
 #define NIL ((tagged_reference_t){TAG_NULL, 0})
 
-inline void require_tag(tagged_reference_t reference, uint64_t tag) {
+static inline void require_tag(tagged_reference_t reference, uint64_t tag) {
   if (reference.tag != tag) {
     fatal_error(ERROR_REFERENCE_NOT_EXPECTED_TYPE);
   }

@@ -18,4 +18,9 @@ extern void pair_list_set(pair_t* head, uint64_t index,
 extern pair_t* pair_list_append(pair_t* lst1, pair_t* lst2);
 extern optional_t pair_assoc_list_lookup(pair_t* lst, char* name);
 
+static inline pair_t* untag_pair(tagged_reference_t reference) {
+  require_tag(reference, TAG_PAIR_T);
+  return (pair_t*) reference.data;
+}
+
 #endif /* _TAGGED_PAIR_H_ */

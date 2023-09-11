@@ -30,7 +30,7 @@ tagged_reference_t eval(environment_t* env, tagged_reference_t expr) {
   }
   }
 
-  pair_t* lst = (pair_t*) expr.data;
+  pair_t* lst = untag_pair(expr);
 
   if (pair_list_length(lst) == 0) {
     return (tagged_reference_t){ERROR_CANT_EVAL_EMPTY_EXPRESSION, TAG_ERROR_T};

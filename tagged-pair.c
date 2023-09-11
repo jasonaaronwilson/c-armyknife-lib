@@ -13,56 +13,41 @@
 #include "fatal-error.h"
 #include "tagged-pair.h"
 
-tagged_pair_t* make_tagged_pair(tag_t head_tag, uint64_t head, tag_t tail_tag,
-                                uint64_t tail) {
+tagged_pair_t* make_tagged_pair(tagged_reference_t head,
+                                tagged_reference_t tail) {
   tagged_pair_t* result = malloc_struct(tagged_pair_t);
   result->head = head;
-  result->head_tag = head_tag;
   result->tail = tail;
-  result->tail_tag = tail_tag;
   return result;
 }
 
-uint64_t tagged_pair_list_length(tagged_pair_t* head) {
+uint64_t tagged_pair_list_length(tagged_pair_t* lst) {
   uint64_t length = 0;
-  while (head) {
-    head = head->tail;
+  while (lst) {
+    lst = (tagged_pair_t*) (lst->tail.data);
     length++;
   }
   return length;
 }
 
-uint64_t tagged_pair_list_get(tagged_pair_t* head, uint64_t index) {
+tagged_reference_t tagged_pair_list_get(tagged_pair_t* lst, uint64_t index) {
   uint64_t length = 0;
-  while (head) {
+  while (lst) {
     if (length == index) {
-      return head->head;
+      return lst->head;
     }
-    head = head->tail;
+    lst = (tagged_pair_t*) (lst->tail.data);
     length++;
   }
   fatal_error(ERROR_ILLEGAL_LIST_INDEX);
 }
 
-uint64_t tagged_pair_list_get_type(tagged_pair_t* head, uint64_t index) {
-  uint64_t length = 0;
-  while (head) {
-    if (length == index) {
-      return head->head_tag;
-    }
-    head = head->tail;
-    length++;
-  }
-  fatal_error(ERROR_ILLEGAL_LIST_INDEX);
-}
-
-void tagged_pair_list_set(tagged_pair_t* head, uint64_t index, tag_t tag,
-                          uint64_t element) {
+void tagged_pair_list_set(tagged_pair_t* head, uint64_t index,
+                          tagged_reference_t element) {
   uint64_t length = 0;
   while (head) {
     if (length == index) {
       head->head = element;
-      head->head_tag = tag;
       return;
     }
     length++;
@@ -70,22 +55,21 @@ void tagged_pair_list_set(tagged_pair_t* head, uint64_t index, tag_t tag,
   fatal_error(ERROR_ILLEGAL_LIST_INDEX);
 }
 
-// TODO(jawilson): tagget_pair_alist_find, tagget_pair_alist_insert,
-// tagget_pair_alist_remove
-
-tagged_pair_t* tagged_pair_list_apppend(tagged_pair_t* lst, tag_t tag,
-                                        uint64_t element) {
-  tagged_pair_t* head = lst;
-  tagged_pair_t* pair = make_tagged_pair(tag, element, TAG_NULL, 0);
-
-  if (head) {
-    while (head->tail) {
-      head = head->tail;
+tagged_pair_t* tagged_pair_list_append(tagged_pair_t* lst_1,
+                                       tagged_pair_t* lst_2) {
+  if (lst_1 && lst_2) {
+    tagged_pair_t* head = lst_1;
+    while (head->tail.data) {
+      head = (tagged_pair_t*) head->tail.data;
     }
-    head->tail = pair;
-    head->tail_tag = TAG_TAGGED_PAIR_T;
-    return lst;
+    head->tail = (tagged_reference_t){lst_2, TAG_TAGGED_PAIR_T};
+    return lst_1;
+  } else if (lst_1) {
+    return lst_1;
   } else {
-    return pair;
+    return lst_2;
   }
 }
+
+// TODO(jawilson): tagged_pair_alist_find, tagged_pair_alist_insert,
+// tagged_pair_alist_remove

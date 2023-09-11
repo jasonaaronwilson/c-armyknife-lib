@@ -4,7 +4,6 @@
 #include <stdint.h>
 
 typedef enum {
-  TAG_UNKNOWN,
   TAG_NULL,
   TAG_TAGGED_PAIR_T,
   TAG_STRING, // aka const char* C string
@@ -16,5 +15,7 @@ typedef struct {
   uint64_t data;
   uint64_t tag;
 } tagged_reference_t;
+
+#define NIL ((tagged_reference_t){TAG_NULL, 0})
 
 #endif /* _TAGGED_REFERENCE_H_ */

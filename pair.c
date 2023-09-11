@@ -20,7 +20,7 @@ pair_t* make_pair(tagged_reference_t head, tagged_reference_t tail) {
   return result;
 }
 
-uint64_t tagged_pair_list_length(pair_t* lst) {
+uint64_t pair_list_length(pair_t* lst) {
   uint64_t length = 0;
   while (lst) {
     lst = (pair_t*) (lst->tail.data);
@@ -29,7 +29,7 @@ uint64_t tagged_pair_list_length(pair_t* lst) {
   return length;
 }
 
-tagged_reference_t tagged_pair_list_get(pair_t* lst, uint64_t index) {
+tagged_reference_t pair_list_get(pair_t* lst, uint64_t index) {
   uint64_t length = 0;
   while (lst) {
     if (length == index) {
@@ -41,8 +41,7 @@ tagged_reference_t tagged_pair_list_get(pair_t* lst, uint64_t index) {
   fatal_error(ERROR_ILLEGAL_LIST_INDEX);
 }
 
-void tagged_pair_list_set(pair_t* head, uint64_t index,
-                          tagged_reference_t element) {
+void pair_list_set(pair_t* head, uint64_t index, tagged_reference_t element) {
   uint64_t length = 0;
   while (head) {
     if (length == index) {
@@ -54,7 +53,7 @@ void tagged_pair_list_set(pair_t* head, uint64_t index,
   fatal_error(ERROR_ILLEGAL_LIST_INDEX);
 }
 
-pair_t* tagged_pair_list_append(pair_t* lst_1, pair_t* lst_2) {
+pair_t* pair_list_append(pair_t* lst_1, pair_t* lst_2) {
   if (lst_1 && lst_2) {
     pair_t* head = lst_1;
     while (head->tail.data) {

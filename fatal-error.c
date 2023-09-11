@@ -107,5 +107,5 @@ void print_error_code_name(int error_code) {
     fprintf(stderr, " ***");
   } while (0);
 #endif /* NO_READABLE_ERROR_CODES */
-  fprintf(stderr, "\n", "ERROR_UKNOWN");
+  fprintf(stderr, "%s\n", "ERROR_UKNOWN");
 }

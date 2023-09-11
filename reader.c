@@ -27,6 +27,8 @@ int all_whitespace_or_end(const char* str, uint64_t start) {
 
 /**
  * This is a light-weight "s-expression" reader.
+ *
+ * read() return NIL, symbol, string, uint64_t, or a linkd list.
  */
 tagged_reference_t read(const char* str, uint64_t start) {
   uint64_t limit = strlen(str);
@@ -46,7 +48,7 @@ tagged_reference_t read(const char* str, uint64_t start) {
         reference.data = result;
         return reference;
       } else {
-        result = tagged_pair_list_append(result, make_pair(child, NIL));
+        result = pair_list_append(result, make_pair(child, NIL));
       }
     }
   } else if (str[start] == ')') {
@@ -73,7 +75,7 @@ tagged_reference_t read(const char* str, uint64_t start) {
     }
     char* token = string_substring(str, start, end);
     tagged_reference_t reference;
-    reference.tag = TAG_STRING;
+    reference.tag = TAG_READER_SYMBOL;
     reference.data = token;
     return reference;
   }

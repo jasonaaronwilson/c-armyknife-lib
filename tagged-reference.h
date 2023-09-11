@@ -6,7 +6,8 @@
 typedef enum {
   TAG_NULL,
   TAG_PAIR_T,
-  TAG_STRING, // aka const char* C string
+  TAG_STRING,        // aka const char* C string
+  TAG_READER_SYMBOL, // also a const char* C string
   TAG_UINT64_T,
   TAG_ERROR_T,
 } tag_t;

@@ -11,6 +11,8 @@ SRC_C = allocate.c \
 	assembler.c \
 	byte-array.c \
 	debug-repl.c \
+	environment.c \
+	evaluator.c \
 	fatal-error.c \
 	instruction-info.c \
 	interpreter.c \
@@ -28,9 +30,12 @@ SRC_C = allocate.c \
 SRC_H = allocate.h \
 	array.h \
 	assembler.h \
+	boolean.h \
 	byte-array.h \
-	debug-repl.h \
 	cpu-thread-state.h \
+	debug-repl.h \
+	environment.h \
+	evaluator.h \
 	fatal-error.h \
 	instruction-info.h \
 	interpreter.h \
@@ -50,11 +55,17 @@ comet-vm: ${SRC_C} ${SRC_H}
 	${CC} ${CC_FLAGS} ${SRC_C} -o comet-vm
 	stat --format=%s comet-vm
 
+SYMBOL_HASH_SRC_C=string-util.c symbol-hash-main.c allocate.c fatal-error.c
+SYMBOL_HASH_SRC_H=string-util.h
+
+symbol-hash: ${SYMBOL_HASH_SRC_C} ${SYMBOL_HASH_SRC_H} 
+	${CC} ${CC_FLAGS} ${SYMBOL_HASH_SRC_C} -o symbol-hash
+
 format:
 	clang-format -i ${SRC_C} ${SRC_H}
 
 clean:
-	rm -rf *~ a.out TAGS tests/*~ test-data/*~ comet-vm doxygen-docs
+	rm -rf *~ a.out TAGS tests/*~ test-data/*~ comet-vm doxygen-docs symbol-hash
 
 diff: clean
 	git difftool HEAD

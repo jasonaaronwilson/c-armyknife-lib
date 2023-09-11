@@ -5,7 +5,7 @@
 
 typedef enum {
   TAG_NULL,
-  TAG_TAGGED_PAIR_T,
+  TAG_PAIR_T,
   TAG_STRING, // aka const char* C string
   TAG_UINT64_T,
   TAG_ERROR_T,

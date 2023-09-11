@@ -17,11 +17,11 @@ SRC_C = allocate.c \
 	io.c \
 	main.c \
 	paged-memory.c \
+	pair.c \
 	printer.c \
 	reader.c \
 	string-util.c \
 	symbol-table.c \
-	tagged-pair.c \
 	tokenizer.c \
 	uleb128.c
 
@@ -37,11 +37,11 @@ SRC_H = allocate.h \
 	io.h \
 	opcodes.h \
 	paged-memory.h \
+	pair.h \
 	printer.h \
 	reader.c \
 	string-util.h \
 	symbol-table.h \
-	tagged-pair.h \
 	tagged-reference.h \
 	tokenizer.h \
 	uleb128.h

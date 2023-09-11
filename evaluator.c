@@ -3,6 +3,7 @@
 
 #include "evaluator.h"
 #include "fatal-error.h"
+#include "optional.h"
 #include "pair.h"
 
 #define HASHCODE_IF UINT64_C(12687957717205024595)
@@ -11,19 +12,22 @@
 #define HASHCODE_LAMBDA 11364329973434366565
 
 tagged_reference_t eval(environment_t* env, tagged_reference_t expr) {
+
+  // Handle self-evaluating values and variable lookups
   switch (expr.tag) {
-    // Self evaluating
   case TAG_NULL:
   case TAG_STRING:
   case TAG_UINT64_T:
   case TAG_ERROR_T:
     return expr;
 
-  case TAG_READER_SYMBOL:
-    return environment_get(env, (char*) expr.data);
-
-  case TAG_PAIR_T:
-    break;
+  case TAG_READER_SYMBOL: {
+    optional_t result = environment_get(env, (char*) expr.data);
+    if (!optional_is_present(result)) {
+      fatal_error(ERROR_VARIABLE_NOT_FOUND);
+    }
+    return optional_value(result);
+  }
   }
 
   pair_t* lst = (pair_t*) expr.data;

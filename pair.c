@@ -11,6 +11,7 @@
 
 #include "allocate.h"
 #include "fatal-error.h"
+#include "optional.h"
 #include "pair.h"
 
 pair_t* make_pair(tagged_reference_t head, tagged_reference_t tail) {
@@ -66,6 +67,19 @@ pair_t* pair_list_append(pair_t* lst_1, pair_t* lst_2) {
   } else {
     return lst_2;
   }
+}
+
+optional_t pair_assoc_list_lookup(pair_t* lst, char* name) {
+  while (lst) {
+    tagged_reference_t element = lst->head;
+    // TODO(jawilson) check tag!
+    if (string_equal(element.data, name)) {
+      return optional_of(lst->tail);
+    }
+    lst = ((pair_t*) lst->tail.data);
+  }
+
+  return optional_empty();
 }
 
 // TODO(jawilson): tagged_pair_alist_find, tagged_pair_alist_insert,

@@ -41,6 +41,7 @@ SRC_H = allocate.h \
 	interpreter.h \
 	io.h \
 	opcodes.h \
+	optional.h \
 	paged-memory.h \
 	pair.h \
 	printer.h \

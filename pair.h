@@ -1,6 +1,7 @@
 #ifndef _PAIR_H_
 #define _PAIR_H_
 
+#include "optional.h"
 #include "tagged-reference.h"
 
 typedef struct {
@@ -15,5 +16,6 @@ extern tagged_reference_t pair_list_get(pair_t* head, uint64_t index);
 extern void pair_list_set(pair_t* head, uint64_t index,
                           tagged_reference_t element);
 extern pair_t* pair_list_append(pair_t* lst1, pair_t* lst2);
+extern optional_t pair_assoc_list_lookup(pair_t* lst, char* name);
 
 #endif /* _TAGGED_PAIR_H_ */

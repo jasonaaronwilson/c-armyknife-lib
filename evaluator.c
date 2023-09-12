@@ -27,6 +27,8 @@
 #define HASHCODE_SET_BANG UINT64_C(8292903574644452355)
 #define HASHCODE_QUOTE UINT64_C(10597478766694597373)
 #define HASHCODE_LAMBDA UINT64_C(11364329973434366565)
+#define HASHCODE_AND UINT64_C(11364329973434366565)
+#define HASHCODE_OR UINT64_C(11364329973434366565)
 
 tagged_reference_t eval_if_expression(environment_t* env,
                                       tagged_reference_t expr);

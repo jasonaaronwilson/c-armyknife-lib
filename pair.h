@@ -10,7 +10,8 @@ typedef struct {
 } pair_t;
 
 extern pair_t* make_pair(tagged_reference_t head, tagged_reference_t tail);
-
+extern tagged_reference_t cons(tagged_reference_t head,
+                               tagged_reference_t tail);
 extern uint64_t pair_list_length(pair_t* head);
 extern tagged_reference_t pair_list_get(pair_t* head, uint64_t index);
 extern void pair_list_set(pair_t* head, uint64_t index,

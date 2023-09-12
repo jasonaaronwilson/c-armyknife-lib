@@ -283,7 +283,7 @@ void debug_repl(cpu_thread_state_t* state) {
       output = byte_array_append_byte(output, '\0');
       // hacky
       fprintf(stderr, "INPUT = %s\n", &output->elements[0]);
-      
+
       tagged_reference_t result = eval(env, expr);
 
       byte_array_t* output2 = make_byte_array(128);

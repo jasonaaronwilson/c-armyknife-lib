@@ -51,4 +51,10 @@ void environment_set(environment_t* env, char* var_name,
                      tagged_reference_t value) {}
 
 void environment_define(environment_t* env, char* var_name,
-                        tagged_reference_t value) {}
+                        tagged_reference_t value) {
+  uint64_t hash_code = string_hash(var_name);
+  uint64_t bucket_number = hash_code % env->n_buckets;
+  tagged_reference_t binding
+      = cons(tagged_reference(TAG_STRING, var_name), value);
+  env->buckets[bucket_number] = cons(binding, env->buckets[bucket_number]);
+}

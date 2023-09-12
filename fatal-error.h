@@ -22,6 +22,7 @@
 #define ERROR_NOT_REACHED 18
 
 extern _Noreturn void fatal_error_impl(char* file, int line, int error_code);
+extern const char* fatal_error_code_to_string(int error_code);
 
 #define fatal_error(code) fatal_error_impl(__FILE__, __LINE__, code)
 

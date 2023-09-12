@@ -152,5 +152,5 @@ tagged_reference_t eval_application(environment_t* env,
   // TODO(jawilson): or invoke a closure. also free all of the pairs
   // we created.
 
-  return NIL;
+  return result;
 }

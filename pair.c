@@ -22,6 +22,14 @@ pair_t* make_pair(tagged_reference_t head, tagged_reference_t tail) {
   return result;
 }
 
+/**
+ * The same as make_pair except the result is a tagged_reference_t
+ * which is often more convenient.
+ */
+tagged_reference_t cons(tagged_reference_t head, tagged_reference_t tail) {
+  return tagged_reference(TAG_PAIR_T, make_pair(head, tail));
+}
+
 uint64_t pair_list_length(pair_t* lst) {
   uint64_t length = 0;
   while (lst) {
@@ -73,9 +81,10 @@ pair_t* pair_list_append(pair_t* lst_1, pair_t* lst_2) {
 optional_t pair_assoc_list_lookup(pair_t* lst, char* name) {
   while (lst) {
     tagged_reference_t element = lst->head;
-    // TODO(jawilson) check tag!
-    if (string_equal(name, untag_string_or_reader_symbol(element))) {
-      return optional_of(lst->tail);
+    pair_t* binding = untag_pair(element);
+
+    if (string_equal(name, untag_string_or_reader_symbol(binding->head))) {
+      return optional_of(binding->tail);
     }
     lst = ((pair_t*) lst->tail.data);
   }

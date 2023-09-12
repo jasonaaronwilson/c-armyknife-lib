@@ -52,60 +52,61 @@ void print_backtrace() {
 #endif /* NO_VM_BACKTRACE_ON_FATAL_ERROR */
 }
 
+const char* fatal_error_code_to_string(int error_code) {
+  switch (error_code) {
+  case ERROR_UKNOWN:
+    return "ERROR_UKNOWN";
+  case ERROR_MEMORY_ALLOCATION:
+    return "ERROR_MEMORY_ALLOCATION";
+  case ERROR_MEMORY_READ:
+    return "ERROR_MEMORY_READ";
+  case ERROR_MEMORY_WRITE:
+    return "ERROR_MEMORY_WRITE";
+  case ERROR_OPCODE_UNKNOWN:
+    return "ERROR_OPCODE_UNKNOWN";
+  case ERROR_OPCODE_DECODE_ERROR:
+    return "ERROR_OPCODE_DECODE_ERROR";
+  case ERROR_ARG_DECODE_ERROR:
+    return "ERROR_ARG_DECODE_ERROR";
+  case ERROR_UNIMLEMENTED_OPCODE:
+    return "ERROR_UNIMLEMENTED_OPCODE";
+  case ERROR_TOKEN_LIST_GET:
+    return "ERROR_TOKEN_LIST_GET";
+  case ERROR_EXPECTED_GENERAL_REGISTER:
+    return "ERROR_EXPECTED_GENERAL_REGISTER";
+  case ERROR_EXPECTED_FLOATING_REGISTER:
+    return "ERROR_EXPECTED_FLOATING_REGISTER";
+  case ERROR_ARRAY_ACCESS_OUT_OF_BOUNDS:
+    return "ERROR_ARRAY_ACCESS_OUT_OF_BOUNDS";
+  case ERROR_UNKNOWN_ASSEMBLER_DIRECTIVE:
+    return "ERROR_UNKNOWN_ASSEMBLER_DIRECTIVE";
+  case ERROR_DEBUGGER_EXPECT_FAILURE:
+    return "ERROR_DEBUGGER_EXPECT_FAILURE";
+  case ERROR_ILLEGAL_LIST_INDEX:
+    return "ERROR_ILLEGAL_LIST_INDEX";
+  case ERROR_CANT_EVAL_EMPTY_EXPRESSION:
+    return "ERROR_CANT_EVAL_EMPTY_EXPRESSION";
+  case ERROR_VARIABLE_NOT_FOUND:
+    return "ERROR_VARIABLE_NOT_FOUND";
+  case ERROR_REFERENCE_NOT_EXPECTED_TYPE:
+    return "ERROR_REFERENCE_NOT_EXPECTED_TYPE";
+  case ERROR_NOT_REACHED:
+    return "ERROR_NOT_REACHED";
+  default:
+    return "error";
+  }
+}
+
 void print_error_code_name(int error_code) {
 #ifndef NO_READABLE_ERROR_CODES
   fprintf(stderr, " ");
   do {
     fprintf(stderr, "*** ");
-    switch (error_code) {
-    case ERROR_UKNOWN:
-      fprintf(stderr, "%s", "ERROR_UKNOWN");
-      break;
-    case ERROR_MEMORY_ALLOCATION:
-      fprintf(stderr, "%s", "ERROR_MEMORY_ALLOCATION");
-      break;
-    case ERROR_MEMORY_READ:
-      fprintf(stderr, "%s", "ERROR_MEMORY_READ");
-      break;
-    case ERROR_MEMORY_WRITE:
-      fprintf(stderr, "%s", "ERROR_MEMORY_WRITE");
-      break;
-    case ERROR_OPCODE_UNKNOWN:
-      fprintf(stderr, "%s", "ERROR_OPCODE_UNKNOWN");
-      break;
-    case ERROR_OPCODE_DECODE_ERROR:
-      fprintf(stderr, "%s", "ERROR_OPCODE_DECODE_ERROR");
-      break;
-    case ERROR_ARG_DECODE_ERROR:
-      fprintf(stderr, "%s", "ERROR_ARG_DECODE_ERROR");
-      break;
-    case ERROR_UNIMLEMENTED_OPCODE:
-      fprintf(stderr, "%s", "ERROR_UNIMLEMENTED_OPCODE");
-      break;
-    case ERROR_TOKEN_LIST_GET:
-      fprintf(stderr, "%s", "ERROR_TOKEN_LIST_GET");
-      break;
-    case ERROR_EXPECTED_GENERAL_REGISTER:
-      fprintf(stderr, "%s", "ERROR_EXPECTED_GENERAL_REGISTER");
-      break;
-    case ERROR_EXPECTED_FLOATING_REGISTER:
-      fprintf(stderr, "%s", "ERROR_EXPECTED_FLOATING_REGISTER");
-      break;
-    case ERROR_ARRAY_ACCESS_OUT_OF_BOUNDS:
-      fprintf(stderr, "%s", "ERROR_ARRAY_ACCESS_OUT_OF_BOUNDS");
-      break;
-    case ERROR_UNKNOWN_ASSEMBLER_DIRECTIVE:
-      fprintf(stderr, "%s", "ERROR_UNKNOWN_ASSEMBLER_DIRECTIVE");
-      break;
-    case ERROR_DEBUGGER_EXPECT_FAILURE:
-      fprintf(stderr, "%s", "ERROR_DEBUGGER_EXPECT_FAILURE");
-      break;
-    default:
-      fprintf(stderr, "%s", "(non handled error code translation)");
-      break;
-    }
-    fprintf(stderr, " ***");
+    fprintf(stderr, "%d -- %s", error_code,
+            fatal_error_code_to_string(error_code));
+    fprintf(stderr, " ***\n");
   } while (0);
+#else
+  fprintf(stderr, "%d %s\n", error_code, "ERROR_UKNOWN");
 #endif /* NO_READABLE_ERROR_CODES */
-  fprintf(stderr, "%s\n", "ERROR_UKNOWN");
 }

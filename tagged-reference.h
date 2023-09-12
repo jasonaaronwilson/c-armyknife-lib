@@ -13,6 +13,7 @@ typedef enum {
   TAG_UINT64_T,
   TAG_ERROR_T,
   TAG_BOOLEAN_T,
+  TAG_PRIMITIVE
 } tag_t;
 
 typedef struct {
@@ -28,6 +29,11 @@ static inline void require_tag(tagged_reference_t reference, uint64_t tag) {
   if (reference.tag != tag) {
     fatal_error(ERROR_REFERENCE_NOT_EXPECTED_TYPE);
   }
+}
+
+static inline uint64_t untag_uint64_t(tagged_reference_t reference) {
+  require_tag(reference, TAG_UINT64_T);
+  return (uint64_t) reference.data;
 }
 
 #endif /* _TAGGED_REFERENCE_H_ */

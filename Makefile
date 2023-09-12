@@ -20,6 +20,7 @@ SRC_C = allocate.c \
 	main.c \
 	paged-memory.c \
 	pair.c \
+	primitive.c \
 	printer.c \
 	reader.c \
 	string-util.c \
@@ -44,6 +45,7 @@ SRC_H = allocate.h \
 	optional.h \
 	paged-memory.h \
 	pair.h \
+	primitive.h \
 	printer.h \
 	reader.c \
 	string-util.h \

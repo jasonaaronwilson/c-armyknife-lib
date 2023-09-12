@@ -1,3 +1,14 @@
+/**
+ * @file evaluator.c
+ *
+ * The file contains an interpreter for a very tiny subset of scheme
+ * (for example there are only 64bit unsigned numbers right now...)
+ * which is used to implement the debugger repl as well as expressions
+ * in the assembler. See reader.c for a parser that reads textual and
+ * converts it to the format suitable for expr (aka linked lists built
+ * out of pairs plus various "atoms".
+ */
+
 #include <stdint.h>
 #include <stdlib.h>
 
@@ -5,13 +16,29 @@
 #include "fatal-error.h"
 #include "optional.h"
 #include "pair.h"
+#include "primitive.h"
 #include "string-util.h"
+
+// See the symbol-hash command line tool in this directory if you need
+// to generate more. Example make symbol-hash && ./symbol-hash 'if'
+// 'set!' 'quote' 'lambda'.
 
 #define HASHCODE_IF UINT64_C(12687957717205024595)
 #define HASHCODE_SET_BANG UINT64_C(8292903574644452355)
 #define HASHCODE_QUOTE UINT64_C(10597478766694597373)
 #define HASHCODE_LAMBDA UINT64_C(11364329973434366565)
 
+tagged_reference_t eval_if_expression(environment_t* env,
+                                      tagged_reference_t expr);
+tagged_reference_t eval_assignment(environment_t* env, tagged_reference_t expr);
+tagged_reference_t eval_application(environment_t* env,
+                                    tagged_reference_t expr);
+
+/**
+ * This is the entry point to the evaluator. Dvaluate the given
+ * expression and return a tagged_reference_t to the result of
+ * interpreting it.
+ */
 tagged_reference_t eval(environment_t* env, tagged_reference_t expr) {
 
   // Handle self-evaluating values and variable lookups
@@ -37,38 +64,90 @@ tagged_reference_t eval(environment_t* env, tagged_reference_t expr) {
     return (tagged_reference_t){ERROR_CANT_EVAL_EMPTY_EXPRESSION, TAG_ERROR_T};
   }
 
-  tagged_reference_t head = pair_list_get(lst, 0);
-  if (head.tag == TAG_READER_SYMBOL) {
-    char* symbol_name = untag_reader_symbol(head);
+  tagged_reference_t first = pair_list_get(lst, 0);
+  if (first.tag == TAG_READER_SYMBOL) {
+    char* symbol_name = untag_reader_symbol(first);
+    // We probably don't need all 64 bits and with so few special
+    // forms, just doing a chain of sring_equal() calls may be faster
+    // or nearly as fast though there is probably a break even point
+    // where this is much faster...
     uint64_t hashcode = string_hash(symbol_name);
     switch (hashcode) {
     case HASHCODE_IF:
       if (!string_equal(symbol_name, "if")) {
         break;
       }
-      // TODO
+      return eval_if_expression(env, expr);
       break;
 
     case HASHCODE_SET_BANG:
-      // TODO
-      break;
-    }
+      if (!string_equal(symbol_name, "set!")) {
+        break;
+      }
+      return eval_assignment(env, expr);
 
-    // TODO quote
-    // TODO lambda
+    case HASHCODE_QUOTE:
+      return pair_list_get(lst, 1);
+
+      // TODO lambda
+    }
   }
 
-  // perform an "application" (either macro or function call)
+  return eval_application(env, expr);
 
-  tagged_reference_t fn = eval(env, head);
+  return NIL;
+}
+
+boolean_t is_false(tagged_reference_t value) {
+  return (value.tag == TAG_BOOLEAN_T) && (value.data == 0);
+}
+
+tagged_reference_t eval_if_expression(environment_t* env,
+                                      tagged_reference_t expr) {
+  pair_t* lst = untag_pair(expr);
+  tagged_reference_t test_expr = pair_list_get(lst, 1);
+  tagged_reference_t consequent_expr = pair_list_get(lst, 2);
+  tagged_reference_t alternative_expr = NIL;
+  if (pair_list_length(lst) >= 3) {
+    alternative_expr = pair_list_get(lst, 3);
+  }
+  tagged_reference_t evaluated_expr = eval(env, test_expr);
+  if (is_false(evaluated_expr)) {
+    return eval(env, alternative_expr);
+  } else {
+    return eval(env, consequent_expr);
+  }
+}
+
+tagged_reference_t eval_assignment(environment_t* env,
+                                   tagged_reference_t expr) {
+  // fixme
+  return NIL;
+}
+
+/**
+ * Evaluate and application, i.e., a function call.
+ */
+tagged_reference_t eval_application(environment_t* env,
+                                    tagged_reference_t expr) {
+  // perform an "application" (aka, function call to a primitive or
+  // closure).
+
+  pair_t* lst = untag_pair(expr);
+
+  tagged_reference_t fn = eval(env, pair_list_get(lst, 0));
+
   pair_t* args = NULL;
   for (int i = 1; (i < pair_list_length(lst)); i++) {
     tagged_reference_t arg_expr = pair_list_get(lst, i);
     args = pair_list_append(args, make_pair(eval(env, arg_expr), NIL));
   }
 
-  // TODO(jawilson): actually invoke the primitive or invoke a
-  // closure.
+  primitive_t primitive = untag_primitive(fn);
+  tagged_reference_t result = primitive(args);
+
+  // TODO(jawilson): or invoke a closure. also free all of the pairs
+  // we created.
 
   return NIL;
 }

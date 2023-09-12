@@ -2,9 +2,15 @@
 
 #include "allocate.h"
 #include "byte-array.h"
+#include "ct-assert.h"
 #include "fatal-error.h"
 
 byte_array_t* make_byte_array(uint32_t initial_capacity) {
+
+  // We make the assumption that casting (char*) to (uint8_t*) and
+  // vice-versa is completely reasonable.
+  ct_assert(sizeof(char) == 1);
+
   byte_array_t* result
       = (byte_array_t*) (malloc_bytes(initial_capacity + sizeof(byte_array_t)));
   result->capacity = initial_capacity;

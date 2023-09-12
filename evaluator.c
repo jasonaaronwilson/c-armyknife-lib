@@ -91,7 +91,12 @@ tagged_reference_t eval(environment_t* env, tagged_reference_t expr) {
     case HASHCODE_QUOTE:
       return pair_list_get(lst, 1);
 
-      // TODO lambda
+#if 0
+      // TODO
+    case HASHCODE_AND:
+    case HASHCODE_OR:
+    case HASHCODE_LAMBDA:
+#endif /* 0 */
     }
   }
 

@@ -27,12 +27,18 @@ int all_whitespace_or_end(const char* str, uint64_t start) {
   return 1;
 }
 
+read_expression_result_t read_expression_result(tagged_reference_t reference,
+                                                uint64_t end) {
+  return (read_expression_result_t){reference, end};
+}
+
 /**
  * This is a light-weight "s-expression" reader.
  *
  * read() return NIL, symbol, string, uint64_t, or a linkd list.
  */
-tagged_reference_t read_expression(const char* str, uint64_t start) {
+read_expression_result_t read_expression(const char* str, uint64_t start) {
+  uint64_t original_start = start;
   uint64_t limit = strlen(str);
   while (is_whitespace(str[start])) {
     start++;
@@ -41,20 +47,21 @@ tagged_reference_t read_expression(const char* str, uint64_t start) {
     start++;
     pair_t* result = NULL;
     while (!all_whitespace_or_end(str, start)) {
-      tagged_reference_t child = read_expression(str, start);
-      // TODO(jawilson): how many bytes were consumed?
+      read_expression_result_t child_result = read_expression(str, start);
+      tagged_reference_t child = child_result.result;
+      start = child_result.end;
+
       if (child.tag == TAG_ERROR_T) {
-        return child;
+        return read_expression_result(child, original_start);
       } else if (child.tag == TAG_NULL) {
-        return tagged_reference(TAG_PAIR_T, result);
+        return read_expression_result(tagged_reference(TAG_PAIR_T, result),
+                                      start);
       } else {
         result = pair_list_append(result, make_pair(child, NIL));
       }
     }
   } else if (str[start] == ')') {
-    tagged_reference_t reference;
-    reference.tag = TAG_NULL;
-    return reference;
+    return read_expression_result(NIL, start + 1);
   } else if (is_digit(str[start])) {
     uint64_t end = start + 1;
     while (!is_token_end(str[end])) {
@@ -63,18 +70,17 @@ tagged_reference_t read_expression(const char* str, uint64_t start) {
     char* token = string_substring(str, start, end);
     uint64_t number = string_parse_uint64(token);
     free(token);
-    tagged_reference_t reference;
-    reference.tag = TAG_UINT64_T;
-    reference.data = number;
-    return reference;
+    return read_expression_result(tagged_reference(TAG_UINT64_T, number), end);
   } else {
-    // a "symbol" in lisp parlance
+    // a "symbol" in lisp parlance (but the rest of the code often
+    // uses symbols to mean a symbol from an assembly/object file.
     uint64_t end = start + 1;
     while (!is_token_end(str[end])) {
       end++;
     }
     char* token = string_substring(str, start, end);
-    return tagged_reference(TAG_READER_SYMBOL, token);
+    return read_expression_result(tagged_reference(TAG_READER_SYMBOL, token),
+                                  end);
   }
   fatal_error(ERROR_NOT_REACHED);
 }

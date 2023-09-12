@@ -277,7 +277,7 @@ void debug_repl(cpu_thread_state_t* state) {
                                          byte_array_length(input_array));
 
     if (0) {
-      tagged_reference_t expr = read_expression(input, 0);
+      tagged_reference_t expr = read_expression(input, 0).result;
       byte_array_t* output = make_byte_array(128);
       output = print_tagged_reference_to_byte_arary(output, expr);
       continue;

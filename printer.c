@@ -7,9 +7,13 @@
 #include <inttypes.h>
 #include <stdio.h>
 
+#include "byte-array.h"
 #include "instruction-info.h"
 #include "opcodes.h"
+#include "pair.h"
 #include "printer.h"
+#include "string-util.h"
+#include "tagged-reference.h"
 #include "uleb128.h"
 
 // Forward Declaration
@@ -112,4 +116,74 @@ void print_symbol_table(symbol_table_t* symbols) {
     fprintf(stderr, "%08lx %s\n", symbols->sym.value, symbols->sym.name);
     symbols = symbols->next;
   }
+}
+
+byte_array_t*
+    print_tagged_reference_to_byte_arary(byte_array_t* destination,
+                                         tagged_reference_t reference) {
+  char* prefix = NULL;
+  char* str = NULL;
+  char* suffix = NULL;
+  char buffer[64];
+
+  switch (reference.tag) {
+  case TAG_NULL:
+    str = "()";
+    break;
+
+  case TAG_PAIR_T:
+    // Use dot notation (which we can't even parse ourselves)
+    byte_array_append_byte(destination, '(');
+    destination = print_tagged_reference_to_byte_arary(
+        destination, untag_pair(reference)->head);
+    byte_array_append_byte(destination, ' ');
+    byte_array_append_byte(destination, '.');
+    byte_array_append_byte(destination, ' ');
+    destination = print_tagged_reference_to_byte_arary(
+        destination, untag_pair(reference)->tail);
+    break;
+
+  case TAG_STRING:
+    prefix = "\"";
+    str = untag_string(reference);
+    suffix = "\"";
+    break;
+
+  case TAG_READER_SYMBOL:
+    str = untag_reader_symbol(reference);
+    break;
+
+  case TAG_UINT64_T:
+    snprintf(buffer, sizeof(buffer), "%lu", untag_uint64_t(reference));
+    str = &buffer[0];
+    break;
+
+  case TAG_ERROR_T:
+    prefix = "#<error-code-";
+    snprintf(buffer, sizeof(buffer), "%lu", reference.data);
+    str = &buffer[0];
+    suffix = ">";
+    break;
+
+  case TAG_BOOLEAN_T:
+    if (is_false(reference)) {
+      str = "#f";
+    }
+    if (is_true(reference)) {
+      str = "#t";
+    } else {
+      str = "#<illegal-boolean-value>";
+    }
+    break;
+
+  case TAG_PRIMITIVE:
+    str = "#<primitive-procedure>";
+    break;
+
+  case TAG_CPU_THREAD_STATE_T:
+    str = "#<thread-state>";
+    break;
+  }
+
+  return destination;
 }

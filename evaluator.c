@@ -98,10 +98,6 @@ tagged_reference_t eval(environment_t* env, tagged_reference_t expr) {
   return NIL;
 }
 
-boolean_t is_false(tagged_reference_t value) {
-  return (value.tag == TAG_BOOLEAN_T) && (value.data == 0);
-}
-
 tagged_reference_t eval_if_expression(environment_t* env,
                                       tagged_reference_t expr) {
   pair_t* lst = untag_pair(expr);

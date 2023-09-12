@@ -2,8 +2,8 @@
 
 Cleanups that aren't important but help keep the style nice.
 
-* make the debug repl a lisp (varname if let set! etc.)
-* what to do about _start?
+* make tags an enum - hopefully allows gdb to display them
+  better. probably the same for error codes.
 * comparison opcodes
 * search for FIXME and TODOs and try to fix any that are easy
 * implement some assembler directives like .text and .data .file .line .global?
@@ -11,6 +11,18 @@ Cleanups that aren't important but help keep the style nice.
 * reimplement symbol tables using 'array'
 * why not use macros for casts for all types? as_string, etc.
 * prefix "reader symbols" with the length and the hashcode.
+
+1. make tagging nicer (inline functions?)
+2. change calling convention for primitives so we don't have to cons
+3. add type predicates, cons, -, *, /, print and read
+4. add debugger commands to env and test executing them
+5. code in printer.c should print to a byte buffer.
+6. change readlines so that we read enough when expression isn't
+   finished.
+
+older
+
+* what to do about _start?
 
 1. implement command line parsing
 2. call repl debugger on fatal error?

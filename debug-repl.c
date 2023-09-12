@@ -276,10 +276,22 @@ void debug_repl(cpu_thread_state_t* state) {
     char* input = byte_array_c_substring(input_array, 0,
                                          byte_array_length(input_array));
 
-    if (0) {
+    if (string_equal(getenv("COMET_VM_SCHEME_REPL"), "true")) {
       tagged_reference_t expr = read_expression(input, 0).result;
       byte_array_t* output = make_byte_array(128);
       output = print_tagged_reference_to_byte_arary(output, expr);
+      output = byte_array_append_byte(output, '\0');
+      // hacky
+      fprintf(stderr, "INPUT = %s\n", &output->elements[0]);
+      
+      tagged_reference_t result = eval(env, expr);
+
+      byte_array_t* output2 = make_byte_array(128);
+      output2 = print_tagged_reference_to_byte_arary(output2, result);
+      output2 = byte_array_append_byte(output2, '\0');
+      // hacky
+      fprintf(stderr, "RESULT = %s\n", &output2->elements[0]);
+
       continue;
     }
 

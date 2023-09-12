@@ -142,6 +142,7 @@ byte_array_t*
     destination = byte_array_append_byte(destination, ' ');
     destination = print_tagged_reference_to_byte_arary(
         destination, untag_pair(reference)->tail);
+    destination = byte_array_append_byte(destination, ')');
     break;
 
   case TAG_STRING:

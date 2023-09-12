@@ -246,7 +246,7 @@ void interpret(cpu_thread_state_t* state, uint64_t max_instructions) {
       break;
 
     default:
-      fprintf(stderr, "opcode is %d\n", opcode);
+      fprintf(stderr, "opcode is %lu\n", opcode & 0xffffffff);
       fatal_error(ERROR_UNIMLEMENTED_OPCODE);
       break;
     }

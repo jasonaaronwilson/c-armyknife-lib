@@ -5,11 +5,12 @@
 #include "fatal-error.h"
 #include "optional.h"
 #include "pair.h"
+#include "string-util.h"
 
 #define HASHCODE_IF UINT64_C(12687957717205024595)
-#define HASHCODE_SET_BANG 8292903574644452355
-#define HASHCODE_QUOTE 10597478766694597373
-#define HASHCODE_LAMBDA 11364329973434366565
+#define HASHCODE_SET_BANG UINT64_C(8292903574644452355)
+#define HASHCODE_QUOTE UINT64_C(10597478766694597373)
+#define HASHCODE_LAMBDA UINT64_C(11364329973434366565)
 
 tagged_reference_t eval(environment_t* env, tagged_reference_t expr) {
 
@@ -38,10 +39,11 @@ tagged_reference_t eval(environment_t* env, tagged_reference_t expr) {
 
   tagged_reference_t head = pair_list_get(lst, 0);
   if (head.tag == TAG_READER_SYMBOL) {
-    uint64_t hashcode = string_hash(head.data);
+    char* symbol_name = untag_reader_symbol(head);
+    uint64_t hashcode = string_hash(symbol_name);
     switch (hashcode) {
     case HASHCODE_IF:
-      if (!string_equal(head.data, "if")) {
+      if (!string_equal(symbol_name, "if")) {
         break;
       }
       // TODO

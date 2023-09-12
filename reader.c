@@ -1,7 +1,9 @@
+#include <stdlib.h>
 #include <string.h>
 
 #include "pair.h"
 #include "reader.h"
+#include "string-util.h"
 #include "tagged-reference.h"
 
 int is_whitespace(char ch) { return ch == ' ' || ch == '\n'; }
@@ -43,10 +45,7 @@ tagged_reference_t read(const char* str, uint64_t start) {
       if (child.tag == TAG_ERROR_T) {
         return child;
       } else if (child.tag == TAG_NULL) {
-        tagged_reference_t reference;
-        reference.tag = TAG_PAIR_T;
-        reference.data = result;
-        return reference;
+        return tagged_reference(TAG_PAIR_T, result);
       } else {
         result = pair_list_append(result, make_pair(child, NIL));
       }
@@ -74,9 +73,7 @@ tagged_reference_t read(const char* str, uint64_t start) {
       end++;
     }
     char* token = string_substring(str, start, end);
-    tagged_reference_t reference;
-    reference.tag = TAG_READER_SYMBOL;
-    reference.data = token;
-    return reference;
+    return tagged_reference(TAG_READER_SYMBOL, token);
   }
+  fatal_error(ERROR_NOT_REACHED);
 }

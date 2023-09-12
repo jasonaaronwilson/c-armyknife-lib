@@ -20,7 +20,9 @@ typedef struct {
   uint64_t tag;
 } tagged_reference_t;
 
-#define NIL ((tagged_reference_t){TAG_NULL, 0})
+#define tagged_reference(tag, data) ((tagged_reference_t){(uint64_t) data, tag})
+
+#define NIL tagged_reference(TAG_NULL, 0)
 
 static inline void require_tag(tagged_reference_t reference, uint64_t tag) {
   if (reference.tag != tag) {

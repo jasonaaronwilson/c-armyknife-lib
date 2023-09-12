@@ -4,6 +4,8 @@
  * This file implements the repl for the built-in debugger.
  */
 
+#include <inttypes.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -220,8 +222,9 @@ void debug_expect_register_command(cpu_thread_state_t* state,
     uint64_t expected = string_parse_uint64(token_list_get(tokens, 2));
     uint64_t value = state->register_storage[reg_num];
     if (value != expected) {
-      fprintf(stderr, "FAIL: expected %s to be %d but was %d\n", register_name,
-              value, expected);
+      fprintf(stderr,
+              "FAIL: expected %s to be %" PRIu64 "but was %" PRIu64 "\n",
+              register_name, value, expected);
       exit(ERROR_DEBUGGER_EXPECT_FAILURE);
     }
   }

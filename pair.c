@@ -13,6 +13,7 @@
 #include "fatal-error.h"
 #include "optional.h"
 #include "pair.h"
+#include "string-util.h"
 
 pair_t* make_pair(tagged_reference_t head, tagged_reference_t tail) {
   pair_t* result = malloc_struct(pair_t);
@@ -60,7 +61,7 @@ pair_t* pair_list_append(pair_t* lst_1, pair_t* lst_2) {
     while (head->tail.data) {
       head = (pair_t*) head->tail.data;
     }
-    head->tail = (tagged_reference_t){lst_2, TAG_PAIR_T};
+    head->tail = (tagged_reference_t){(uint64_t) lst_2, TAG_PAIR_T};
     return lst_1;
   } else if (lst_1) {
     return lst_1;
@@ -73,7 +74,7 @@ optional_t pair_assoc_list_lookup(pair_t* lst, char* name) {
   while (lst) {
     tagged_reference_t element = lst->head;
     // TODO(jawilson) check tag!
-    if (string_equal(element.data, name)) {
+    if (string_equal(name, untag_string_or_reader_symbol(element))) {
       return optional_of(lst->tail);
     }
     lst = ((pair_t*) lst->tail.data);

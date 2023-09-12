@@ -76,7 +76,7 @@ uint64_t print_instruction(paged_memory_t* memory, uint64_t address) {
 
 void print_gr_register_name_and_value(cpu_thread_state_t* state,
                                       uint64_t reg_number) {
-  fprintf(stderr, "r%02d ", reg_number);
+  fprintf(stderr, "r%02lu ", reg_number);
   fprintf(stderr, "%08lx",
           ((state->register_storage[reg_number]) >> 32) & 0xffffffff);
   fprintf(stderr, "%08lx", (state->register_storage[reg_number]) & 0xffffffff);

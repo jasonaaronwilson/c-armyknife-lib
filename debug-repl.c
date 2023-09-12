@@ -20,6 +20,7 @@
 #include "interpreter.h"
 #include "io.h"
 #include "printer.h"
+#include "reader.h"
 #include "string-util.h"
 #include "symbol-table.h"
 #include "tagged-reference.h"
@@ -246,6 +247,9 @@ byte_array_t* read_expression_lines(char* prompt) {
   char line[1024];
   fgets(line, sizeof(line), stdin);
 
+  // TODO(jawilson): read more lines if necessary to finish an
+  // expression.
+
   result = byte_array_append_bytes(result, (uint8_t*) line, strlen(line));
   return result;
 }
@@ -271,6 +275,13 @@ void debug_repl(cpu_thread_state_t* state) {
     byte_array_t* input_array = read_expression_lines("(debug) ");
     char* input = byte_array_c_substring(input_array, 0,
                                          byte_array_length(input_array));
+
+    if (0) {
+      tagged_reference_t expr = read_expression(input, 0);
+      byte_array_t* output = make_byte_array(128);
+      output = print_tagged_reference_to_byte_arary(output, expr);
+      continue;
+    }
 
     token_list_t* tokens = tokenize(input, " \n");
 

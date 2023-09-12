@@ -32,7 +32,7 @@ int all_whitespace_or_end(const char* str, uint64_t start) {
  *
  * read() return NIL, symbol, string, uint64_t, or a linkd list.
  */
-tagged_reference_t read(const char* str, uint64_t start) {
+tagged_reference_t read_expression(const char* str, uint64_t start) {
   uint64_t limit = strlen(str);
   while (is_whitespace(str[start])) {
     start++;
@@ -41,7 +41,8 @@ tagged_reference_t read(const char* str, uint64_t start) {
     start++;
     pair_t* result = NULL;
     while (!all_whitespace_or_end(str, start)) {
-      tagged_reference_t child = read(str, start);
+      tagged_reference_t child = read_expression(str, start);
+      // TODO(jawilson): how many bytes were consumed?
       if (child.tag == TAG_ERROR_T) {
         return child;
       } else if (child.tag == TAG_NULL) {

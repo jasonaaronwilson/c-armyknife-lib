@@ -13,13 +13,19 @@
 #include "assembler.h"
 #include "byte-array.h"
 #include "debug-repl.h"
+#include "environment.h"
+#include "evaluator.h"
 #include "fatal-error.h"
+#include "global-environment.h"
 #include "interpreter.h"
 #include "io.h"
 #include "printer.h"
 #include "string-util.h"
 #include "symbol-table.h"
+#include "tagged-reference.h"
 #include "tokenizer.h"
+
+environment_t* make_debugger_env(environment_t* global_env);
 
 /**
  * Parse an address for a command.
@@ -256,6 +262,11 @@ byte_array_t* read_expression_lines(char* prompt) {
  * continue
  */
 void debug_repl(cpu_thread_state_t* state) {
+
+  environment_t* env = make_global_environment(); // make_debugger_env();
+  environment_define(env, "*thread-state*",
+                     tagged_reference(TAG_CPU_THREAD_STATE_T, state));
+
   while (1) {
     byte_array_t* input_array = read_expression_lines("(debug) ");
     char* input = byte_array_c_substring(input_array, 0,
@@ -300,3 +311,13 @@ void debug_repl(cpu_thread_state_t* state) {
     token_list_free_all(tokens);
   }
 }
+
+void add_debugger_repl_commands(environment_t* env);
+
+environment_t* make_debugger_env(environment_t* global_env) {
+  environment_t* result = make_environment(global_env);
+  add_debugger_repl_commands(result);
+  return result;
+}
+
+void add_debugger_repl_commands(environment_t* env) {}

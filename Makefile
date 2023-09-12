@@ -14,6 +14,7 @@ SRC_C = allocate.c \
 	environment.c \
 	evaluator.c \
 	fatal-error.c \
+	global-environment.c \
 	instruction-info.c \
 	interpreter.c \
 	io.c \
@@ -38,6 +39,7 @@ SRC_H = allocate.h \
 	environment.h \
 	evaluator.h \
 	fatal-error.h \
+	global-environment.h \
 	instruction-info.h \
 	interpreter.h \
 	io.h \

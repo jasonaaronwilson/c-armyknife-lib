@@ -13,7 +13,8 @@ typedef enum {
   TAG_UINT64_T,
   TAG_ERROR_T,
   TAG_BOOLEAN_T,
-  TAG_PRIMITIVE
+  TAG_PRIMITIVE,
+  TAG_CPU_THREAD_STATE_T
 } tag_t;
 
 typedef struct {

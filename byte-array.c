@@ -34,7 +34,8 @@ char* byte_array_c_substring(byte_array_t* arr, uint64_t start, uint64_t end) {
   return result;
 }
 
-byte_array_t* byte_array_append_byte(byte_array_t* arr, uint8_t element) {
+__attribute__((warn_unused_result)) byte_array_t*
+    byte_array_append_byte(byte_array_t* arr, uint8_t element) {
   if (arr->length < arr->capacity) {
     arr->elements[arr->length] = element;
     arr->length++;
@@ -50,8 +51,9 @@ byte_array_t* byte_array_append_byte(byte_array_t* arr, uint8_t element) {
   }
 }
 
-byte_array_t* byte_array_append_bytes(byte_array_t* arr, uint8_t* bytes,
-                                      uint64_t n_bytes) {
+__attribute__((warn_unused_result)) byte_array_t*
+    byte_array_append_bytes(byte_array_t* arr, uint8_t* bytes,
+                            uint64_t n_bytes) {
   for (int i = 0; i < n_bytes; i++) {
     arr = byte_array_append_byte(arr, bytes[i]);
   }

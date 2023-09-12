@@ -14,8 +14,12 @@ extern uint64_t byte_array_length(byte_array_t* arr);
 extern uint8_t byte_array_get(byte_array_t* arr, uint64_t position);
 extern char* byte_array_c_substring(byte_array_t* arr, uint64_t start,
                                     uint64_t end);
-extern byte_array_t* byte_array_append_byte(byte_array_t* arr, uint8_t byte);
-extern byte_array_t* byte_array_append_bytes(byte_array_t* arr, uint8_t* bytes,
-                                             uint64_t n_bytes);
+
+__attribute__((warn_unused_result)) extern byte_array_t*
+    byte_array_append_byte(byte_array_t* arr, uint8_t byte);
+
+__attribute__((warn_unused_result)) extern byte_array_t*
+    byte_array_append_bytes(byte_array_t* arr, uint8_t* bytes,
+                            uint64_t n_bytes);
 
 #endif /* _BYTE_ARRAY_H_ */

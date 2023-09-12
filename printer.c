@@ -6,6 +6,7 @@
 
 #include <inttypes.h>
 #include <stdio.h>
+#include <string.h>
 
 #include "byte-array.h"
 #include "instruction-info.h"
@@ -133,12 +134,12 @@ byte_array_t*
 
   case TAG_PAIR_T:
     // Use dot notation (which we can't even parse ourselves)
-    byte_array_append_byte(destination, '(');
+    destination = byte_array_append_byte(destination, '(');
     destination = print_tagged_reference_to_byte_arary(
         destination, untag_pair(reference)->head);
-    byte_array_append_byte(destination, ' ');
-    byte_array_append_byte(destination, '.');
-    byte_array_append_byte(destination, ' ');
+    destination = byte_array_append_byte(destination, ' ');
+    destination = byte_array_append_byte(destination, '.');
+    destination = byte_array_append_byte(destination, ' ');
     destination = print_tagged_reference_to_byte_arary(
         destination, untag_pair(reference)->tail);
     break;
@@ -183,6 +184,19 @@ byte_array_t*
   case TAG_CPU_THREAD_STATE_T:
     str = "#<thread-state>";
     break;
+  }
+
+  if (prefix) {
+    destination = byte_array_append_bytes(destination, (uint8_t*) prefix,
+                                          strlen(prefix));
+  }
+  if (str) {
+    destination
+        = byte_array_append_bytes(destination, (uint8_t*) str, strlen(str));
+  }
+  if (suffix) {
+    destination = byte_array_append_bytes(destination, (uint8_t*) suffix,
+                                          strlen(suffix));
   }
 
   return destination;

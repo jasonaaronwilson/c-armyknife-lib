@@ -11,7 +11,7 @@ byte_array_t* make_byte_array(uint32_t initial_capacity) {
   return result;
 }
 
-uint64_t byte_array_length(byte_array_t* arr) { return arr->length; }
+uint64_t byte_array_length(byte_array_t* array) { return array->length; }
 
 uint8_t byte_array_get(byte_array_t* arr, uint64_t position) {
   if (position < arr->length) {
@@ -21,10 +21,13 @@ uint8_t byte_array_get(byte_array_t* arr, uint64_t position) {
   }
 }
 
-uint8_t* byte_array_c_substring(byte_array_t* arr, uint64_t start,
-                                uint64_t end) {
+/**
+ * Extract a newly allocated string contain the bytes from start to
+ * end (appending a zero byte to make sure it's a legal C string).
+ */
+char* byte_array_c_substring(byte_array_t* arr, uint64_t start, uint64_t end) {
   // Add one extra byte for a NUL string terminator byte
-  uint8_t* result = (malloc_bytes(end - start + 1));
+  char* result = (char*) (malloc_bytes(end - start + 1));
   for (int i = start; i < end; i++) {
     result[i - start] = arr->elements[i];
   }

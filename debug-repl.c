@@ -231,6 +231,20 @@ void debug_expect_register_command(cpu_thread_state_t* state,
 }
 
 /**
+ * Read one or more lines from stdin.
+ */
+byte_array_t* read_expression_lines(char* prompt) {
+  byte_array_t* result = make_byte_array(128);
+  fputs(prompt, stderr);
+
+  char line[1024];
+  fgets(line, sizeof(line), stdin);
+
+  result = byte_array_append_bytes(result, (uint8_t*) line, strlen(line));
+  return result;
+}
+
+/**
  * Enter a debug repl. The list of available commands is available
  * below in the implementation of "help".
  *
@@ -242,14 +256,13 @@ void debug_expect_register_command(cpu_thread_state_t* state,
  * continue
  */
 void debug_repl(cpu_thread_state_t* state) {
-  char line[1024];
-
   while (1) {
-    fputs("(debug) ", stderr);
+    byte_array_t* input_array = read_expression_lines("(debug) ");
+    char* input = byte_array_c_substring(input_array, 0,
+                                         byte_array_length(input_array));
 
-    fgets(line, sizeof(line), stdin);
+    token_list_t* tokens = tokenize(input, " \n");
 
-    token_list_t* tokens = tokenize(line, " \n");
     if (token_list_length(tokens) == 0) {
       continue;
     }

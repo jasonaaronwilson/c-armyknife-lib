@@ -19,11 +19,17 @@ typedef struct {
 // primitive_t is the new type name being defined.
 typedef tagged_reference_t (*primitive_t)(primitive_arguments_t args);
 
-extern tagged_reference_t primtive_function_plus(primitive_arguments_t args);
-
 static inline primitive_t untag_primitive(tagged_reference_t reference) {
   require_tag(reference, TAG_PRIMITIVE);
   return (primitive_t) reference.data;
 }
+
+// A list of the basic scheme library primitives (other primitives
+// specific to the debugger, etc., will not be listed here).
+
+extern tagged_reference_t primtive_function_plus(primitive_arguments_t args);
+extern tagged_reference_t primtive_function_sub(primitive_arguments_t args);
+extern tagged_reference_t primtive_function_mul(primitive_arguments_t args);
+extern tagged_reference_t primtive_function_div(primitive_arguments_t args);
 
 #endif /* _PRIMITIVE_H_ */

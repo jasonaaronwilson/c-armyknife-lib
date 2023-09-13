@@ -3,10 +3,49 @@
 /**
  * Example (+ 1 2) => 3 or (+ 1 2 3) => 6
  */
-tagged_reference_t primtive_function_plus(primitive_arguments_t args) {
-  uint64_t result = 0;
-  for (int i = 0; i < args.n_args; i++) {
-    result += untag_uint64_t(args.args[i]);
+tagged_reference_t primtive_function_plus(primitive_arguments_t arguments) {
+  // checkargs
+  int64_t result = untag_int64_t(arguments.args[0]);
+  for (int i = 1; i < arguments.n_args; i++) {
+    result += untag_int64_t(arguments.args[i]);
   }
+  return tagged_reference(TAG_UINT64_T, result);
+}
+
+/**
+ * Example (- 10 4) => 6
+ */
+tagged_reference_t primtive_function_sub(primitive_arguments_t arguments) {
+  // checkargs
+  int64_t result = untag_int64_t(arguments.args[0]);
+  for (int i = 1; i < arguments.n_args; i++) {
+    result -= untag_int64_t(arguments.args[i]);
+  }
+  return tagged_reference(TAG_UINT64_T, result);
+}
+
+/**
+ * Example (* 10 4) => 40
+ */
+tagged_reference_t primtive_function_mul(primitive_arguments_t arguments) {
+  // checkargs
+  int64_t result = untag_int64_t(arguments.args[0]);
+  for (int i = 1; i < arguments.n_args; i++) {
+    result *= untag_int64_t(arguments.args[i]);
+  }
+  return tagged_reference(TAG_UINT64_T, result);
+}
+
+/**
+ * Example (/ 10 2) => 5
+ */
+tagged_reference_t primtive_function_div(primitive_arguments_t arguments) {
+  // checkargs macro?
+  if (arguments.n_args != 2) {
+    fatal_error(ERROR_WRONG_NUMBER_OF_ARGS);
+  }
+
+  int64_t result
+      = untag_int64_t(arguments.args[0]) / untag_int64_t(arguments.args[0]);
   return tagged_reference(TAG_UINT64_T, result);
 }

@@ -37,4 +37,10 @@ static inline uint64_t untag_uint64_t(tagged_reference_t reference) {
   return (uint64_t) reference.data;
 }
 
+static inline int64_t untag_int64_t(tagged_reference_t reference) {
+  // Maybe we should rename the tag?
+  require_tag(reference, TAG_UINT64_T);
+  return (int64_t) reference.data;
+}
+
 #endif /* _TAGGED_REFERENCE_H_ */

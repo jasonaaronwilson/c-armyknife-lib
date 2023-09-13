@@ -11,6 +11,7 @@
 
 #include <stdint.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "evaluator.h"
 #include "fatal-error.h"
@@ -133,6 +134,9 @@ tagged_reference_t eval_assignment(environment_t* env,
  */
 tagged_reference_t eval_application(environment_t* env,
                                     tagged_reference_t expr) {
+  primitive_arguments_t arguments;
+  memset(&arguments, 0, sizeof(arguments));
+
   // perform an "application" (aka, function call to a primitive or
   // closure).
 
@@ -143,7 +147,7 @@ tagged_reference_t eval_application(environment_t* env,
   pair_t* args = NULL;
   for (int i = 1; (i < pair_list_length(lst)); i++) {
     tagged_reference_t arg_expr = pair_list_get(lst, i);
-    args = pair_list_append(args, make_pair(eval(env, arg_expr), NIL));
+    arguments.args[arguments.n_args++] = eval(env, arg_expr);
   }
 
   primitive_t primitive = untag_primitive(fn);

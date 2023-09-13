@@ -1,3 +1,8 @@
+/**
+ * This is the program entry point of the Comet VM (comet-vm)
+ * executable.
+ */
+
 #include <stdlib.h>
 
 #include "allocate.h"

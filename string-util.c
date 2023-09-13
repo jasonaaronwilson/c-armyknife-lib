@@ -1,7 +1,8 @@
 /**
  * @file string-util.c
  *
- * This contains additional string function to operate on "strings".
+ * This contains additional string function to operate on "strings"
+ * since the C libary has only basic routines.
  */
 
 #include <stdlib.h>

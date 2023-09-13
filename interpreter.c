@@ -1,7 +1,9 @@
 /**
  * @file interpreter.c
  *
- * This contains the interpreter for the Comet VM.
+ * This contains the interpreter for the Comet VM. The Comet VM will
+ * eventually be able to be compiled without any scheme code so this
+ * has little to do with the scheme interpreter.
  */
 
 #include <stdio.h>

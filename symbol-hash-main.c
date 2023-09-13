@@ -1,3 +1,9 @@
+/**
+ * This is a stand-alone program to hash scheme symbols so that we can
+ * used the hashed values in C code as constants (for example for
+ * switch statements).
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>

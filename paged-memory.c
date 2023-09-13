@@ -1,10 +1,6 @@
-#include <stdlib.h>
-
-#include "allocate.h"
-#include "fatal-error.h"
-#include "paged-memory.h"
-
 /**
+ * @file paged-memory.c
+ *
  * This is an abstraction for holding the virtualized main memory
  * (i.e., a "proccess address space" like a POSIX process might wish
  * to employ).
@@ -33,6 +29,12 @@
  * attempt to use aligned loads even when the address is naturally
  * aligned and the current machine is little-endian.
  */
+
+#include <stdlib.h>
+
+#include "allocate.h"
+#include "fatal-error.h"
+#include "paged-memory.h"
 
 #define AS_UINT8(x) ((uint8_t) x)
 #define AS_UINT16(x) ((uint16_t) x)

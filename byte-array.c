@@ -8,7 +8,8 @@
 byte_array_t* make_byte_array(uint32_t initial_capacity) {
 
   // We make the assumption that casting (char*) to (uint8_t*) and
-  // vice-versa is completely reasonable.
+  // vice-versa is completely reasonable which it is on all modern
+  // architecures.
   ct_assert(sizeof(char) == 1);
 
   byte_array_t* result

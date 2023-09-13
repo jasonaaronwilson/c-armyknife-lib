@@ -3,6 +3,10 @@
  *
  * This is an interface for compiling a single instruction statement
  * to "memory" or updating the symbol table for a label.
+ *
+ * The file will likely be replaced with a pure scheme based assembler
+ * with a more consistent syntax (folks seem to have gotten over
+ * parenthesize syntax for assembly because of WARM...)
  */
 
 #include <stdio.h>
@@ -39,11 +43,19 @@ uint64_t parse_argument(uint8_t type, symbol_table_t* symbols, char* str) {
   return 0;
 }
 
+// TODO(jawilson): max passes (and also print out the number of passes).
 assembly_result_t assemble_statements(paged_memory_t* memory, uint64_t address,
                                       symbol_table_t* symbols,
                                       array_t* statements) {
   uint64_t start_address = address;
 
+  // This is similar to branch tensioning in other assemblers. The
+  // first pass gets symbols close to their final addresses. A second
+  // pass is always performed unless there are no labels (which isn't
+  // obvious but all symbols are dirty even if all labels are only
+  // backward referenced and therefore we know their address when they
+  // are used). If code grows enough in the second pass, then some
+  // labels might move enough to make another pass necesary, etc.
   while (1) {
     address = start_address;
     for (int i = 0; i < array_length(statements); i++) {
@@ -67,6 +79,7 @@ assembly_result_t assemble(paged_memory_t* memory, uint64_t address,
 
   assembly_result_t result = make_assembly_result(symbols, address);
 
+  // Comments
   if (string_starts_with(statement, "#")) {
     return result;
   }

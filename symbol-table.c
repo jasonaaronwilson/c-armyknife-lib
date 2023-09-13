@@ -1,7 +1,9 @@
 /**
  * @file symbol-table.c
  *
- * This contains the implementation of a symbol table.
+ * This contains the implementation of a symbol table for the
+ * assembler and debugger. In this case symbol means "code or data
+ * label" instead of "scheme symbol".
  */
 
 #include <stdlib.h>

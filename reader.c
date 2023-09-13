@@ -1,3 +1,8 @@
+/**
+ * This is a limited s-expression reader. Eventually it will only be
+ * used to bootstrap a better reader written in scheme itself.
+ */
+
 #include <stdlib.h>
 #include <string.h>
 

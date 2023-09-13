@@ -1,7 +1,9 @@
 /**
  * @file printer.c
  *
- * This file contains all kinds of routines print stuff.
+ * This file contains all kinds of routines print stuff. Some is for
+ * the scheme interpreter only so this file probaly makes sense to
+ * split up.
  */
 
 #include <inttypes.h>

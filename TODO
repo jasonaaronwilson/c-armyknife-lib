@@ -2,6 +2,8 @@
 
 Cleanups that aren't important but help keep the style nice.
 
+* add standalone scheme interpreter target
+* add hack to define so we can put a debug name on closures...
 * make tags an enum - hopefully allows gdb to display them
   better. probably the same for error codes.
 * comparison opcodes

@@ -2,12 +2,21 @@
 
 #include "allocate.h"
 #include "boolean.h"
+#include "closure.h"
 #include "environment.h"
 #include "optional.h"
 #include "pair.h"
 #include "string-util.h"
 #include "tagged-reference.h"
 
+#define GLOBAL_ENVIRONMENT_BUCKETS 73
+#define NESTED_ENVIRONMENT_BUCKETS 1
+
+/**
+ * Make an empty environment with the given parent. When parent is
+ * NULL, the environment is optimized for lookup performance over
+ * space.
+ */
 environment_t* make_environment(environment_t* parent) {
   // The global environment gets more buckets since it will have way
   // more symbols than a child environment. We can also avoid hashing
@@ -20,6 +29,11 @@ environment_t* make_environment(environment_t* parent) {
   return result;
 }
 
+/**
+ * Perform a lookup in the environment returning optional_empty() when
+ * the var_name isn't found and otherwise the tagged_reference_t which
+ * is bound to var_name (which can be NIL, etc.).
+ */
 optional_t environment_get(environment_t* env, char* var_name) {
   if (!env) {
     return optional_empty();
@@ -48,11 +62,30 @@ optional_t environment_get(environment_t* env, char* var_name) {
   return environment_get(env->parent, var_name);
 }
 
+// TODO(jawilson): implement!
 void environment_set(environment_t* env, char* var_name,
                      tagged_reference_t value) {}
 
+/**
+ * Define a new variable in this environment (possibly shadowing an
+ * older binding).
+ */
 void environment_define(environment_t* env, char* var_name,
                         tagged_reference_t value) {
+
+  // Total hack to put a debug name on closures defined at the
+  // top-level. This is completely optional behavior as the debug name
+  // is not directly accessible.
+  if (env->parent == NULL) {
+    if (value.tag == TAG_CLOSURE_T) {
+      closure_t* closure = untag_closure_t(value);
+      if (closure->debug_name == NULL) {
+        closure->debug_name = var_name;
+      }
+    }
+  }
+
+  // TODO(jawilson): reuse the older binding if redefining...
   uint64_t hash_code = string_hash(var_name);
   uint64_t bucket_number = hash_code % env->n_buckets;
   tagged_reference_t binding

@@ -1,3 +1,8 @@
+/**
+ * Implementation of the basic scheme primitives that don't have a
+ * good home elsewhere.
+ */
+
 #include "primitive.h"
 
 /**

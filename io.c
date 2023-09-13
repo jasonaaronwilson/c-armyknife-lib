@@ -28,4 +28,5 @@ byte_array_t* byte_array_append_file_contents(byte_array_t* bytes,
   return bytes;
 }
 
+// TODO(jawilson): implement
 void byte_array_write_file(byte_array_t* bytes, char* file_name) {}

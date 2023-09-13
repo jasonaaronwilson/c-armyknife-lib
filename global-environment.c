@@ -1,3 +1,15 @@
+/**
+ * @file global-environment.c
+ *
+ * This file contains the routine to build a global environment
+ * populated with typical scheme routines. (It won't be unusual to
+ * have multiple global environments created while debugging or
+ * assembling.)
+ *
+ * The debugger creates a child environment populated with debugger
+ * functions and data which keeps the global environment "clean".
+ */
+
 #include <stdlib.h>
 
 #include "environment.h"

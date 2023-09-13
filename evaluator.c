@@ -2,11 +2,10 @@
  * @file evaluator.c
  *
  * The file contains an interpreter for a very tiny subset of scheme
- * (for example there are only 64bit unsigned numbers right now...)
  * which is used to implement the debugger repl as well as expressions
- * in the assembler. See reader.c for a parser that reads textual and
- * converts it to the format suitable for expr (aka linked lists built
- * out of pairs plus various "atoms".
+ * in the assembler. See reader.c for a parser that reads character
+ * oriented text and converts it to the format suitable for expr (aka
+ * linked lists built out of pairs plus various "atoms").
  */
 
 #include <stdint.h>

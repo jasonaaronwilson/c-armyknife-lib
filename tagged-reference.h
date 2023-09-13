@@ -12,12 +12,14 @@ typedef enum {
   TAG_UNICODE_CODE_POINT,
   TAG_STRING,        // aka const char* C string
   TAG_SCHEME_SYMBOL, // also a const char* C string
+  TAG_SINGLETON_T,   // also a const char* C string
   TAG_ERROR_T,
   TAG_PAIR_T,
   TAG_VECTOR_T,
+  TAG_RECORD_T,
   TAG_BYTE_VECTOR_T,
   TAG_PRIMITIVE,
-  TAG_CLOSURE,
+  TAG_CLOSURE_T,
   TAG_CPU_THREAD_STATE_T
 } tag_t;
 

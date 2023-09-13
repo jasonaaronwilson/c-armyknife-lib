@@ -30,6 +30,14 @@ tagged_reference_t cons(tagged_reference_t head, tagged_reference_t tail) {
   return tagged_reference(TAG_PAIR_T, make_pair(head, tail));
 }
 
+tagged_reference_t car(tagged_reference_t pair) {
+  return untag_pair(pair)->head;
+}
+
+tagged_reference_t cdr(tagged_reference_t pair) {
+  return untag_pair(pair)->tail;
+}
+
 uint64_t pair_list_length(pair_t* lst) {
   uint64_t length = 0;
   while (lst) {

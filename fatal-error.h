@@ -22,6 +22,7 @@
 #define ERROR_NOT_REACHED 18
 #define ERROR_MAX_PRIMITIVE_ARGS 19
 #define ERROR_WRONG_NUMBER_OF_ARGS 20
+#define ERROR_CLOSURE_HAS_NO_BODY 21
 
 extern _Noreturn void fatal_error_impl(char* file, int line, int error_code);
 extern const char* fatal_error_code_to_string(int error_code);

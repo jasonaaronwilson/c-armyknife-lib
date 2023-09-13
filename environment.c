@@ -28,7 +28,8 @@ optional_t environment_get(environment_t* env, char* var_name) {
   tagged_reference_t lst = NIL;
   if (env->n_buckets > 1) {
     uint64_t hash_code = string_hash(var_name);
-    tagged_reference_t lst = env->buckets[hash_code % env->n_buckets];
+    uint64_t bucket_number = hash_code % env->n_buckets;
+    lst = env->buckets[bucket_number];
   } else {
     lst = env->buckets[0];
   }

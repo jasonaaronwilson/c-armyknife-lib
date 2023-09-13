@@ -10,8 +10,7 @@ typedef struct {
 } pair_t;
 
 extern pair_t* make_pair(tagged_reference_t head, tagged_reference_t tail);
-extern tagged_reference_t cons(tagged_reference_t head,
-                               tagged_reference_t tail);
+
 extern uint64_t pair_list_length(pair_t* head);
 extern tagged_reference_t pair_list_get(pair_t* head, uint64_t index);
 extern void pair_list_set(pair_t* head, uint64_t index,
@@ -23,5 +22,14 @@ static inline pair_t* untag_pair(tagged_reference_t reference) {
   require_tag(reference, TAG_PAIR_T);
   return (pair_t*) reference.data;
 }
+
+// Pairs are used so much in code implementing the scheme interpreter
+// that we provide some convenient utilities to avoid seeing lots of
+// untags and such.
+
+extern tagged_reference_t cons(tagged_reference_t head,
+                               tagged_reference_t tail);
+extern tagged_reference_t car(tagged_reference_t pair);
+extern tagged_reference_t cdr(tagged_reference_t pair);
 
 #endif /* _TAGGED_PAIR_H_ */

@@ -10,6 +10,7 @@ SRC_C = allocate.c \
 	array.c \
 	assembler.c \
 	byte-array.c \
+	closure.c \
 	debug-repl.c \
 	environment.c \
 	evaluator.c \
@@ -34,6 +35,7 @@ SRC_H = allocate.h \
 	assembler.h \
 	boolean.h \
 	byte-array.h \
+	closure.h \
 	cpu-thread-state.h \
 	debug-repl.h \
 	environment.h \
@@ -50,6 +52,7 @@ SRC_H = allocate.h \
 	primitive.h \
 	printer.h \
 	reader.c \
+	scheme-symbol.h \
 	string-util.h \
 	symbol-table.h \
 	tagged-reference.h \

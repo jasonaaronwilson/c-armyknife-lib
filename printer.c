@@ -182,6 +182,10 @@ byte_array_t*
     str = "#<primitive-procedure>";
     break;
 
+  case TAG_CLOSURE_T:
+    str = "#<closure>";
+    break;
+
   case TAG_CPU_THREAD_STATE_T:
     str = "#<thread-state>";
     break;

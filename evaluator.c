@@ -13,11 +13,13 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "closure.h"
 #include "evaluator.h"
 #include "fatal-error.h"
 #include "optional.h"
 #include "pair.h"
 #include "primitive.h"
+#include "scheme-symbol.h"
 #include "string-util.h"
 
 // See the symbol-hash command line tool in this directory if you need
@@ -36,6 +38,7 @@ tagged_reference_t eval_if_expression(environment_t* env,
 tagged_reference_t eval_assignment(environment_t* env, tagged_reference_t expr);
 tagged_reference_t eval_application(environment_t* env,
                                     tagged_reference_t expr);
+tagged_reference_t eval_lambda(environment_t* env, tagged_reference_t expr);
 
 /**
  * This is the entry point to the evaluator. Dvaluate the given
@@ -92,11 +95,13 @@ tagged_reference_t eval(environment_t* env, tagged_reference_t expr) {
     case HASHCODE_QUOTE:
       return pair_list_get(lst, 1);
 
+    case HASHCODE_LAMBDA:
+      return eval_lambda(env, expr);
+
 #if 0
       // TODO
     case HASHCODE_AND:
     case HASHCODE_OR:
-    case HASHCODE_LAMBDA:
 #endif /* 0 */
     }
   }
@@ -155,11 +160,45 @@ tagged_reference_t eval_application(environment_t* env,
     arguments.args[arguments.n_args++] = eval(env, arg_expr);
   }
 
-  primitive_t primitive = untag_primitive(fn);
-  tagged_reference_t result = primitive(arguments);
+  if (fn.tag == TAG_PRIMITIVE) {
+    primitive_t primitive = untag_primitive(fn);
+    return primitive(arguments);
+  }
 
-  // TODO(jawilson): test for a closure and invoke it by making a tail
-  // call (hopefully if the compiler agrees) to eval().
+  // Must be a closure.
+  closure_t* closure = untag_closure_t(fn);
+  env = make_environment(closure->env);
+  // make sure number of args are compatible.
+  for (int i = 0; (i < closure->n_arg_names); i++) {
+    environment_define(env, closure->arg_names[i], arguments.args[i]);
+  }
 
-  return result;
+  pair_t* sequence = untag_pair(closure->code);
+  while (sequence->tail.tag != TAG_NULL) {
+    eval(env, sequence->head);
+    sequence = untag_pair(sequence->tail);
+  }
+
+  // Hopefully do a tail call to evaluate the last element of the
+  // lambda expression's body;
+  return eval(env, sequence->head);
+}
+
+/**
+ * Make a closure
+ */
+tagged_reference_t eval_lambda(environment_t* env, tagged_reference_t expr) {
+  pair_t* argument_list = untag_pair(pair_list_get(untag_pair(expr), 1));
+  uint64_t n_args = pair_list_length(argument_list);
+  closure_t* closure = allocate_closure(n_args);
+  closure->code = cdr(cdr(expr));
+  closure->env = env;
+  closure->debug_name = NULL;
+  closure->n_arg_names = n_args;
+  for (int i = 0; i < n_args; i++) {
+    closure->arg_names[i]
+        = untag_scheme_symbol(pair_list_get(argument_list, i));
+  }
+
+  return tagged_reference(TAG_CLOSURE_T, closure);
 }

@@ -151,7 +151,7 @@ byte_array_t*
     suffix = "\"";
     break;
 
-  case TAG_READER_SYMBOL:
+  case TAG_SCHEME_SYMBOL:
     str = untag_reader_symbol(reference);
     break;
 

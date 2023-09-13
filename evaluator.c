@@ -52,7 +52,7 @@ tagged_reference_t eval(environment_t* env, tagged_reference_t expr) {
   case TAG_ERROR_T:
     return expr;
 
-  case TAG_READER_SYMBOL: {
+  case TAG_SCHEME_SYMBOL: {
     optional_t result = environment_get(env, (char*) expr.data);
     if (!optional_is_present(result)) {
       fatal_error(ERROR_VARIABLE_NOT_FOUND);
@@ -68,7 +68,7 @@ tagged_reference_t eval(environment_t* env, tagged_reference_t expr) {
   }
 
   tagged_reference_t first = pair_list_get(lst, 0);
-  if (first.tag == TAG_READER_SYMBOL) {
+  if (first.tag == TAG_SCHEME_SYMBOL) {
     char* symbol_name = untag_reader_symbol(first);
     // We probably don't need all 64 bits and with so few special
     // forms, just doing a chain of sring_equal() calls may be faster

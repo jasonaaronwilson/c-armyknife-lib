@@ -79,7 +79,7 @@ read_expression_result_t read_expression(const char* str, uint64_t start) {
       end++;
     }
     char* token = string_substring(str, start, end);
-    return read_expression_result(tagged_reference(TAG_READER_SYMBOL, token),
+    return read_expression_result(tagged_reference(TAG_SCHEME_SYMBOL, token),
                                   end);
   }
   fatal_error(ERROR_NOT_REACHED);

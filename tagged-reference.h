@@ -7,13 +7,17 @@
 
 typedef enum {
   TAG_NULL,
-  TAG_PAIR_T,
-  TAG_STRING,        // aka const char* C string
-  TAG_READER_SYMBOL, // also a const char* C string
-  TAG_UINT64_T,
-  TAG_ERROR_T,
   TAG_BOOLEAN_T,
+  TAG_UINT64_T,
+  TAG_UNICODE_CODE_POINT,
+  TAG_STRING,        // aka const char* C string
+  TAG_SCHEME_SYMBOL, // also a const char* C string
+  TAG_ERROR_T,
+  TAG_PAIR_T,
+  TAG_VECTOR_T,
+  TAG_BYTE_VECTOR_T,
   TAG_PRIMITIVE,
+  TAG_CLOSURE,
   TAG_CPU_THREAD_STATE_T
 } tag_t;
 

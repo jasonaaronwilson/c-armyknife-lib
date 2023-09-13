@@ -23,13 +23,13 @@ static inline char* untag_string(tagged_reference_t reference) {
 }
 
 static inline char* untag_reader_symbol(tagged_reference_t reference) {
-  require_tag(reference, TAG_READER_SYMBOL);
+  require_tag(reference, TAG_SCHEME_SYMBOL);
   return (char*) reference.data;
 }
 
 static inline char*
     untag_string_or_reader_symbol(tagged_reference_t reference) {
-  if (reference.tag == TAG_STRING || reference.tag == TAG_READER_SYMBOL) {
+  if (reference.tag == TAG_STRING || reference.tag == TAG_SCHEME_SYMBOL) {
     return (char*) reference.data;
   }
   fatal_error(ERROR_REFERENCE_NOT_EXPECTED_TYPE);

@@ -69,8 +69,11 @@ symbol-hash: ${SYMBOL_HASH_SRC_C} ${SYMBOL_HASH_SRC_H}
 format:
 	clang-format -i ${SRC_C} ${SRC_H}
 
+CLEAN_BINARIES = \
+	a.out comet-vm symbol-hash
+
 clean:
-	rm -rf *~ a.out TAGS tests/*~ test-data/*~ comet-vm doxygen-docs symbol-hash
+	rm -rf *~ docs/*~ tests/*~ ${CLEAN_BINARIES} TAGS doxygen-docs 
 
 diff: clean
 	git difftool HEAD

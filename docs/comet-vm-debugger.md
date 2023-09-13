@@ -12,7 +12,7 @@ debugging experience for power users and is probably unprecedented in
 a low-level instruction debugger.
 
 Even though the debugger repl is a scheme interpreter, a simple trick
-allows you to write simply "quit" instead of "(quit)" to invoke the
+allows you to write just "quit" instead of "(quit)" to invoke the
 debugger command "quit" so you may not even realize that scheme is
 being used to interpret your commands when you first use the
 debugger. The debugger repl should feel like using gdb until you use
@@ -61,12 +61,12 @@ therefore more convenient for interactive use.
 * fewer data-types
 * only 64bit integers (and eventually double) so no real numeric tower
 * no macros (though we do support "eval" so...)
-* symbols are not interned
+* schene symbols are not interned
 * no garbage collection (yet!) so large scripts could run out of
   memory
 * tail recursion is basically not guaranteed though when gcc -O or
-  clang (at any optimization level), tail recursion will probably work
-  as expected.
+  clang (at any optimization level) are used, tail recursion will
+  probably work as expected.
 
 ## Additional Functions (and Data) Available In the Debug Repl
 

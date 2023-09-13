@@ -11,7 +11,5 @@ multiple relocatable "sections" can be defined. (We don't yet handle
 ELF files but we can handle a simplified format based on an archive
 file format called core-archive).
 
-Of course the VM already contains an assembler, so another format, the
+Usually the VM already contains an assembler, so another format, the
 one used extensively for testing, is simply assembler source code.
-
-

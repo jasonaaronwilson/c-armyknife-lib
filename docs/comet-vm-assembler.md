@@ -33,11 +33,31 @@ This is a valid assembly language fragment:
     multiple_labels_at_the_same_address_is_supported:
     add r19,r0,r0
 
-    ; Naturally assembler like to have different "sections" for code
-    ; and data so that code can be write protected.
+    ; Like other assemblers, you can have different "sections" for
+    ; code and data so that code and read-only data can be write
+    ; protected or marked for no execution, etc.
     .data
     my_object:
     .byte 10 12 34
+
+    ; But wait, there is more. You can embed scheme code!
+
+    (define %tmp0 r1)
+    (define %tmp1 r2)
+    (define %tmp2 r3)
+    (define %tmp3 r4)
+
+    (define (clear-scratch-registers)
+      (list (list mov %tmp0 r0)
+            (list mov %tmp1 r0)
+            (list mov %tmp2 r0)
+            (list mov %tmp3 r0)))
+
+    some_routine:
+    (clear-scratch-registers)
+    add %tmp1 r12 r19
+    imm %tmp2 0xf0f0
+    xor %tmp1 %tmp1 %tmp2
 ```
 
 However this assembler includes the ability to evaluate comet-vm
@@ -53,12 +73,12 @@ generate labels names, etc. In this case, the scheme code invoked must
 return one of the following values:
 
 1. an empty list
-2. a single integer (that is encoded in ULEB128)
+2. a single integer (that will be encoded in ULEB128)
 3. a byte-vector
 4. a label marker (which causes an entry to be added to the symbol
    table)
 5. a relocation expression
-6. a list of these items
+6. a list of these items (including other lists)
 
 The scheme code can also have side-effects like directly entering a
 new label into the assemblers symbol table, incrementing a global
@@ -66,8 +86,8 @@ variable containing say a counter, etc.
 
 In order to perform the equivalent of "branch tensioning", the
 assembler will assemble the code multiple times until all labels
-settle. This means that your code scheme code must be idempotent. To
-make this easier, a fresh environment is created each time the
-assembler runs so state like the random number generator, are reset
-automatically between iterations.
-
+settle and this means running your code multiple times. This means
+that your code scheme code must be idempotent. To make this easier, a
+fresh environment is created each time the assembler runs so state
+like the random number generator, are reset automatically between
+iterations.

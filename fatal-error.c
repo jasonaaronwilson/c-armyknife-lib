@@ -92,6 +92,8 @@ const char* fatal_error_code_to_string(int error_code) {
     return "ERROR_REFERENCE_NOT_EXPECTED_TYPE";
   case ERROR_NOT_REACHED:
     return "ERROR_NOT_REACHED";
+  case ERROR_MAX_PRIMITIVE_ARGS:
+    return "ERROR_MAX_PRIMITIVE_ARGS";
   default:
     return "error";
   }

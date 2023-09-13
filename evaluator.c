@@ -134,7 +134,10 @@ tagged_reference_t eval_assignment(environment_t* env,
  */
 tagged_reference_t eval_application(environment_t* env,
                                     tagged_reference_t expr) {
-  primitive_arguments_t arguments;
+  primitive_arguments_t arguments = {.n_args = 0};
+
+  // The above should be sufficient but just clear the entire
+  // structure while we are still in early development.
   memset(&arguments, 0, sizeof(arguments));
 
   // perform an "application" (aka, function call to a primitive or
@@ -144,17 +147,19 @@ tagged_reference_t eval_application(environment_t* env,
 
   tagged_reference_t fn = eval(env, pair_list_get(lst, 0));
 
-  pair_t* args = NULL;
   for (int i = 1; (i < pair_list_length(lst)); i++) {
+    if (i >= MAX_PRIMITIVE_ARGS) {
+      fatal_error(ERROR_MAX_PRIMITIVE_ARGS);
+    }
     tagged_reference_t arg_expr = pair_list_get(lst, i);
     arguments.args[arguments.n_args++] = eval(env, arg_expr);
   }
 
   primitive_t primitive = untag_primitive(fn);
-  tagged_reference_t result = primitive(args);
+  tagged_reference_t result = primitive(arguments);
 
-  // TODO(jawilson): or invoke a closure. also free all of the pairs
-  // we created.
+  // TODO(jawilson): test for a closure and invoke it by making a tail
+  // call (hopefully if the compiler agrees) to eval().
 
   return result;
 }

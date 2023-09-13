@@ -20,6 +20,7 @@
 #define ERROR_VARIABLE_NOT_FOUND 16
 #define ERROR_REFERENCE_NOT_EXPECTED_TYPE 17
 #define ERROR_NOT_REACHED 18
+#define ERROR_MAX_PRIMITIVE_ARGS 19
 
 extern _Noreturn void fatal_error_impl(char* file, int line, int error_code);
 extern const char* fatal_error_code_to_string(int error_code);

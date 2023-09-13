@@ -17,7 +17,7 @@ typedef struct {
 // to linked lists).
 
 // primitive_t is the new type name being defined.
-typedef tagged_reference_t (*primitive_t)(pair_t* args);
+typedef tagged_reference_t (*primitive_t)(primitive_arguments_t args);
 
 extern tagged_reference_t primtive_function_plus(primitive_arguments_t args);
 

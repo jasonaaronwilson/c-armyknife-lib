@@ -1,5 +1,38 @@
 # TODO
 
+After testing chibi scheme to make an assembler (which the design
+seems to work), the latest plan is to embed chibi scheme rather than
+write our own scheme implementation (though working on that was still
+fun and I'll probably preserve the code in a new repository).
+
+To do that:
+
+1) make a new build target called comet-vm-chibi-scheme
+
+2) write a routine to produce the prolog code into our byte vectors
+(which can be treated like a c string and there is a way to eval
+them). there should also be a command line tool to just smack the
+prolog code to a file so that we can use it off-line.
+
+3) (create a fake version of the absractions we want to expose to
+   scheme -- not sure how to tackle fake breakpoints and instruction
+   stepping...)
+
+* comet-vm:memory-load8
+* comet-vm:memory-store8 (etc.)
+* comet-vm:get-integer-register
+* comet-vm:get-fp-register
+* comet-vm:breakpoint
+* comet-vm:step max-instructions
+* comet-vm:symbol-address
+* comet-vm:dissassemble start-address end-address
+* comet-vm:assemble
+
+4) make an abstraction for a byte-array that automatically grows,
+   maybe called dynamic-byte-array
+
+======================================================================
+
 Cleanups that aren't important but help keep the style nice.
 
 * maybe implement a scheme hashtable and use the code for other

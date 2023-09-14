@@ -1,4 +1,22 @@
-(import (chibi) (scheme load) (scheme base) (srfi 125) (scheme process-context))
+;;;
+;;; This is the outline of a simple assembler for the comet-vm.
+;;;
+;;; This works by adding to the environment useful global variables
+;;; like r13 as well as functions for opcodes like "mov". Then we use
+;;; "load" to "exectute" the statements in each assembly source file
+;;; from the command line. If the symbol table has changed (because a
+;;; symbol has moved), we loop back to a saved continuation and reload
+;;; and re-execute.
+;;;
+
+(import (chibi)
+        (scheme load)
+        (scheme base)
+        (srfi 125) ;; hash-tables
+        (scheme process-context)
+        (srfi 151)
+        (srfi 95) ;; sort
+        )
 
 ;;; Define r0 to r1023
 (let loop ((i 0))
@@ -30,18 +48,27 @@
 (define (assembler:end)
   (if (symbol-table-dirty?)
       (begin
-        (display "(restarting assembler...\n" (current-error-port))
+        (display "...restarting assembler...\n" (current-error-port))
         (*restart-assembler-continuation* #f))
       (let ((bytes (get-output-bytes)))
         (display "Finishing assembly..\n" (current-error-port))
         (write-bytevector bytes)
+        (assembler:dump-symbol-table)
         (exit #t))))
+
+(define (assembler:dump-symbol-table)
+  (let* ((keys (sort (hash-table-keys *symbol-table*))))
+    (for-each (lambda (key)
+                (write key (current-error-port))
+                (display ": " (current-error-port))
+                (write (hash-table-ref/default *symbol-table* key 0)
+                       (current-error-port))
+                (display "\n" (current-error-port)))
+              keys)))
 
 (define (get-output-bytes)
   (let ((trimmed (make-bytevector *output-number-of-bytes*)))
     (bytevector-copy! trimmed 0 *output-bv*)
-    ;; (write trimmed)
-    ;; (display "\n")
     trimmed))
 
 ;;; Symbol Tables
@@ -56,9 +83,6 @@
   (not (equal? *symbol-table* *previous-symbol-table*)))
   
 (define (assembler:output-byte! b)
-  ;; (display "assembler:output-byte!")
-  ;; (display b)
-  ;; (display "\n")
   (let ((len (bytevector-length *output-bv*)))
     (if (< *output-number-of-bytes* len)
         (begin
@@ -67,14 +91,19 @@
           (set! *output-number-of-bytes* (+ *output-number-of-bytes* 1)))
         (let ((bv (make-bytevector (* 2 (bytevector-length *output-bv*)))))
           (bytevector-copy! *output-bv* 0 bv len)
-          (assembler:output-byte! b))))
-  ;; (write *output-bv*)
-  ;; (display "\n")
-  )
+          (assembler:output-byte! b)))))
 
-;;; implement me!
 (define (assembler:output-uleb128! number)
-  (assembler:output-byte! number))
+  (if (< number 0)
+      (error "assembler:output-uleb128! called with negative number"))
+  ;; make sure number is positive!
+  (let* ((b (bitwise-and number #x7f))
+         (remainder (arithmetic-shift b -7)))
+    (if (> remainder 0)
+        (set! b (bitwise-ior b #x80)))
+    (assembler:output-byte! b)
+    (if (> remainder 0)
+        (assembler:output-uleb128! remainder))))
 
 (define *opcode-mov* 13)
 

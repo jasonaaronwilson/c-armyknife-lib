@@ -2,6 +2,8 @@
 
 Cleanups that aren't important but help keep the style nice.
 
+* maybe implement a scheme hashtable and use the code for other
+  things?
 * add standalone scheme interpreter target
 * add hack to define so we can put a debug name on closures...
 * make tags an enum - hopefully allows gdb to display them

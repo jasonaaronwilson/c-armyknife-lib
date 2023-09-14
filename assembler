@@ -1,0 +1,13 @@
+#! /usr/bin/env chibi-scheme
+
+(import (scheme load))
+
+(load "scheme/assembler.scm")
+
+;;; TODO(jawilson): get filenames from the command-line
+(begin
+  (assembler:start)
+  (load "sample.s")
+  (assembler:end))
+  
+  

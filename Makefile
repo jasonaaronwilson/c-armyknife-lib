@@ -76,7 +76,7 @@ CLEAN_BINARIES = \
 	a.out comet-vm symbol-hash
 
 clean:
-	rm -rf *~ docs/*~ tests/*~ ${CLEAN_BINARIES} TAGS doxygen-docs 
+	rm -rf *~ docs/*~ tests/*~ scheme/*~ ${CLEAN_BINARIES} TAGS doxygen-docs 
 
 diff: clean
 	git difftool HEAD

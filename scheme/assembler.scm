@@ -98,14 +98,20 @@
       (error "assembler:output-uleb128! called with negative number"))
   ;; make sure number is positive!
   (let* ((b (bitwise-and number #x7f))
-         (remainder (arithmetic-shift b -7)))
+         (remainder (arithmetic-shift number -7)))
     (if (> remainder 0)
         (set! b (bitwise-ior b #x80)))
     (assembler:output-byte! b)
     (if (> remainder 0)
         (assembler:output-uleb128! remainder))))
 
-(define *opcode-mov* 13)
+(define *opcode-imm* 3)
+(define *opcode-mov* 8)
+
+(define (imm dst-reg immediate)
+  (assembler:output-uleb128! *opcode-imm*)
+  (assembler:output-uleb128! dst-reg)
+  (assembler:output-uleb128! immediate))
 
 (define (mov dst-reg src-reg)
   (assembler:output-uleb128! *opcode-mov*)

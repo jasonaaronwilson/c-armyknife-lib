@@ -237,6 +237,17 @@ void debug_expect_register_command(cpu_thread_state_t* state,
   }
 }
 
+void debug_load_command(cpu_thread_state_t* state,
+                        token_list_t* tokens) {
+  char* file_name = token_list_get(tokens, 1);
+  byte_array_t* barray = make_byte_array(1024);
+  barray = byte_array_append_file_contents(barray, file_name);
+  uint64_t pc = state->pc;
+  for (int i = 0; i < byte_array_length(barray); i++) {
+    store8(state->memory, pc++, (byte_array_get(barray, i) & 0xff));
+  }
+}
+
 /**
  * Read one or more lines from stdin.
  */
@@ -327,6 +338,8 @@ void debug_repl(cpu_thread_state_t* state) {
       debug_print_register_command(state, tokens);
     } else if (string_equal(command, "expect-register")) {
       debug_expect_register_command(state, tokens);
+    } else if (string_equal(command, "load")) {
+      debug_load_command(state, tokens);
     } else {
       fprintf(stderr, "Uknown debug command. Ignoring.\n");
     }

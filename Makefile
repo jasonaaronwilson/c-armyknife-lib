@@ -1,7 +1,7 @@
 all: c-armyknife-lib
 
-CC = clang
-#CC = gcc
+# CC = clang
+CC = gcc
 
 # debug information
 CC_FLAGS=-g -rdynamic
@@ -21,7 +21,7 @@ SRC_GENERATED_H = \
 	fatal-error.h \
 	io.h \
 	string-util.h \
-	tokenizer.c
+	tokenizer.h
 
 SRC_H =  \
 	boolean.h \
@@ -31,17 +31,24 @@ generate-header-files: ${SRC_C}
 	../c-single-source-file/generate-header-file ${SRC_C}
 
 c-armyknife-lib: ${SRC_C} ${SRC_H} generate-header-files
-	${CC} ${CC_FLAGS} ${SRC_C} -o c-armyknife-lib
-	stat --format=%s c-armyknife-lib
+	${CC} ${CC_FLAGS} -c -o allocate.o allocate.c
+	${CC} ${CC_FLAGS} -c -o array.o array.c
+	${CC} ${CC_FLAGS} -c -o byte-array.o byte-array.c
+	${CC} ${CC_FLAGS} -c -o fatal-error.o fatal-error.c
+	${CC} ${CC_FLAGS} -c -o io.o io.c
+	${CC} ${CC_FLAGS} -c -o string-util.o string-util.c
+	${CC} ${CC_FLAGS} -c -o tokenizer.o tokenizer.c
+	ar -rcs libarmyknife.a allocate.o array.o byte-array.o fatal-error.o io.o string-util.o tokenizer.o
+	stat --format=%s libarmyknife.a
 
 format:
 	clang-format -i ${SRC_C} ${SRC_H}
 
 CLEAN_BINARIES = \
-	a.out FIXME
+	a.out libarmyknife.a
 
 clean:
-	rm -rf *~ docs/*~ tests/*~ ${CLEAN_BINARIES} TAGS doxygen-docs 
+	rm -rf *~ docs/*~ tests/*~ ${CLEAN_BINARIES} TAGS doxygen-docs *.o ${SRC_GENERATED_H}
 
 diff: clean
 	git difftool HEAD

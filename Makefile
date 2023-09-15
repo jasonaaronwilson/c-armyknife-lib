@@ -1,4 +1,4 @@
-all: comet-vm
+all: c-armyknife-lib
 
 CC = clang
 #CC = gcc
@@ -8,56 +8,31 @@ CC_FLAGS=-g -rdynamic
 
 SRC_C = allocate.c \
 	array.c \
-	assembler.c \
 	byte-array.c \
-	closure.c \
 	debug-repl.c \
 	environment.c \
 	evaluator.c \
 	fatal-error.c \
-	global-environment.c \
-	instruction-info.c \
-	interpreter.c \
 	io.c \
-	main.c \
 	paged-memory.c \
-	pair.c \
-	primitive.c \
-	printer.c \
-	reader.c \
 	string-util.c \
-	symbol-table.c \
 	tokenizer.c \
 	uleb128.c
 
-SRC_H = allocate.h \
+SRC_GENERATED_H = \
+	allocate.h \
 	array.h \
-	assembler.h \
-	boolean.h \
 	byte-array.h \
-	closure.h \
-	cpu-thread-state.h \
-	debug-repl.h \
-	environment.h \
-	evaluator.h \
 	fatal-error.h \
-	global-environment.h \
-	instruction-info.h \
-	interpreter.h \
 	io.h \
-	opcodes.h \
-	optional.h \
-	paged-memory.h \
-	pair.h \
-	primitive.h \
-	printer.h \
-	reader.c \
-	scheme-symbol.h \
-	string-util.h \
-	symbol-table.h \
+	string-util.h
+
+SRC_H =  \
+	boolean.h \
+	ct-assert.h \
 	tagged-reference.h \
-	tokenizer.h \
-	uleb128.h
+	optional.h \
+	scheme-symbol.h \
 
 comet-vm: ${SRC_C} ${SRC_H}
 	${CC} ${CC_FLAGS} ${SRC_C} -o comet-vm

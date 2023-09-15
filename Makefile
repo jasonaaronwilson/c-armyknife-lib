@@ -21,13 +21,16 @@ SRC_GENERATED_H = \
 	fatal-error.h \
 	io.h \
 	string-util.h \
-	tokenizer.c \
+	tokenizer.c
 
 SRC_H =  \
 	boolean.h \
 	ct-assert.h
 
-c-armyknife-lib: ${SRC_C} ${SRC_H}
+generate-header-files: ${SRC_C}
+	../c-single-source-file/generate-header-file ${SRC_C}
+
+c-armyknife-lib: ${SRC_C} ${SRC_H} generate-header-files
 	${CC} ${CC_FLAGS} ${SRC_C} -o c-armyknife-lib
 	stat --format=%s c-armyknife-lib
 

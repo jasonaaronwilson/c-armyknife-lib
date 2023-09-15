@@ -11,6 +11,38 @@
  * TODO(jawilson): command line flag to be quieter...
  */
 
+// ======================================================================
+// This is block is extraced to fatal-error.h
+// ======================================================================
+
+#ifndef _FATAL_ERROR_H_
+#define _FATAL_ERROR_H_
+
+typedef enum {
+  ERROR_UKNOWN,
+  ERROR_MEMORY_ALLOCATION,
+  ERROR_MEMORY_FREE_NULL,
+  ERROR_ARRAY_ACCESS_OUT_OF_BOUNDS,
+  ERROR_ILLEGAL_LIST_INDEX,
+  ERROR_CANT_EVAL_EMPTY_EXPRESSION,
+  ERROR_VARIABLE_NOT_FOUND,
+  ERROR_REFERENCE_NOT_EXPECTED_TYPE,
+  ERROR_NOT_REACHED,
+  ERROR_MAX_PRIMITIVE_ARGS,
+  ERROR_WRONG_NUMBER_OF_ARGS,
+  ERROR_CLOSURE_HAS_NO_BODY,
+  ERROR_NULL_ENVIRONMENT,
+} error_code_t;
+
+extern _Noreturn void fatal_error_impl(char* file, int line, int error_code);
+extern const char* fatal_error_code_to_string(int error_code);
+
+#define fatal_error(code) fatal_error_impl(__FILE__, __LINE__, code)
+
+#endif /* _FATAL_ERROR_H_ */
+
+// ======================================================================
+
 #include <execinfo.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -26,8 +58,7 @@ void _Noreturn fatal_error_impl(char* file, int line, int error_code) {
   print_backtrace();
   fprintf(stderr, "%s:%d: FATAL ERROR %d", file, line, error_code);
   print_error_code_name(error_code);
-
-  fprintf(stderr, "Exiting...\n");
+  fprintf(stderr, "Necessaria Morte Mori...\n");
   exit(-(error_code + 100));
 }
 
@@ -58,30 +89,10 @@ const char* fatal_error_code_to_string(int error_code) {
     return "ERROR_UKNOWN";
   case ERROR_MEMORY_ALLOCATION:
     return "ERROR_MEMORY_ALLOCATION";
-  case ERROR_MEMORY_READ:
-    return "ERROR_MEMORY_READ";
-  case ERROR_MEMORY_WRITE:
-    return "ERROR_MEMORY_WRITE";
-  case ERROR_OPCODE_UNKNOWN:
-    return "ERROR_OPCODE_UNKNOWN";
-  case ERROR_OPCODE_DECODE_ERROR:
-    return "ERROR_OPCODE_DECODE_ERROR";
-  case ERROR_ARG_DECODE_ERROR:
-    return "ERROR_ARG_DECODE_ERROR";
-  case ERROR_UNIMLEMENTED_OPCODE:
-    return "ERROR_UNIMLEMENTED_OPCODE";
-  case ERROR_TOKEN_LIST_GET:
-    return "ERROR_TOKEN_LIST_GET";
-  case ERROR_EXPECTED_GENERAL_REGISTER:
-    return "ERROR_EXPECTED_GENERAL_REGISTER";
-  case ERROR_EXPECTED_FLOATING_REGISTER:
-    return "ERROR_EXPECTED_FLOATING_REGISTER";
+  case ERROR_MEMORY_FREE_NULL:
+    return "ERROR_MEMORY_FREE_NULL";
   case ERROR_ARRAY_ACCESS_OUT_OF_BOUNDS:
     return "ERROR_ARRAY_ACCESS_OUT_OF_BOUNDS";
-  case ERROR_UNKNOWN_ASSEMBLER_DIRECTIVE:
-    return "ERROR_UNKNOWN_ASSEMBLER_DIRECTIVE";
-  case ERROR_DEBUGGER_EXPECT_FAILURE:
-    return "ERROR_DEBUGGER_EXPECT_FAILURE";
   case ERROR_ILLEGAL_LIST_INDEX:
     return "ERROR_ILLEGAL_LIST_INDEX";
   case ERROR_CANT_EVAL_EMPTY_EXPRESSION:

@@ -10,13 +10,7 @@
 
 #include "array.h"
 
-typedef array_t token_list_t;
-
-extern token_list_t* tokenize(const char* str, const char* delimiters);
-extern token_list_t* token_list_append(token_list_t* head, const char* data);
-extern void token_list_free_all(token_list_t* head);
-extern char* token_list_get(token_list_t* head, int position);
-extern int token_list_length(token_list_t* head);
+extern array_t* tokenize(const char* str, const char* delimiters);
 
 #endif /* _TOKENIZER_H_ */
 
@@ -29,13 +23,15 @@ extern int token_list_length(token_list_t* head);
 #include "string-util.h"
 #include "tokenizer.h"
 
+array_t* add_duplicate(array_t* token_array, const char* data);
+
 /**
  * Tokenize a string.
  *
  * Delimiters terminate the current token and are thrown away.
  */
-token_list_t* tokenize(const char* str, const char* delimiters) {
-  token_list_t* result = make_array(4);
+array_t* tokenize(const char* str, const char* delimiters) {
+  array_t* result = make_array(4);
   char token_data[1024];
   int cpos = 0;
   for (int i = 0; (i < strlen(str)); i++) {
@@ -43,7 +39,7 @@ token_list_t* tokenize(const char* str, const char* delimiters) {
     if (string_contains(delimiters, ch)) {
       token_data[cpos++] = '\0';
       if (strlen(token_data) > 0) {
-        result = token_list_append(result, token_data);
+        result = add_duplicate(result, token_data);
       }
       cpos = 0;
     } else {
@@ -52,7 +48,7 @@ token_list_t* tokenize(const char* str, const char* delimiters) {
   }
   token_data[cpos++] = '\0';
   if (strlen(token_data) > 0) {
-    result = token_list_append(result, token_data);
+    result = add_duplicate(result, token_data);
   }
 
   return result;
@@ -61,16 +57,6 @@ token_list_t* tokenize(const char* str, const char* delimiters) {
 /**
  * Add a *copy* of the string named data to the token list.
  */
-token_list_t* token_list_append(token_list_t* head, const char* data) {
-  return array_add(head, (uint64_t) string_duplicate(data));
+array_t* add_duplicate(array_t* token_array, const char* data) {
+  return array_add(token_array, (uint64_t) string_duplicate(data));
 }
-
-void token_list_free_all(token_list_t* head) {
-  // TODO(jawilson): implement me.
-}
-
-char* token_list_get(token_list_t* head, int position) {
-  return (char*) array_get(head, position);
-}
-
-int token_list_length(token_list_t* head) { return array_length(head); }

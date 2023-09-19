@@ -1,3 +1,4 @@
+#line 2 "tokenizer.c"
 /**
  * @file tokenizer.c
  *
@@ -31,7 +32,7 @@ array_t* add_duplicate(array_t* token_array, const char* data);
  * Delimiters terminate the current token and are thrown away.
  */
 array_t* tokenize(const char* str, const char* delimiters) {
-  array_t* result = make_array(4);
+  array_t* result = make_array(char_ptr_type(), 4);
   char token_data[1024];
   int cpos = 0;
   for (int i = 0; (i < strlen(str)); i++) {

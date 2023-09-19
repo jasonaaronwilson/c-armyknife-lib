@@ -1,0 +1,12 @@
+/**
+ * This is a single header file C library providing a small set of
+ * critical functions on existing C data-structures as well as a few
+ * critical collections like hashtables. This library only depends on
+ * the C standard library (and probably some POSIX functions).
+ *
+ * At least one ".c" file in your project must include
+ * c-armyknife-lib.h after defining C_ARMYKNIFE_LIB_IMPL which
+ * provides the definitions of the code and data rather than just
+ * prototypes, inlined functions, macros, and type definitions.
+ */
+

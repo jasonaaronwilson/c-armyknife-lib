@@ -65,7 +65,7 @@ uint8_t byte_array_get(byte_array_t* arr, uint64_t position) {
   if (position < arr->length) {
     return arr->elements[position];
   } else {
-    fatal_error(ERROR_ARRAY_ACCESS_OUT_OF_BOUNDS);
+    fatal_error(ERROR_ACCESS_OUT_OF_BOUNDS);
   }
 }
 

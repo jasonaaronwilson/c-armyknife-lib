@@ -5,12 +5,15 @@ functionality to C to write real programs:
 
 * fatal errors
 * safer malloc and free
-* dynamically sized byte-arrays
+* dynamically sized arrays (and specifically byte-arrays to make IO
+  easier)
 * more string operations (maybe even left pad functionality someday)
-* a dynamic result type (aka any - can be used to make optional and errors)
-* hashtables, dynamically sized arrays (and maybe a balanced tree
-  collection)
-* readability improvements like boolean_t
+* a dynamic type (like "any" in Go) - can be used to make
+  optionals and error signaling easier while providing a basis for
+  generic containers
+* hashtables
+* readability improvements like boolean_t (in the eye of the beholder
+  perhaps)
 
 ## Status
 

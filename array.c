@@ -23,13 +23,14 @@ typedef struct {
   type_t* element_type;
   uint32_t length;
   uint32_t capacity;
-  uint64_t elements[0];
+  uint8_t data[0];
 } array_t;
 
 extern array_t* make_array(type_t* element_type, uint32_t initial_capacity);
 extern uint64_t array_length(array_t* arr);
-extern uint64_t array_get(array_t* arr, uint64_t position);
-extern array_t* array_add(array_t* arr, uint64_t element);
+extern reference_t array_get_reference(array_t* arr, uint64_t position);
+__attribute__((warn_unused_result)) extern array_t*
+    array_add(array_t* arr, reference_t element);
 
 #endif /* _ARRAY_H_ */
 
@@ -40,6 +41,11 @@ extern array_t* array_add(array_t* arr, uint64_t element);
 #include "allocate.h"
 #include "array.h"
 #include "fatal-error.h"
+
+static inline void* array_address_of_element(array_t* array,
+                                             uint64_t position) {
+  return &(array->data[position * array->element_type->size]);
+}
 
 /**
  * Make an array with the given initial_capacity.
@@ -64,27 +70,33 @@ uint64_t array_length(array_t* arr) { return arr->length; }
 /**
  * Get the nth element from an array.
  */
-uint64_t array_get(array_t* arr, uint64_t position) {
-  if (position < arr->length) {
-    return arr->elements[position];
+reference_t array_get(array_t* array, uint64_t position) {
+  if (position < array->length) {
+    return reference_of(array->element_type,
+                        array_address_of_element(array, position));
   } else {
-    fatal_error(ERROR_ARRAY_ACCESS_OUT_OF_BOUNDS);
+    fatal_error(ERROR_ACCESS_OUT_OF_BOUNDS);
   }
 }
 
 /**
  * Add an element to the end of an array.
  */
-array_t* array_add(array_t* array, uint64_t element) {
+__attribute__((warn_unused_result)) array_t* array_add(array_t* array,
+                                                       reference_t reference) {
+  if (reference.underlying_type != array->element_type) {
+    fatal_error(ERROR_REFERENCE_NOT_EXPECTED_TYPE);
+  }
+  int size = array->element_type->size;
   if (array->length < array->capacity) {
-    array->elements[array->length] = element;
+    memcpy(array_address_of_element(array, array->length), reference.pointer,
+           size);
     array->length++;
     return array;
   } else {
     array_t* result = make_array(array->element_type, array->capacity * 2);
-    for (int i = 0; i < array->length; i++) {
-      array_add(result, array_get(array, i));
-    }
+    memcpy(array_address_of_element(result, 0),
+           array_address_of_element(array, 0), size * array->length);
     free_bytes(array);
     return result;
   }

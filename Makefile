@@ -5,6 +5,7 @@ SRC_C = allocate.c \
 	byte-array.c \
 	fatal-error.c \
 	io.c \
+	reference.c \
 	string-util.c \
 	tokenizer.c \
 	type.c
@@ -15,6 +16,7 @@ SRC_GENERATED_H = \
 	byte-array.h \
 	fatal-error.h \
 	io.h \
+	reference.h \
 	string-util.h \
 	tokenizer.h \
 	type.h
@@ -28,6 +30,7 @@ ORDERED_H = \
 	ct-assert.h \
 	type.h \
 	fatal-error.h \
+	reference.h \
 	allocate.h \
 	array.h \
 	byte-array.h \
@@ -62,7 +65,7 @@ how-big: clean
 tags:
 	etags ${SRC_C} ${SRC_H}
 
-TESTS= ./compile-test.sh
+TESTS= ./compile-test.sh ./array-test.sh
 
 test:
 	(cd tests && ../run-tests.sh ${TESTS})

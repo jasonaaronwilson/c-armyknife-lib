@@ -95,17 +95,10 @@ typedef enum {
   ERROR_UKNOWN,
   ERROR_MEMORY_ALLOCATION,
   ERROR_MEMORY_FREE_NULL,
-  ERROR_DYNAMICALLY_SIZED_TYPE_ILLEGAL_IN_CONTAINER,
-  ERROR_ARRAY_ACCESS_OUT_OF_BOUNDS,
-  ERROR_ILLEGAL_LIST_INDEX,
-  ERROR_CANT_EVAL_EMPTY_EXPRESSION,
-  ERROR_VARIABLE_NOT_FOUND,
   ERROR_REFERENCE_NOT_EXPECTED_TYPE,
+  ERROR_DYNAMICALLY_SIZED_TYPE_ILLEGAL_IN_CONTAINER,
+  ERROR_ACCESS_OUT_OF_BOUNDS,
   ERROR_NOT_REACHED,
-  ERROR_MAX_PRIMITIVE_ARGS,
-  ERROR_WRONG_NUMBER_OF_ARGS,
-  ERROR_CLOSURE_HAS_NO_BODY,
-  ERROR_NULL_ENVIRONMENT,
 } error_code_t;
 
 extern _Noreturn void fatal_error_impl(char* file, int line, int error_code);
@@ -114,6 +107,35 @@ extern const char* fatal_error_code_to_string(int error_code);
 #define fatal_error(code) fatal_error_impl(__FILE__, __LINE__, code)
 
 #endif /* _FATAL_ERROR_H_ */
+// SSCF generated file from: reference.c
+
+#line 17 "reference.c"
+#ifndef _REFERENCE_H_
+#define _REFERENCE_H_
+
+#include <stdint.h>
+
+struct reference_S {
+  type_t* underlying_type;
+  void* pointer;
+};
+typedef struct reference_S reference_t;
+
+static inline reference_t reference_of(type_t* type, void* pointer) {
+  reference_t result;
+  result.underlying_type = type;
+  result.pointer = pointer;
+  return result;
+}
+
+static inline uint64_t reference_to_uint64(reference_t reference) {
+  if (reference.underlying_type != &uint64_type_constant) {
+    fatal_error(ERROR_REFERENCE_NOT_EXPECTED_TYPE);
+  }
+  return *((uint64_t*) reference.pointer);
+}
+
+#endif /* _REFERENCE_H_ */
 // SSCF generated file from: allocate.c
 
 #line 13 "allocate.c"
@@ -144,13 +166,14 @@ typedef struct {
   type_t* element_type;
   uint32_t length;
   uint32_t capacity;
-  uint64_t elements[0];
+  uint8_t data[0];
 } array_t;
 
 extern array_t* make_array(type_t* element_type, uint32_t initial_capacity);
 extern uint64_t array_length(array_t* arr);
-extern uint64_t array_get(array_t* arr, uint64_t position);
-extern array_t* array_add(array_t* arr, uint64_t element);
+extern reference_t array_get_reference(array_t* arr, uint64_t position);
+__attribute__((warn_unused_result)) extern array_t*
+    array_add(array_t* arr, reference_t element);
 
 #endif /* _ARRAY_H_ */
 // SSCF generated file from: byte-array.c
@@ -348,13 +371,14 @@ typedef struct {
   type_t* element_type;
   uint32_t length;
   uint32_t capacity;
-  uint64_t elements[0];
+  uint8_t data[0];
 } array_t;
 
 extern array_t* make_array(type_t* element_type, uint32_t initial_capacity);
 extern uint64_t array_length(array_t* arr);
-extern uint64_t array_get(array_t* arr, uint64_t position);
-extern array_t* array_add(array_t* arr, uint64_t element);
+extern reference_t array_get_reference(array_t* arr, uint64_t position);
+__attribute__((warn_unused_result)) extern array_t*
+    array_add(array_t* arr, reference_t element);
 
 #endif /* _ARRAY_H_ */
 
@@ -365,6 +389,11 @@ extern array_t* array_add(array_t* arr, uint64_t element);
 #include "allocate.h"
 #include "array.h"
 #include "fatal-error.h"
+
+static inline void* array_address_of_element(array_t* array,
+                                             uint64_t position) {
+  return &(array->data[position * array->element_type->size]);
+}
 
 /**
  * Make an array with the given initial_capacity.
@@ -389,27 +418,33 @@ uint64_t array_length(array_t* arr) { return arr->length; }
 /**
  * Get the nth element from an array.
  */
-uint64_t array_get(array_t* arr, uint64_t position) {
-  if (position < arr->length) {
-    return arr->elements[position];
+reference_t array_get(array_t* array, uint64_t position) {
+  if (position < array->length) {
+    return reference_of(array->element_type,
+                        array_address_of_element(array, position));
   } else {
-    fatal_error(ERROR_ARRAY_ACCESS_OUT_OF_BOUNDS);
+    fatal_error(ERROR_ACCESS_OUT_OF_BOUNDS);
   }
 }
 
 /**
  * Add an element to the end of an array.
  */
-array_t* array_add(array_t* array, uint64_t element) {
+__attribute__((warn_unused_result)) array_t* array_add(array_t* array,
+                                                       reference_t reference) {
+  if (reference.underlying_type != array->element_type) {
+    fatal_error(ERROR_REFERENCE_NOT_EXPECTED_TYPE);
+  }
+  int size = array->element_type->size;
   if (array->length < array->capacity) {
-    array->elements[array->length] = element;
+    memcpy(array_address_of_element(array, array->length), reference.pointer,
+           size);
     array->length++;
     return array;
   } else {
     array_t* result = make_array(array->element_type, array->capacity * 2);
-    for (int i = 0; i < array->length; i++) {
-      array_add(result, array_get(array, i));
-    }
+    memcpy(array_address_of_element(result, 0),
+           array_address_of_element(array, 0), size * array->length);
     free_bytes(array);
     return result;
   }
@@ -481,7 +516,7 @@ uint8_t byte_array_get(byte_array_t* arr, uint64_t position) {
   if (position < arr->length) {
     return arr->elements[position];
   } else {
-    fatal_error(ERROR_ARRAY_ACCESS_OUT_OF_BOUNDS);
+    fatal_error(ERROR_ACCESS_OUT_OF_BOUNDS);
   }
 }
 
@@ -553,17 +588,10 @@ typedef enum {
   ERROR_UKNOWN,
   ERROR_MEMORY_ALLOCATION,
   ERROR_MEMORY_FREE_NULL,
-  ERROR_DYNAMICALLY_SIZED_TYPE_ILLEGAL_IN_CONTAINER,
-  ERROR_ARRAY_ACCESS_OUT_OF_BOUNDS,
-  ERROR_ILLEGAL_LIST_INDEX,
-  ERROR_CANT_EVAL_EMPTY_EXPRESSION,
-  ERROR_VARIABLE_NOT_FOUND,
   ERROR_REFERENCE_NOT_EXPECTED_TYPE,
+  ERROR_DYNAMICALLY_SIZED_TYPE_ILLEGAL_IN_CONTAINER,
+  ERROR_ACCESS_OUT_OF_BOUNDS,
   ERROR_NOT_REACHED,
-  ERROR_MAX_PRIMITIVE_ARGS,
-  ERROR_WRONG_NUMBER_OF_ARGS,
-  ERROR_CLOSURE_HAS_NO_BODY,
-  ERROR_NULL_ENVIRONMENT,
 } error_code_t;
 
 extern _Noreturn void fatal_error_impl(char* file, int line, int error_code);
@@ -623,20 +651,10 @@ const char* fatal_error_code_to_string(int error_code) {
     return "ERROR_MEMORY_ALLOCATION";
   case ERROR_MEMORY_FREE_NULL:
     return "ERROR_MEMORY_FREE_NULL";
-  case ERROR_ARRAY_ACCESS_OUT_OF_BOUNDS:
-    return "ERROR_ARRAY_ACCESS_OUT_OF_BOUNDS";
-  case ERROR_ILLEGAL_LIST_INDEX:
-    return "ERROR_ILLEGAL_LIST_INDEX";
-  case ERROR_CANT_EVAL_EMPTY_EXPRESSION:
-    return "ERROR_CANT_EVAL_EMPTY_EXPRESSION";
-  case ERROR_VARIABLE_NOT_FOUND:
-    return "ERROR_VARIABLE_NOT_FOUND";
   case ERROR_REFERENCE_NOT_EXPECTED_TYPE:
     return "ERROR_REFERENCE_NOT_EXPECTED_TYPE";
   case ERROR_NOT_REACHED:
     return "ERROR_NOT_REACHED";
-  case ERROR_MAX_PRIMITIVE_ARGS:
-    return "ERROR_MAX_PRIMITIVE_ARGS";
   default:
     return "error";
   }
@@ -705,6 +723,48 @@ byte_array_t* byte_array_append_file_contents(byte_array_t* bytes,
 
 // TODO(jawilson): implement
 void byte_array_write_file(byte_array_t* bytes, char* file_name) {}
+#line 1 "reference.c"
+/**
+ * C does not have parameterized types which makes generic containers
+ * more difficult to work with.
+ *
+ * Therefore we we resort to dynamic (aka runtime) type checking of
+ * the generic parameters.  types are interned so we can check a type
+ * with a single comparison of a type_t pointer. Additionally, we pass
+ * these structs by value which the C compiler can probably return in
+ * registers.
+ *
+ * Containers which store elements of the same type only need to store
+ * the type once so this doesn't impact the overall space occupied by
+ * the collection.
+ */
+
+#ifndef _REFERENCE_H_
+#define _REFERENCE_H_
+
+#include <stdint.h>
+
+struct reference_S {
+  type_t* underlying_type;
+  void* pointer;
+};
+typedef struct reference_S reference_t;
+
+static inline reference_t reference_of(type_t* type, void* pointer) {
+  reference_t result;
+  result.underlying_type = type;
+  result.pointer = pointer;
+  return result;
+}
+
+static inline uint64_t reference_to_uint64(reference_t reference) {
+  if (reference.underlying_type != &uint64_type_constant) {
+    fatal_error(ERROR_REFERENCE_NOT_EXPECTED_TYPE);
+  }
+  return *((uint64_t*) reference.pointer);
+}
+
+#endif /* _REFERENCE_H_ */
 #line 1 "string-util.c"
 /**
  * @file string-util.c
@@ -1014,7 +1074,8 @@ array_t* tokenize(const char* str, const char* delimiters) {
  * Add a *copy* of the string named data to the token list.
  */
 array_t* add_duplicate(array_t* token_array, const char* data) {
-  return array_add(token_array, (uint64_t) string_duplicate(data));
+  return array_add(token_array, reference_of(token_array->element_type,
+                                             string_duplicate(data)));
 }
 #line 1 "type.c"
 /**
@@ -1112,5 +1173,4 @@ type_t char_ptr_type_constant = {
 };
 
 // TODO(jawilson): more pointer types for the built in C types.
-
 #endif /* C_ARMYKNIFE_LIB_IMPL */

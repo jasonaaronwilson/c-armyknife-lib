@@ -1,3 +1,4 @@
+#line 1 "byte-array.c"
 /**
  * @file byte-array.c
  */

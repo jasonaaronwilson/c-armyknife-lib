@@ -12,6 +12,6 @@
 //
 // We can change to use vendor specific version in the future.
 
-#define ct_assert(e) ((void)sizeof(char[1 - 2*!(e)]))
+#define ct_assert(e) ((void) sizeof(char[1 - 2 * !(e)]))
 
 #endif /* _CT_ASSERT_ */

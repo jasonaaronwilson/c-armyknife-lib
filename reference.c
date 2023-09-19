@@ -1,3 +1,4 @@
+#line 1 "reference.c"
 /**
  * C does not have parameterized types which makes generic containers
  * more difficult to work with.
@@ -14,7 +15,11 @@
  * the collection.
  */
 
+#ifndef _REFERENCE_H_
+#define _REFERENCE_H_
 struct {
   type_t* underlying_type;
   void* pointer;
 } reference_t;
+
+#endif /* _REFERENCE_H_ */

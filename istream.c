@@ -1,3 +1,4 @@
+#line 1 "istream.c"
 /**
  * An input stream is simply a callable_t that takes no arguments and
  * on each call returns another element from the stream or

@@ -1,3 +1,4 @@
+#line 1 "fatal-error.c"
 /**
  * @file: fatal-error.c
  *

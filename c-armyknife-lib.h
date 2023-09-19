@@ -10,6 +10,7 @@
  * prototypes, inlined functions, macros, and type definitions.
  */
 
+#line 1 "boolean.h"
 #ifndef _BOOLEAN_H_
 #define _BOOLEAN_H_
 
@@ -33,13 +34,14 @@ typedef int boolean_t;
 //
 // We can change to use vendor specific version in the future.
 
-#define ct_assert(e) ((void)sizeof(char[1 - 2*!(e)]))
+#define ct_assert(e) ((void) sizeof(char[1 - 2 * !(e)]))
 
 #endif /* _CT_ASSERT_ */
 // SSCF generated file from: type.c
 
-#line 4 "type.c"
+#line 10 "type.c"
 #ifndef _TYPE_H_
+#define _TYPE_H_
 
 #include <stdint.h>
 #include <stdlib.h>
@@ -48,17 +50,20 @@ struct byte_buffer_S;
 struct reference_S;
 struct type_S;
 
-typedef int (*compare_references_fn_t)(struct reference_S a, struct reference_S b);
-typedef void (*append_text_representation_fn_t)(struct byte_buffer_S *buffer, struct reference_S object);
+typedef int (*compare_references_fn_t)(struct reference_S a,
+                                       struct reference_S b);
+typedef void (*append_text_representation_fn_t)(struct byte_buffer_S* buffer,
+                                                struct reference_S object);
 typedef uint64_t (*hash_reference_fn_t)(struct reference_S object);
 
-typedef struct type_S {
+struct type_S {
   char* name;
   int size;
   compare_references_fn_t compare_fn;
   append_text_representation_fn_t append_fn;
   hash_reference_fn_t hash_fn;
-} type_t;
+};
+typedef struct type_S type_t;
 
 extern type_t* intern_type(type_t type);
 
@@ -68,13 +73,9 @@ extern type_t uint32_type_constant;
 extern type_t uint64_type_constant;
 extern type_t char_ptr_type_constant;
 
-static inline type_t* uint64_type() {
-  return &uint64_type_constant;
-}
+static inline type_t* uint64_type() { return &uint64_type_constant; }
 
-static inline type_t* char_ptr_type() {
-  return &char_ptr_type_constant;
-}
+static inline type_t* char_ptr_type() { return &char_ptr_type_constant; }
 
 // TODO: global constants for standard types like uint64_t and void*
 
@@ -86,7 +87,7 @@ type_t* intern_type(type_t type) {
 #endif /* _TYPE_H_ */
 // SSCF generated file from: fatal-error.c
 
-#line 4 "fatal-error.c"
+#line 19 "fatal-error.c"
 #ifndef _FATAL_ERROR_H_
 #define _FATAL_ERROR_H_
 
@@ -115,7 +116,7 @@ extern const char* fatal_error_code_to_string(int error_code);
 #endif /* _FATAL_ERROR_H_ */
 // SSCF generated file from: allocate.c
 
-#line 4 "allocate.c"
+#line 13 "allocate.c"
 #ifndef _ALLOCATE_H_
 #define _ALLOCATE_H_
 
@@ -133,7 +134,7 @@ extern void checked_free(char* file, int line, void* pointer);
 #endif /* _ALLOCATE_H_ */
 // SSCF generated file from: array.c
 
-#line 4 "array.c"
+#line 17 "array.c"
 #ifndef _ARRAY_H_
 #define _ARRAY_H_
 
@@ -154,7 +155,7 @@ extern array_t* array_add(array_t* arr, uint64_t element);
 #endif /* _ARRAY_H_ */
 // SSCF generated file from: byte-array.c
 
-#line 4 "byte-array.c"
+#line 10 "byte-array.c"
 #ifndef _BYTE_ARRAY_H_
 #define _BYTE_ARRAY_H_
 
@@ -186,7 +187,7 @@ __attribute__((warn_unused_result)) extern byte_array_t*
 #endif /* _BYTE_ARRAY_H_ */
 // SSCF generated file from: io.c
 
-#line 4 "io.c"
+#line 13 "io.c"
 #ifndef _IO_H_
 #define _IO_H_
 
@@ -201,7 +202,7 @@ extern void byte_array_write_file(byte_array_t* bytes, char* file_name);
 #endif /* _IO_H_ */
 // SSCF generated file from: string-util.c
 
-#line 4 "string-util.c"
+#line 13 "string-util.c"
 #ifndef _STRING_UTIL_H_
 #define _STRING_UTIL_H_
 
@@ -223,7 +224,7 @@ extern char* string_duplicate(const char* src);
 #endif /* _STRING_UTIL_H_ */
 // SSCF generated file from: tokenizer.c
 
-#line 4 "tokenizer.c"
+#line 9 "tokenizer.c"
 #ifndef _TOKENIZER_H_
 #define _TOKENIZER_H_
 
@@ -233,6 +234,7 @@ extern array_t* tokenize(const char* str, const char* delimiters);
 
 #endif /* _TOKENIZER_H_ */
 #ifdef C_ARMYKNIFE_LIB_IMPL
+#line 1 "allocate.c"
 /**
  * @file allocate.c
  *
@@ -295,7 +297,7 @@ static inline boolean_t should_log() {
  */
 uint8_t* checked_malloc(char* file, int line, uint64_t amount) {
   if (should_log()) {
-    fprintf(stderr, "ALLOCATE %s:%d -- %d\n", file, line, amount);
+    fprintf(stderr, "ALLOCATE %s:%d -- %lu\n", file, line, amount);
   }
   uint8_t* result = malloc(amount);
   if (result == NULL) {
@@ -315,14 +317,15 @@ uint8_t* checked_malloc(char* file, int line, uint64_t amount) {
  */
 void checked_free(char* file, int line, void* pointer) {
   if (should_log()) {
-    fprintf(stderr, "DEALLOCATE %s:%d -- %d\n", file, line, pointer);
+    fprintf(stderr, "DEALLOCATE %s:%d -- %lu\n", file, line,
+            (uint64_t) pointer);
   }
   if (pointer == NULL) {
     fatal_error_impl(file, line, ERROR_MEMORY_FREE_NULL);
   }
   free(pointer);
 }
-#line 2 "array.c"
+#line 1 "array.c"
 /**
  * @file array.c
  *
@@ -373,8 +376,8 @@ array_t* make_array(type_t* type, uint32_t initial_capacity) {
   if (element_size < 0) {
     fatal_error(ERROR_DYNAMICALLY_SIZED_TYPE_ILLEGAL_IN_CONTAINER);
   }
-  array_t* result
-    = (array_t*) (malloc_bytes(sizeof(array_t) + (element_size * initial_capacity)));
+  array_t* result = (array_t*) (malloc_bytes(
+      sizeof(array_t) + (element_size * initial_capacity)));
   result->element_type = type;
   result->capacity = initial_capacity;
   return result;
@@ -413,6 +416,7 @@ array_t* array_add(array_t* array, uint64_t element) {
     return result;
   }
 }
+#line 1 "byte-array.c"
 /**
  * @file byte-array.c
  */
@@ -526,6 +530,7 @@ __attribute__((warn_unused_result)) byte_array_t*
     byte_array_append_string(byte_array_t* arr, const char* str) {
   return byte_array_append_bytes(arr, (uint8_t*) str, strlen(str));
 }
+#line 1 "fatal-error.c"
 /**
  * @file: fatal-error.c
  *
@@ -652,6 +657,7 @@ void print_error_code_name(int error_code) {
   fprintf(stderr, "%d %s\n", error_code, "ERROR_UKNOWN");
 #endif /* NO_READABLE_ERROR_CODES */
 }
+#line 1 "io.c"
 /**
  * @file io.c
  *
@@ -703,6 +709,7 @@ byte_array_t* byte_array_append_file_contents(byte_array_t* bytes,
 
 // TODO(jawilson): implement
 void byte_array_write_file(byte_array_t* bytes, char* file_name) {}
+#line 1 "string-util.c"
 /**
  * @file string-util.c
  *
@@ -950,7 +957,7 @@ uint64_t fasthash64(const void* buf, size_t len, uint64_t seed) {
 
   return mix(h);
 }
-#line 2 "tokenizer.c"
+#line 1 "tokenizer.c"
 /**
  * @file tokenizer.c
  *
@@ -1013,6 +1020,7 @@ array_t* tokenize(const char* str, const char* delimiters) {
 array_t* add_duplicate(array_t* token_array, const char* data) {
   return array_add(token_array, (uint64_t) string_duplicate(data));
 }
+#line 1 "type.c"
 /**
  * @file type.c
  *
@@ -1022,6 +1030,7 @@ array_t* add_duplicate(array_t* token_array, const char* data) {
  */
 
 #ifndef _TYPE_H_
+#define _TYPE_H_
 
 #include <stdint.h>
 #include <stdlib.h>
@@ -1030,17 +1039,20 @@ struct byte_buffer_S;
 struct reference_S;
 struct type_S;
 
-typedef int (*compare_references_fn_t)(struct reference_S a, struct reference_S b);
-typedef void (*append_text_representation_fn_t)(struct byte_buffer_S *buffer, struct reference_S object);
+typedef int (*compare_references_fn_t)(struct reference_S a,
+                                       struct reference_S b);
+typedef void (*append_text_representation_fn_t)(struct byte_buffer_S* buffer,
+                                                struct reference_S object);
 typedef uint64_t (*hash_reference_fn_t)(struct reference_S object);
 
-typedef struct type_S {
+struct type_S {
   char* name;
   int size;
   compare_references_fn_t compare_fn;
   append_text_representation_fn_t append_fn;
   hash_reference_fn_t hash_fn;
-} type_t;
+};
+typedef struct type_S type_t;
 
 extern type_t* intern_type(type_t type);
 
@@ -1050,13 +1062,9 @@ extern type_t uint32_type_constant;
 extern type_t uint64_type_constant;
 extern type_t char_ptr_type_constant;
 
-static inline type_t* uint64_type() {
-  return &uint64_type_constant;
-}
+static inline type_t* uint64_type() { return &uint64_type_constant; }
 
-static inline type_t* char_ptr_type() {
-  return &char_ptr_type_constant;
-}
+static inline type_t* char_ptr_type() { return &char_ptr_type_constant; }
 
 // TODO: global constants for standard types like uint64_t and void*
 
@@ -1066,4 +1074,18 @@ type_t* intern_type(type_t type) {
 }
 
 #endif /* _TYPE_H_ */
+
+type_t uint8_type_constant = {
+    .name = "uint8_t",
+    .size = sizeof(uint8_t),
+};
+
+// extern type_t uint16_type_constant;
+// extern type_t uint32_type_constant;
+// extern type_t uint64_type_constant;
+
+type_t char_ptr_type_constant = {
+    .name = "char*",
+    .size = sizeof(char*),
+};
 #endif /* C_ARMYKNIFE_LIB_IMPL */

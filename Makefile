@@ -51,7 +51,7 @@ CLEAN_BINARIES = \
 	a.out libarmyknife.a
 
 clean:
-	rm -rf *~ docs/*~ tests/*~ ${CLEAN_BINARIES} TAGS doxygen-docs *.o ${SRC_GENERATED_H}
+	rm -rf *~ docs/*~ tests/*~ ${CLEAN_BINARIES} TAGS doxygen-docs *.o ${SRC_GENERATED_H} tests/build/*
 
 diff: clean
 	git difftool HEAD

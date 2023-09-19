@@ -1,3 +1,4 @@
+#line 1 "boolean.h"
 #ifndef _BOOLEAN_H_
 #define _BOOLEAN_H_
 

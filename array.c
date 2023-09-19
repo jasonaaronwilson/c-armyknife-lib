@@ -1,4 +1,4 @@
-#line 2 "array.c"
+#line 1 "array.c"
 /**
  * @file array.c
  *
@@ -49,8 +49,8 @@ array_t* make_array(type_t* type, uint32_t initial_capacity) {
   if (element_size < 0) {
     fatal_error(ERROR_DYNAMICALLY_SIZED_TYPE_ILLEGAL_IN_CONTAINER);
   }
-  array_t* result
-    = (array_t*) (malloc_bytes(sizeof(array_t) + (element_size * initial_capacity)));
+  array_t* result = (array_t*) (malloc_bytes(
+      sizeof(array_t) + (element_size * initial_capacity)));
   result->element_type = type;
   result->capacity = initial_capacity;
   return result;

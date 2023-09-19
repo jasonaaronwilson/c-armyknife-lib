@@ -1,4 +1,4 @@
-#line 2 "tokenizer.c"
+#line 1 "tokenizer.c"
 /**
  * @file tokenizer.c
  *

@@ -62,19 +62,10 @@ how-big: clean
 tags:
 	etags ${SRC_C} ${SRC_H}
 
-TESTS = ./tests/nop-test.sh \
-	./tests/numbers-test.sh \
-	./tests/alignment.sh \
-	./tests/count-down-loop.sh
+TESTS= ./compile-test.sh
 
-#
-# I'm trying to find a sensible test strategy. Tests should look
-# pretty simple and run fast.
-#	./tests/integer-binary-operators.sh
-#
-
-test: comet-vm
-	./run-tests.sh ${TESTS}
+test:
+	(cd tests && ../run-tests.sh ${TESTS})
 
 docs:
 	doxygen

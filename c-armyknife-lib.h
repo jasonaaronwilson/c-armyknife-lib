@@ -10,6 +10,20 @@
  * prototypes, inlined functions, macros, and type definitions.
  */
 
+// SSCF generated file from: trace.c
+
+#line 2 "trace.c"
+#ifndef _TRACE_H_
+#define _TRACE_H_
+
+#include <stdio.h>
+
+#define TRACE() \
+  do {\
+  fprintf(stderr, "TRACE file=%s line=%d\n", __FILE__, __LINE__); \
+  } while(0)
+
+#endif /* _TRACE_H_ */
 #line 1 "boolean.h"
 #ifndef _BOOLEAN_H_
 #define _BOOLEAN_H_
@@ -96,6 +110,7 @@ typedef enum {
   ERROR_MEMORY_ALLOCATION,
   ERROR_MEMORY_FREE_NULL,
   ERROR_REFERENCE_NOT_EXPECTED_TYPE,
+  ERROR_ILLEGAL_INITIAL_CAPACITY,
   ERROR_DYNAMICALLY_SIZED_TYPE_ILLEGAL_IN_CONTAINER,
   ERROR_ACCESS_OUT_OF_BOUNDS,
   ERROR_NOT_REACHED,
@@ -129,10 +144,17 @@ static inline reference_t reference_of(type_t* type, void* pointer) {
 }
 
 static inline uint64_t reference_to_uint64(reference_t reference) {
-  if (reference.underlying_type != &uint64_type_constant) {
+  if (reference.underlying_type != uint64_type()) {
     fatal_error(ERROR_REFERENCE_NOT_EXPECTED_TYPE);
   }
   return *((uint64_t*) reference.pointer);
+}
+
+static inline char* reference_to_char_ptr(reference_t reference) {
+  if (reference.underlying_type != char_ptr_type()) {
+    fatal_error(ERROR_REFERENCE_NOT_EXPECTED_TYPE);
+  }
+  return ((char*) reference.pointer);
 }
 
 #endif /* _REFERENCE_H_ */
@@ -166,7 +188,7 @@ typedef struct {
   type_t* element_type;
   uint32_t length;
   uint32_t capacity;
-  uint8_t data[0];
+  __attribute__((aligned(8))) uint8_t data[0];
 } array_t;
 
 extern array_t* make_array(type_t* element_type, uint32_t initial_capacity);
@@ -344,7 +366,7 @@ void checked_free(char* file, int line, void* pointer) {
   }
   free(pointer);
 }
-#line 1 "array.c"
+#line 2 "array.c"
 /**
  * @file array.c
  *
@@ -369,7 +391,7 @@ typedef struct {
   type_t* element_type;
   uint32_t length;
   uint32_t capacity;
-  uint8_t data[0];
+  __attribute__((aligned(8))) uint8_t data[0];
 } array_t;
 
 extern array_t* make_array(type_t* element_type, uint32_t initial_capacity);
@@ -390,20 +412,29 @@ __attribute__((warn_unused_result)) extern array_t*
 
 static inline void* array_address_of_element(array_t* array,
                                              uint64_t position) {
-  return &(array->data[position * array->element_type->size]);
+  TRACE();
+  void* result = &(array->data[0]) + position * array->element_type->size;
+  return result;
 }
 
 /**
  * Make an array with the given initial_capacity.
  */
 array_t* make_array(type_t* type, uint32_t initial_capacity) {
+  TRACE();
+
+  if (initial_capacity == 0) {
+    fatal_error(ERROR_ILLEGAL_INITIAL_CAPACITY);
+  }
+
   int element_size = type->size;
-  if (element_size < 0) {
+  if (element_size <= 0) {
     fatal_error(ERROR_DYNAMICALLY_SIZED_TYPE_ILLEGAL_IN_CONTAINER);
   }
   array_t* result = (array_t*) (malloc_bytes(
       sizeof(array_t) + (element_size * initial_capacity)));
   result->element_type = type;
+  result->length = 0;
   result->capacity = initial_capacity;
   return result;
 }
@@ -416,11 +447,14 @@ uint64_t array_length(array_t* arr) { return arr->length; }
 /**
  * Get the nth element from an array.
  */
-reference_t array_get(array_t* array, uint64_t position) {
+reference_t array_get_reference(array_t* array, uint64_t position) {
+  TRACE();
   if (position < array->length) {
     return reference_of(array->element_type,
                         array_address_of_element(array, position));
   } else {
+    fprintf(stderr, "%s:%d: position is %lu but array length is %d\n", 
+            __FILE__, __LINE__, position, array->length);
     fatal_error(ERROR_ACCESS_OUT_OF_BOUNDS);
   }
 }
@@ -430,6 +464,7 @@ reference_t array_get(array_t* array, uint64_t position) {
  */
 __attribute__((warn_unused_result)) array_t* array_add(array_t* array,
                                                        reference_t reference) {
+  TRACE();
   if (reference.underlying_type != array->element_type) {
     fatal_error(ERROR_REFERENCE_NOT_EXPECTED_TYPE);
   }
@@ -443,8 +478,10 @@ __attribute__((warn_unused_result)) array_t* array_add(array_t* array,
     array_t* result = make_array(array->element_type, array->capacity * 2);
     memcpy(array_address_of_element(result, 0),
            array_address_of_element(array, 0), size * array->length);
+    result->length = array->length;
     free_bytes(array);
-    return result;
+    array = NULL;
+    return array_add(result, reference);
   }
 }
 #line 1 "byte-array.c"
@@ -587,6 +624,7 @@ typedef enum {
   ERROR_MEMORY_ALLOCATION,
   ERROR_MEMORY_FREE_NULL,
   ERROR_REFERENCE_NOT_EXPECTED_TYPE,
+  ERROR_ILLEGAL_INITIAL_CAPACITY,
   ERROR_DYNAMICALLY_SIZED_TYPE_ILLEGAL_IN_CONTAINER,
   ERROR_ACCESS_OUT_OF_BOUNDS,
   ERROR_NOT_REACHED,
@@ -653,23 +691,18 @@ const char* fatal_error_code_to_string(int error_code) {
     return "ERROR_REFERENCE_NOT_EXPECTED_TYPE";
   case ERROR_NOT_REACHED:
     return "ERROR_NOT_REACHED";
+  case ERROR_ILLEGAL_INITIAL_CAPACITY:
+    return "ERROR_ILLEGAL_INITIAL_CAPACITY";
   default:
     return "error";
   }
 }
 
 void print_error_code_name(int error_code) {
-#ifndef NO_READABLE_ERROR_CODES
   fprintf(stderr, " ");
-  do {
-    fprintf(stderr, "*** ");
-    fprintf(stderr, "%d -- %s", error_code,
-            fatal_error_code_to_string(error_code));
-    fprintf(stderr, " ***\n");
-  } while (0);
-#else
-  fprintf(stderr, "%d %s\n", error_code, "ERROR_UKNOWN");
-#endif /* NO_READABLE_ERROR_CODES */
+  fprintf(stderr, "*** ");
+  fprintf(stderr, "%s", fatal_error_code_to_string(error_code));
+  fprintf(stderr, " ***\n");
 }
 #line 1 "io.c"
 /**
@@ -701,9 +734,8 @@ extern void byte_array_write_file(byte_array_t* bytes, char* file_name);
 #include "byte-array.h"
 #include "io.h"
 
-__attribute__((warn_unused_result))
-byte_array_t* byte_array_append_file_contents(byte_array_t* bytes,
-                                              char* file_name) {
+__attribute__((warn_unused_result)) byte_array_t*
+    byte_array_append_file_contents(byte_array_t* bytes, char* file_name) {
   FILE* file = fopen(file_name, "r");
   uint8_t buffer[1024];
 
@@ -760,10 +792,17 @@ static inline reference_t reference_of(type_t* type, void* pointer) {
 }
 
 static inline uint64_t reference_to_uint64(reference_t reference) {
-  if (reference.underlying_type != &uint64_type_constant) {
+  if (reference.underlying_type != uint64_type()) {
     fatal_error(ERROR_REFERENCE_NOT_EXPECTED_TYPE);
   }
   return *((uint64_t*) reference.pointer);
+}
+
+static inline char* reference_to_char_ptr(reference_t reference) {
+  if (reference.underlying_type != char_ptr_type()) {
+    fatal_error(ERROR_REFERENCE_NOT_EXPECTED_TYPE);
+  }
+  return ((char*) reference.pointer);
 }
 
 #endif /* _REFERENCE_H_ */
@@ -1077,6 +1116,18 @@ array_t* add_duplicate(array_t* token_array, const char* data) {
   return array_add(token_array, reference_of(token_array->element_type,
                                              string_duplicate(data)));
 }
+#line 1 "trace.c"
+#ifndef _TRACE_H_
+#define _TRACE_H_
+
+#include <stdio.h>
+
+#define TRACE() \
+  do {\
+  fprintf(stderr, "TRACE file=%s line=%d\n", __FILE__, __LINE__); \
+  } while(0)
+
+#endif /* _TRACE_H_ */
 #line 1 "type.c"
 /**
  * @file type.c

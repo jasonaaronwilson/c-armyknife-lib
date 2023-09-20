@@ -3,8 +3,11 @@
 C_FILE=$1
 EXE_FILE=$2
 
+echo ${C_FILE}
+
 # CC=gcc
 CC=clang
+CC_FLAGS=-g
 
 ${CC} ${C_FILE} -o build/${EXE_FILE}
 

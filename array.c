@@ -1,4 +1,4 @@
-#line 1 "array.c"
+#line 2 "array.c"
 /**
  * @file array.c
  *
@@ -23,7 +23,7 @@ typedef struct {
   type_t* element_type;
   uint32_t length;
   uint32_t capacity;
-  uint8_t data[0];
+  __attribute__((aligned(8))) uint8_t data[0];
 } array_t;
 
 extern array_t* make_array(type_t* element_type, uint32_t initial_capacity);
@@ -44,20 +44,29 @@ __attribute__((warn_unused_result)) extern array_t*
 
 static inline void* array_address_of_element(array_t* array,
                                              uint64_t position) {
-  return &(array->data[position * array->element_type->size]);
+  TRACE();
+  void* result = &(array->data[0]) + position * array->element_type->size;
+  return result;
 }
 
 /**
  * Make an array with the given initial_capacity.
  */
 array_t* make_array(type_t* type, uint32_t initial_capacity) {
+  TRACE();
+
+  if (initial_capacity == 0) {
+    fatal_error(ERROR_ILLEGAL_INITIAL_CAPACITY);
+  }
+
   int element_size = type->size;
-  if (element_size < 0) {
+  if (element_size <= 0) {
     fatal_error(ERROR_DYNAMICALLY_SIZED_TYPE_ILLEGAL_IN_CONTAINER);
   }
   array_t* result = (array_t*) (malloc_bytes(
       sizeof(array_t) + (element_size * initial_capacity)));
   result->element_type = type;
+  result->length = 0;
   result->capacity = initial_capacity;
   return result;
 }
@@ -70,11 +79,14 @@ uint64_t array_length(array_t* arr) { return arr->length; }
 /**
  * Get the nth element from an array.
  */
-reference_t array_get(array_t* array, uint64_t position) {
+reference_t array_get_reference(array_t* array, uint64_t position) {
+  TRACE();
   if (position < array->length) {
     return reference_of(array->element_type,
                         array_address_of_element(array, position));
   } else {
+    fprintf(stderr, "%s:%d: position is %lu but array length is %d\n", __FILE__,
+            __LINE__, position, array->length);
     fatal_error(ERROR_ACCESS_OUT_OF_BOUNDS);
   }
 }
@@ -84,6 +96,7 @@ reference_t array_get(array_t* array, uint64_t position) {
  */
 __attribute__((warn_unused_result)) array_t* array_add(array_t* array,
                                                        reference_t reference) {
+  TRACE();
   if (reference.underlying_type != array->element_type) {
     fatal_error(ERROR_REFERENCE_NOT_EXPECTED_TYPE);
   }
@@ -97,7 +110,9 @@ __attribute__((warn_unused_result)) array_t* array_add(array_t* array,
     array_t* result = make_array(array->element_type, array->capacity * 2);
     memcpy(array_address_of_element(result, 0),
            array_address_of_element(array, 0), size * array->length);
+    result->length = array->length;
     free_bytes(array);
-    return result;
+    array = NULL;
+    return array_add(result, reference);
   }
 }

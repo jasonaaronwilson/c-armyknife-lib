@@ -8,6 +8,7 @@ SRC_C = allocate.c \
 	reference.c \
 	string-util.c \
 	tokenizer.c \
+	trace.c \
 	type.c
 
 SRC_GENERATED_H = \
@@ -19,6 +20,7 @@ SRC_GENERATED_H = \
 	reference.h \
 	string-util.h \
 	tokenizer.h \
+	trace.h \
 	type.h
 
 SRC_H =  \
@@ -26,6 +28,7 @@ SRC_H =  \
 	ct-assert.h
 
 ORDERED_H = \
+	trace.h \
 	boolean.h \
 	ct-assert.h \
 	type.h \
@@ -65,7 +68,7 @@ how-big: clean
 tags:
 	etags ${SRC_C} ${SRC_H}
 
-TESTS= ./compile-test.sh ./array-test.sh ./string-util-test.sh
+TESTS= ./compile-test.sh ./array-test.sh ./string-util-test.sh ./tokenizer-test.sh
 
 test:
 	(cd tests && ../run-tests.sh ${TESTS})

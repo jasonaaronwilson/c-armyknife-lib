@@ -24,6 +24,7 @@ typedef enum {
   ERROR_MEMORY_ALLOCATION,
   ERROR_MEMORY_FREE_NULL,
   ERROR_REFERENCE_NOT_EXPECTED_TYPE,
+  ERROR_ILLEGAL_INITIAL_CAPACITY,
   ERROR_DYNAMICALLY_SIZED_TYPE_ILLEGAL_IN_CONTAINER,
   ERROR_ACCESS_OUT_OF_BOUNDS,
   ERROR_NOT_REACHED,
@@ -90,21 +91,16 @@ const char* fatal_error_code_to_string(int error_code) {
     return "ERROR_REFERENCE_NOT_EXPECTED_TYPE";
   case ERROR_NOT_REACHED:
     return "ERROR_NOT_REACHED";
+  case ERROR_ILLEGAL_INITIAL_CAPACITY:
+    return "ERROR_ILLEGAL_INITIAL_CAPACITY";
   default:
     return "error";
   }
 }
 
 void print_error_code_name(int error_code) {
-#ifndef NO_READABLE_ERROR_CODES
   fprintf(stderr, " ");
-  do {
-    fprintf(stderr, "*** ");
-    fprintf(stderr, "%d -- %s", error_code,
-            fatal_error_code_to_string(error_code));
-    fprintf(stderr, " ***\n");
-  } while (0);
-#else
-  fprintf(stderr, "%d %s\n", error_code, "ERROR_UKNOWN");
-#endif /* NO_READABLE_ERROR_CODES */
+  fprintf(stderr, "*** ");
+  fprintf(stderr, "%s", fatal_error_code_to_string(error_code));
+  fprintf(stderr, " ***\n");
 }

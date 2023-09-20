@@ -701,6 +701,7 @@ extern void byte_array_write_file(byte_array_t* bytes, char* file_name);
 #include "byte-array.h"
 #include "io.h"
 
+__attribute__((warn_unused_result))
 byte_array_t* byte_array_append_file_contents(byte_array_t* bytes,
                                               char* file_name) {
   FILE* file = fopen(file_name, "r");
@@ -719,8 +720,11 @@ byte_array_t* byte_array_append_file_contents(byte_array_t* bytes,
   return bytes;
 }
 
-// TODO(jawilson): implement
-void byte_array_write_file(byte_array_t* bytes, char* file_name) {}
+void byte_array_write_file(byte_array_t* bytes, char* file_name) {
+  FILE* file = fopen(file_name, "r");
+  fwrite(&bytes->elements, 1, bytes->length, file);
+  fclose(file);
+}
 #line 1 "reference.c"
 /**
  * C does not have parameterized types which makes generic containers

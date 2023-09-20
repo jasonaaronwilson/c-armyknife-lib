@@ -15,8 +15,6 @@
 
 #include <stdint.h>
 
-#include "fatal-error.h"
-
 extern int string_is_null_or_empty(const char* str1);
 extern int string_equal(const char* str1, const char* str2);
 extern int string_starts_with(const char* str1, const char* str2);

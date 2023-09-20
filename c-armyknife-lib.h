@@ -229,8 +229,6 @@ extern void byte_array_write_file(byte_array_t* bytes, char* file_name);
 
 #include <stdint.h>
 
-#include "fatal-error.h"
-
 extern int string_is_null_or_empty(const char* str1);
 extern int string_equal(const char* str1, const char* str2);
 extern int string_starts_with(const char* str1, const char* str2);
@@ -781,8 +779,6 @@ static inline uint64_t reference_to_uint64(reference_t reference) {
 #define _STRING_UTIL_H_
 
 #include <stdint.h>
-
-#include "fatal-error.h"
 
 extern int string_is_null_or_empty(const char* str1);
 extern int string_equal(const char* str1, const char* str2);

@@ -65,7 +65,7 @@ how-big: clean
 tags:
 	etags ${SRC_C} ${SRC_H}
 
-TESTS= ./compile-test.sh ./array-test.sh
+TESTS= ./compile-test.sh ./array-test.sh ./string-util-test.sh
 
 test:
 	(cd tests && ../run-tests.sh ${TESTS})

@@ -233,7 +233,7 @@ extern int string_is_null_or_empty(const char* str1);
 extern int string_equal(const char* str1, const char* str2);
 extern int string_starts_with(const char* str1, const char* str2);
 extern int string_ends_with(const char* str1, const char* str2);
-extern int string_contains(const char* str, const char ch);
+extern int string_contains_char(const char* str, const char ch);
 extern uint64_t string_to_uint64(const char* str);
 extern uint64_t string_hash(const char* str);
 extern char* string_substring(const char* str, int start, int end);
@@ -784,7 +784,7 @@ extern int string_is_null_or_empty(const char* str1);
 extern int string_equal(const char* str1, const char* str2);
 extern int string_starts_with(const char* str1, const char* str2);
 extern int string_ends_with(const char* str1, const char* str2);
-extern int string_contains(const char* str, const char ch);
+extern int string_contains_char(const char* str, const char ch);
 extern uint64_t string_to_uint64(const char* str);
 extern uint64_t string_hash(const char* str);
 extern char* string_substring(const char* str, int start, int end);
@@ -829,7 +829,7 @@ int string_ends_with(const char* str1, const char* str2) {
   return strcmp(str1 + (len1 - len2), str2) == 0;
 }
 
-int string_contains(const char* str, char ch) {
+int string_contains_char(const char* str, char ch) {
   if (string_is_null_or_empty(str)) {
     return 0;
   }
@@ -1048,7 +1048,7 @@ array_t* tokenize(const char* str, const char* delimiters) {
   int cpos = 0;
   for (int i = 0; (i < strlen(str)); i++) {
     char ch = str[i];
-    if (string_contains(delimiters, ch)) {
+    if (string_contains_char(delimiters, ch)) {
       token_data[cpos++] = '\0';
       if (strlen(token_data) > 0) {
         result = add_duplicate(result, token_data);

@@ -37,7 +37,7 @@ array_t* tokenize(const char* str, const char* delimiters) {
   int cpos = 0;
   for (int i = 0; (i < strlen(str)); i++) {
     char ch = str[i];
-    if (string_contains(delimiters, ch)) {
+    if (string_contains_char(delimiters, ch)) {
       token_data[cpos++] = '\0';
       if (strlen(token_data) > 0) {
         result = add_duplicate(result, token_data);

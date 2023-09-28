@@ -15,22 +15,6 @@ SRC_C = allocate.c \
 	tuple.c \
 	type.c
 
-SRC_GENERATED_H = \
-	allocate.h \
-	array.h \
-	boolean.h \
-	byte-array.h \
-	ct-assert.h \
-	fatal-error.h \
-	io.h \
-	reference.h \
-	string-util.h \
-	test.h \
-	tokenizer.h \
-	trace.h \
-	tuple.h \
-	type.h
-
 ORDERED_H = \
 	ct-assert.h \
 	boolean.h \
@@ -62,7 +46,7 @@ format:
 	clang-format -i ${SRC_C} ${SRC_H}
 
 clean:
-	rm -rf *~ docs/*~ tests/*~ TAGS doxygen-docs *.o ${SRC_GENERATED_H} tests/build/*
+	rm -rf *~ docs/*~ tests/*~ TAGS doxygen-docs *.o ${ORDERED_H} tests/build/*
 
 diff: clean
 	git difftool HEAD

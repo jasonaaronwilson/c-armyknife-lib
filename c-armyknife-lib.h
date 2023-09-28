@@ -92,6 +92,9 @@ extern type_t uint64_type_constant;
 extern type_t char_ptr_type_constant;
 
 static inline type_t* uint64_type() { return &uint64_type_constant; }
+static inline type_t* uint32_type() { return &uint32_type_constant; }
+static inline type_t* uint16_type() { return &uint16_type_constant; }
+static inline type_t* uint8_type() { return &uint8_type_constant; }
 
 static inline type_t* char_ptr_type() { return &char_ptr_type_constant; }
 
@@ -1330,6 +1333,9 @@ extern type_t uint64_type_constant;
 extern type_t char_ptr_type_constant;
 
 static inline type_t* uint64_type() { return &uint64_type_constant; }
+static inline type_t* uint32_type() { return &uint32_type_constant; }
+static inline type_t* uint16_type() { return &uint16_type_constant; }
+static inline type_t* uint8_type() { return &uint8_type_constant; }
 
 static inline type_t* char_ptr_type() { return &char_ptr_type_constant; }
 

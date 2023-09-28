@@ -47,6 +47,21 @@ static inline void write_to_uint64_reference(reference_t reference,
   *((uint64_t*) reference.pointer) = value;
 }
 
+static inline uint64_t reference_to_uint32(reference_t reference) {
+  if (reference.underlying_type != uint32_type()) {
+    fatal_error(ERROR_REFERENCE_NOT_EXPECTED_TYPE);
+  }
+  return *((uint32_t*) reference.pointer);
+}
+
+static inline void write_to_uint32_reference(reference_t reference,
+                                             uint32_t value) {
+  if (reference.underlying_type != uint32_type()) {
+    fatal_error(ERROR_REFERENCE_NOT_EXPECTED_TYPE);
+  }
+  *((uint32_t*) reference.pointer) = value;
+}
+
 static inline char* reference_to_char_ptr(reference_t reference) {
   if (reference.underlying_type != char_ptr_type()) {
     fatal_error(ERROR_REFERENCE_NOT_EXPECTED_TYPE);

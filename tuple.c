@@ -60,7 +60,7 @@ type_t* intern_tuple_type(int number_of_parameters, ...) {
     }
     name = byte_array_append_string(name, element_type->name);
     size += element_type->size;
-    TUPLE_ALIGN_OFFSET(size);
+    size = TUPLE_ALIGN_OFFSET(size);
   }
   va_end(args);
 

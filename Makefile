@@ -2,7 +2,9 @@ all: c-armyknife-lib
 
 SRC_C = allocate.c \
 	array.c \
+	boolean.c \
 	byte-array.c \
+	ct-assert.c \
 	fatal-error.c \
 	io.c \
 	reference.c \
@@ -16,7 +18,9 @@ SRC_C = allocate.c \
 SRC_GENERATED_H = \
 	allocate.h \
 	array.h \
+	boolean.h \
 	byte-array.h \
+	ct-assert.h \
 	fatal-error.h \
 	io.h \
 	reference.h \
@@ -27,11 +31,9 @@ SRC_GENERATED_H = \
 	tuple.h \
 	type.h
 
-SRC_H =  \
-	boolean.h \
-	ct-assert.h
-
 ORDERED_H = \
+	ct-assert.h \
+	boolean.h \
 	trace.h \
 	boolean.h \
 	ct-assert.h \
@@ -50,7 +52,7 @@ ORDERED_H = \
 generate-header-files: ${SRC_C}
 	../c-single-source-file/generate-header-file ${SRC_C}
 
-c-armyknife-lib: ${SRC_C} ${SRC_H} generate-header-files
+c-armyknife-lib: ${SRC_C} generate-header-files
 	cat header-comment.txt ${ORDERED_H} >c-armyknife-lib.h
 	echo '#ifdef C_ARMYKNIFE_LIB_IMPL' >>c-armyknife-lib.h
 	cat ${SRC_C} >>c-armyknife-lib.h

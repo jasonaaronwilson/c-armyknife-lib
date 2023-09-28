@@ -1,5 +1,12 @@
-#ifndef _CT_ASSERT_
-#define _CT_ASSERT_
+#line 2 "ct-assert.c"
+/**
+ * @file ct-assert.c
+ *
+ * Provide a basic compile time assert facility.
+ */
+
+#ifndef _CT_ASSERT_H_
+#define _CT_ASSERT_H_
 
 // Do a compile time assertion. Using shorter name so that if someone
 // google's this they are more likely to find out where I got
@@ -14,4 +21,4 @@
 
 #define ct_assert(e) ((void) sizeof(char[1 - 2 * !(e)]))
 
-#endif /* _CT_ASSERT_ */
+#endif /* _CT_ASSERT_H_ */

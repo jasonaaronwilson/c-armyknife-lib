@@ -10,32 +10,11 @@
  * prototypes, inlined functions, macros, and type definitions.
  */
 
-// SSCF generated file from: trace.c
+// SSCF generated file from: ct-assert.c
 
-#line 2 "trace.c"
-#ifndef _TRACE_H_
-#define _TRACE_H_
-
-#include <stdio.h>
-
-#define TRACE()                                                                \
-  do {                                                                         \
-    fprintf(stderr, "TRACE file=%s line=%d\n", __FILE__, __LINE__);            \
-  } while (0)
-
-#endif /* _TRACE_H_ */
-#line 1 "boolean.h"
-#ifndef _BOOLEAN_H_
-#define _BOOLEAN_H_
-
-typedef int boolean_t;
-
-#define true ((boolean_t) 1)
-#define false ((boolean_t) 0)
-
-#endif /* _BOOLEAN_H_ */
-#ifndef _CT_ASSERT_
-#define _CT_ASSERT_
+#line 8 "ct-assert.c"
+#ifndef _CT_ASSERT_H_
+#define _CT_ASSERT_H_
 
 // Do a compile time assertion. Using shorter name so that if someone
 // google's this they are more likely to find out where I got
@@ -50,7 +29,65 @@ typedef int boolean_t;
 
 #define ct_assert(e) ((void) sizeof(char[1 - 2 * !(e)]))
 
-#endif /* _CT_ASSERT_ */
+#endif /* _CT_ASSERT_H_ */
+// SSCF generated file from: boolean.c
+
+#line 13 "boolean.c"
+#ifndef _BOOLEAN_H_
+#define _BOOLEAN_H_
+
+typedef int boolean_t;
+
+#define true ((boolean_t) 1)
+#define false ((boolean_t) 0)
+
+#endif /* _BOOLEAN_H_ */
+// SSCF generated file from: trace.c
+
+#line 2 "trace.c"
+#ifndef _TRACE_H_
+#define _TRACE_H_
+
+#include <stdio.h>
+
+#define TRACE()                                                                \
+  do {                                                                         \
+    fprintf(stderr, "TRACE file=%s line=%d\n", __FILE__, __LINE__);            \
+  } while (0)
+
+#endif /* _TRACE_H_ */
+// SSCF generated file from: boolean.c
+
+#line 13 "boolean.c"
+#ifndef _BOOLEAN_H_
+#define _BOOLEAN_H_
+
+typedef int boolean_t;
+
+#define true ((boolean_t) 1)
+#define false ((boolean_t) 0)
+
+#endif /* _BOOLEAN_H_ */
+// SSCF generated file from: ct-assert.c
+
+#line 8 "ct-assert.c"
+#ifndef _CT_ASSERT_H_
+#define _CT_ASSERT_H_
+
+// Do a compile time assertion. Using shorter name so that if someone
+// google's this they are more likely to find out where I got
+// this. Note that this only works where a statement is allowed (not
+// top-level in a file).
+
+// When this fails, you'll see something like:
+//
+// main.c:18:3: error: array size is negative
+//
+// We can change to use vendor specific version in the future.
+
+#define ct_assert(e) ((void) sizeof(char[1 - 2 * !(e)]))
+
+#endif /* _CT_ASSERT_H_ */
 // SSCF generated file from: type.c
 
 #line 10 "type.c"
@@ -198,9 +235,9 @@ static inline char* reference_to_char_ptr(reference_t reference) {
 
 #include <stdint.h>
 
-// This is feeling worse all of the time. The true alignment should be
-// the alignment of the first element which we won't really know at
-// compile time.
+// Technically there is no struct that can really represent a tuple
+// and the alignment can be as little as one byte. I think this will
+// eventually prove to be the wrong thing.
 typedef struct {
   __attribute__((aligned(8))) uint8_t data[0];
 } tuple_t;
@@ -342,10 +379,10 @@ extern array_t* tokenize(const char* str, const char* delimiters);
 #ifndef _TEST_H_
 #define _TEST_H_
 
-#define ARMYKNIFE_TEST_FAIL(msg)                                     \
+#define ARMYKNIFE_TEST_FAIL(msg)                                               \
   do {                                                                         \
-    fprintf(stderr, "%s:%d: -- FAIL (fn=%s, msg='%s')\n", __FILE__, __LINE__,      \
-            __func__, msg);                                   \
+    fprintf(stderr, "%s:%d: -- FAIL (fn=%s, msg='%s')\n", __FILE__, __LINE__,  \
+            __func__, msg);                                                    \
     exit(1);                                                                   \
   } while (0)
 
@@ -581,6 +618,31 @@ __attribute__((warn_unused_result)) array_t* array_add(array_t* array,
     return array_add(result, reference);
   }
 }
+#line 2 "boolean.c"
+/**
+ * @file boolean.c
+ *
+ * Provides a simple typdef and true/false which sometimes makes code
+ * more readable.
+ */
+
+// ======================================================================
+// This section is extraced to boolean.h
+// ======================================================================
+
+#ifndef _BOOLEAN_H_
+#define _BOOLEAN_H_
+
+typedef int boolean_t;
+
+#define true ((boolean_t) 1)
+#define false ((boolean_t) 0)
+
+#endif /* _BOOLEAN_H_ */
+
+// ======================================================================
+// Currently no implementation
+// ======================================================================
 #line 1 "byte-array.c"
 /**
  * @file byte-array.c
@@ -696,6 +758,30 @@ __attribute__((warn_unused_result)) byte_array_t*
     byte_array_append_string(byte_array_t* arr, const char* str) {
   return byte_array_append_bytes(arr, (uint8_t*) str, strlen(str));
 }
+#line 2 "ct-assert.c"
+/**
+ * @file ct-assert.c
+ *
+ * Provide a basic compile time assert facility.
+ */
+
+#ifndef _CT_ASSERT_H_
+#define _CT_ASSERT_H_
+
+// Do a compile time assertion. Using shorter name so that if someone
+// google's this they are more likely to find out where I got
+// this. Note that this only works where a statement is allowed (not
+// top-level in a file).
+
+// When this fails, you'll see something like:
+//
+// main.c:18:3: error: array size is negative
+//
+// We can change to use vendor specific version in the future.
+
+#define ct_assert(e) ((void) sizeof(char[1 - 2 * !(e)]))
+
+#endif /* _CT_ASSERT_H_ */
 #line 1 "fatal-error.c"
 /**
  * @file: fatal-error.c
@@ -1188,10 +1274,10 @@ uint64_t fasthash64(const void* buf, size_t len, uint64_t seed) {
 #ifndef _TEST_H_
 #define _TEST_H_
 
-#define ARMYKNIFE_TEST_FAIL(msg)                                     \
+#define ARMYKNIFE_TEST_FAIL(msg)                                               \
   do {                                                                         \
-    fprintf(stderr, "%s:%d: -- FAIL (fn=%s, msg='%s')\n", __FILE__, __LINE__,      \
-            __func__, msg);                                   \
+    fprintf(stderr, "%s:%d: -- FAIL (fn=%s, msg='%s')\n", __FILE__, __LINE__,  \
+            __func__, msg);                                                    \
     exit(1);                                                                   \
   } while (0)
 
@@ -1297,9 +1383,9 @@ array_t* add_duplicate(array_t* token_array, const char* data) {
 
 #include <stdint.h>
 
-// This is feeling worse all of the time. The true alignment should be
-// the alignment of the first element which we won't really know at
-// compile time.
+// Technically there is no struct that can really represent a tuple
+// and the alignment can be as little as one byte. I think this will
+// eventually prove to be the wrong thing.
 typedef struct {
   __attribute__((aligned(8))) uint8_t data[0];
 } tuple_t;
@@ -1317,7 +1403,8 @@ extern reference_t tuple_reference_of_element_from_pointer(
 #include <stdarg.h>
 #include <stdlib.h>
 
-#define TUPLE_ALIGN_OFFSET(offset, alignment) ((offset + (alignment - 1)) & ~(alignment - 1))
+#define TUPLE_ALIGN_OFFSET(offset, alignment)                                  \
+  ((offset + (alignment - 1)) & ~(alignment - 1))
 
 /**
  * Make a tuple type.
@@ -1330,7 +1417,7 @@ type_t* intern_tuple_type(int number_of_parameters, ...) {
 
   int offset = 0;
   int alignment = 1;
-  
+
   va_list args;
   va_start(args, number_of_parameters);
   for (int i = 0; (i < number_of_parameters); i++) {

@@ -71,7 +71,7 @@ how-big: clean
 tags:
 	etags ${SRC_C} ${SRC_H}
 
-TESTS= ./compile-test.sh ./array-test.sh ./string-util-test.sh ./tokenizer-test.sh
+TESTS= ./compile-test.sh  ./tuple-test.sh ./array-test.sh ./string-util-test.sh ./tokenizer-test.sh
 
 test:
 	(cd tests && ../run-tests.sh ${TESTS})

@@ -31,6 +31,11 @@ void test_sizes() {
   if (type->size != 16) {
     FAIL("tuple_t(uint32_t, uint64_t) size");
   }
+
+  type = intern_tuple_type(3, uint64_type(), uint32_type(), uint64_type());
+  if (type->size != 24) {
+    FAIL("tuple_t(uint64_t, uint32_t, uint64_t) size");
+  }
 }
 
 int main(int argc, char** argv) {

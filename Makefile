@@ -7,6 +7,7 @@ SRC_C = allocate.c \
 	io.c \
 	reference.c \
 	string-util.c \
+	test.c \
 	tokenizer.c \
 	trace.c \
 	tuple.c \
@@ -20,6 +21,7 @@ SRC_GENERATED_H = \
 	io.h \
 	reference.h \
 	string-util.h \
+	test.h \
 	tokenizer.h \
 	trace.h \
 	tuple.h \
@@ -42,7 +44,8 @@ ORDERED_H = \
 	byte-array.h \
 	io.h \
 	string-util.h \
-	tokenizer.h
+	tokenizer.h \
+	test.h
 
 generate-header-files: ${SRC_C}
 	../c-single-source-file/generate-header-file ${SRC_C}
@@ -56,11 +59,8 @@ c-armyknife-lib: ${SRC_C} ${SRC_H} generate-header-files
 format:
 	clang-format -i ${SRC_C} ${SRC_H}
 
-CLEAN_BINARIES = \
-	a.out libarmyknife.a
-
 clean:
-	rm -rf *~ docs/*~ tests/*~ ${CLEAN_BINARIES} TAGS doxygen-docs *.o ${SRC_GENERATED_H} tests/build/*
+	rm -rf *~ docs/*~ tests/*~ TAGS doxygen-docs *.o ${SRC_GENERATED_H} tests/build/*
 
 diff: clean
 	git difftool HEAD

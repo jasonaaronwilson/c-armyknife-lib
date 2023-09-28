@@ -308,6 +308,19 @@ extern char* string_duplicate(const char* src);
 extern array_t* tokenize(const char* str, const char* delimiters);
 
 #endif /* _TOKENIZER_H_ */
+// SSCF generated file from: test.c
+
+#line 13 "test.c"
+#ifndef _TEST_H_
+#define _TEST_H_
+
+#define ARMYKNIFE_TEST_FAIL(testcase_name) \
+  do { \
+  fprintf(stderr, "%s:%d: -- FAIL (testcase=%s)\n", __FILE__, __LINE__, testcase_name); \
+  exit(1); \
+  } while (0)
+
+#endif /* _TEST_H_ */
 #ifdef C_ARMYKNIFE_LIB_IMPL
 #line 1 "allocate.c"
 /**
@@ -1113,6 +1126,34 @@ uint64_t fasthash64(const void* buf, size_t len, uint64_t seed) {
 
   return mix(h);
 }
+#line 2 "test.c"
+/**
+ * @file test.c
+ *
+ * A set of macros and inline functions to help write tests for the
+ * armyknife library (or your own tests).
+ */
+
+// ======================================================================
+// This section is extraced to test.h
+// ======================================================================
+
+#ifndef _TEST_H_
+#define _TEST_H_
+
+#define ARMYKNIFE_TEST_FAIL(testcase_name) \
+  do { \
+  fprintf(stderr, "%s:%d: -- FAIL (testcase=%s)\n", __FILE__, __LINE__, testcase_name); \
+  exit(1); \
+  } while (0)
+
+#endif /* _TEST_H_ */
+
+// ======================================================================
+// In order to not increase the runtime footprint, we don't actually
+// have any non-macros (or inlined functions).
+// ======================================================================
+
 #line 1 "tokenizer.c"
 /**
  * @file tokenizer.c

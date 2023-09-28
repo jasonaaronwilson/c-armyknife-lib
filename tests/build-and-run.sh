@@ -9,7 +9,7 @@ echo ${C_FILE}
 CC=clang
 CC_FLAGS=-g
 
-${CC} ${C_FILE} -o build/${EXE_FILE}
+${CC} ${CC_FLAGS} ${C_FILE} -o build/${EXE_FILE}
 
 if [[ $? != 0 ]] ; then
     echo "-- failed to compile test case."

@@ -157,7 +157,8 @@ static inline uint64_t reference_to_uint64(reference_t reference) {
   return *((uint64_t*) reference.pointer);
 }
 
-static inline void write_to_uint64_reference(reference_t reference, uint64_t value) {
+static inline void write_to_uint64_reference(reference_t reference,
+                                             uint64_t value) {
   if (reference.underlying_type != uint64_type()) {
     fatal_error(ERROR_REFERENCE_NOT_EXPECTED_TYPE);
   }
@@ -321,10 +322,11 @@ extern array_t* tokenize(const char* str, const char* delimiters);
 #ifndef _TEST_H_
 #define _TEST_H_
 
-#define ARMYKNIFE_TEST_FAIL(testcase_name) \
-  do { \
-  fprintf(stderr, "%s:%d: -- FAIL (testcase=%s)\n", __FILE__, __LINE__, testcase_name); \
-  exit(1); \
+#define ARMYKNIFE_TEST_FAIL(testcase_name)                                     \
+  do {                                                                         \
+    fprintf(stderr, "%s:%d: -- FAIL (testcase=%s)\n", __FILE__, __LINE__,      \
+            testcase_name);                                                    \
+    exit(1);                                                                   \
   } while (0)
 
 #endif /* _TEST_H_ */
@@ -492,7 +494,6 @@ __attribute__((warn_unused_result)) extern array_t*
 
 static inline void* array_address_of_element(array_t* array,
                                              uint64_t position) {
-  TRACE();
   void* result = &(array->data[0]) + position * array->element_type->size;
   return result;
 }
@@ -501,8 +502,6 @@ static inline void* array_address_of_element(array_t* array,
  * Make an array with the given initial_capacity.
  */
 array_t* make_array(type_t* type, uint32_t initial_capacity) {
-  TRACE();
-
   if (initial_capacity == 0) {
     fatal_error(ERROR_ILLEGAL_INITIAL_CAPACITY);
   }
@@ -528,7 +527,6 @@ uint64_t array_length(array_t* arr) { return arr->length; }
  * Get the nth element from an array.
  */
 reference_t array_get_reference(array_t* array, uint64_t position) {
-  TRACE();
   if (position < array->length) {
     return reference_of(array->element_type,
                         array_address_of_element(array, position));
@@ -544,7 +542,6 @@ reference_t array_get_reference(array_t* array, uint64_t position) {
  */
 __attribute__((warn_unused_result)) array_t* array_add(array_t* array,
                                                        reference_t reference) {
-  TRACE();
   if (reference.underlying_type != array->element_type) {
     fatal_error(ERROR_REFERENCE_NOT_EXPECTED_TYPE);
   }
@@ -879,7 +876,8 @@ static inline uint64_t reference_to_uint64(reference_t reference) {
   return *((uint64_t*) reference.pointer);
 }
 
-static inline void write_to_uint64_reference(reference_t reference, uint64_t value) {
+static inline void write_to_uint64_reference(reference_t reference,
+                                             uint64_t value) {
   if (reference.underlying_type != uint64_type()) {
     fatal_error(ERROR_REFERENCE_NOT_EXPECTED_TYPE);
   }
@@ -1155,10 +1153,11 @@ uint64_t fasthash64(const void* buf, size_t len, uint64_t seed) {
 #ifndef _TEST_H_
 #define _TEST_H_
 
-#define ARMYKNIFE_TEST_FAIL(testcase_name) \
-  do { \
-  fprintf(stderr, "%s:%d: -- FAIL (testcase=%s)\n", __FILE__, __LINE__, testcase_name); \
-  exit(1); \
+#define ARMYKNIFE_TEST_FAIL(testcase_name)                                     \
+  do {                                                                         \
+    fprintf(stderr, "%s:%d: -- FAIL (testcase=%s)\n", __FILE__, __LINE__,      \
+            testcase_name);                                                    \
+    exit(1);                                                                   \
   } while (0)
 
 #endif /* _TEST_H_ */
@@ -1167,7 +1166,6 @@ uint64_t fasthash64(const void* buf, size_t len, uint64_t seed) {
 // In order to not increase the runtime footprint, we don't actually
 // have any non-macros (or inlined functions).
 // ======================================================================
-
 #line 1 "tokenizer.c"
 /**
  * @file tokenizer.c
@@ -1334,7 +1332,7 @@ reference_t tuple_reference_of_element(reference_t tuple_ref,
   for (int i = 0; (i < type->number_of_parameters); i++) {
     type_t* element_type = type->parameters[i];
     if (i == position) {
-      return reference_of(element_type, &tuple_pointer->data[i]);
+      return reference_of(element_type, &tuple_pointer->data[offset]);
     }
     offset += element_type->size;
     offset = TUPLE_ALIGN_OFFSET(offset);

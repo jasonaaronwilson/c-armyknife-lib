@@ -47,7 +47,6 @@ __attribute__((warn_unused_result)) extern array_t*
 
 static inline void* array_address_of_element(array_t* array,
                                              uint64_t position) {
-  TRACE();
   void* result = &(array->data[0]) + position * array->element_type->size;
   return result;
 }
@@ -56,8 +55,6 @@ static inline void* array_address_of_element(array_t* array,
  * Make an array with the given initial_capacity.
  */
 array_t* make_array(type_t* type, uint32_t initial_capacity) {
-  TRACE();
-
   if (initial_capacity == 0) {
     fatal_error(ERROR_ILLEGAL_INITIAL_CAPACITY);
   }
@@ -83,7 +80,6 @@ uint64_t array_length(array_t* arr) { return arr->length; }
  * Get the nth element from an array.
  */
 reference_t array_get_reference(array_t* array, uint64_t position) {
-  TRACE();
   if (position < array->length) {
     return reference_of(array->element_type,
                         array_address_of_element(array, position));
@@ -99,7 +95,6 @@ reference_t array_get_reference(array_t* array, uint64_t position) {
  */
 __attribute__((warn_unused_result)) array_t* array_add(array_t* array,
                                                        reference_t reference) {
-  TRACE();
   if (reference.underlying_type != array->element_type) {
     fatal_error(ERROR_REFERENCE_NOT_EXPECTED_TYPE);
   }

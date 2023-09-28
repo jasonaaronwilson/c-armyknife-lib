@@ -88,7 +88,7 @@ reference_t tuple_reference_of_element(reference_t tuple_ref,
   for (int i = 0; (i < type->number_of_parameters); i++) {
     type_t* element_type = type->parameters[i];
     if (i == position) {
-      return reference_of(element_type, &tuple_pointer->data[i]);
+      return reference_of(element_type, &tuple_pointer->data[offset]);
     }
     offset += element_type->size;
     offset = TUPLE_ALIGN_OFFSET(offset);

@@ -36,23 +36,40 @@ void test_offsets() {
   uint64_t stack_tuple_space[16];
   type_t* type;
   reference_t tuple_reference;
-  reference_t field_reference;
+  reference_t field0_reference;
+  reference_t field1_reference;
 
+  memset(stack_tuple_space, 0, sizeof(stack_tuple_space));
   type = intern_tuple_type(1, uint64_type());
   tuple_reference = reference_of(type, &stack_tuple_space);
-  memset(stack_tuple_space, 0, sizeof(stack_tuple_space));
-  field_reference = tuple_reference_of_element(tuple_reference, 0);
-  uint64_t field_value = reference_to_uint64(field_reference);
+  field0_reference = tuple_reference_of_element(tuple_reference, 0);
+  uint64_t field_value = reference_to_uint64(field0_reference);
   if (field_value != 0) {
     ARMYKNIFE_TEST_FAIL("tuple_t(uint64_t)");
   }
-  write_to_uint64_reference(field_reference, 0xffffffffffffffff);
-  field_value = reference_to_uint64(field_reference);
+  write_to_uint64_reference(field0_reference, 0xffffffffffffffff);
+  field_value = reference_to_uint64(field0_reference);
   if (field_value != 0xffffffffffffffff) {
     ARMYKNIFE_TEST_FAIL("tuple_t(uint64_t)");
   }
   if (stack_tuple_space[1] != 0) {
     ARMYKNIFE_TEST_FAIL("tuple_t(uint64_t)");
+  }
+
+  memset(stack_tuple_space, 0, sizeof(stack_tuple_space));
+  stack_tuple_space[0] = 1000;
+  stack_tuple_space[1] = 1001;
+  type = intern_tuple_type(2, uint64_type(), uint64_type());
+  tuple_reference = reference_of(type, &stack_tuple_space);
+  field0_reference = tuple_reference_of_element(tuple_reference, 0);
+  field1_reference = tuple_reference_of_element(tuple_reference, 1);
+  field_value = reference_to_uint64(field0_reference);
+  if (field_value != 1000) {
+    ARMYKNIFE_TEST_FAIL("tuple_t(uint64_t,uint64_t)");
+  }
+  field_value = reference_to_uint64(field1_reference);
+  if (field_value != 1001) {
+    ARMYKNIFE_TEST_FAIL("tuple_t(uint64_t,uint64_t)");
   }
 }
 

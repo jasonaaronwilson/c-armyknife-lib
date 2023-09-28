@@ -9,6 +9,7 @@ SRC_C = allocate.c \
 	string-util.c \
 	tokenizer.c \
 	trace.c \
+	tuple.c \
 	type.c
 
 SRC_GENERATED_H = \
@@ -21,6 +22,7 @@ SRC_GENERATED_H = \
 	string-util.h \
 	tokenizer.h \
 	trace.h \
+	tuple.h \
 	type.h
 
 SRC_H =  \
@@ -34,6 +36,7 @@ ORDERED_H = \
 	type.h \
 	fatal-error.h \
 	reference.h \
+	tuple.h \
 	allocate.h \
 	array.h \
 	byte-array.h \

@@ -18,10 +18,10 @@
 
 #include <stdio.h>
 
-#define TRACE() \
-  do {\
-  fprintf(stderr, "TRACE file=%s line=%d\n", __FILE__, __LINE__); \
-  } while(0)
+#define TRACE()                                                                \
+  do {                                                                         \
+    fprintf(stderr, "TRACE file=%s line=%d\n", __FILE__, __LINE__);            \
+  } while (0)
 
 #endif /* _TRACE_H_ */
 #line 1 "boolean.h"
@@ -60,6 +60,8 @@ typedef int boolean_t;
 #include <stdint.h>
 #include <stdlib.h>
 
+#define MAX_TYPE_PARAMETERS 8
+
 struct byte_buffer_S;
 struct reference_S;
 struct type_S;
@@ -76,6 +78,8 @@ struct type_S {
   compare_references_fn_t compare_fn;
   append_text_representation_fn_t append_fn;
   hash_reference_fn_t hash_fn;
+  uint64_t number_of_parameters;
+  struct type_S* parameters[MAX_TYPE_PARAMETERS];
 };
 typedef struct type_S type_t;
 
@@ -158,6 +162,25 @@ static inline char* reference_to_char_ptr(reference_t reference) {
 }
 
 #endif /* _REFERENCE_H_ */
+// SSCF generated file from: tuple.c
+
+#line 16 "tuple.c"
+#ifndef _TUPLE_H_
+#define _TUPLE_H_
+
+#include <stdint.h>
+
+typedef struct {
+  __attribute__((aligned(8))) uint8_t data[0];
+} tuple_t;
+
+extern type_t* intern_tuple_type(int number_of_parameters, ...);
+extern reference_t tuple_reference_of_element(reference_t tuple,
+                                              uint64_t position);
+extern reference_t tuple_reference_of_element_from_pointer(
+    type_t* type, tuple_t* tuple_pointer, uint64_t position);
+
+#endif /* _TUPLE_H_ */
 // SSCF generated file from: allocate.c
 
 #line 13 "allocate.c"
@@ -167,6 +190,8 @@ static inline char* reference_to_char_ptr(reference_t reference) {
 #include <stdint.h>
 
 extern uint8_t* checked_malloc(char* file, int line, uint64_t amount);
+extern uint8_t* checked_malloc_copy_of(char* file, int line, uint8_t* source,
+                                       uint64_t amount);
 extern void checked_free(char* file, int line, void* pointer);
 
 #define malloc_bytes(amount) (checked_malloc(__FILE__, __LINE__, amount))
@@ -174,6 +199,9 @@ extern void checked_free(char* file, int line, void* pointer);
 
 #define malloc_struct(struct_name)                                             \
   ((struct_name*) (checked_malloc(__FILE__, __LINE__, sizeof(struct_name))))
+
+#define malloc_copy_of(source, number_of_bytes)                                \
+  (checked_malloc_copy_of(__FILE__, __LINE__, source, number_of_bytes))
 
 #endif /* _ALLOCATE_H_ */
 // SSCF generated file from: array.c
@@ -196,6 +224,9 @@ extern uint64_t array_length(array_t* arr);
 extern reference_t array_get_reference(array_t* arr, uint64_t position);
 __attribute__((warn_unused_result)) extern array_t*
     array_add(array_t* arr, reference_t element);
+
+// C won't typecheck generic types so just use the naked array_t
+#define array_of_type(type) array_t
 
 #endif /* _ARRAY_H_ */
 // SSCF generated file from: byte-array.c
@@ -293,6 +324,8 @@ extern array_t* tokenize(const char* str, const char* delimiters);
 #include <stdint.h>
 
 extern uint8_t* checked_malloc(char* file, int line, uint64_t amount);
+extern uint8_t* checked_malloc_copy_of(char* file, int line, uint8_t* source,
+                                       uint64_t amount);
 extern void checked_free(char* file, int line, void* pointer);
 
 #define malloc_bytes(amount) (checked_malloc(__FILE__, __LINE__, amount))
@@ -300,6 +333,9 @@ extern void checked_free(char* file, int line, void* pointer);
 
 #define malloc_struct(struct_name)                                             \
   ((struct_name*) (checked_malloc(__FILE__, __LINE__, sizeof(struct_name))))
+
+#define malloc_copy_of(source, number_of_bytes)                                \
+  (checked_malloc_copy_of(__FILE__, __LINE__, source, number_of_bytes))
 
 #endif /* _ALLOCATE_H_ */
 
@@ -315,6 +351,10 @@ extern void checked_free(char* file, int line, void* pointer);
 
 boolean_t is_initialized = false;
 boolean_t should_log_value = false;
+
+uint64_t number_of_bytes_allocated = 0;
+uint64_t number_of_malloc_calls = 0;
+uint64_t number_of_free_calls = 0;
 
 static inline boolean_t should_log() {
   if (is_initialized) {
@@ -344,7 +384,20 @@ uint8_t* checked_malloc(char* file, int line, uint64_t amount) {
   if (result == NULL) {
     fatal_error_impl(file, line, ERROR_MEMORY_ALLOCATION);
   }
+  number_of_bytes_allocated += amount;
+  number_of_malloc_calls++;
   memset(result, 0, amount);
+  return result;
+}
+
+/**
+ * Allocate amount bytes and initialize it with a copy of that many
+ * bytes from source.
+ */
+uint8_t* checked_malloc_copy_of(char* file, int line, uint8_t* source,
+                                uint64_t amount) {
+  uint8_t* result = checked_malloc(file, line, amount);
+  memcpy(result, source, amount);
   return result;
 }
 
@@ -364,6 +417,7 @@ void checked_free(char* file, int line, void* pointer) {
   if (pointer == NULL) {
     fatal_error_impl(file, line, ERROR_MEMORY_FREE_NULL);
   }
+  number_of_free_calls++;
   free(pointer);
 }
 #line 2 "array.c"
@@ -399,6 +453,9 @@ extern uint64_t array_length(array_t* arr);
 extern reference_t array_get_reference(array_t* arr, uint64_t position);
 __attribute__((warn_unused_result)) extern array_t*
     array_add(array_t* arr, reference_t element);
+
+// C won't typecheck generic types so just use the naked array_t
+#define array_of_type(type) array_t
 
 #endif /* _ARRAY_H_ */
 
@@ -453,8 +510,8 @@ reference_t array_get_reference(array_t* array, uint64_t position) {
     return reference_of(array->element_type,
                         array_address_of_element(array, position));
   } else {
-    fprintf(stderr, "%s:%d: position is %lu but array length is %d\n", 
-            __FILE__, __LINE__, position, array->length);
+    fprintf(stderr, "%s:%d: position is %lu but array length is %d\n", __FILE__,
+            __LINE__, position, array->length);
     fatal_error(ERROR_ACCESS_OUT_OF_BOUNDS);
   }
 }
@@ -559,27 +616,28 @@ uint8_t byte_array_get(byte_array_t* arr, uint64_t position) {
  * Extract a newly allocated string contain the bytes from start to
  * end (appending a zero byte to make sure it's a legal C string).
  */
-char* byte_array_c_substring(byte_array_t* arr, uint64_t start, uint64_t end) {
+char* byte_array_c_substring(byte_array_t* byte_array, uint64_t start,
+                             uint64_t end) {
   // Add one extra byte for a NUL string terminator byte
   char* result = (char*) (malloc_bytes(end - start + 1));
   for (int i = start; i < end; i++) {
-    result[i - start] = arr->elements[i];
+    result[i - start] = byte_array->elements[i];
   }
   return result;
 }
 
 __attribute__((warn_unused_result)) byte_array_t*
-    byte_array_append_byte(byte_array_t* arr, uint8_t element) {
-  if (arr->length < arr->capacity) {
-    arr->elements[arr->length] = element;
-    arr->length++;
-    return arr;
+    byte_array_append_byte(byte_array_t* byte_array, uint8_t element) {
+  if (byte_array->length < byte_array->capacity) {
+    byte_array->elements[byte_array->length] = element;
+    byte_array->length++;
+    return byte_array;
   } else {
-    byte_array_t* result = make_byte_array(arr->capacity * 2);
-    for (int i = 0; i < arr->length; i++) {
-      result = byte_array_append_byte(result, byte_array_get(arr, i));
+    byte_array_t* result = make_byte_array(byte_array->capacity * 2);
+    for (int i = 0; i < byte_array->length; i++) {
+      result = byte_array_append_byte(result, byte_array_get(byte_array, i));
     }
-    free_bytes(arr);
+    free_bytes(byte_array);
 
     return result;
   }
@@ -1122,12 +1180,109 @@ array_t* add_duplicate(array_t* token_array, const char* data) {
 
 #include <stdio.h>
 
-#define TRACE() \
-  do {\
-  fprintf(stderr, "TRACE file=%s line=%d\n", __FILE__, __LINE__); \
-  } while(0)
+#define TRACE()                                                                \
+  do {                                                                         \
+    fprintf(stderr, "TRACE file=%s line=%d\n", __FILE__, __LINE__);            \
+  } while (0)
 
 #endif /* _TRACE_H_ */
+#line 2 "tuple.c"
+/**
+ * @file tuple.c
+ *
+ * Tuples are a low-level construct which are most useful for
+ * implementing containers. The abstraction is like a C structure
+ * except that "members" are referenced by position rather than name
+ * and that the layout of tuples are determined by the tuple type not
+ * the static declaration of the structure.
+ */
+
+// ======================================================================
+// This section is extraced to tuple.h
+// ======================================================================
+
+#ifndef _TUPLE_H_
+#define _TUPLE_H_
+
+#include <stdint.h>
+
+typedef struct {
+  __attribute__((aligned(8))) uint8_t data[0];
+} tuple_t;
+
+extern type_t* intern_tuple_type(int number_of_parameters, ...);
+extern reference_t tuple_reference_of_element(reference_t tuple,
+                                              uint64_t position);
+extern reference_t tuple_reference_of_element_from_pointer(
+    type_t* type, tuple_t* tuple_pointer, uint64_t position);
+
+#endif /* _TUPLE_H_ */
+
+// ======================================================================
+
+#include <stdarg.h>
+#include <stdlib.h>
+
+#define TUPLE_ALIGN_OFFSET(offset) ((offset + 7) & ~7)
+
+/**
+ * Make a tuple type.
+ */
+type_t* intern_tuple_type(int number_of_parameters, ...) {
+  type_t* result = (malloc_struct(type_t));
+
+  byte_array_t* name = make_byte_array(32);
+  name = byte_array_append_string(name, "tuple(");
+
+  uint64_t size = 0;
+  va_list args;
+  va_start(args, number_of_parameters);
+  for (int i = 0; (i < number_of_parameters); i++) {
+    type_t* element_type = va_arg(args, type_t*);
+    if (element_type->size <= 0) {
+      fatal_error(ERROR_DYNAMICALLY_SIZED_TYPE_ILLEGAL_IN_CONTAINER);
+    }
+    result->parameters[result->number_of_parameters++] = element_type;
+    if (i > 0) {
+      name = byte_array_append_string(name, ",");
+    }
+    name = byte_array_append_string(name, element_type->name);
+    size += element_type->size;
+    TUPLE_ALIGN_OFFSET(size);
+  }
+  va_end(args);
+
+  result->size = size;
+  name = byte_array_append_string(name, ")");
+  result->name = byte_array_c_substring(name, 0, byte_array_length(name));
+  free(name);
+
+  // TODO(jawilson): compare_fn, append_fn, hash_fn
+  // TODO(jawilson): actually intern the type!
+
+  return result;
+}
+
+/**
+ * Get a reference to a "member" element (from a reference to a tuple).
+ */
+reference_t tuple_reference_of_element(reference_t tuple_ref,
+                                       uint64_t position) {
+  // Make sure the reference is to a tuple?
+  type_t* type = tuple_ref.underlying_type;
+  tuple_t* tuple_pointer = tuple_ref.pointer;
+
+  uint64_t offset = 0;
+  for (int i = 0; (i < type->number_of_parameters); i++) {
+    type_t* element_type = type->parameters[i];
+    if (i == position) {
+      return reference_of(element_type, &tuple_pointer->data[i]);
+    }
+    offset += element_type->size;
+    offset = TUPLE_ALIGN_OFFSET(offset);
+  }
+  fatal_error(ERROR_ACCESS_OUT_OF_BOUNDS);
+}
 #line 1 "type.c"
 /**
  * @file type.c
@@ -1142,6 +1297,8 @@ array_t* add_duplicate(array_t* token_array, const char* data) {
 
 #include <stdint.h>
 #include <stdlib.h>
+
+#define MAX_TYPE_PARAMETERS 8
 
 struct byte_buffer_S;
 struct reference_S;
@@ -1159,6 +1316,8 @@ struct type_S {
   compare_references_fn_t compare_fn;
   append_text_representation_fn_t append_fn;
   hash_reference_fn_t hash_fn;
+  uint64_t number_of_parameters;
+  struct type_S* parameters[MAX_TYPE_PARAMETERS];
 };
 typedef struct type_S type_t;
 

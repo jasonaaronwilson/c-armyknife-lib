@@ -13,6 +13,8 @@
 #include <stdint.h>
 #include <stdlib.h>
 
+#define MAX_TYPE_PARAMETERS 8
+
 struct byte_buffer_S;
 struct reference_S;
 struct type_S;
@@ -29,6 +31,8 @@ struct type_S {
   compare_references_fn_t compare_fn;
   append_text_representation_fn_t append_fn;
   hash_reference_fn_t hash_fn;
+  uint64_t number_of_parameters;
+  struct type_S* parameters[MAX_TYPE_PARAMETERS];
 };
 typedef struct type_S type_t;
 

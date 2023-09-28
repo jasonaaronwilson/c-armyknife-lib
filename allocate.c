@@ -16,6 +16,8 @@
 #include <stdint.h>
 
 extern uint8_t* checked_malloc(char* file, int line, uint64_t amount);
+extern uint8_t* checked_malloc_copy_of(char* file, int line, uint8_t* source,
+                                       uint64_t amount);
 extern void checked_free(char* file, int line, void* pointer);
 
 #define malloc_bytes(amount) (checked_malloc(__FILE__, __LINE__, amount))
@@ -23,6 +25,9 @@ extern void checked_free(char* file, int line, void* pointer);
 
 #define malloc_struct(struct_name)                                             \
   ((struct_name*) (checked_malloc(__FILE__, __LINE__, sizeof(struct_name))))
+
+#define malloc_copy_of(source, number_of_bytes)                                \
+  (checked_malloc_copy_of(__FILE__, __LINE__, source, number_of_bytes))
 
 #endif /* _ALLOCATE_H_ */
 
@@ -38,6 +43,10 @@ extern void checked_free(char* file, int line, void* pointer);
 
 boolean_t is_initialized = false;
 boolean_t should_log_value = false;
+
+uint64_t number_of_bytes_allocated = 0;
+uint64_t number_of_malloc_calls = 0;
+uint64_t number_of_free_calls = 0;
 
 static inline boolean_t should_log() {
   if (is_initialized) {
@@ -67,7 +76,20 @@ uint8_t* checked_malloc(char* file, int line, uint64_t amount) {
   if (result == NULL) {
     fatal_error_impl(file, line, ERROR_MEMORY_ALLOCATION);
   }
+  number_of_bytes_allocated += amount;
+  number_of_malloc_calls++;
   memset(result, 0, amount);
+  return result;
+}
+
+/**
+ * Allocate amount bytes and initialize it with a copy of that many
+ * bytes from source.
+ */
+uint8_t* checked_malloc_copy_of(char* file, int line, uint8_t* source,
+                                uint64_t amount) {
+  uint8_t* result = checked_malloc(file, line, amount);
+  memcpy(result, source, amount);
   return result;
 }
 
@@ -87,5 +109,6 @@ void checked_free(char* file, int line, void* pointer) {
   if (pointer == NULL) {
     fatal_error_impl(file, line, ERROR_MEMORY_FREE_NULL);
   }
+  number_of_free_calls++;
   free(pointer);
 }

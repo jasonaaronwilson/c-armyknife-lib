@@ -32,6 +32,9 @@ extern reference_t array_get_reference(array_t* arr, uint64_t position);
 __attribute__((warn_unused_result)) extern array_t*
     array_add(array_t* arr, reference_t element);
 
+// C won't typecheck generic types so just use the naked array_t
+#define array_of_type(type) array_t
+
 #endif /* _ARRAY_H_ */
 
 // ======================================================================

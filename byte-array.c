@@ -73,27 +73,28 @@ uint8_t byte_array_get(byte_array_t* arr, uint64_t position) {
  * Extract a newly allocated string contain the bytes from start to
  * end (appending a zero byte to make sure it's a legal C string).
  */
-char* byte_array_c_substring(byte_array_t* arr, uint64_t start, uint64_t end) {
+char* byte_array_c_substring(byte_array_t* byte_array, uint64_t start,
+                             uint64_t end) {
   // Add one extra byte for a NUL string terminator byte
   char* result = (char*) (malloc_bytes(end - start + 1));
   for (int i = start; i < end; i++) {
-    result[i - start] = arr->elements[i];
+    result[i - start] = byte_array->elements[i];
   }
   return result;
 }
 
 __attribute__((warn_unused_result)) byte_array_t*
-    byte_array_append_byte(byte_array_t* arr, uint8_t element) {
-  if (arr->length < arr->capacity) {
-    arr->elements[arr->length] = element;
-    arr->length++;
-    return arr;
+    byte_array_append_byte(byte_array_t* byte_array, uint8_t element) {
+  if (byte_array->length < byte_array->capacity) {
+    byte_array->elements[byte_array->length] = element;
+    byte_array->length++;
+    return byte_array;
   } else {
-    byte_array_t* result = make_byte_array(arr->capacity * 2);
-    for (int i = 0; i < arr->length; i++) {
-      result = byte_array_append_byte(result, byte_array_get(arr, i));
+    byte_array_t* result = make_byte_array(byte_array->capacity * 2);
+    for (int i = 0; i < byte_array->length; i++) {
+      result = byte_array_append_byte(result, byte_array_get(byte_array, i));
     }
-    free_bytes(arr);
+    free_bytes(byte_array);
 
     return result;
   }

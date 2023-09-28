@@ -13,10 +13,10 @@
 #ifndef _TEST_H_
 #define _TEST_H_
 
-#define ARMYKNIFE_TEST_FAIL(testcase_name)                                     \
+#define ARMYKNIFE_TEST_FAIL(msg)                                               \
   do {                                                                         \
-    fprintf(stderr, "%s:%d: -- FAIL (testcase=%s)\n", __FILE__, __LINE__,      \
-            testcase_name);                                                    \
+    fprintf(stderr, "%s:%d: -- FAIL (fn=%s, msg='%s')\n", __FILE__, __LINE__,  \
+            __func__, msg);                                                    \
     exit(1);                                                                   \
   } while (0)
 

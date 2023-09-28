@@ -57,9 +57,9 @@ typedef int boolean_t;
 #ifndef _TYPE_H_
 #define _TYPE_H_
 
+#include <stdalign.h>
 #include <stdint.h>
 #include <stdlib.h>
-#include <stdalign.h>
 
 #define MAX_TYPE_PARAMETERS 8
 
@@ -198,6 +198,9 @@ static inline char* reference_to_char_ptr(reference_t reference) {
 
 #include <stdint.h>
 
+// This is feeling worse all of the time. The true alignment should be
+// the alignment of the first element which we won't really know at
+// compile time.
 typedef struct {
   __attribute__((aligned(8))) uint8_t data[0];
 } tuple_t;
@@ -339,10 +342,10 @@ extern array_t* tokenize(const char* str, const char* delimiters);
 #ifndef _TEST_H_
 #define _TEST_H_
 
-#define ARMYKNIFE_TEST_FAIL(testcase_name)                                     \
+#define ARMYKNIFE_TEST_FAIL(msg)                                     \
   do {                                                                         \
-    fprintf(stderr, "%s:%d: -- FAIL (testcase=%s)\n", __FILE__, __LINE__,      \
-            testcase_name);                                                    \
+    fprintf(stderr, "%s:%d: -- FAIL (fn=%s, msg='%s')\n", __FILE__, __LINE__,      \
+            __func__, msg);                                   \
     exit(1);                                                                   \
   } while (0)
 
@@ -1185,10 +1188,10 @@ uint64_t fasthash64(const void* buf, size_t len, uint64_t seed) {
 #ifndef _TEST_H_
 #define _TEST_H_
 
-#define ARMYKNIFE_TEST_FAIL(testcase_name)                                     \
+#define ARMYKNIFE_TEST_FAIL(msg)                                     \
   do {                                                                         \
-    fprintf(stderr, "%s:%d: -- FAIL (testcase=%s)\n", __FILE__, __LINE__,      \
-            testcase_name);                                                    \
+    fprintf(stderr, "%s:%d: -- FAIL (fn=%s, msg='%s')\n", __FILE__, __LINE__,      \
+            __func__, msg);                                   \
     exit(1);                                                                   \
   } while (0)
 
@@ -1294,6 +1297,9 @@ array_t* add_duplicate(array_t* token_array, const char* data) {
 
 #include <stdint.h>
 
+// This is feeling worse all of the time. The true alignment should be
+// the alignment of the first element which we won't really know at
+// compile time.
 typedef struct {
   __attribute__((aligned(8))) uint8_t data[0];
 } tuple_t;
@@ -1311,7 +1317,7 @@ extern reference_t tuple_reference_of_element_from_pointer(
 #include <stdarg.h>
 #include <stdlib.h>
 
-#define TUPLE_ALIGN_OFFSET(offset) ((offset + 7) & ~7)
+#define TUPLE_ALIGN_OFFSET(offset, alignment) ((offset + (alignment - 1)) & ~(alignment - 1))
 
 /**
  * Make a tuple type.
@@ -1322,25 +1328,33 @@ type_t* intern_tuple_type(int number_of_parameters, ...) {
   byte_array_t* name = make_byte_array(32);
   name = byte_array_append_string(name, "tuple(");
 
-  uint64_t size = 0;
+  int offset = 0;
+  int alignment = 1;
+  
   va_list args;
   va_start(args, number_of_parameters);
   for (int i = 0; (i < number_of_parameters); i++) {
     type_t* element_type = va_arg(args, type_t*);
+    offset = TUPLE_ALIGN_OFFSET(offset, element_type->alignment);
     if (element_type->size <= 0) {
       fatal_error(ERROR_DYNAMICALLY_SIZED_TYPE_ILLEGAL_IN_CONTAINER);
+    }
+    if (element_type->alignment > alignment) {
+      alignment = element_type->alignment;
     }
     result->parameters[result->number_of_parameters++] = element_type;
     if (i > 0) {
       name = byte_array_append_string(name, ",");
     }
     name = byte_array_append_string(name, element_type->name);
-    size += element_type->size;
-    size = TUPLE_ALIGN_OFFSET(size);
+    offset += element_type->size;
   }
   va_end(args);
 
-  result->size = size;
+  // TODO(jawilson): make sure alignment is a power of two.
+
+  result->size = offset;
+  result->alignment = alignment;
   name = byte_array_append_string(name, ")");
   result->name = byte_array_c_substring(name, 0, byte_array_length(name));
   free(name);
@@ -1363,11 +1377,11 @@ reference_t tuple_reference_of_element(reference_t tuple_ref,
   uint64_t offset = 0;
   for (int i = 0; (i < type->number_of_parameters); i++) {
     type_t* element_type = type->parameters[i];
+    offset = TUPLE_ALIGN_OFFSET(offset, element_type->alignment);
     if (i == position) {
       return reference_of(element_type, &tuple_pointer->data[offset]);
     }
     offset += element_type->size;
-    offset = TUPLE_ALIGN_OFFSET(offset);
   }
   fatal_error(ERROR_ACCESS_OUT_OF_BOUNDS);
 }
@@ -1383,9 +1397,9 @@ reference_t tuple_reference_of_element(reference_t tuple_ref,
 #ifndef _TYPE_H_
 #define _TYPE_H_
 
+#include <stdalign.h>
 #include <stdint.h>
 #include <stdlib.h>
-#include <stdalign.h>
 
 #define MAX_TYPE_PARAMETERS 8
 

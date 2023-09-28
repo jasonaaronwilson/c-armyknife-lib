@@ -18,6 +18,9 @@
 
 #include <stdint.h>
 
+// Technically there is no struct that can really represent a tuple
+// and the alignment can be as little as one byte. I think this will
+// eventually prove to be the wrong thing.
 typedef struct {
   __attribute__((aligned(8))) uint8_t data[0];
 } tuple_t;
@@ -35,7 +38,8 @@ extern reference_t tuple_reference_of_element_from_pointer(
 #include <stdarg.h>
 #include <stdlib.h>
 
-#define TUPLE_ALIGN_OFFSET(offset) ((offset + 7) & ~7)
+#define TUPLE_ALIGN_OFFSET(offset, alignment)                                  \
+  ((offset + (alignment - 1)) & ~(alignment - 1))
 
 /**
  * Make a tuple type.
@@ -46,25 +50,33 @@ type_t* intern_tuple_type(int number_of_parameters, ...) {
   byte_array_t* name = make_byte_array(32);
   name = byte_array_append_string(name, "tuple(");
 
-  uint64_t size = 0;
+  int offset = 0;
+  int alignment = 1;
+
   va_list args;
   va_start(args, number_of_parameters);
   for (int i = 0; (i < number_of_parameters); i++) {
     type_t* element_type = va_arg(args, type_t*);
+    offset = TUPLE_ALIGN_OFFSET(offset, element_type->alignment);
     if (element_type->size <= 0) {
       fatal_error(ERROR_DYNAMICALLY_SIZED_TYPE_ILLEGAL_IN_CONTAINER);
+    }
+    if (element_type->alignment > alignment) {
+      alignment = element_type->alignment;
     }
     result->parameters[result->number_of_parameters++] = element_type;
     if (i > 0) {
       name = byte_array_append_string(name, ",");
     }
     name = byte_array_append_string(name, element_type->name);
-    size += element_type->size;
-    size = TUPLE_ALIGN_OFFSET(size);
+    offset += element_type->size;
   }
   va_end(args);
 
-  result->size = size;
+  // TODO(jawilson): make sure alignment is a power of two.
+
+  result->size = offset;
+  result->alignment = alignment;
   name = byte_array_append_string(name, ")");
   result->name = byte_array_c_substring(name, 0, byte_array_length(name));
   free(name);
@@ -87,11 +99,11 @@ reference_t tuple_reference_of_element(reference_t tuple_ref,
   uint64_t offset = 0;
   for (int i = 0; (i < type->number_of_parameters); i++) {
     type_t* element_type = type->parameters[i];
+    offset = TUPLE_ALIGN_OFFSET(offset, element_type->alignment);
     if (i == position) {
       return reference_of(element_type, &tuple_pointer->data[offset]);
     }
     offset += element_type->size;
-    offset = TUPLE_ALIGN_OFFSET(offset);
   }
   fatal_error(ERROR_ACCESS_OUT_OF_BOUNDS);
 }

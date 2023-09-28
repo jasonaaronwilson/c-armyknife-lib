@@ -12,23 +12,34 @@ void test_sizes() {
   if (type->size != 8) {
     ARMYKNIFE_TEST_FAIL("tuple_t(uint64_t) size");
   }
-
-  // All members must be 64bit aligned (at least for now) which also
-  // effectively means the size must be a multiple of 
-
-  type = intern_tuple_type(1, uint32_type());
-  if (type->size != 8) {
-    ARMYKNIFE_TEST_FAIL("tuple_t(uint32_t) size");
+  if (type->alignment != 8) {
+    ARMYKNIFE_TEST_FAIL("tuple_t(uint64_t) alignment");
   }
 
+  type = intern_tuple_type(1, uint32_type());
+  if (type->size != 4) {
+    ARMYKNIFE_TEST_FAIL("tuple_t(uint32_t) size");
+  }
+  if (type->alignment != 4) {
+    ARMYKNIFE_TEST_FAIL("tuple_t(uint32_t) alignment");
+  }
+
+  // This ordering means we have to "pad" before the uint64 hence the
+  // size of the tuple has increased.
   type = intern_tuple_type(2, uint32_type(), uint64_type());
   if (type->size != 16) {
     ARMYKNIFE_TEST_FAIL("tuple_t(uint32_t, uint64_t) size");
+  }
+  if (type->alignment != 8) {
+    ARMYKNIFE_TEST_FAIL("tuple_t(uint64_t) alignment");
   }
 
   type = intern_tuple_type(3, uint64_type(), uint32_type(), uint64_type());
   if (type->size != 24) {
     ARMYKNIFE_TEST_FAIL("tuple_t(uint64_t, uint32_t, uint64_t) size");
+  }
+  if (type->alignment != 8) {
+    ARMYKNIFE_TEST_FAIL("tuple_t(uint64_t) alignment");
   }
 }
 

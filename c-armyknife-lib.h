@@ -274,7 +274,7 @@ extern void checked_free(char* file, int line, void* pointer);
 #endif /* _ALLOCATE_H_ */
 // SSCF generated file from: array.c
 
-#line 17 "array.c"
+#line 13 "array.c"
 #ifndef _ARRAY_H_
 #define _ARRAY_H_
 
@@ -506,12 +506,8 @@ void checked_free(char* file, int line, void* pointer) {
 /**
  * @file array.c
  *
- * This file contains a growable array of 64 bit values. Any function
- * that changes the length of an array may return a new pointer.
- *
- * (For scheme vectors, we actually will have a different
- * implemetation that doesn't have a capacity and knows it is holding
- * tagged_reference_t which are like 128 bits in size, not 64 bits.
+ * This file contains a growable array of values. Any function that
+ * changes the length of an array may return a new pointer.
  */
 
 // ======================================================================

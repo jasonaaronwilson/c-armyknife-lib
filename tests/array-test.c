@@ -10,7 +10,6 @@
 int main(int argc, char** argv) {
   array_t* array = make_array(uint64_type(), 1);
   for (int i = 0; i < 16; i++) {
-    fprintf(stderr, "i is %d\n", i);
     uint64_t value = i + 100;
     array = array_add(array, reference_of(uint64_type(), &value));
     /*

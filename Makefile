@@ -81,4 +81,4 @@ test:
 docs:
 	doxygen
 
-
+cfd:	clean format diff

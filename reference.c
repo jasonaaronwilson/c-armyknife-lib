@@ -32,6 +32,13 @@ static inline reference_t reference_of(type_t* type, void* pointer) {
   return result;
 }
 
+static inline reference_t reference_of_uint64(uint64_t* pointer) {
+  reference_t result;
+  result.underlying_type = uint64_type();
+  result.pointer = pointer;
+  return result;
+}
+
 static inline uint64_t reference_to_uint64(reference_t reference) {
   if (reference.underlying_type != uint64_type()) {
     fatal_error(ERROR_REFERENCE_NOT_EXPECTED_TYPE);
@@ -98,5 +105,7 @@ static inline char* reference_to_char_ptr(reference_t reference) {
   }
   return ((char*) reference.pointer);
 }
+
+static inline reference_t nil() { return reference_of(nil_type(), 0); }
 
 #endif /* _REFERENCE_H_ */

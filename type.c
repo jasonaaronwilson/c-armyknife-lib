@@ -30,11 +30,11 @@ struct type_S {
   char* name;
   int size;
   int alignment;
+  uint64_t number_of_parameters;
+  struct type_S* parameters[MAX_TYPE_PARAMETERS];
   compare_references_fn_t compare_fn;
   append_text_representation_fn_t append_fn;
   hash_reference_fn_t hash_fn;
-  uint64_t number_of_parameters;
-  struct type_S* parameters[MAX_TYPE_PARAMETERS];
 };
 typedef struct type_S type_t;
 
@@ -45,11 +45,13 @@ extern type_t uint16_type_constant;
 extern type_t uint32_type_constant;
 extern type_t uint64_type_constant;
 extern type_t char_ptr_type_constant;
+extern type_t nil_type_constant;
 
 static inline type_t* uint64_type() { return &uint64_type_constant; }
 static inline type_t* uint32_type() { return &uint32_type_constant; }
 static inline type_t* uint16_type() { return &uint16_type_constant; }
 static inline type_t* uint8_type() { return &uint8_type_constant; }
+static inline type_t* nil_type() { return &nil_type_constant; }
 
 static inline type_t* char_ptr_type() { return &char_ptr_type_constant; }
 
@@ -110,6 +112,12 @@ type_t char_ptr_type_constant = {
     .name = "char*",
     .size = sizeof(char*),
     .alignment = alignof(char*),
+};
+
+type_t nil_type_constant = {
+    .name = "nil",
+    .size = 0,
+    .alignment = 0,
 };
 
 // TODO(jawilson): more pointer types for the built in C types.

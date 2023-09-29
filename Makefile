@@ -6,6 +6,7 @@ SRC_C = allocate.c \
 	byte-array.c \
 	ct-assert.c \
 	fatal-error.c \
+	hashtable.c \
 	io.c \
 	reference.c \
 	string-util.c \
@@ -27,6 +28,7 @@ ORDERED_H = \
 	allocate.h \
 	array.h \
 	byte-array.h \
+	hashtable.h \
 	io.h \
 	string-util.h \
 	tokenizer.h \

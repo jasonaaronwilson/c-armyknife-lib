@@ -30,6 +30,8 @@ extern reference_t tuple_reference_of_element(reference_t tuple,
                                               uint64_t position);
 extern reference_t tuple_reference_of_element_from_pointer(
     type_t* type, tuple_t* tuple_pointer, uint64_t position);
+extern void tuple_write_element(reference_t tuple_ref, uint64_t position,
+                                reference_t value);
 
 #endif /* _TUPLE_H_ */
 
@@ -106,4 +108,15 @@ reference_t tuple_reference_of_element(reference_t tuple_ref,
     offset += element_type->size;
   }
   fatal_error(ERROR_ACCESS_OUT_OF_BOUNDS);
+}
+
+void tuple_write_element(reference_t tuple_ref, uint64_t position,
+                         reference_t value) {
+  reference_t element_reference
+      = tuple_reference_of_element(tuple_ref, position);
+  if (element_reference.underlying_type != value.underlying_type) {
+    fatal_error(ERROR_REFERENCE_NOT_EXPECTED_TYPE);
+  }
+  memcpy(element_reference.pointer, value.pointer,
+         tuple_ref.underlying_type->size);
 }

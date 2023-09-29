@@ -111,7 +111,8 @@ void hashtable_set_value(hashtable_t(K, V) * ht, reference_t key_reference,
   uint64_t hashcode = hashtable_hash_key(ht, key_reference);
   reference_t bucket_reference
       = hashtable_get_reference_to_bucket(ht, hashcode);
-  // TODO(jawilson): make sure something isn't in this bucket!
+  // TODO(jawilson): make sure something with a different key isn't in
+  // this bucket!
   tuple_write_element(bucket_reference, HT_ENTRY_HASHCODE_POSITION,
                       reference_of_uint64(&hashcode));
   tuple_write_element(bucket_reference, HT_ENTRY_KEY_POSITION, key_reference);

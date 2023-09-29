@@ -253,9 +253,7 @@ static inline char* reference_to_char_ptr(reference_t reference) {
   return ((char*) reference.pointer);
 }
 
-static inline reference_t nil() {
-  return reference_of(nil_type(), 0);
-}
+static inline reference_t nil() { return reference_of(nil_type(), 0); }
 
 #endif /* _REFERENCE_H_ */
 // SSCF generated file from: tuple.c
@@ -278,7 +276,8 @@ extern reference_t tuple_reference_of_element(reference_t tuple,
                                               uint64_t position);
 extern reference_t tuple_reference_of_element_from_pointer(
     type_t* type, tuple_t* tuple_pointer, uint64_t position);
-extern void tuple_write_element(reference_t tuple_ref, uint64_t position, reference_t value);
+extern void tuple_write_element(reference_t tuple_ref, uint64_t position,
+                                reference_t value);
 
 #endif /* _TUPLE_H_ */
 // SSCF generated file from: allocate.c
@@ -370,17 +369,23 @@ __attribute__((warn_unused_result)) extern byte_array_t*
 
 struct hashtable_S {
   type_t* type;
-  array_t(tuple_of_type(uint64_type(), K, V))* storage;
+  array_t(tuple_of_type(uint64_type(), K, V)) * storage;
   uint64_t number_of_keys;
 };
 
-#define hashtable_t(K,V) struct hashtable_S
+#define hashtable_t(K, V) struct hashtable_S
 
-extern hashtable_t(K,V)* make_hashtable(type_t* key_type, type_t* value_type, uint32_t initial_capacity);
-extern uint64_t hashtable_number_of_keys(hashtable_t(K,V)* hashtable);
-extern reference_t hashtable_get_reference_to_value(hashtable_t(K,V)* hashtable, reference_t key_reference);
-extern void hashtable_set_value(hashtable_t(K,V)* ht, reference_t key_reference, reference_t value_reference);
-extern int hashtable_compare(hashtable_t(K,V)* a, hashtable_t(K,V)* b);
+extern hashtable_t(K, V)
+    * make_hashtable(type_t* key_type, type_t* value_type,
+                     uint32_t initial_capacity);
+extern uint64_t hashtable_number_of_keys(hashtable_t(K, V) * hashtable);
+extern reference_t hashtable_get_reference_to_value(hashtable_t(K, V)
+                                                        * hashtable,
+                                                    reference_t key_reference);
+extern void hashtable_set_value(hashtable_t(K, V) * ht,
+                                reference_t key_reference,
+                                reference_t value_reference);
+extern int hashtable_compare(hashtable_t(K, V) * a, hashtable_t(K, V) * b);
 
 #endif /* _HASHTABLE_H_ */
 // SSCF generated file from: io.c
@@ -955,17 +960,23 @@ void print_error_code_name(int error_code) {
 
 struct hashtable_S {
   type_t* type;
-  array_t(tuple_of_type(uint64_type(), K, V))* storage;
+  array_t(tuple_of_type(uint64_type(), K, V)) * storage;
   uint64_t number_of_keys;
 };
 
-#define hashtable_t(K,V) struct hashtable_S
+#define hashtable_t(K, V) struct hashtable_S
 
-extern hashtable_t(K,V)* make_hashtable(type_t* key_type, type_t* value_type, uint32_t initial_capacity);
-extern uint64_t hashtable_number_of_keys(hashtable_t(K,V)* hashtable);
-extern reference_t hashtable_get_reference_to_value(hashtable_t(K,V)* hashtable, reference_t key_reference);
-extern void hashtable_set_value(hashtable_t(K,V)* ht, reference_t key_reference, reference_t value_reference);
-extern int hashtable_compare(hashtable_t(K,V)* a, hashtable_t(K,V)* b);
+extern hashtable_t(K, V)
+    * make_hashtable(type_t* key_type, type_t* value_type,
+                     uint32_t initial_capacity);
+extern uint64_t hashtable_number_of_keys(hashtable_t(K, V) * hashtable);
+extern reference_t hashtable_get_reference_to_value(hashtable_t(K, V)
+                                                        * hashtable,
+                                                    reference_t key_reference);
+extern void hashtable_set_value(hashtable_t(K, V) * ht,
+                                reference_t key_reference,
+                                reference_t value_reference);
+extern int hashtable_compare(hashtable_t(K, V) * a, hashtable_t(K, V) * b);
 
 #endif /* _HASHTABLE_H_ */
 
@@ -982,13 +993,16 @@ type_t* intern_hashtable_type(type_t* key_type, type_t* value_type);
 /**
  * Make an array with the given initial_capacity.
  */
-hashtable_t(K,V)* make_hashtable(type_t* key_type, type_t* value_type, uint32_t initial_capacity) {
+hashtable_t(K, V)
+    * make_hashtable(type_t* key_type, type_t* value_type,
+                     uint32_t initial_capacity) {
   if (initial_capacity == 0) {
     fatal_error(ERROR_ILLEGAL_INITIAL_CAPACITY);
   }
   type_t* hashtable_type = intern_hashtable_type(key_type, value_type);
-  type_t* storage_type = intern_tuple_type(3, uint64_type(), key_type, value_type);
-  hashtable_t(K,V)* result = malloc_struct(hashtable_t(K,V));
+  type_t* storage_type
+      = intern_tuple_type(3, uint64_type(), key_type, value_type);
+  hashtable_t(K, V)* result = malloc_struct(hashtable_t(K, V));
   result->type = hashtable_type;
   result->storage = make_array(storage_type, initial_capacity);
   result->storage->length = result->storage->capacity;
@@ -998,9 +1012,9 @@ hashtable_t(K,V)* make_hashtable(type_t* key_type, type_t* value_type, uint32_t 
 /**
  * Return the number of actual entries in an array.
  */
-uint64_t hashtable_size(hashtable_t(K,V)* ht) { return ht->number_of_keys; }
+uint64_t hashtable_size(hashtable_t(K, V) * ht) { return ht->number_of_keys; }
 
-uint64_t hashtable_hash_key(hashtable_t(K,V)* ht, reference_t key_reference) {
+uint64_t hashtable_hash_key(hashtable_t(K, V) * ht, reference_t key_reference) {
   uint64_t hash = ht->type->parameters[0]->hash_fn(key_reference);
   // Reserve 0 so we can tell which buckets contain something. Any
   // value except 0 would be fine here but I choose a random looking
@@ -1011,7 +1025,8 @@ uint64_t hashtable_hash_key(hashtable_t(K,V)* ht, reference_t key_reference) {
   return hash;
 }
 
-reference_t hashtable_get_reference_to_bucket(hashtable_t(K,V)* ht, uint64_t hashcode) {
+reference_t hashtable_get_reference_to_bucket(hashtable_t(K, V) * ht,
+                                              uint64_t hashcode) {
   uint64_t position = hashcode % ht->storage->length;
   return array_get_reference(ht->storage, position);
 }
@@ -1019,25 +1034,34 @@ reference_t hashtable_get_reference_to_bucket(hashtable_t(K,V)* ht, uint64_t has
 /**
  * Lookup a key in a hashtable.
  */
-reference_t hashtable_get_reference_to_value(hashtable_t(K,V)* ht, reference_t key_reference) {
+reference_t hashtable_get_reference_to_value(hashtable_t(K, V) * ht,
+                                             reference_t key_reference) {
   uint64_t hashcode = hashtable_hash_key(ht, key_reference);
-  reference_t bucket_reference = hashtable_get_reference_to_bucket(ht, hashcode);
-  if (reference_to_uint64(tuple_reference_of_element(bucket_reference, 
-                                                     HT_ENTRY_HASHCODE_POSITION)) == hashcode) {
+  reference_t bucket_reference
+      = hashtable_get_reference_to_bucket(ht, hashcode);
+  if (reference_to_uint64(tuple_reference_of_element(
+          bucket_reference, HT_ENTRY_HASHCODE_POSITION))
+      == hashcode) {
     // TODO(jawilson): check that the keys are equal!
-    return tuple_reference_of_element(bucket_reference, HT_ENTRY_VALUE_POSITION);
+    return tuple_reference_of_element(bucket_reference,
+                                      HT_ENTRY_VALUE_POSITION);
   }
 
   return nil();
 }
 
-void hashtable_set_value(hashtable_t(K,V)* ht, reference_t key_reference, reference_t value_reference) {
+void hashtable_set_value(hashtable_t(K, V) * ht, reference_t key_reference,
+                         reference_t value_reference) {
   uint64_t hashcode = hashtable_hash_key(ht, key_reference);
-  reference_t bucket_reference = hashtable_get_reference_to_bucket(ht, hashcode);
-  // TODO(jawilson): make sure something isn't in this bucket!
-  tuple_write_element(bucket_reference, HT_ENTRY_HASHCODE_POSITION, reference_of_uint64(&hashcode));
+  reference_t bucket_reference
+      = hashtable_get_reference_to_bucket(ht, hashcode);
+  // TODO(jawilson): make sure something with a different key isn't in
+  // this bucket!
+  tuple_write_element(bucket_reference, HT_ENTRY_HASHCODE_POSITION,
+                      reference_of_uint64(&hashcode));
   tuple_write_element(bucket_reference, HT_ENTRY_KEY_POSITION, key_reference);
-  tuple_write_element(bucket_reference, HT_ENTRY_VALUE_POSITION, value_reference);
+  tuple_write_element(bucket_reference, HT_ENTRY_VALUE_POSITION,
+                      value_reference);
 }
 
 // ----------------------------------------------------------------------
@@ -1230,9 +1254,7 @@ static inline char* reference_to_char_ptr(reference_t reference) {
   return ((char*) reference.pointer);
 }
 
-static inline reference_t nil() {
-  return reference_of(nil_type(), 0);
-}
+static inline reference_t nil() { return reference_of(nil_type(), 0); }
 
 #endif /* _REFERENCE_H_ */
 #line 2 "string-util.c"
@@ -1619,7 +1641,8 @@ extern reference_t tuple_reference_of_element(reference_t tuple,
                                               uint64_t position);
 extern reference_t tuple_reference_of_element_from_pointer(
     type_t* type, tuple_t* tuple_pointer, uint64_t position);
-extern void tuple_write_element(reference_t tuple_ref, uint64_t position, reference_t value);
+extern void tuple_write_element(reference_t tuple_ref, uint64_t position,
+                                reference_t value);
 
 #endif /* _TUPLE_H_ */
 
@@ -1698,12 +1721,15 @@ reference_t tuple_reference_of_element(reference_t tuple_ref,
   fatal_error(ERROR_ACCESS_OUT_OF_BOUNDS);
 }
 
-void tuple_write_element(reference_t tuple_ref, uint64_t position, reference_t value) {
-  reference_t element_reference = tuple_reference_of_element(tuple_ref, position);
+void tuple_write_element(reference_t tuple_ref, uint64_t position,
+                         reference_t value) {
+  reference_t element_reference
+      = tuple_reference_of_element(tuple_ref, position);
   if (element_reference.underlying_type != value.underlying_type) {
     fatal_error(ERROR_REFERENCE_NOT_EXPECTED_TYPE);
   }
-  memcpy(element_reference.pointer, value.pointer, tuple_ref.underlying_type->size);
+  memcpy(element_reference.pointer, value.pointer,
+         tuple_ref.underlying_type->size);
 }
 #line 2 "type.c"
 /**

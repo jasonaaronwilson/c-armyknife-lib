@@ -1,4 +1,4 @@
-#line 1 "callable.c"
+#line 2 "callable.c"
 /**
  * A callable is a closure, aka a function pointer and a pointer to
  * data.

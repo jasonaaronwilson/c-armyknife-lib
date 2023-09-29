@@ -15,21 +15,20 @@
 
 #include <stdint.h>
 
-typedef struct {
+struct array_S {
   type_t* element_type;
   uint32_t length;
   uint32_t capacity;
   __attribute__((aligned(8))) uint8_t data[0];
-} array_t;
+};
 
-extern array_t* make_array(type_t* element_type, uint32_t initial_capacity);
-extern uint64_t array_length(array_t* arr);
-extern reference_t array_get_reference(array_t* arr, uint64_t position);
-__attribute__((warn_unused_result)) extern array_t*
-    array_add(array_t* arr, reference_t element);
+#define array_t(t) struct array_S
 
-// C won't typecheck generic types so just use the naked array_t
-#define array_of_type(type) array_t
+extern array_t(|?|)* make_array(type_t* element_type, uint32_t initial_capacity);
+extern uint64_t array_length(array_t(|?|)* arr);
+extern reference_t array_get_reference(array_t(|?|)* arr, uint64_t position);
+__attribute__((warn_unused_result)) extern array_t(|?|)*
+    array_add(array_t(|?|)* arr, reference_t element);
 
 #endif /* _ARRAY_H_ */
 
@@ -41,7 +40,7 @@ __attribute__((warn_unused_result)) extern array_t*
 #include "array.h"
 #include "fatal-error.h"
 
-static inline void* array_address_of_element(array_t* array,
+static inline void* array_address_of_element(array_t(|?|)* array,
                                              uint64_t position) {
   void* result = &(array->data[0]) + position * array->element_type->size;
   return result;
@@ -50,7 +49,7 @@ static inline void* array_address_of_element(array_t* array,
 /**
  * Make an array with the given initial_capacity.
  */
-array_t* make_array(type_t* type, uint32_t initial_capacity) {
+array_t(|?|)* make_array(type_t* type, uint32_t initial_capacity) {
   if (initial_capacity == 0) {
     fatal_error(ERROR_ILLEGAL_INITIAL_CAPACITY);
   }
@@ -59,8 +58,8 @@ array_t* make_array(type_t* type, uint32_t initial_capacity) {
   if (element_size <= 0) {
     fatal_error(ERROR_DYNAMICALLY_SIZED_TYPE_ILLEGAL_IN_CONTAINER);
   }
-  array_t* result = (array_t*) (malloc_bytes(
-      sizeof(array_t) + (element_size * initial_capacity)));
+  array_t(|?|)* result = (array_t(|?|)*) (malloc_bytes(
+      sizeof(array_t(|?|)) + (element_size * initial_capacity)));
   result->element_type = type;
   result->length = 0;
   result->capacity = initial_capacity;
@@ -70,12 +69,12 @@ array_t* make_array(type_t* type, uint32_t initial_capacity) {
 /**
  * Return the number of actual entries in an array.
  */
-uint64_t array_length(array_t* arr) { return arr->length; }
+uint64_t array_length(array_t(|?|)* arr) { return arr->length; }
 
 /**
  * Get the nth element from an array.
  */
-reference_t array_get_reference(array_t* array, uint64_t position) {
+reference_t array_get_reference(array_t(|?|)* array, uint64_t position) {
   if (position < array->length) {
     return reference_of(array->element_type,
                         array_address_of_element(array, position));
@@ -89,8 +88,8 @@ reference_t array_get_reference(array_t* array, uint64_t position) {
 /**
  * Add an element to the end of an array.
  */
-__attribute__((warn_unused_result)) array_t* array_add(array_t* array,
-                                                       reference_t reference) {
+__attribute__((warn_unused_result)) array_t(|?|)* array_add(array_t(|?|)* array,
+                                                            reference_t reference) {
   if (reference.underlying_type != array->element_type) {
     fatal_error(ERROR_REFERENCE_NOT_EXPECTED_TYPE);
   }
@@ -101,7 +100,7 @@ __attribute__((warn_unused_result)) array_t* array_add(array_t* array,
     array->length++;
     return array;
   } else {
-    array_t* result = make_array(array->element_type, array->capacity * 2);
+    array_t(|?|)* result = make_array(array->element_type, array->capacity * 2);
     memcpy(array_address_of_element(result, 0),
            array_address_of_element(array, 0), size * array->length);
     result->length = array->length;

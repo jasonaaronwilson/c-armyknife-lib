@@ -19,7 +19,6 @@ ORDERED_H = \
 	ct-assert.h \
 	boolean.h \
 	trace.h \
-	boolean.h \
 	ct-assert.h \
 	type.h \
 	fatal-error.h \

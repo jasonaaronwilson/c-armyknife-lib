@@ -1,4 +1,4 @@
-#line 1 "reference.c"
+#line 2 "reference.c"
 /**
  * C does not have parameterized types which makes generic containers
  * more difficult to work with.

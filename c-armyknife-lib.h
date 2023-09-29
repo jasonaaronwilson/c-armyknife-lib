@@ -56,18 +56,6 @@ typedef int boolean_t;
   } while (0)
 
 #endif /* _TRACE_H_ */
-// SSCF generated file from: boolean.c
-
-#line 13 "boolean.c"
-#ifndef _BOOLEAN_H_
-#define _BOOLEAN_H_
-
-typedef int boolean_t;
-
-#define true ((boolean_t) 1)
-#define false ((boolean_t) 0)
-
-#endif /* _BOOLEAN_H_ */
 // SSCF generated file from: ct-assert.c
 
 #line 8 "ct-assert.c"
@@ -242,7 +230,7 @@ static inline uint64_t reference_to_uint8(reference_t reference) {
 }
 
 static inline void write_to_uint8_reference(reference_t reference,
-                                             uint8_t value) {
+                                            uint8_t value) {
   if (reference.underlying_type != uint8_type()) {
     fatal_error(ERROR_REFERENCE_NOT_EXPECTED_TYPE);
   }
@@ -310,21 +298,20 @@ extern void checked_free(char* file, int line, void* pointer);
 
 #include <stdint.h>
 
-typedef struct {
+struct array_S {
   type_t* element_type;
   uint32_t length;
   uint32_t capacity;
   __attribute__((aligned(8))) uint8_t data[0];
-} array_t;
+};
 
-extern array_t* make_array(type_t* element_type, uint32_t initial_capacity);
-extern uint64_t array_length(array_t* arr);
-extern reference_t array_get_reference(array_t* arr, uint64_t position);
-__attribute__((warn_unused_result)) extern array_t*
-    array_add(array_t* arr, reference_t element);
+#define array_t(t) struct array_S
 
-// C won't typecheck generic types so just use the naked array_t
-#define array_of_type(type) array_t
+extern array_t(|?|)* make_array(type_t* element_type, uint32_t initial_capacity);
+extern uint64_t array_length(array_t(|?|)* arr);
+extern reference_t array_get_reference(array_t(|?|)* arr, uint64_t position);
+__attribute__((warn_unused_result)) extern array_t(|?|)*
+    array_add(array_t(|?|)* arr, reference_t element);
 
 #endif /* _ARRAY_H_ */
 // SSCF generated file from: byte-array.c
@@ -400,7 +387,7 @@ extern char* string_duplicate(const char* src);
 
 #include "array.h"
 
-extern array_t* tokenize(const char* str, const char* delimiters);
+extern array_t(char*)* tokenize(const char* str, const char* delimiters);
 
 #endif /* _TOKENIZER_H_ */
 // SSCF generated file from: test.c
@@ -418,7 +405,7 @@ extern array_t* tokenize(const char* str, const char* delimiters);
 
 #endif /* _TEST_H_ */
 #ifdef C_ARMYKNIFE_LIB_IMPL
-#line 1 "allocate.c"
+#line 2 "allocate.c"
 /**
  * @file allocate.c
  *
@@ -549,21 +536,20 @@ void checked_free(char* file, int line, void* pointer) {
 
 #include <stdint.h>
 
-typedef struct {
+struct array_S {
   type_t* element_type;
   uint32_t length;
   uint32_t capacity;
   __attribute__((aligned(8))) uint8_t data[0];
-} array_t;
+};
 
-extern array_t* make_array(type_t* element_type, uint32_t initial_capacity);
-extern uint64_t array_length(array_t* arr);
-extern reference_t array_get_reference(array_t* arr, uint64_t position);
-__attribute__((warn_unused_result)) extern array_t*
-    array_add(array_t* arr, reference_t element);
+#define array_t(t) struct array_S
 
-// C won't typecheck generic types so just use the naked array_t
-#define array_of_type(type) array_t
+extern array_t(|?|)* make_array(type_t* element_type, uint32_t initial_capacity);
+extern uint64_t array_length(array_t(|?|)* arr);
+extern reference_t array_get_reference(array_t(|?|)* arr, uint64_t position);
+__attribute__((warn_unused_result)) extern array_t(|?|)*
+    array_add(array_t(|?|)* arr, reference_t element);
 
 #endif /* _ARRAY_H_ */
 
@@ -575,7 +561,7 @@ __attribute__((warn_unused_result)) extern array_t*
 #include "array.h"
 #include "fatal-error.h"
 
-static inline void* array_address_of_element(array_t* array,
+static inline void* array_address_of_element(array_t(|?|)* array,
                                              uint64_t position) {
   void* result = &(array->data[0]) + position * array->element_type->size;
   return result;
@@ -584,7 +570,7 @@ static inline void* array_address_of_element(array_t* array,
 /**
  * Make an array with the given initial_capacity.
  */
-array_t* make_array(type_t* type, uint32_t initial_capacity) {
+array_t(|?|)* make_array(type_t* type, uint32_t initial_capacity) {
   if (initial_capacity == 0) {
     fatal_error(ERROR_ILLEGAL_INITIAL_CAPACITY);
   }
@@ -593,8 +579,8 @@ array_t* make_array(type_t* type, uint32_t initial_capacity) {
   if (element_size <= 0) {
     fatal_error(ERROR_DYNAMICALLY_SIZED_TYPE_ILLEGAL_IN_CONTAINER);
   }
-  array_t* result = (array_t*) (malloc_bytes(
-      sizeof(array_t) + (element_size * initial_capacity)));
+  array_t(|?|)* result = (array_t(|?|)*) (malloc_bytes(
+      sizeof(array_t(|?|)) + (element_size * initial_capacity)));
   result->element_type = type;
   result->length = 0;
   result->capacity = initial_capacity;
@@ -604,12 +590,12 @@ array_t* make_array(type_t* type, uint32_t initial_capacity) {
 /**
  * Return the number of actual entries in an array.
  */
-uint64_t array_length(array_t* arr) { return arr->length; }
+uint64_t array_length(array_t(|?|)* arr) { return arr->length; }
 
 /**
  * Get the nth element from an array.
  */
-reference_t array_get_reference(array_t* array, uint64_t position) {
+reference_t array_get_reference(array_t(|?|)* array, uint64_t position) {
   if (position < array->length) {
     return reference_of(array->element_type,
                         array_address_of_element(array, position));
@@ -623,8 +609,8 @@ reference_t array_get_reference(array_t* array, uint64_t position) {
 /**
  * Add an element to the end of an array.
  */
-__attribute__((warn_unused_result)) array_t* array_add(array_t* array,
-                                                       reference_t reference) {
+__attribute__((warn_unused_result)) array_t(|?|)* array_add(array_t(|?|)* array,
+                                                            reference_t reference) {
   if (reference.underlying_type != array->element_type) {
     fatal_error(ERROR_REFERENCE_NOT_EXPECTED_TYPE);
   }
@@ -635,7 +621,7 @@ __attribute__((warn_unused_result)) array_t* array_add(array_t* array,
     array->length++;
     return array;
   } else {
-    array_t* result = make_array(array->element_type, array->capacity * 2);
+    array_t(|?|)* result = make_array(array->element_type, array->capacity * 2);
     memcpy(array_address_of_element(result, 0),
            array_address_of_element(array, 0), size * array->length);
     result->length = array->length;
@@ -669,7 +655,7 @@ typedef int boolean_t;
 // ======================================================================
 // Currently no implementation
 // ======================================================================
-#line 1 "byte-array.c"
+#line 2 "byte-array.c"
 /**
  * @file byte-array.c
  */
@@ -808,7 +794,7 @@ __attribute__((warn_unused_result)) byte_array_t*
 #define ct_assert(e) ((void) sizeof(char[1 - 2 * !(e)]))
 
 #endif /* _CT_ASSERT_H_ */
-#line 1 "fatal-error.c"
+#line 2 "fatal-error.c"
 /**
  * @file: fatal-error.c
  *
@@ -914,7 +900,7 @@ void print_error_code_name(int error_code) {
   fprintf(stderr, "%s", fatal_error_code_to_string(error_code));
   fprintf(stderr, " ***\n");
 }
-#line 1 "io.c"
+#line 2 "io.c"
 /**
  * @file io.c
  *
@@ -967,7 +953,7 @@ void byte_array_write_file(byte_array_t* bytes, char* file_name) {
   fwrite(&bytes->elements, 1, bytes->length, file);
   fclose(file);
 }
-#line 1 "reference.c"
+#line 2 "reference.c"
 /**
  * C does not have parameterized types which makes generic containers
  * more difficult to work with.
@@ -1054,7 +1040,7 @@ static inline uint64_t reference_to_uint8(reference_t reference) {
 }
 
 static inline void write_to_uint8_reference(reference_t reference,
-                                             uint8_t value) {
+                                            uint8_t value) {
   if (reference.underlying_type != uint8_type()) {
     fatal_error(ERROR_REFERENCE_NOT_EXPECTED_TYPE);
   }
@@ -1069,7 +1055,7 @@ static inline char* reference_to_char_ptr(reference_t reference) {
 }
 
 #endif /* _REFERENCE_H_ */
-#line 1 "string-util.c"
+#line 2 "string-util.c"
 /**
  * @file string-util.c
  *
@@ -1343,7 +1329,7 @@ uint64_t fasthash64(const void* buf, size_t len, uint64_t seed) {
 // In order to not increase the runtime footprint, we don't actually
 // have any non-macros (or inlined functions).
 // ======================================================================
-#line 1 "tokenizer.c"
+#line 2 "tokenizer.c"
 /**
  * @file tokenizer.c
  *
@@ -1356,7 +1342,7 @@ uint64_t fasthash64(const void* buf, size_t len, uint64_t seed) {
 
 #include "array.h"
 
-extern array_t* tokenize(const char* str, const char* delimiters);
+extern array_t(char*)* tokenize(const char* str, const char* delimiters);
 
 #endif /* _TOKENIZER_H_ */
 
@@ -1364,20 +1350,22 @@ extern array_t* tokenize(const char* str, const char* delimiters);
 #include <stdlib.h>
 #include <string.h>
 
+#include "array.h"
 #include "allocate.h"
 #include "fatal-error.h"
 #include "string-util.h"
 #include "tokenizer.h"
 
-array_t* add_duplicate(array_t* token_array, const char* data);
+array_t(char*)* add_duplicate(array_t(char*)* token_array, const char* data);
 
 /**
  * Tokenize a string.
  *
  * Delimiters terminate the current token and are thrown away.
  */
-array_t* tokenize(const char* str, const char* delimiters) {
-  array_t* result = make_array(char_ptr_type(), 4);
+
+array_t(char*)* tokenize(const char* str, const char* delimiters) {
+  array_t(char*)* result = make_array(char_ptr_type(), 4);
   char token_data[1024];
   int cpos = 0;
   for (int i = 0; (i < strlen(str)); i++) {
@@ -1403,11 +1391,11 @@ array_t* tokenize(const char* str, const char* delimiters) {
 /**
  * Add a *copy* of the string named data to the token list.
  */
-array_t* add_duplicate(array_t* token_array, const char* data) {
+array_t(char*)* add_duplicate(array_t(char*)* token_array, const char* data) {
   return array_add(token_array, reference_of(token_array->element_type,
                                              string_duplicate(data)));
 }
-#line 1 "trace.c"
+#line 2 "trace.c"
 #ifndef _TRACE_H_
 #define _TRACE_H_
 
@@ -1528,7 +1516,7 @@ reference_t tuple_reference_of_element(reference_t tuple_ref,
   }
   fatal_error(ERROR_ACCESS_OUT_OF_BOUNDS);
 }
-#line 1 "type.c"
+#line 2 "type.c"
 /**
  * @file type.c
  *

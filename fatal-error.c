@@ -1,4 +1,4 @@
-#line 1 "fatal-error.c"
+#line 2 "fatal-error.c"
 /**
  * @file: fatal-error.c
  *

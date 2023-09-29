@@ -1,4 +1,4 @@
-#line 1 "type.c"
+#line 2 "type.c"
 /**
  * @file type.c
  *

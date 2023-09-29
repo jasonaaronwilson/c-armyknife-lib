@@ -9,7 +9,7 @@
 #include "../c-armyknife-lib.h"
 
 int main(int argc, char** argv) {
-  array_t* tokens = NULL;
+  array_t(char*)* tokens = NULL;
 
   // Lots of memory leaking below but this is only a test...
 

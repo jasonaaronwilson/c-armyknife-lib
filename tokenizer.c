@@ -1,4 +1,4 @@
-#line 1 "tokenizer.c"
+#line 2 "tokenizer.c"
 /**
  * @file tokenizer.c
  *
@@ -11,7 +11,7 @@
 
 #include "array.h"
 
-extern array_t* tokenize(const char* str, const char* delimiters);
+extern array_t(char*) * tokenize(const char* str, const char* delimiters);
 
 #endif /* _TOKENIZER_H_ */
 
@@ -20,19 +20,21 @@ extern array_t* tokenize(const char* str, const char* delimiters);
 #include <string.h>
 
 #include "allocate.h"
+#include "array.h"
 #include "fatal-error.h"
 #include "string-util.h"
 #include "tokenizer.h"
 
-array_t* add_duplicate(array_t* token_array, const char* data);
+array_t(char*) * add_duplicate(array_t(char*) * token_array, const char* data);
 
 /**
  * Tokenize a string.
  *
  * Delimiters terminate the current token and are thrown away.
  */
-array_t* tokenize(const char* str, const char* delimiters) {
-  array_t* result = make_array(char_ptr_type(), 4);
+
+array_t(char*) * tokenize(const char* str, const char* delimiters) {
+  array_t(char*)* result = make_array(char_ptr_type(), 4);
   char token_data[1024];
   int cpos = 0;
   for (int i = 0; (i < strlen(str)); i++) {
@@ -58,7 +60,7 @@ array_t* tokenize(const char* str, const char* delimiters) {
 /**
  * Add a *copy* of the string named data to the token list.
  */
-array_t* add_duplicate(array_t* token_array, const char* data) {
+array_t(char*) * add_duplicate(array_t(char*) * token_array, const char* data) {
   return array_add(token_array, reference_of(token_array->element_type,
                                              string_duplicate(data)));
 }

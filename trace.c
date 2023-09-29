@@ -1,4 +1,4 @@
-#line 1 "trace.c"
+#line 2 "trace.c"
 #ifndef _TRACE_H_
 #define _TRACE_H_
 

@@ -28,6 +28,8 @@ typedef enum {
   ERROR_DYNAMICALLY_SIZED_TYPE_ILLEGAL_IN_CONTAINER,
   ERROR_ACCESS_OUT_OF_BOUNDS,
   ERROR_NOT_REACHED,
+  ERROR_ILLEGAL_ZERO_HASHCODE_VALUE,
+  ERROR_UNIMPLEMENTED,
 } error_code_t;
 
 extern _Noreturn void fatal_error_impl(char* file, int line, int error_code);

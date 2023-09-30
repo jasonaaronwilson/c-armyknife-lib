@@ -1,0 +1,134 @@
+#line 2 "hashtree.c"
+/**
+ * @file hashtree.c
+ *
+ * A hashtree is a binary tree where the order of keys is based on the
+ * hash of the key rather than the key itself (hence it appears
+ * unsorted to an external observer).
+ *
+ * Since hashcodes are simply 64bit numbers, they can be very
+ * efficiently compared versus complex keys (which obviously can then
+ * take more time to compare) providing a constant factor speedup
+ * versus a tree sorted by key. Additionally, hashtrees do not require
+ * balancing operations like normal binary trees to provide O(lg(n))
+ * operations under normal conditions which simplify their
+ * implementation.
+ *
+ * Hashtrees have better space efficieny versus a hashtable but
+ * obviously have slower lookup, insert, and delete (and will incur
+ * more cache misses). The real reason we implement hashtrees is to
+ * allow hashtables a simple but efficient mechanism to handle bucket
+ * collisions and thus permit higher load in the hashtable itself
+ * while still providing good performance.
+ *
+ * Like tuples, hashtrees do not carry their key and value types with
+ * them so the types must be provided to all operations that operate
+ * on them, one reason they be less desireable to use than hashtables.
+ */
+
+#ifndef _HASHTREE_H_
+#define _HASHTREE_H_
+
+#include <stdint.h>
+
+// Each node in the tree is simply a tuple of hashcode, left (pointer), right
+// (pointer), K, and V.
+#define hashtree_t(K, V) tuple_t
+
+extern hashtree_t(K, V)* make_hashtree_node(type_t* key_type, type_t* value_type);
+
+extern reference_t hashtree_get_reference_to_value(hashtree_t(K, V)* htree,
+                                                   type_t* key_type, 
+                                                   type_t* value_type,
+                                                   reference_t key_reference);
+
+extern void hashtree_insert_value(hashtree_t(K, V)* htree,
+                                  type_t* key_type, 
+                                  type_t* value_type,
+                                  reference_t key_reference,
+                                  reference_t value_reference);
+
+extern void hashtree_delete_value(hashtree_t(K, V)* htree,
+                                  type_t* key_type, 
+                                  type_t* value_type,
+                                  reference_t key_reference);
+
+#endif /* _HASHTREE_H_ */
+
+#define HTREE_HASHCODE_POSITION 0
+#define HTREE_LEFT_POSITION 1
+#define HTREE_RIGHT_POSITION 2
+#define HTREE_KEY_POSITION 3
+#define HTREE_VALUE_POSITION 4
+
+type_t* intern_hashtree_type(type_t* key_type, type_t* value_type) {
+  return intern_tuple_type(5, 
+                           uint64_type(), 
+                           raw_pointer_type(), 
+                           raw_pointer_type(),
+                           key_type,
+                           value_type);
+}
+
+hashtree_t(K, V)* make_empty_hashtree_node(type_t* key_type, type_t* value_type) {
+  type_t* node_type = intern_hashtree_type(key_type, value_type);
+  return (hashtree_t(K, V)*)(malloc_bytes(node_type->size));
+}
+
+void hashtree_insert(hashtree_t(K, V)* htree,
+                     type_t* key_type, 
+                            type_t* value_type,
+                            uint64_t hashcode,
+                            reference_t key_reference,
+                            reference_t value_reference) {
+  if (hashcode == 0) {
+    fatal_error(ERROR_ILLEGAL_ZERO_HASHCODE_VALUE);
+  }
+
+  type_t* node_type = intern_hashtree_type(key_type, value_type);
+  reference_t node_ref = reference_of(node_type, htree);
+
+  // TODO(jawilson): make sure types match
+  uint64_t node_hashcode = dereference_uint64(tuple_reference_of_element(node_ref, HTREE_HASHCODE_POSITION));
+  if (hashcode == node_hashcode || node_hashcode == 0) {
+    // TODO(jawilson): make sure the keys are actually the same!
+    // SET VALUE
+  } else if (hashcode < node_hashcode) {
+    hashtree_t(K, V)* left = 
+      dereference_raw_pointer(hashtree_t(K, V)*, tuple_reference_of_element(node_ref, HTREE_HASHCODE_POSITION));
+    if (left == NULL) {
+      hashtree_t(K, V)* new_node = make_empty_hashtree_node(key_type, value_type);
+      reference_t new_node_ref = reference_of(node_type, new_node);
+      tuple_write_element(new_node_ref, HTREE_HASHCODE_POSITION, hashcode);
+      tuple_write_element(new_node_ref, HTREE_KEY_POSITION, key_reference);
+      tuple_write_element(new_node_ref, HTREE_VALUE_POSITION, value_reference);
+      // new_node_ref looks wrong... Should be a referent_t of a raw
+      // pointer...
+      tuple_write_element(node_ref, HTREE_LEFT_POSITION, new_node_ref);
+    } else {
+      hashtree_insert(left, key_type, value_type, hashcode, key_reference, value_reference);
+    }
+  } else {
+    hashtree_t(K, V)* right = 
+      dereference_raw_pointer(hashtree_t(K, V)*, tuple_reference_of_element(node_ref, HTREE_HASHCODE_POSITION));
+    if (right == NULL) {
+      hashtree_t(K, V)* new_node = make_empty_hashtree_node(key_type, value_type);
+      reference_t new_node_ref = reference_of(node_type, new_node);
+      tuple_write_element(new_node_ref, HTREE_HASHCODE_POSITION, hashcode);
+      tuple_write_element(new_node_ref, HTREE_KEY_POSITION, key_reference);
+      tuple_write_element(new_node_ref, HTREE_VALUE_POSITION, value_reference);
+      // new_node_ref looks wrong... Should be a referent_t of a raw
+      // pointer...
+      tuple_write_element(node_ref, HTREE_RIGHT_POSITION, new_node_ref);
+    } else {
+      hashtree_insert(right, key_type, value_type, hashcode, key_reference, value_reference);
+    }
+  }
+}
+
+void hashtree_delete(hashtree_t(K, V)* htree,
+                     type_t* key_type, 
+                     type_t* value_type,
+                     reference_t key_reference) {
+  fatal_error(ERROR_UNIMPLEMENTED);
+}

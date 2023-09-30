@@ -55,12 +55,12 @@ void test_offsets() {
   type = intern_tuple_type(1, uint64_type());
   tuple_reference = reference_of(type, &stack_tuple_space);
   field0_reference = tuple_reference_of_element(tuple_reference, 0);
-  uint64_t field_value = reference_to_uint64(field0_reference);
+  uint64_t field_value = dereference_uint64(field0_reference);
   if (field_value != 0) {
     ARMYKNIFE_TEST_FAIL("tuple_t(uint64_t)");
   }
   write_to_uint64_reference(field0_reference, 0xffffffffffffffff);
-  field_value = reference_to_uint64(field0_reference);
+  field_value = dereference_uint64(field0_reference);
   if (field_value != 0xffffffffffffffff) {
     ARMYKNIFE_TEST_FAIL("tuple_t(uint64_t)");
   }
@@ -75,11 +75,11 @@ void test_offsets() {
   tuple_reference = reference_of(type, &stack_tuple_space);
   field0_reference = tuple_reference_of_element(tuple_reference, 0);
   field1_reference = tuple_reference_of_element(tuple_reference, 1);
-  field_value = reference_to_uint64(field0_reference);
+  field_value = dereference_uint64(field0_reference);
   if (field_value != 1000) {
     ARMYKNIFE_TEST_FAIL("tuple_t(uint64_t,uint64_t)");
   }
-  field_value = reference_to_uint64(field1_reference);
+  field_value = dereference_uint64(field1_reference);
   if (field_value != 1001) {
     ARMYKNIFE_TEST_FAIL("tuple_t(uint64_t,uint64_t)");
   }
@@ -93,20 +93,32 @@ void test_offsets() {
   field0_reference = tuple_reference_of_element(tuple_reference, 0);
   field1_reference = tuple_reference_of_element(tuple_reference, 1);
   field2_reference = tuple_reference_of_element(tuple_reference, 2);
-  field_value = reference_to_uint64(field0_reference);
+  field_value = dereference_uint64(field0_reference);
   if (field_value != 1000) {
     ARMYKNIFE_TEST_FAIL("tuple_t(uint64_t,uint32_t,uint64_t)");
   }
-  
+
   write_to_uint32_reference(field1_reference, 0xffffffff);
   uint32_t field_value32 = reference_to_uint32(field1_reference);
   if (field_value32 != 0xffffffff) {
     ARMYKNIFE_TEST_FAIL("tuple_t(uint64_t,uint32_t,uint64_t)");
   }
-  field_value = reference_to_uint64(field2_reference);
+  field_value = dereference_uint64(field2_reference);
   if (field_value != 1002) {
     ARMYKNIFE_TEST_FAIL("tuple_t(uint64_t,uint32_t,uint64_t)");
   }
+}
+
+void test_string_tuple() {
+  type_t* type = intern_tuple_type(2, char_ptr_type(), char_ptr_type());
+  reference_t tuple_ref = reference_of(type, malloc_bytes(type->size));
+  tuple_write_element(tuple_ref, 0, reference_of(char_ptr_type(), "Hello"));
+  tuple_write_element(tuple_ref, 1, reference_of(char_ptr_type(), "World"));
+  reference_t element_0 = tuple_reference_of_element(tuple_ref, 0);
+  if (strcmp((char*) element_0.pointer, "Hello") != 0) {
+    ARMYKNIFE_TEST_FAIL("first element should be Hello");
+  }
+  // reference_t element_1 = tuple_reference_of_element(tuple_ref, 0);
 }
 
 int main(int argc, char** argv) {

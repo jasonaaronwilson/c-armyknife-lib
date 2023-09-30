@@ -2,8 +2,8 @@
 /// Test the additional string utilities.
 ///
 
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #define C_ARMYKNIFE_LIB_IMPL
 #include "../c-armyknife-lib.h"
@@ -43,7 +43,7 @@ int main(int argc, char** argv) {
   if (string_ends_with("The quick brown fox", "red dog")) {
     ARMYKNIFE_TEST_FAIL("string_ends_with");
   }
-  
+
 
   if (!(string_contains_char("The quick brown fox", 'q'))) {
     ARMYKNIFE_TEST_FAIL("string_contains_char");
@@ -52,7 +52,8 @@ int main(int argc, char** argv) {
     ARMYKNIFE_TEST_FAIL("string_contains_char");
   }
 
-  if (string_hash("The quick brown fox") == string_hash("The QUICK brown fox")) {
+  if (string_hash("The quick brown fox")
+      == string_hash("The QUICK brown fox")) {
     ARMYKNIFE_TEST_FAIL("string_hash");
   }
 
@@ -62,7 +63,7 @@ int main(int argc, char** argv) {
     ARMYKNIFE_TEST_FAIL("string_substring");
   }
 
-  
+
   if (string_parse_uint64("0") != 0) {
     ARMYKNIFE_TEST_FAIL("string_parse_uint64");
   }
@@ -79,7 +80,7 @@ int main(int argc, char** argv) {
     ARMYKNIFE_TEST_FAIL("string_parse_uint64");
   }
 
-  if(!string_duplicate("The quick brown fox")) {
+  if (!string_duplicate("The quick brown fox")) {
     ARMYKNIFE_TEST_FAIL("string_duplicate");
   }
 

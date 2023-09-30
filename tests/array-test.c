@@ -16,7 +16,7 @@ void test_array_uint64() {
 
   for (int i = 0; i < 16; i++) {
     uint64_t value = i + 100;
-    uint64_t element = reference_to_uint64(array_get_reference(array, i));
+    uint64_t element = dereference_uint64(array_get_reference(array, i));
     if (element != value) {
       fprintf(stderr, "%lu != %lu\n", value, element);
       ARMYKNIFE_TEST_FAIL("array_get_reference");

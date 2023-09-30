@@ -82,8 +82,9 @@ uint64_t hashtable_hash_key(hashtable_t(K, V) * ht, reference_t key_reference) {
 }
 
 reference_t hashtable_get_reference_to_bucket(hashtable_t(K, V) * ht,
-                                              uint64_t hashcode) {
-  uint64_t position = hashcode % ht->storage->length;
+                                              uint64_t hashcode,
+                                              uint64_t probe_number) {
+  uint64_t position = (hashcode + probe_number) % ht->storage->length;
   return array_get_reference(ht->storage, position);
 }
 
@@ -93,14 +94,21 @@ reference_t hashtable_get_reference_to_bucket(hashtable_t(K, V) * ht,
 reference_t hashtable_get_reference_to_value(hashtable_t(K, V) * ht,
                                              reference_t key_reference) {
   uint64_t hashcode = hashtable_hash_key(ht, key_reference);
-  reference_t bucket_reference
-      = hashtable_get_reference_to_bucket(ht, hashcode);
-  if (reference_to_uint64(tuple_reference_of_element(
-          bucket_reference, HT_ENTRY_HASHCODE_POSITION))
-      == hashcode) {
-    // TODO(jawilson): check that the keys are equal!
-    return tuple_reference_of_element(bucket_reference,
-                                      HT_ENTRY_VALUE_POSITION);
+  for (int i = 0; true; i++) {
+    reference_t bucket_reference
+        = hashtable_get_reference_to_bucket(ht, hashcode, i);
+    uint64_t stored_hashcode = dereference_uint64(tuple_reference_of_element(
+        bucket_reference, HT_ENTRY_HASHCODE_POSITION));
+    if (stored_hashcode == hashcode) {
+      reference_t stored_key_reference
+          = tuple_reference_of_element(bucket_reference, HT_ENTRY_KEY_POSITION);
+      if (compare_references(key_reference, stored_key_reference) == 0) {
+        return tuple_reference_of_element(bucket_reference,
+                                          HT_ENTRY_VALUE_POSITION);
+      }
+    } else if (stored_hashcode == 0) {
+      break;
+    }
   }
 
   return nil();
@@ -109,15 +117,28 @@ reference_t hashtable_get_reference_to_value(hashtable_t(K, V) * ht,
 void hashtable_set_value(hashtable_t(K, V) * ht, reference_t key_reference,
                          reference_t value_reference) {
   uint64_t hashcode = hashtable_hash_key(ht, key_reference);
-  reference_t bucket_reference
-      = hashtable_get_reference_to_bucket(ht, hashcode);
-  // TODO(jawilson): make sure something with a different key isn't in
-  // this bucket!
-  tuple_write_element(bucket_reference, HT_ENTRY_HASHCODE_POSITION,
-                      reference_of_uint64(&hashcode));
-  tuple_write_element(bucket_reference, HT_ENTRY_KEY_POSITION, key_reference);
-  tuple_write_element(bucket_reference, HT_ENTRY_VALUE_POSITION,
-                      value_reference);
+  for (int i = 0; true; i++) {
+    reference_t bucket_reference
+        = hashtable_get_reference_to_bucket(ht, hashcode, i);
+    uint64_t stored_hashcode = dereference_uint64(tuple_reference_of_element(
+        bucket_reference, HT_ENTRY_HASHCODE_POSITION));
+    if ((stored_hashcode == 0)
+        || ((stored_hashcode == hashcode)
+            && ((compare_references(key_reference, tuple_reference_of_element(
+                                                       bucket_reference,
+                                                       HT_ENTRY_KEY_POSITION)))
+                == 0))) {
+      tuple_write_element(bucket_reference, HT_ENTRY_HASHCODE_POSITION,
+                          reference_of_uint64(&hashcode));
+      tuple_write_element(bucket_reference, HT_ENTRY_KEY_POSITION,
+                          key_reference);
+      tuple_write_element(bucket_reference, HT_ENTRY_VALUE_POSITION,
+                          value_reference);
+      // TODO(jawilson): keep track of number of entries and possibly
+      // grow if we exceed a certain load factor.
+      return;
+    }
+  }
 }
 
 // ----------------------------------------------------------------------

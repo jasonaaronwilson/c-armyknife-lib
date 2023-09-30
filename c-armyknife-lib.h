@@ -55,6 +55,11 @@ typedef int boolean_t;
     fprintf(stderr, "TRACE file=%s line=%d\n", __FILE__, __LINE__);            \
   } while (0)
 
+#define WARN(msg)                                                              \
+  do {                                                                         \
+    fprintf(stderr, "WARN file=%s line=%d '%s'\n", __FILE__, __LINE__, msg);   \
+  } while (0)
+
 #endif /* _TRACE_H_ */
 // SSCF generated file from: ct-assert.c
 
@@ -76,6 +81,29 @@ typedef int boolean_t;
 #define ct_assert(e) ((void) sizeof(char[1 - 2 * !(e)]))
 
 #endif /* _CT_ASSERT_H_ */
+// SSCF generated file from: allocate.c
+
+#line 13 "allocate.c"
+#ifndef _ALLOCATE_H_
+#define _ALLOCATE_H_
+
+#include <stdint.h>
+
+extern uint8_t* checked_malloc(char* file, int line, uint64_t amount);
+extern uint8_t* checked_malloc_copy_of(char* file, int line, uint8_t* source,
+                                       uint64_t amount);
+extern void checked_free(char* file, int line, void* pointer);
+
+#define malloc_bytes(amount) (checked_malloc(__FILE__, __LINE__, amount))
+#define free_bytes(ptr) (checked_free(__FILE__, __LINE__, ptr))
+
+#define malloc_struct(struct_name)                                             \
+  ((struct_name*) (checked_malloc(__FILE__, __LINE__, sizeof(struct_name))))
+
+#define malloc_copy_of(source, number_of_bytes)                                \
+  (checked_malloc_copy_of(__FILE__, __LINE__, source, number_of_bytes))
+
+#endif /* _ALLOCATE_H_ */
 // SSCF generated file from: type.c
 
 #line 10 "type.c"
@@ -130,8 +158,8 @@ static inline type_t* char_ptr_type() { return &char_ptr_type_constant; }
 // TODO: global constants for standard types like uint64_t and void*
 
 type_t* intern_type(type_t type) {
-  // HERE: malloc storage space and copy type to the heap.
-  return NULL;
+  WARN("intern_type is not actually doing interning");
+  return (type_t*) malloc_copy_of((uint8_t*) &type, sizeof(type));
 }
 
 #endif /* _TYPE_H_ */
@@ -179,6 +207,16 @@ static inline reference_t reference_of(type_t* type, void* pointer) {
   return result;
 }
 
+static inline int compare_references(reference_t ref_a, reference_t ref_b) {
+  if (ref_a.underlying_type != ref_b.underlying_type) {
+    // An aribrary ordering based on the "random" layout of references
+    // in memory.
+    return (int) (((uint64_t) ref_a.underlying_type)
+                  - ((uint64_t) ref_b.underlying_type));
+  }
+  return ref_a.underlying_type->compare_fn(ref_a, ref_b);
+}
+
 static inline reference_t reference_of_uint64(uint64_t* pointer) {
   reference_t result;
   result.underlying_type = uint64_type();
@@ -186,7 +224,14 @@ static inline reference_t reference_of_uint64(uint64_t* pointer) {
   return result;
 }
 
-static inline uint64_t reference_to_uint64(reference_t reference) {
+static inline reference_t reference_of_char_ptr(char** pointer) {
+  reference_t result;
+  result.underlying_type = char_ptr_type();
+  result.pointer = pointer;
+  return result;
+}
+
+static inline uint64_t dereference_uint64(reference_t reference) {
   if (reference.underlying_type != uint64_type()) {
     fatal_error(ERROR_REFERENCE_NOT_EXPECTED_TYPE);
   }
@@ -246,7 +291,7 @@ static inline void write_to_uint8_reference(reference_t reference,
   *((uint8_t*) reference.pointer) = value;
 }
 
-static inline char* reference_to_char_ptr(reference_t reference) {
+static inline char* dereference_char_ptr(reference_t reference) {
   if (reference.underlying_type != char_ptr_type()) {
     fatal_error(ERROR_REFERENCE_NOT_EXPECTED_TYPE);
   }
@@ -280,29 +325,6 @@ extern void tuple_write_element(reference_t tuple_ref, uint64_t position,
                                 reference_t value);
 
 #endif /* _TUPLE_H_ */
-// SSCF generated file from: allocate.c
-
-#line 13 "allocate.c"
-#ifndef _ALLOCATE_H_
-#define _ALLOCATE_H_
-
-#include <stdint.h>
-
-extern uint8_t* checked_malloc(char* file, int line, uint64_t amount);
-extern uint8_t* checked_malloc_copy_of(char* file, int line, uint8_t* source,
-                                       uint64_t amount);
-extern void checked_free(char* file, int line, void* pointer);
-
-#define malloc_bytes(amount) (checked_malloc(__FILE__, __LINE__, amount))
-#define free_bytes(ptr) (checked_free(__FILE__, __LINE__, ptr))
-
-#define malloc_struct(struct_name)                                             \
-  ((struct_name*) (checked_malloc(__FILE__, __LINE__, sizeof(struct_name))))
-
-#define malloc_copy_of(source, number_of_bytes)                                \
-  (checked_malloc_copy_of(__FILE__, __LINE__, source, number_of_bytes))
-
-#endif /* _ALLOCATE_H_ */
 // SSCF generated file from: array.c
 
 #line 13 "array.c"
@@ -1026,8 +1048,9 @@ uint64_t hashtable_hash_key(hashtable_t(K, V) * ht, reference_t key_reference) {
 }
 
 reference_t hashtable_get_reference_to_bucket(hashtable_t(K, V) * ht,
-                                              uint64_t hashcode) {
-  uint64_t position = hashcode % ht->storage->length;
+                                              uint64_t hashcode,
+                                              uint64_t probe_number) {
+  uint64_t position = (hashcode + probe_number) % ht->storage->length;
   return array_get_reference(ht->storage, position);
 }
 
@@ -1037,14 +1060,21 @@ reference_t hashtable_get_reference_to_bucket(hashtable_t(K, V) * ht,
 reference_t hashtable_get_reference_to_value(hashtable_t(K, V) * ht,
                                              reference_t key_reference) {
   uint64_t hashcode = hashtable_hash_key(ht, key_reference);
-  reference_t bucket_reference
-      = hashtable_get_reference_to_bucket(ht, hashcode);
-  if (reference_to_uint64(tuple_reference_of_element(
-          bucket_reference, HT_ENTRY_HASHCODE_POSITION))
-      == hashcode) {
-    // TODO(jawilson): check that the keys are equal!
-    return tuple_reference_of_element(bucket_reference,
-                                      HT_ENTRY_VALUE_POSITION);
+  for (int i = 0; true; i++) {
+    reference_t bucket_reference
+        = hashtable_get_reference_to_bucket(ht, hashcode, i);
+    uint64_t stored_hashcode = dereference_uint64(tuple_reference_of_element(
+        bucket_reference, HT_ENTRY_HASHCODE_POSITION));
+    if (stored_hashcode == hashcode) {
+      reference_t stored_key_reference
+          = tuple_reference_of_element(bucket_reference, HT_ENTRY_KEY_POSITION);
+      if (compare_references(key_reference, stored_key_reference) == 0) {
+        return tuple_reference_of_element(bucket_reference,
+                                          HT_ENTRY_VALUE_POSITION);
+      }
+    } else if (stored_hashcode == 0) {
+      break;
+    }
   }
 
   return nil();
@@ -1053,15 +1083,28 @@ reference_t hashtable_get_reference_to_value(hashtable_t(K, V) * ht,
 void hashtable_set_value(hashtable_t(K, V) * ht, reference_t key_reference,
                          reference_t value_reference) {
   uint64_t hashcode = hashtable_hash_key(ht, key_reference);
-  reference_t bucket_reference
-      = hashtable_get_reference_to_bucket(ht, hashcode);
-  // TODO(jawilson): make sure something with a different key isn't in
-  // this bucket!
-  tuple_write_element(bucket_reference, HT_ENTRY_HASHCODE_POSITION,
-                      reference_of_uint64(&hashcode));
-  tuple_write_element(bucket_reference, HT_ENTRY_KEY_POSITION, key_reference);
-  tuple_write_element(bucket_reference, HT_ENTRY_VALUE_POSITION,
-                      value_reference);
+  for (int i = 0; true; i++) {
+    reference_t bucket_reference
+        = hashtable_get_reference_to_bucket(ht, hashcode, i);
+    uint64_t stored_hashcode = dereference_uint64(tuple_reference_of_element(
+        bucket_reference, HT_ENTRY_HASHCODE_POSITION));
+    if ((stored_hashcode == 0)
+        || ((stored_hashcode == hashcode)
+            && ((compare_references(key_reference, tuple_reference_of_element(
+                                                       bucket_reference,
+                                                       HT_ENTRY_KEY_POSITION)))
+                == 0))) {
+      tuple_write_element(bucket_reference, HT_ENTRY_HASHCODE_POSITION,
+                          reference_of_uint64(&hashcode));
+      tuple_write_element(bucket_reference, HT_ENTRY_KEY_POSITION,
+                          key_reference);
+      tuple_write_element(bucket_reference, HT_ENTRY_VALUE_POSITION,
+                          value_reference);
+      // TODO(jawilson): keep track of number of entries and possibly
+      // grow if we exceed a certain load factor.
+      return;
+    }
+  }
 }
 
 // ----------------------------------------------------------------------
@@ -1180,6 +1223,16 @@ static inline reference_t reference_of(type_t* type, void* pointer) {
   return result;
 }
 
+static inline int compare_references(reference_t ref_a, reference_t ref_b) {
+  if (ref_a.underlying_type != ref_b.underlying_type) {
+    // An aribrary ordering based on the "random" layout of references
+    // in memory.
+    return (int) (((uint64_t) ref_a.underlying_type)
+                  - ((uint64_t) ref_b.underlying_type));
+  }
+  return ref_a.underlying_type->compare_fn(ref_a, ref_b);
+}
+
 static inline reference_t reference_of_uint64(uint64_t* pointer) {
   reference_t result;
   result.underlying_type = uint64_type();
@@ -1187,7 +1240,14 @@ static inline reference_t reference_of_uint64(uint64_t* pointer) {
   return result;
 }
 
-static inline uint64_t reference_to_uint64(reference_t reference) {
+static inline reference_t reference_of_char_ptr(char** pointer) {
+  reference_t result;
+  result.underlying_type = char_ptr_type();
+  result.pointer = pointer;
+  return result;
+}
+
+static inline uint64_t dereference_uint64(reference_t reference) {
   if (reference.underlying_type != uint64_type()) {
     fatal_error(ERROR_REFERENCE_NOT_EXPECTED_TYPE);
   }
@@ -1247,7 +1307,7 @@ static inline void write_to_uint8_reference(reference_t reference,
   *((uint8_t*) reference.pointer) = value;
 }
 
-static inline char* reference_to_char_ptr(reference_t reference) {
+static inline char* dereference_char_ptr(reference_t reference) {
   if (reference.underlying_type != char_ptr_type()) {
     fatal_error(ERROR_REFERENCE_NOT_EXPECTED_TYPE);
   }
@@ -1608,6 +1668,11 @@ array_t(char*) * add_duplicate(array_t(char*) * token_array, const char* data) {
     fprintf(stderr, "TRACE file=%s line=%d\n", __FILE__, __LINE__);            \
   } while (0)
 
+#define WARN(msg)                                                              \
+  do {                                                                         \
+    fprintf(stderr, "WARN file=%s line=%d '%s'\n", __FILE__, __LINE__, msg);   \
+  } while (0)
+
 #endif /* _TRACE_H_ */
 #line 2 "tuple.c"
 /**
@@ -1791,66 +1856,90 @@ static inline type_t* char_ptr_type() { return &char_ptr_type_constant; }
 // TODO: global constants for standard types like uint64_t and void*
 
 type_t* intern_type(type_t type) {
-  // HERE: malloc storage space and copy type to the heap.
-  return NULL;
+  WARN("intern_type is not actually doing interning");
+  return (type_t*) malloc_copy_of((uint8_t*) &type, sizeof(type));
 }
 
 #endif /* _TYPE_H_ */
 
 #include <stdalign.h>
 
+uint64_t hash_reference_bytes(reference_t reference) {
+  // Actually call fasthash64!
+  return 12;
+}
+
+uint64_t hash_string_reference(reference_t reference) {
+  // Hash the underlying string (we won't know it's size like above).
+  return 12;
+}
+
+int compare_string_references(reference_t ref_a, reference_t ref_b) {
+  return strcmp(dereference_char_ptr(ref_a), dereference_char_ptr(ref_b));
+}
+
 type_t uint8_type_constant = {
     .name = "uint8_t",
     .size = sizeof(uint8_t),
     .alignment = alignof(uint8_t),
+    .hash_fn = &hash_reference_bytes,
 };
 
 type_t uint16_type_constant = {
     .name = "uint16_t",
     .size = sizeof(uint16_t),
     .alignment = alignof(uint16_t),
+    .hash_fn = &hash_reference_bytes,
 };
 
 type_t uint32_type_constant = {
     .name = "uint32_t",
     .size = sizeof(uint32_t),
     .alignment = alignof(uint32_t),
+    .hash_fn = &hash_reference_bytes,
 };
 
 type_t uint64_type_constant = {
     .name = "uint64_t",
     .size = sizeof(uint64_t),
     .alignment = alignof(uint64_t),
+    .hash_fn = &hash_reference_bytes,
 };
 
 type_t char_type_constant = {
     .name = "char",
     .size = sizeof(char),
     .alignment = alignof(char),
+    .hash_fn = &hash_reference_bytes,
 };
 
 type_t double_type_constant = {
     .name = "double",
     .size = sizeof(double),
     .alignment = alignof(double),
+    .hash_fn = &hash_reference_bytes,
 };
 
 type_t float_type_constant = {
     .name = "float",
     .size = sizeof(float),
     .alignment = alignof(float),
+    .hash_fn = &hash_reference_bytes,
 };
 
 type_t char_ptr_type_constant = {
     .name = "char*",
     .size = sizeof(char*),
     .alignment = alignof(char*),
+    .hash_fn = &hash_string_reference,
+    .compare_fn = &compare_string_references,
 };
 
 type_t nil_type_constant = {
     .name = "nil",
     .size = 0,
     .alignment = 0,
+    .hash_fn = &hash_reference_bytes,
 };
 
 // TODO(jawilson): more pointer types for the built in C types.

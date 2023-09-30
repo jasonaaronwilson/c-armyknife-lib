@@ -32,6 +32,16 @@ static inline reference_t reference_of(type_t* type, void* pointer) {
   return result;
 }
 
+static inline int compare_references(reference_t ref_a, reference_t ref_b) {
+  if (ref_a.underlying_type != ref_b.underlying_type) {
+    // An aribrary ordering based on the "random" layout of references
+    // in memory.
+    return (int) (((uint64_t) ref_a.underlying_type)
+                  - ((uint64_t) ref_b.underlying_type));
+  }
+  return ref_a.underlying_type->compare_fn(ref_a, ref_b);
+}
+
 static inline reference_t reference_of_uint64(uint64_t* pointer) {
   reference_t result;
   result.underlying_type = uint64_type();
@@ -39,7 +49,14 @@ static inline reference_t reference_of_uint64(uint64_t* pointer) {
   return result;
 }
 
-static inline uint64_t reference_to_uint64(reference_t reference) {
+static inline reference_t reference_of_char_ptr(char** pointer) {
+  reference_t result;
+  result.underlying_type = char_ptr_type();
+  result.pointer = pointer;
+  return result;
+}
+
+static inline uint64_t dereference_uint64(reference_t reference) {
   if (reference.underlying_type != uint64_type()) {
     fatal_error(ERROR_REFERENCE_NOT_EXPECTED_TYPE);
   }
@@ -99,7 +116,7 @@ static inline void write_to_uint8_reference(reference_t reference,
   *((uint8_t*) reference.pointer) = value;
 }
 
-static inline char* reference_to_char_ptr(reference_t reference) {
+static inline char* dereference_char_ptr(reference_t reference) {
   if (reference.underlying_type != char_ptr_type()) {
     fatal_error(ERROR_REFERENCE_NOT_EXPECTED_TYPE);
   }

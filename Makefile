@@ -21,11 +21,11 @@ ORDERED_H = \
 	boolean.h \
 	trace.h \
 	ct-assert.h \
+	allocate.h \
 	type.h \
 	fatal-error.h \
 	reference.h \
 	tuple.h \
-	allocate.h \
 	array.h \
 	byte-array.h \
 	hashtable.h \
@@ -44,7 +44,7 @@ c-armyknife-lib: ${SRC_C} generate-header-files
 	echo '#endif /* C_ARMYKNIFE_LIB_IMPL */' >>c-armyknife-lib.h
 
 format:
-	clang-format -i ${SRC_C} ${SRC_H}
+	clang-format -i ${SRC_C} ${SRC_H} tests/*.c
 
 clean:
 	rm -rf *~ docs/*~ tests/*~ TAGS doxygen-docs *.o ${ORDERED_H} tests/build/*

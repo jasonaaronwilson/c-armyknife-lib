@@ -20,20 +20,21 @@ typedef struct {
 } byte_array_t;
 
 extern byte_array_t* make_byte_array(uint32_t initial_capacity);
-extern uint64_t byte_array_length(byte_array_t* arr);
-extern uint8_t byte_array_get(byte_array_t* arr, uint64_t position);
-extern char* byte_array_c_substring(byte_array_t* arr, uint64_t start,
+extern uint64_t byte_array_length(byte_array_t* byte_array);
+extern uint8_t byte_array_get(byte_array_t* byte_array, uint64_t position);
+extern char* byte_array_c_substring(byte_array_t* byte_array, uint64_t start,
                                     uint64_t end);
+extern char* byte_array_to_c(byte_array_t* byte_array);
 
 __attribute__((warn_unused_result)) extern byte_array_t*
-    byte_array_append_byte(byte_array_t* arr, uint8_t byte);
+    byte_array_append_byte(byte_array_t* byte_array, uint8_t byte);
 
 __attribute__((warn_unused_result)) extern byte_array_t*
-    byte_array_append_bytes(byte_array_t* arr, uint8_t* bytes,
+    byte_array_append_bytes(byte_array_t* byte_array, uint8_t* bytes,
                             uint64_t n_bytes);
 
 __attribute__((warn_unused_result)) extern byte_array_t*
-    byte_array_append_string(byte_array_t* arr, const char* str);
+    byte_array_append_string(byte_array_t* byte_array, const char* str);
 
 #endif /* _BYTE_ARRAY_H_ */
 
@@ -61,17 +62,17 @@ byte_array_t* make_byte_array(uint32_t initial_capacity) {
 
 uint64_t byte_array_length(byte_array_t* array) { return array->length; }
 
-uint8_t byte_array_get(byte_array_t* arr, uint64_t position) {
-  if (position < arr->length) {
-    return arr->elements[position];
+uint8_t byte_array_get(byte_array_t* byte_array, uint64_t position) {
+  if (position < byte_array->length) {
+    return byte_array->elements[position];
   } else {
     fatal_error(ERROR_ACCESS_OUT_OF_BOUNDS);
   }
 }
 
 /**
- * Extract a newly allocated string contain the bytes from start to
- * end (appending a zero byte to make sure it's a legal C string).
+ * Extract a newly allocated string that contain the bytes from start
+ * to end (appending a zero byte to make sure it's a legal C string).
  */
 char* byte_array_c_substring(byte_array_t* byte_array, uint64_t start,
                              uint64_t end) {
@@ -81,6 +82,14 @@ char* byte_array_c_substring(byte_array_t* byte_array, uint64_t start,
     result[i - start] = byte_array->elements[i];
   }
   return result;
+}
+
+/**
+ * Extract a newly allocated string that contain all of the bytes in the byte
+ * buffer as a NU * terminated C string.
+ */
+char* byte_array_to_c_string(byte_array_t* byte_array) {
+  return byte_array_c_substring(byte_array, 0, byte_array->length);
 }
 
 __attribute__((warn_unused_result)) byte_array_t*
@@ -100,15 +109,15 @@ __attribute__((warn_unused_result)) byte_array_t*
 }
 
 __attribute__((warn_unused_result)) byte_array_t*
-    byte_array_append_bytes(byte_array_t* arr, uint8_t* bytes,
+    byte_array_append_bytes(byte_array_t* byte_array, uint8_t* bytes,
                             uint64_t n_bytes) {
   for (int i = 0; i < n_bytes; i++) {
-    arr = byte_array_append_byte(arr, bytes[i]);
+    byte_array = byte_array_append_byte(byte_array, bytes[i]);
   }
-  return arr;
+  return byte_array;
 }
 
 __attribute__((warn_unused_result)) byte_array_t*
-    byte_array_append_string(byte_array_t* arr, const char* str) {
-  return byte_array_append_bytes(arr, (uint8_t*) str, strlen(str));
+    byte_array_append_string(byte_array_t* byte_array, const char* str) {
+  return byte_array_append_bytes(byte_array, (uint8_t*) str, strlen(str));
 }

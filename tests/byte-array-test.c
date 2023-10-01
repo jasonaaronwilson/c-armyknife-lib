@@ -26,7 +26,24 @@ void test_append_byte() {
   free(byte_array);
 }
 
+void test_append_string() {
+  byte_array_t* byte_array = make_byte_array(3);
+  byte_array = byte_array_append_string(byte_array, "Hello");
+  byte_array = byte_array_append_string(byte_array, " ");
+  byte_array = byte_array_append_string(byte_array, "");
+  byte_array = byte_array_append_string(byte_array, "World!");
+  char* contents = byte_array_to_c_string(byte_array);
+  if (!string_equal("Hello World!", contents)) {
+    fprintf(stderr, "contents='%s'\n", contents);
+    ARMYKNIFE_TEST_FAIL(
+        "stringified version of byte array does not match what we added");
+  }
+  free(contents);
+  free(byte_array);
+}
+
 int main(int argc, char** argv) {
   test_append_byte();
+  test_append_string();
   exit(0);
 }

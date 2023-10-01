@@ -95,8 +95,7 @@ __attribute__((warn_unused_result)) byte_array_t*
       result = byte_array_append_byte(result, byte_array_get(byte_array, i));
     }
     free_bytes(byte_array);
-
-    return result;
+    return byte_array_append_byte(result, element);
   }
 }
 

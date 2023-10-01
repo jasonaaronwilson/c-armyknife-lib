@@ -7,6 +7,7 @@ SRC_C = allocate.c \
 	ct-assert.c \
 	fatal-error.c \
 	hashtable.c \
+	hashtree.c \
 	io.c \
 	reference.c \
 	string-util.c \
@@ -29,6 +30,7 @@ ORDERED_H = \
 	tuple.h \
 	array.h \
 	byte-array.h \
+	hashtree.h \
 	hashtable.h \
 	io.h \
 	tokenizer.h \
@@ -60,10 +62,12 @@ tags:
 
 TESTS= \
 	./compile-test.sh \
+	./string-util-test.sh \
+	./byte-array-test.sh \
 	./tuple-test.sh \
 	./array-test.sh \
-	./string-util-test.sh \
 	./tokenizer-test.sh \
+	./hashtree-test.sh \
 	./hashtable-test.sh
 
 test:

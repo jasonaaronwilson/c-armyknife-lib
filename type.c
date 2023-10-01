@@ -72,8 +72,8 @@ type_t* intern_type(type_t type) {
       if (ptr_to_self_type == NULL) {
         ptr_to_self_type = (malloc_struct(type_t));
         ptr_to_self_type->name = string_append(type.name, "*");
-        ptr_to_self_type->size = sizeof(char*);
-        ptr_to_self_type->alignment = alignof(char*);
+        ptr_to_self_type->size = sizeof(uint64_t*);
+        ptr_to_self_type->alignment = alignof(uint64_t*);
         WARN("POINTER_TO_SELF_TYPE only partially implemented");
       }
       result->parameters[i] = ptr_to_self_type;
@@ -85,6 +85,8 @@ type_t* intern_type(type_t type) {
   // (intern_tuple_type) should have accounted for...
   return result;
 }
+
+#define pointer_t(t) t*
 
 #endif /* _TYPE_H_ */
 

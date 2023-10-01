@@ -59,19 +59,28 @@ type_t* intern_tuple_type(int number_of_parameters, ...) {
   va_start(args, number_of_parameters);
   for (int i = 0; (i < number_of_parameters); i++) {
     type_t* element_type = va_arg(args, type_t*);
-    offset = TUPLE_ALIGN_OFFSET(offset, element_type->alignment);
-    if (element_type->size <= 0) {
-      fatal_error(ERROR_DYNAMICALLY_SIZED_TYPE_ILLEGAL_IN_CONTAINER);
+    if (element_type == POINTER_TO_SELF_TYPE) {
+      offset = TUPLE_ALIGN_OFFSET(offset, alignof(uint64_t*));
+      offset += sizeof(uint64_t*);
+      if (i > 0) {
+        name = byte_array_append_string(name, ",");
+      }
+      name = byte_array_append_string(name, "self*");
+    } else {
+      offset = TUPLE_ALIGN_OFFSET(offset, element_type->alignment);
+      if (element_type->size <= 0) {
+        fatal_error(ERROR_DYNAMICALLY_SIZED_TYPE_ILLEGAL_IN_CONTAINER);
+      }
+      if (element_type->alignment > alignment) {
+        alignment = element_type->alignment;
+      }
+      result->parameters[result->number_of_parameters++] = element_type;
+      if (i > 0) {
+        name = byte_array_append_string(name, ",");
+      }
+      name = byte_array_append_string(name, element_type->name);
+      offset += element_type->size;
     }
-    if (element_type->alignment > alignment) {
-      alignment = element_type->alignment;
-    }
-    result->parameters[result->number_of_parameters++] = element_type;
-    if (i > 0) {
-      name = byte_array_append_string(name, ",");
-    }
-    name = byte_array_append_string(name, element_type->name);
-    offset += element_type->size;
   }
   va_end(args);
 
@@ -86,7 +95,7 @@ type_t* intern_tuple_type(int number_of_parameters, ...) {
   // TODO(jawilson): compare_fn, append_fn, hash_fn
   // TODO(jawilson): actually intern the type!
 
-  return result;
+  return intern_type(*result);
 }
 
 /**

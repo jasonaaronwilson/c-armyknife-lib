@@ -415,11 +415,15 @@ typedef struct {
 } byte_array_t;
 
 extern byte_array_t* make_byte_array(uint32_t initial_capacity);
+
 extern uint64_t byte_array_length(byte_array_t* byte_array);
+
 extern uint8_t byte_array_get(byte_array_t* byte_array, uint64_t position);
+
 extern char* byte_array_c_substring(byte_array_t* byte_array, uint64_t start,
                                     uint64_t end);
-extern char* byte_array_to_c(byte_array_t* byte_array);
+
+extern char* byte_array_to_c_strring(byte_array_t* byte_array);
 
 __attribute__((warn_unused_result)) extern byte_array_t*
     byte_array_append_byte(byte_array_t* byte_array, uint8_t byte);
@@ -802,11 +806,15 @@ typedef struct {
 } byte_array_t;
 
 extern byte_array_t* make_byte_array(uint32_t initial_capacity);
+
 extern uint64_t byte_array_length(byte_array_t* byte_array);
+
 extern uint8_t byte_array_get(byte_array_t* byte_array, uint64_t position);
+
 extern char* byte_array_c_substring(byte_array_t* byte_array, uint64_t start,
                                     uint64_t end);
-extern char* byte_array_to_c(byte_array_t* byte_array);
+
+extern char* byte_array_to_c_strring(byte_array_t* byte_array);
 
 __attribute__((warn_unused_result)) extern byte_array_t*
     byte_array_append_byte(byte_array_t* byte_array, uint8_t byte);
@@ -867,7 +875,8 @@ char* byte_array_c_substring(byte_array_t* byte_array, uint64_t start,
 }
 
 /**
- * Extract a newly allocated string that contain all of the bytes in the byte buffer as a NU * terminated C string.
+ * Extract a newly allocated string that contain all of the bytes in the byte
+ * buffer as a NU * terminated C string.
  */
 char* byte_array_to_c_string(byte_array_t* byte_array) {
   return byte_array_c_substring(byte_array, 0, byte_array->length);

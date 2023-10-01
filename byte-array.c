@@ -20,11 +20,15 @@ typedef struct {
 } byte_array_t;
 
 extern byte_array_t* make_byte_array(uint32_t initial_capacity);
+
 extern uint64_t byte_array_length(byte_array_t* byte_array);
+
 extern uint8_t byte_array_get(byte_array_t* byte_array, uint64_t position);
+
 extern char* byte_array_c_substring(byte_array_t* byte_array, uint64_t start,
                                     uint64_t end);
-extern char* byte_array_to_c(byte_array_t* byte_array);
+
+extern char* byte_array_to_c_strring(byte_array_t* byte_array);
 
 __attribute__((warn_unused_result)) extern byte_array_t*
     byte_array_append_byte(byte_array_t* byte_array, uint8_t byte);
@@ -47,6 +51,9 @@ __attribute__((warn_unused_result)) extern byte_array_t*
 #include "ct-assert.h"
 #include "fatal-error.h"
 
+/**
+ * Make an empty byte array with the given initial capacity.
+ */
 byte_array_t* make_byte_array(uint32_t initial_capacity) {
 
   // We make the assumption that casting (char*) to (uint8_t*) and
@@ -54,14 +61,24 @@ byte_array_t* make_byte_array(uint32_t initial_capacity) {
   // architecures.
   ct_assert(sizeof(char) == 1);
 
+  if (initial_capacity < 1) {
+    fatal_error(ERROR_ILLEGAL_INITIAL_CAPACITY);
+  }
+
   byte_array_t* result
       = (byte_array_t*) (malloc_bytes(initial_capacity + sizeof(byte_array_t)));
   result->capacity = initial_capacity;
   return result;
 }
 
+/**
+ * Return the number of bytes that have been added to this byte array.
+ */
 uint64_t byte_array_length(byte_array_t* array) { return array->length; }
 
+/**
+ * Get a single byte from a byte array.
+ */
 uint8_t byte_array_get(byte_array_t* byte_array, uint64_t position) {
   if (position < byte_array->length) {
     return byte_array->elements[position];
@@ -92,6 +109,9 @@ char* byte_array_to_c_string(byte_array_t* byte_array) {
   return byte_array_c_substring(byte_array, 0, byte_array->length);
 }
 
+/**
+ * Append a single byte to the byte array.
+ */
 __attribute__((warn_unused_result)) byte_array_t*
     byte_array_append_byte(byte_array_t* byte_array, uint8_t element) {
   if (byte_array->length < byte_array->capacity) {
@@ -108,15 +128,23 @@ __attribute__((warn_unused_result)) byte_array_t*
   }
 }
 
+/**
+ * Append multiple bytes to the byte array.
+ */
 __attribute__((warn_unused_result)) byte_array_t*
     byte_array_append_bytes(byte_array_t* byte_array, uint8_t* bytes,
                             uint64_t n_bytes) {
+  // Obviously this can be optimized...
   for (int i = 0; i < n_bytes; i++) {
     byte_array = byte_array_append_byte(byte_array, bytes[i]);
   }
   return byte_array;
 }
 
+/**
+ * Append all of the bytes from a C string (except the ending NUL
+ * char).
+ */
 __attribute__((warn_unused_result)) byte_array_t*
     byte_array_append_string(byte_array_t* byte_array, const char* str) {
   return byte_array_append_bytes(byte_array, (uint8_t*) str, strlen(str));

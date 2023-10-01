@@ -55,11 +55,35 @@ static inline type_t* nil_type() { return &nil_type_constant; }
 
 static inline type_t* char_ptr_type() { return &char_ptr_type_constant; }
 
+// This is used to indicate that a type is recursive in that it
+// contains a pointer to the same type. When the type is finally
+// interned then these are replaced with a pointer(xyz)
+#define POINTER_TO_SELF_TYPE ((type_t*) 0x1)
+
 // TODO: global constants for standard types like uint64_t and void*
 
 type_t* intern_type(type_t type) {
   WARN("intern_type is not actually doing interning");
-  return (type_t*) malloc_copy_of((uint8_t*) &type, sizeof(type));
+  type_t* result = (type_t*) malloc_copy_of((uint8_t*) &type, sizeof(type));
+
+  type_t* ptr_to_self_type = NULL;
+  for (int i = 0; (i < result->number_of_parameters); i++) {
+    if (result->parameters[i] == POINTER_TO_SELF_TYPE) {
+      if (ptr_to_self_type == NULL) {
+        ptr_to_self_type = (malloc_struct(type_t));
+        ptr_to_self_type->name = string_append(type.name, "*");
+        ptr_to_self_type->size = sizeof(char*);
+        ptr_to_self_type->alignment = alignof(char*);
+        WARN("POINTER_TO_SELF_TYPE only partially implemented");
+      }
+      result->parameters[i] = ptr_to_self_type;
+    }
+  }
+
+  // TODO(jawilson): make sure size and alignment still hold because
+  // of any POINTER_TO_SELF_TYPE adjustments that the caller
+  // (intern_tuple_type) should have accounted for...
+  return result;
 }
 
 #endif /* _TYPE_H_ */

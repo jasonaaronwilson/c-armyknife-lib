@@ -10,6 +10,32 @@
  * prototypes, inlined functions, macros, and type definitions.
  */
 
+// SSCF generated file from: fatal-error.c
+
+#line 19 "fatal-error.c"
+#ifndef _FATAL_ERROR_H_
+#define _FATAL_ERROR_H_
+
+typedef enum {
+  ERROR_UKNOWN,
+  ERROR_MEMORY_ALLOCATION,
+  ERROR_MEMORY_FREE_NULL,
+  ERROR_REFERENCE_NOT_EXPECTED_TYPE,
+  ERROR_ILLEGAL_INITIAL_CAPACITY,
+  ERROR_DYNAMICALLY_SIZED_TYPE_ILLEGAL_IN_CONTAINER,
+  ERROR_ACCESS_OUT_OF_BOUNDS,
+  ERROR_NOT_REACHED,
+  ERROR_ILLEGAL_ZERO_HASHCODE_VALUE,
+  ERROR_UNIMPLEMENTED,
+  ERROR_ILLEGAL_NULL_ARGUMENT,
+} error_code_t;
+
+extern _Noreturn void fatal_error_impl(char* file, int line, int error_code);
+extern const char* fatal_error_code_to_string(int error_code);
+
+#define fatal_error(code) fatal_error_impl(__FILE__, __LINE__, code)
+
+#endif /* _FATAL_ERROR_H_ */
 // SSCF generated file from: ct-assert.c
 
 #line 8 "ct-assert.c"
@@ -104,6 +130,27 @@ extern void checked_free(char* file, int line, void* pointer);
   (checked_malloc_copy_of(__FILE__, __LINE__, source, number_of_bytes))
 
 #endif /* _ALLOCATE_H_ */
+// SSCF generated file from: string-util.c
+
+#line 13 "string-util.c"
+#ifndef _STRING_UTIL_H_
+#define _STRING_UTIL_H_
+
+#include <stdint.h>
+
+extern int string_is_null_or_empty(const char* str1);
+extern int string_equal(const char* str1, const char* str2);
+extern int string_starts_with(const char* str1, const char* str2);
+extern int string_ends_with(const char* str1, const char* str2);
+extern int string_contains_char(const char* str, const char ch);
+extern uint64_t string_to_uint64(const char* str);
+extern uint64_t string_hash(const char* str);
+extern char* string_substring(const char* str, int start, int end);
+extern uint64_t string_parse_uint64(const char* string);
+extern char* string_duplicate(const char* src);
+extern char* string_append(const char* a, const char* b);
+
+#endif /* _STRING_UTIL_H_ */
 // SSCF generated file from: type.c
 
 #line 10 "type.c"
@@ -155,37 +202,38 @@ static inline type_t* nil_type() { return &nil_type_constant; }
 
 static inline type_t* char_ptr_type() { return &char_ptr_type_constant; }
 
+// This is used to indicate that a type is recursive in that it
+// contains a pointer to the same type. When the type is finally
+// interned then these are replaced with a pointer(xyz)
+#define POINTER_TO_SELF_TYPE ((type_t*) 0x1)
+
 // TODO: global constants for standard types like uint64_t and void*
 
 type_t* intern_type(type_t type) {
   WARN("intern_type is not actually doing interning");
-  return (type_t*) malloc_copy_of((uint8_t*) &type, sizeof(type));
+  type_t* result = (type_t*) malloc_copy_of((uint8_t*) &type, sizeof(type));
+
+  type_t* ptr_to_self_type = NULL;
+  for (int i = 0; (i < result->number_of_parameters); i++) {
+    if (result->parameters[i] == POINTER_TO_SELF_TYPE) {
+      if (ptr_to_self_type == NULL) {
+        ptr_to_self_type = (malloc_struct(type_t));
+        ptr_to_self_type->name = string_append(type.name, "*");
+        ptr_to_self_type->size = sizeof(char*);
+        ptr_to_self_type->alignment = alignof(char*);
+        WARN("POINTER_TO_SELF_TYPE only partially implemented");
+      }
+      result->parameters[i] = ptr_to_self_type;
+    }
+  }
+
+  // TODO(jawilson): make sure size and alignment still hold because
+  // of any POINTER_TO_SELF_TYPE adjustments that the caller
+  // (intern_tuple_type) should have accounted for...
+  return result;
 }
 
 #endif /* _TYPE_H_ */
-// SSCF generated file from: fatal-error.c
-
-#line 19 "fatal-error.c"
-#ifndef _FATAL_ERROR_H_
-#define _FATAL_ERROR_H_
-
-typedef enum {
-  ERROR_UKNOWN,
-  ERROR_MEMORY_ALLOCATION,
-  ERROR_MEMORY_FREE_NULL,
-  ERROR_REFERENCE_NOT_EXPECTED_TYPE,
-  ERROR_ILLEGAL_INITIAL_CAPACITY,
-  ERROR_DYNAMICALLY_SIZED_TYPE_ILLEGAL_IN_CONTAINER,
-  ERROR_ACCESS_OUT_OF_BOUNDS,
-  ERROR_NOT_REACHED,
-} error_code_t;
-
-extern _Noreturn void fatal_error_impl(char* file, int line, int error_code);
-extern const char* fatal_error_code_to_string(int error_code);
-
-#define fatal_error(code) fatal_error_impl(__FILE__, __LINE__, code)
-
-#endif /* _FATAL_ERROR_H_ */
 // SSCF generated file from: reference.c
 
 #line 17 "reference.c"
@@ -383,7 +431,7 @@ __attribute__((warn_unused_result)) extern byte_array_t*
 #endif /* _BYTE_ARRAY_H_ */
 // SSCF generated file from: hashtable.c
 
-#line 12 "hashtable.c"
+#line 8 "hashtable.c"
 #ifndef _HASHTABLE_H_
 #define _HASHTABLE_H_
 
@@ -423,26 +471,6 @@ __attribute__((warn_unused_result)) extern byte_array_t*
 extern void byte_array_write_file(byte_array_t* bytes, char* file_name);
 
 #endif /* _IO_H_ */
-// SSCF generated file from: string-util.c
-
-#line 13 "string-util.c"
-#ifndef _STRING_UTIL_H_
-#define _STRING_UTIL_H_
-
-#include <stdint.h>
-
-extern int string_is_null_or_empty(const char* str1);
-extern int string_equal(const char* str1, const char* str2);
-extern int string_starts_with(const char* str1, const char* str2);
-extern int string_ends_with(const char* str1, const char* str2);
-extern int string_contains_char(const char* str, const char ch);
-extern uint64_t string_to_uint64(const char* str);
-extern uint64_t string_hash(const char* str);
-extern char* string_substring(const char* str, int start, int end);
-extern uint64_t string_parse_uint64(const char* string);
-extern char* string_duplicate(const char* src);
-
-#endif /* _STRING_UTIL_H_ */
 // SSCF generated file from: tokenizer.c
 
 #line 9 "tokenizer.c"
@@ -888,6 +916,9 @@ typedef enum {
   ERROR_DYNAMICALLY_SIZED_TYPE_ILLEGAL_IN_CONTAINER,
   ERROR_ACCESS_OUT_OF_BOUNDS,
   ERROR_NOT_REACHED,
+  ERROR_ILLEGAL_ZERO_HASHCODE_VALUE,
+  ERROR_UNIMPLEMENTED,
+  ERROR_ILLEGAL_NULL_ARGUMENT,
 } error_code_t;
 
 extern _Noreturn void fatal_error_impl(char* file, int line, int error_code);
@@ -970,10 +1001,6 @@ void print_error_code_name(int error_code) {
  *
  * A simple hashtable from keys to values.
  */
-
-// ======================================================================
-// This is block is extraced to hashtable.h
-// ======================================================================
 
 #ifndef _HASHTABLE_H_
 #define _HASHTABLE_H_
@@ -1344,6 +1371,7 @@ extern uint64_t string_hash(const char* str);
 extern char* string_substring(const char* str, int start, int end);
 extern uint64_t string_parse_uint64(const char* string);
 extern char* string_duplicate(const char* src);
+extern char* string_append(const char* a, const char* b);
 
 #endif /* _STRING_UTIL_H_ */
 
@@ -1562,6 +1590,21 @@ uint64_t fasthash64(const void* buf, size_t len, uint64_t seed) {
   }
 
   return mix(h);
+}
+
+/**
+ * Return a freshly allocated string that is the concatentation of the
+ * two input strings (neither of which should be NULL);
+ */
+char* string_append(const char* a, const char* b) {
+  if (a == NULL || b == NULL) {
+    fatal_error(ERROR_ILLEGAL_NULL_ARGUMENT);
+  }
+  int total_length = strlen(a) + strlen(b) + 1;
+  char* result = (char*)(malloc_bytes(total_length));
+  strcat(result, a);
+  strcat(result, b);
+  return result;
 }
 #line 2 "test.c"
 /**
@@ -1853,11 +1896,35 @@ static inline type_t* nil_type() { return &nil_type_constant; }
 
 static inline type_t* char_ptr_type() { return &char_ptr_type_constant; }
 
+// This is used to indicate that a type is recursive in that it
+// contains a pointer to the same type. When the type is finally
+// interned then these are replaced with a pointer(xyz)
+#define POINTER_TO_SELF_TYPE ((type_t*) 0x1)
+
 // TODO: global constants for standard types like uint64_t and void*
 
 type_t* intern_type(type_t type) {
   WARN("intern_type is not actually doing interning");
-  return (type_t*) malloc_copy_of((uint8_t*) &type, sizeof(type));
+  type_t* result = (type_t*) malloc_copy_of((uint8_t*) &type, sizeof(type));
+
+  type_t* ptr_to_self_type = NULL;
+  for (int i = 0; (i < result->number_of_parameters); i++) {
+    if (result->parameters[i] == POINTER_TO_SELF_TYPE) {
+      if (ptr_to_self_type == NULL) {
+        ptr_to_self_type = (malloc_struct(type_t));
+        ptr_to_self_type->name = string_append(type.name, "*");
+        ptr_to_self_type->size = sizeof(char*);
+        ptr_to_self_type->alignment = alignof(char*);
+        WARN("POINTER_TO_SELF_TYPE only partially implemented");
+      }
+      result->parameters[i] = ptr_to_self_type;
+    }
+  }
+
+  // TODO(jawilson): make sure size and alignment still hold because
+  // of any POINTER_TO_SELF_TYPE adjustments that the caller
+  // (intern_tuple_type) should have accounted for...
+  return result;
 }
 
 #endif /* _TYPE_H_ */

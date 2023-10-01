@@ -25,6 +25,7 @@ extern uint64_t string_hash(const char* str);
 extern char* string_substring(const char* str, int start, int end);
 extern uint64_t string_parse_uint64(const char* string);
 extern char* string_duplicate(const char* src);
+extern char* string_append(const char* a, const char* b);
 
 #endif /* _STRING_UTIL_H_ */
 
@@ -243,4 +244,19 @@ uint64_t fasthash64(const void* buf, size_t len, uint64_t seed) {
   }
 
   return mix(h);
+}
+
+/**
+ * Return a freshly allocated string that is the concatentation of the
+ * two input strings (neither of which should be NULL);
+ */
+char* string_append(const char* a, const char* b) {
+  if (a == NULL || b == NULL) {
+    fatal_error(ERROR_ILLEGAL_NULL_ARGUMENT);
+  }
+  int total_length = strlen(a) + strlen(b) + 1;
+  char* result = (char*) (malloc_bytes(total_length));
+  strcat(result, a);
+  strcat(result, b);
+  return result;
 }

@@ -17,20 +17,20 @@ SRC_C = allocate.c \
 	type.c
 
 ORDERED_H = \
+	fatal-error.h \
 	ct-assert.h \
 	boolean.h \
 	trace.h \
 	ct-assert.h \
 	allocate.h \
+	string-util.h \
 	type.h \
-	fatal-error.h \
 	reference.h \
 	tuple.h \
 	array.h \
 	byte-array.h \
 	hashtable.h \
 	io.h \
-	string-util.h \
 	tokenizer.h \
 	test.h
 

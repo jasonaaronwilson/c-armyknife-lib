@@ -30,6 +30,7 @@ typedef enum {
   ERROR_NOT_REACHED,
   ERROR_ILLEGAL_ZERO_HASHCODE_VALUE,
   ERROR_UNIMPLEMENTED,
+  ERROR_ILLEGAL_NULL_ARGUMENT,
 } error_code_t;
 
 extern _Noreturn void fatal_error_impl(char* file, int line, int error_code);

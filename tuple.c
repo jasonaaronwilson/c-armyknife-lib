@@ -58,29 +58,21 @@ type_t* intern_tuple_type(int number_of_parameters, ...) {
   va_list args;
   va_start(args, number_of_parameters);
   for (int i = 0; (i < number_of_parameters); i++) {
+
     type_t* element_type = va_arg(args, type_t*);
-    if (element_type == POINTER_TO_SELF_TYPE) {
-      offset = TUPLE_ALIGN_OFFSET(offset, alignof(uint64_t*));
-      offset += sizeof(uint64_t*);
-      if (i > 0) {
-        name = byte_array_append_string(name, ",");
-      }
-      name = byte_array_append_string(name, "self*");
-    } else {
-      offset = TUPLE_ALIGN_OFFSET(offset, element_type->alignment);
-      if (element_type->size <= 0) {
-        fatal_error(ERROR_DYNAMICALLY_SIZED_TYPE_ILLEGAL_IN_CONTAINER);
-      }
-      if (element_type->alignment > alignment) {
-        alignment = element_type->alignment;
-      }
-      result->parameters[result->number_of_parameters++] = element_type;
-      if (i > 0) {
-        name = byte_array_append_string(name, ",");
-      }
-      name = byte_array_append_string(name, element_type->name);
-      offset += element_type->size;
+    result->parameters[result->number_of_parameters++] = element_type;
+    offset = TUPLE_ALIGN_OFFSET(offset, element_type->alignment);
+    if (element_type->size <= 0) {
+      fatal_error(ERROR_DYNAMICALLY_SIZED_TYPE_ILLEGAL_IN_CONTAINER);
     }
+    if (element_type->alignment > alignment) {
+      alignment = element_type->alignment;
+    }
+    if (i > 0) {
+      name = byte_array_append_string(name, ",");
+    }
+    name = byte_array_append_string(name, element_type->name);
+    offset += element_type->size;
   }
   va_end(args);
 

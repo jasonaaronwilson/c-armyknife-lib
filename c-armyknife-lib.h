@@ -193,43 +193,21 @@ extern type_t uint32_type_constant;
 extern type_t uint64_type_constant;
 extern type_t char_ptr_type_constant;
 extern type_t nil_type_constant;
+extern type_t self_ptr_type_constant;
 
 static inline type_t* uint64_type() { return &uint64_type_constant; }
 static inline type_t* uint32_type() { return &uint32_type_constant; }
 static inline type_t* uint16_type() { return &uint16_type_constant; }
 static inline type_t* uint8_type() { return &uint8_type_constant; }
 static inline type_t* nil_type() { return &nil_type_constant; }
-
 static inline type_t* char_ptr_type() { return &char_ptr_type_constant; }
-
-// This is used to indicate that a type is recursive in that it
-// contains a pointer to the same type. When the type is finally
-// interned then these are replaced with a pointer(xyz)
-#define POINTER_TO_SELF_TYPE ((type_t*) 0x1)
+static inline type_t* self_ptr_type() { return &self_ptr_type_constant; }
 
 // TODO: global constants for standard types like uint64_t and void*
 
 type_t* intern_type(type_t type) {
   WARN("intern_type is not actually doing interning");
   type_t* result = (type_t*) malloc_copy_of((uint8_t*) &type, sizeof(type));
-
-  type_t* ptr_to_self_type = NULL;
-  for (int i = 0; (i < result->number_of_parameters); i++) {
-    if (result->parameters[i] == POINTER_TO_SELF_TYPE) {
-      if (ptr_to_self_type == NULL) {
-        ptr_to_self_type = (malloc_struct(type_t));
-        ptr_to_self_type->name = string_append(type.name, "*");
-        ptr_to_self_type->size = sizeof(uint64_t*);
-        ptr_to_self_type->alignment = alignof(uint64_t*);
-        WARN("POINTER_TO_SELF_TYPE only partially implemented");
-      }
-      result->parameters[i] = ptr_to_self_type;
-    }
-  }
-
-  // TODO(jawilson): make sure size and alignment still hold because
-  // of any POINTER_TO_SELF_TYPE adjustments that the caller
-  // (intern_tuple_type) should have accounted for...
   return result;
 }
 
@@ -837,6 +815,9 @@ __attribute__((warn_unused_result)) extern byte_array_t*
 #include "ct-assert.h"
 #include "fatal-error.h"
 
+/**
+ * Make an empty byte array with the given initial capacity.
+ */
 byte_array_t* make_byte_array(uint32_t initial_capacity) {
 
   // We make the assumption that casting (char*) to (uint8_t*) and
@@ -844,14 +825,24 @@ byte_array_t* make_byte_array(uint32_t initial_capacity) {
   // architecures.
   ct_assert(sizeof(char) == 1);
 
+  if (initial_capacity < 1) {
+    fatal_error(ERROR_ILLEGAL_INITIAL_CAPACITY);
+  }
+
   byte_array_t* result
       = (byte_array_t*) (malloc_bytes(initial_capacity + sizeof(byte_array_t)));
   result->capacity = initial_capacity;
   return result;
 }
 
+/**
+ * Return the number of bytes that have been added to this byte array.
+ */
 uint64_t byte_array_length(byte_array_t* array) { return array->length; }
 
+/**
+ * Get a single byte from a byte array.
+ */
 uint8_t byte_array_get(byte_array_t* byte_array, uint64_t position) {
   if (position < byte_array->length) {
     return byte_array->elements[position];
@@ -882,6 +873,9 @@ char* byte_array_to_c_string(byte_array_t* byte_array) {
   return byte_array_c_substring(byte_array, 0, byte_array->length);
 }
 
+/**
+ * Append a single byte to the byte array.
+ */
 __attribute__((warn_unused_result)) byte_array_t*
     byte_array_append_byte(byte_array_t* byte_array, uint8_t element) {
   if (byte_array->length < byte_array->capacity) {
@@ -898,15 +892,23 @@ __attribute__((warn_unused_result)) byte_array_t*
   }
 }
 
+/**
+ * Append multiple bytes to the byte array.
+ */
 __attribute__((warn_unused_result)) byte_array_t*
     byte_array_append_bytes(byte_array_t* byte_array, uint8_t* bytes,
                             uint64_t n_bytes) {
+  // Obviously this can be optimized...
   for (int i = 0; i < n_bytes; i++) {
     byte_array = byte_array_append_byte(byte_array, bytes[i]);
   }
   return byte_array;
 }
 
+/**
+ * Append all of the bytes from a C string (except the ending NUL
+ * char).
+ */
 __attribute__((warn_unused_result)) byte_array_t*
     byte_array_append_string(byte_array_t* byte_array, const char* str) {
   return byte_array_append_bytes(byte_array, (uint8_t*) str, strlen(str));
@@ -1288,14 +1290,13 @@ extern void hashtree_delete_value(hashtree_t(K, V) * htree, type_t* key_type,
 #define tuple_read tuple_reference_of_element
 
 type_t* intern_hashtree_type(type_t* key_type, type_t* value_type) {
-  return intern_tuple_type(5, uint64_type(), POINTER_TO_SELF_TYPE,
-                           POINTER_TO_SELF_TYPE, key_type, value_type);
+  return intern_tuple_type(5, uint64_type(), self_ptr_type(),
+                           self_ptr_type(), key_type, value_type);
 }
 
-hashtree_t(K, V)
-    * make_empty_hashtree_node(type_t* key_type, type_t* value_type) {
+pointer_t(hashtree_t(K, V)) make_empty_hashtree_node(type_t* key_type, type_t* value_type) {
   type_t* node_type = intern_hashtree_type(key_type, value_type);
-  return (hashtree_t(K, V)*) (malloc_bytes(node_type->size));
+  return (pointer_t(hashtree_t(K, V))) (malloc_bytes(node_type->size));
 }
 
 /**
@@ -1309,7 +1310,7 @@ hashtree_t(K, V)
  * (simply consistently map zero to any other value like hashtable
  * already does).
  */
-boolean_t hashtree_insert(hashtree_t(K, V) * htree, type_t* key_type,
+boolean_t hashtree_insert(pointer_t(hashtree_t(K, V)) htree, type_t* key_type,
                           type_t* value_type, uint64_t hashcode,
                           reference_t key_reference,
                           reference_t value_reference) {
@@ -1370,7 +1371,7 @@ boolean_t hashtree_insert(hashtree_t(K, V) * htree, type_t* key_type,
   }
 }
 
-void hashtree_delete(hashtree_t(K, V) * htree, type_t* key_type,
+void hashtree_delete(pointer_t(hashtree_t(K, V)) htree, type_t* key_type,
                      type_t* value_type, reference_t key_reference) {
   fatal_error(ERROR_UNIMPLEMENTED);
 }
@@ -1988,29 +1989,21 @@ type_t* intern_tuple_type(int number_of_parameters, ...) {
   va_list args;
   va_start(args, number_of_parameters);
   for (int i = 0; (i < number_of_parameters); i++) {
+
     type_t* element_type = va_arg(args, type_t*);
-    if (element_type == POINTER_TO_SELF_TYPE) {
-      offset = TUPLE_ALIGN_OFFSET(offset, alignof(uint64_t*));
-      offset += sizeof(uint64_t*);
-      if (i > 0) {
-        name = byte_array_append_string(name, ",");
-      }
-      name = byte_array_append_string(name, "self*");
-    } else {
-      offset = TUPLE_ALIGN_OFFSET(offset, element_type->alignment);
-      if (element_type->size <= 0) {
-        fatal_error(ERROR_DYNAMICALLY_SIZED_TYPE_ILLEGAL_IN_CONTAINER);
-      }
-      if (element_type->alignment > alignment) {
-        alignment = element_type->alignment;
-      }
-      result->parameters[result->number_of_parameters++] = element_type;
-      if (i > 0) {
-        name = byte_array_append_string(name, ",");
-      }
-      name = byte_array_append_string(name, element_type->name);
-      offset += element_type->size;
+    result->parameters[result->number_of_parameters++] = element_type;
+    offset = TUPLE_ALIGN_OFFSET(offset, element_type->alignment);
+    if (element_type->size <= 0) {
+      fatal_error(ERROR_DYNAMICALLY_SIZED_TYPE_ILLEGAL_IN_CONTAINER);
     }
+    if (element_type->alignment > alignment) {
+      alignment = element_type->alignment;
+    }
+    if (i > 0) {
+      name = byte_array_append_string(name, ",");
+    }
+    name = byte_array_append_string(name, element_type->name);
+    offset += element_type->size;
   }
   va_end(args);
 
@@ -2107,43 +2100,21 @@ extern type_t uint32_type_constant;
 extern type_t uint64_type_constant;
 extern type_t char_ptr_type_constant;
 extern type_t nil_type_constant;
+extern type_t self_ptr_type_constant;
 
 static inline type_t* uint64_type() { return &uint64_type_constant; }
 static inline type_t* uint32_type() { return &uint32_type_constant; }
 static inline type_t* uint16_type() { return &uint16_type_constant; }
 static inline type_t* uint8_type() { return &uint8_type_constant; }
 static inline type_t* nil_type() { return &nil_type_constant; }
-
 static inline type_t* char_ptr_type() { return &char_ptr_type_constant; }
-
-// This is used to indicate that a type is recursive in that it
-// contains a pointer to the same type. When the type is finally
-// interned then these are replaced with a pointer(xyz)
-#define POINTER_TO_SELF_TYPE ((type_t*) 0x1)
+static inline type_t* self_ptr_type() { return &self_ptr_type_constant; }
 
 // TODO: global constants for standard types like uint64_t and void*
 
 type_t* intern_type(type_t type) {
   WARN("intern_type is not actually doing interning");
   type_t* result = (type_t*) malloc_copy_of((uint8_t*) &type, sizeof(type));
-
-  type_t* ptr_to_self_type = NULL;
-  for (int i = 0; (i < result->number_of_parameters); i++) {
-    if (result->parameters[i] == POINTER_TO_SELF_TYPE) {
-      if (ptr_to_self_type == NULL) {
-        ptr_to_self_type = (malloc_struct(type_t));
-        ptr_to_self_type->name = string_append(type.name, "*");
-        ptr_to_self_type->size = sizeof(uint64_t*);
-        ptr_to_self_type->alignment = alignof(uint64_t*);
-        WARN("POINTER_TO_SELF_TYPE only partially implemented");
-      }
-      result->parameters[i] = ptr_to_self_type;
-    }
-  }
-
-  // TODO(jawilson): make sure size and alignment still hold because
-  // of any POINTER_TO_SELF_TYPE adjustments that the caller
-  // (intern_tuple_type) should have accounted for...
   return result;
 }
 
@@ -2229,6 +2200,12 @@ type_t nil_type_constant = {
     .size = 0,
     .alignment = 0,
     .hash_fn = &hash_reference_bytes,
+};
+
+type_t self_ptr_type_constant = {
+    .name = "self*",
+    .size = sizeof(uint64_t*),
+    .alignment = alignof(uint64_t*),
 };
 
 // TODO(jawilson): more pointer types for the built in C types.

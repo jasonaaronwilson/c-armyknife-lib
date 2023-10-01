@@ -64,14 +64,14 @@ extern void hashtree_delete_value(hashtree_t(K, V) * htree, type_t* key_type,
 #define tuple_read tuple_reference_of_element
 
 type_t* intern_hashtree_type(type_t* key_type, type_t* value_type) {
-  return intern_tuple_type(5, uint64_type(), POINTER_TO_SELF_TYPE,
-                           POINTER_TO_SELF_TYPE, key_type, value_type);
+  return intern_tuple_type(5, uint64_type(), self_ptr_type(), self_ptr_type(),
+                           key_type, value_type);
 }
 
-hashtree_t(K, V)
-    * make_empty_hashtree_node(type_t* key_type, type_t* value_type) {
+pointer_t(hashtree_t(K, V))
+    make_empty_hashtree_node(type_t* key_type, type_t* value_type) {
   type_t* node_type = intern_hashtree_type(key_type, value_type);
-  return (hashtree_t(K, V)*) (malloc_bytes(node_type->size));
+  return (pointer_t(hashtree_t(K, V)))(malloc_bytes(node_type->size));
 }
 
 /**
@@ -85,7 +85,7 @@ hashtree_t(K, V)
  * (simply consistently map zero to any other value like hashtable
  * already does).
  */
-boolean_t hashtree_insert(hashtree_t(K, V) * htree, type_t* key_type,
+boolean_t hashtree_insert(pointer_t(hashtree_t(K, V)) htree, type_t* key_type,
                           type_t* value_type, uint64_t hashcode,
                           reference_t key_reference,
                           reference_t value_reference) {
@@ -146,7 +146,7 @@ boolean_t hashtree_insert(hashtree_t(K, V) * htree, type_t* key_type,
   }
 }
 
-void hashtree_delete(hashtree_t(K, V) * htree, type_t* key_type,
+void hashtree_delete(pointer_t(hashtree_t(K, V)) htree, type_t* key_type,
                      type_t* value_type, reference_t key_reference) {
   fatal_error(ERROR_UNIMPLEMENTED);
 }

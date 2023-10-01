@@ -46,43 +46,21 @@ extern type_t uint32_type_constant;
 extern type_t uint64_type_constant;
 extern type_t char_ptr_type_constant;
 extern type_t nil_type_constant;
+extern type_t self_ptr_type_constant;
 
 static inline type_t* uint64_type() { return &uint64_type_constant; }
 static inline type_t* uint32_type() { return &uint32_type_constant; }
 static inline type_t* uint16_type() { return &uint16_type_constant; }
 static inline type_t* uint8_type() { return &uint8_type_constant; }
 static inline type_t* nil_type() { return &nil_type_constant; }
-
 static inline type_t* char_ptr_type() { return &char_ptr_type_constant; }
-
-// This is used to indicate that a type is recursive in that it
-// contains a pointer to the same type. When the type is finally
-// interned then these are replaced with a pointer(xyz)
-#define POINTER_TO_SELF_TYPE ((type_t*) 0x1)
+static inline type_t* self_ptr_type() { return &self_ptr_type_constant; }
 
 // TODO: global constants for standard types like uint64_t and void*
 
 type_t* intern_type(type_t type) {
   WARN("intern_type is not actually doing interning");
   type_t* result = (type_t*) malloc_copy_of((uint8_t*) &type, sizeof(type));
-
-  type_t* ptr_to_self_type = NULL;
-  for (int i = 0; (i < result->number_of_parameters); i++) {
-    if (result->parameters[i] == POINTER_TO_SELF_TYPE) {
-      if (ptr_to_self_type == NULL) {
-        ptr_to_self_type = (malloc_struct(type_t));
-        ptr_to_self_type->name = string_append(type.name, "*");
-        ptr_to_self_type->size = sizeof(uint64_t*);
-        ptr_to_self_type->alignment = alignof(uint64_t*);
-        WARN("POINTER_TO_SELF_TYPE only partially implemented");
-      }
-      result->parameters[i] = ptr_to_self_type;
-    }
-  }
-
-  // TODO(jawilson): make sure size and alignment still hold because
-  // of any POINTER_TO_SELF_TYPE adjustments that the caller
-  // (intern_tuple_type) should have accounted for...
   return result;
 }
 
@@ -168,6 +146,12 @@ type_t nil_type_constant = {
     .size = 0,
     .alignment = 0,
     .hash_fn = &hash_reference_bytes,
+};
+
+type_t self_ptr_type_constant = {
+    .name = "self*",
+    .size = sizeof(uint64_t*),
+    .alignment = alignof(uint64_t*),
 };
 
 // TODO(jawilson): more pointer types for the built in C types.

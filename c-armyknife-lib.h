@@ -345,10 +345,15 @@ typedef struct {
 } tuple_t;
 
 extern type_t* intern_tuple_type(int number_of_parameters, ...);
+
+// Rename all of these since they are in fact painfully long...
+
 extern reference_t tuple_reference_of_element(reference_t tuple,
                                               uint64_t position);
+
 extern reference_t tuple_reference_of_element_from_pointer(
     type_t* type, tuple_t* tuple_pointer, uint64_t position);
+
 extern void tuple_write_element(reference_t tuple_ref, uint64_t position,
                                 reference_t value);
 
@@ -432,16 +437,19 @@ extern hashtree_t(K, V)
 extern reference_t hashtree_get_reference_to_value(hashtree_t(K, V) * htree,
                                                    type_t* key_type,
                                                    type_t* value_type,
+                                                   uint64_t hashcode,
                                                    reference_t key_reference);
 
-extern boolean_t hashtree_insert_value(hashtree_t(K, V) * htree,
-                                       type_t* key_type, type_t* value_type,
-                                       reference_t key_reference,
-                                       reference_t value_reference);
+extern boolean_t hashtree_insert(pointer_t(hashtree_t(K, V)) htree,
+                                 type_t* key_type, type_t* value_type,
+                                 uint64_t hashcode,
+                                 reference_t key_reference,
+                                 reference_t value_reference);
 
-extern void hashtree_delete_value(hashtree_t(K, V) * htree, type_t* key_type,
-                                  type_t* value_type,
-                                  reference_t key_reference);
+extern void hashtree_delete(pointer_t(hashtree_t(K, V)) htree, 
+                            type_t* key_type,
+                            type_t* value_type,
+                            reference_t key_reference);
 
 #endif /* _HASHTREE_H_ */
 // SSCF generated file from: hashtable.c
@@ -503,11 +511,16 @@ extern array_t(char*) * tokenize(const char* str, const char* delimiters);
 #ifndef _TEST_H_
 #define _TEST_H_
 
+// Provide a convenient place to set a breakpoint
+void armyknife_test_fail_exit() {
+  exit(1);  
+}
+
 #define ARMYKNIFE_TEST_FAIL(msg)                                               \
   do {                                                                         \
     fprintf(stderr, "%s:%d: -- FAIL (fn=%s, msg='%s')\n", __FILE__, __LINE__,  \
             __func__, msg);                                                    \
-    exit(1);                                                                   \
+    armyknife_test_fail_exit();                                                \
   } while (0)
 
 #endif /* _TEST_H_ */
@@ -1267,16 +1280,19 @@ extern hashtree_t(K, V)
 extern reference_t hashtree_get_reference_to_value(hashtree_t(K, V) * htree,
                                                    type_t* key_type,
                                                    type_t* value_type,
+                                                   uint64_t hashcode,
                                                    reference_t key_reference);
 
-extern boolean_t hashtree_insert_value(hashtree_t(K, V) * htree,
-                                       type_t* key_type, type_t* value_type,
-                                       reference_t key_reference,
-                                       reference_t value_reference);
+extern boolean_t hashtree_insert(pointer_t(hashtree_t(K, V)) htree,
+                                 type_t* key_type, type_t* value_type,
+                                 uint64_t hashcode,
+                                 reference_t key_reference,
+                                 reference_t value_reference);
 
-extern void hashtree_delete_value(hashtree_t(K, V) * htree, type_t* key_type,
-                                  type_t* value_type,
-                                  reference_t key_reference);
+extern void hashtree_delete(pointer_t(hashtree_t(K, V)) htree, 
+                            type_t* key_type,
+                            type_t* value_type,
+                            reference_t key_reference);
 
 #endif /* _HASHTREE_H_ */
 
@@ -1290,14 +1306,53 @@ extern void hashtree_delete_value(hashtree_t(K, V) * htree, type_t* key_type,
 #define tuple_read tuple_reference_of_element
 
 type_t* intern_hashtree_type(type_t* key_type, type_t* value_type) {
-  return intern_tuple_type(5, uint64_type(), self_ptr_type(),
-                           self_ptr_type(), key_type, value_type);
+  return intern_tuple_type(5, uint64_type(), self_ptr_type(), self_ptr_type(),
+                           key_type, value_type);
 }
 
-pointer_t(hashtree_t(K, V)) make_empty_hashtree_node(type_t* key_type, type_t* value_type) {
+pointer_t(hashtree_t(K, V))
+    make_empty_hashtree_node(type_t* key_type, type_t* value_type) {
   type_t* node_type = intern_hashtree_type(key_type, value_type);
-  return (pointer_t(hashtree_t(K, V))) (malloc_bytes(node_type->size));
+  return (pointer_t(hashtree_t(K, V)))(malloc_bytes(node_type->size));
 }
+
+reference_t hashtree_get_reference_to_value(pointer_t(hashtree_t(K, V)) htree,
+                                            type_t* key_type,
+                                            type_t* value_type,
+                                            uint64_t hashcode,
+                                            reference_t key_reference) {
+  type_t* node_type = intern_hashtree_type(key_type, value_type);
+  reference_t node_ref = reference_of(node_type, htree);
+
+  uint64_t node_hashcode = dereference_uint64(
+      tuple_reference_of_element(node_ref, HTREE_HASHCODE_POSITION));
+
+  if (node_hashcode == 0) {
+    return nil();
+  }
+
+  if (hashcode == node_hashcode) {
+    // TODO(jawilson): check key!!!
+    return tuple_reference_of_element(node_ref, HTREE_VALUE_POSITION);
+  } else if (hashcode < node_hashcode) {
+    pointer_t(hashtree_t(K, V)) left = *(
+        (hashtree_t(K, V)**) tuple_read(node_ref, HTREE_LEFT_POSITION).pointer);
+    if (left == NULL) {
+      return nil();
+    } else {
+      return hashtree_get_reference_to_value(left, 
+                                             key_type, 
+                                             value_type, 
+                                             hashcode, 
+                                             key_reference);
+    }
+
+  } else {
+    // GO RIGHT
+    return nil();
+  }
+}
+
 
 /**
  * Insert (or replace) a mapping from K to V in the tree. If the value
@@ -1310,8 +1365,10 @@ pointer_t(hashtree_t(K, V)) make_empty_hashtree_node(type_t* key_type, type_t* v
  * (simply consistently map zero to any other value like hashtable
  * already does).
  */
-boolean_t hashtree_insert(pointer_t(hashtree_t(K, V)) htree, type_t* key_type,
-                          type_t* value_type, uint64_t hashcode,
+boolean_t hashtree_insert(pointer_t(hashtree_t(K, V)) htree, 
+                          type_t* key_type,
+                          type_t* value_type,
+                          uint64_t hashcode,
                           reference_t key_reference,
                           reference_t value_reference) {
 
@@ -1325,10 +1382,15 @@ boolean_t hashtree_insert(pointer_t(hashtree_t(K, V)) htree, type_t* key_type,
   // TODO(jawilson): make sure types match
   uint64_t node_hashcode = dereference_uint64(
       tuple_reference_of_element(node_ref, HTREE_HASHCODE_POSITION));
-  if (hashcode == node_hashcode || node_hashcode == 0) {
+  if (node_hashcode == 0) {
+    tuple_write(node_ref, HTREE_HASHCODE_POSITION, reference_of_uint64(&hashcode));
+    tuple_write(node_ref, HTREE_KEY_POSITION, key_reference);
+    tuple_write(node_ref, HTREE_VALUE_POSITION, value_reference);
+    return true;
+  } else if (hashcode == node_hashcode) {
     // TODO(jawilson): make sure the keys are actually the same!
     tuple_write(node_ref, HTREE_VALUE_POSITION, value_reference);
-    return node_hashcode == 0;
+    return false;
   } else if (hashcode < node_hashcode) {
     hashtree_t(K, V)* left = *(
         (hashtree_t(K, V)**) tuple_read(node_ref, HTREE_LEFT_POSITION).pointer);
@@ -1833,11 +1895,16 @@ char* string_append(const char* a, const char* b) {
 #ifndef _TEST_H_
 #define _TEST_H_
 
+// Provide a convenient place to set a breakpoint
+void armyknife_test_fail_exit() {
+  exit(1);  
+}
+
 #define ARMYKNIFE_TEST_FAIL(msg)                                               \
   do {                                                                         \
     fprintf(stderr, "%s:%d: -- FAIL (fn=%s, msg='%s')\n", __FILE__, __LINE__,  \
             __func__, msg);                                                    \
-    exit(1);                                                                   \
+    armyknife_test_fail_exit();                                                \
   } while (0)
 
 #endif /* _TEST_H_ */
@@ -1957,10 +2024,15 @@ typedef struct {
 } tuple_t;
 
 extern type_t* intern_tuple_type(int number_of_parameters, ...);
+
+// Rename all of these since they are in fact painfully long...
+
 extern reference_t tuple_reference_of_element(reference_t tuple,
                                               uint64_t position);
+
 extern reference_t tuple_reference_of_element_from_pointer(
     type_t* type, tuple_t* tuple_pointer, uint64_t position);
+
 extern void tuple_write_element(reference_t tuple_ref, uint64_t position,
                                 reference_t value);
 
@@ -2049,8 +2121,14 @@ void tuple_write_element(reference_t tuple_ref, uint64_t position,
   if (element_reference.underlying_type != value.underlying_type) {
     fatal_error(ERROR_REFERENCE_NOT_EXPECTED_TYPE);
   }
+  /*
+  TRACE();
+  fprintf(stderr, "Writing size=%d bytes to address %ul\n", 
+          value.underlying_type->size,
+          element_reference.pointer);
+  */
   memcpy(element_reference.pointer, value.pointer,
-         tuple_ref.underlying_type->size);
+         value.underlying_type->size);
 }
 #line 2 "type.c"
 /**

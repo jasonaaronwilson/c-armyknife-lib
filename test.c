@@ -13,11 +13,14 @@
 #ifndef _TEST_H_
 #define _TEST_H_
 
+// Provide a convenient place to set a breakpoint
+void armyknife_test_fail_exit() { exit(1); }
+
 #define ARMYKNIFE_TEST_FAIL(msg)                                               \
   do {                                                                         \
     fprintf(stderr, "%s:%d: -- FAIL (fn=%s, msg='%s')\n", __FILE__, __LINE__,  \
             __func__, msg);                                                    \
-    exit(1);                                                                   \
+    armyknife_test_fail_exit();                                                \
   } while (0)
 
 #endif /* _TEST_H_ */

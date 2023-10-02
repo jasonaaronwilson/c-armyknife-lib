@@ -41,16 +41,16 @@ extern hashtree_t(K, V)
 extern reference_t hashtree_get_reference_to_value(hashtree_t(K, V) * htree,
                                                    type_t* key_type,
                                                    type_t* value_type,
+                                                   uint64_t hashcode,
                                                    reference_t key_reference);
 
-extern boolean_t hashtree_insert_value(hashtree_t(K, V) * htree,
-                                       type_t* key_type, type_t* value_type,
-                                       reference_t key_reference,
-                                       reference_t value_reference);
+extern boolean_t hashtree_insert(pointer_t(hashtree_t(K, V)) htree,
+                                 type_t* key_type, type_t* value_type,
+                                 uint64_t hashcode, reference_t key_reference,
+                                 reference_t value_reference);
 
-extern void hashtree_delete_value(hashtree_t(K, V) * htree, type_t* key_type,
-                                  type_t* value_type,
-                                  reference_t key_reference);
+extern void hashtree_delete(pointer_t(hashtree_t(K, V)) htree, type_t* key_type,
+                            type_t* value_type, reference_t key_reference);
 
 #endif /* _HASHTREE_H_ */
 
@@ -73,6 +73,41 @@ pointer_t(hashtree_t(K, V))
   type_t* node_type = intern_hashtree_type(key_type, value_type);
   return (pointer_t(hashtree_t(K, V)))(malloc_bytes(node_type->size));
 }
+
+reference_t hashtree_get_reference_to_value(pointer_t(hashtree_t(K, V)) htree,
+                                            type_t* key_type,
+                                            type_t* value_type,
+                                            uint64_t hashcode,
+                                            reference_t key_reference) {
+  type_t* node_type = intern_hashtree_type(key_type, value_type);
+  reference_t node_ref = reference_of(node_type, htree);
+
+  uint64_t node_hashcode = dereference_uint64(
+      tuple_reference_of_element(node_ref, HTREE_HASHCODE_POSITION));
+
+  if (node_hashcode == 0) {
+    return nil();
+  }
+
+  if (hashcode == node_hashcode) {
+    // TODO(jawilson): check key!!!
+    return tuple_reference_of_element(node_ref, HTREE_VALUE_POSITION);
+  } else if (hashcode < node_hashcode) {
+    pointer_t(hashtree_t(K, V)) left = *(
+        (hashtree_t(K, V)**) tuple_read(node_ref, HTREE_LEFT_POSITION).pointer);
+    if (left == NULL) {
+      return nil();
+    } else {
+      return hashtree_get_reference_to_value(left, key_type, value_type,
+                                             hashcode, key_reference);
+    }
+
+  } else {
+    // GO RIGHT
+    return nil();
+  }
+}
+
 
 /**
  * Insert (or replace) a mapping from K to V in the tree. If the value
@@ -100,10 +135,16 @@ boolean_t hashtree_insert(pointer_t(hashtree_t(K, V)) htree, type_t* key_type,
   // TODO(jawilson): make sure types match
   uint64_t node_hashcode = dereference_uint64(
       tuple_reference_of_element(node_ref, HTREE_HASHCODE_POSITION));
-  if (hashcode == node_hashcode || node_hashcode == 0) {
+  if (node_hashcode == 0) {
+    tuple_write(node_ref, HTREE_HASHCODE_POSITION,
+                reference_of_uint64(&hashcode));
+    tuple_write(node_ref, HTREE_KEY_POSITION, key_reference);
+    tuple_write(node_ref, HTREE_VALUE_POSITION, value_reference);
+    return true;
+  } else if (hashcode == node_hashcode) {
     // TODO(jawilson): make sure the keys are actually the same!
     tuple_write(node_ref, HTREE_VALUE_POSITION, value_reference);
-    return node_hashcode == 0;
+    return false;
   } else if (hashcode < node_hashcode) {
     hashtree_t(K, V)* left = *(
         (hashtree_t(K, V)**) tuple_read(node_ref, HTREE_LEFT_POSITION).pointer);

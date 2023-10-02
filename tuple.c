@@ -26,10 +26,15 @@ typedef struct {
 } tuple_t;
 
 extern type_t* intern_tuple_type(int number_of_parameters, ...);
+
+// Rename all of these since they are in fact painfully long...
+
 extern reference_t tuple_reference_of_element(reference_t tuple,
                                               uint64_t position);
+
 extern reference_t tuple_reference_of_element_from_pointer(
     type_t* type, tuple_t* tuple_pointer, uint64_t position);
+
 extern void tuple_write_element(reference_t tuple_ref, uint64_t position,
                                 reference_t value);
 
@@ -118,6 +123,11 @@ void tuple_write_element(reference_t tuple_ref, uint64_t position,
   if (element_reference.underlying_type != value.underlying_type) {
     fatal_error(ERROR_REFERENCE_NOT_EXPECTED_TYPE);
   }
-  memcpy(element_reference.pointer, value.pointer,
-         tuple_ref.underlying_type->size);
+  /*
+  TRACE();
+  fprintf(stderr, "Writing size=%d bytes to address %ul\n",
+          value.underlying_type->size,
+          element_reference.pointer);
+  */
+  memcpy(element_reference.pointer, value.pointer, value.underlying_type->size);
 }

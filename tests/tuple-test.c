@@ -7,6 +7,29 @@
 #define C_ARMYKNIFE_LIB_IMPL
 #include "../c-armyknife-lib.h"
 
+void test_writing_in_reverse() {
+  type_t* type
+      = intern_tuple_type(3, uint64_type(), uint64_type(), uint64_type());
+  reference_t tuple_ref = reference_of(type, malloc_bytes(type->size));
+  uint64_t big_number = 0xdeadbeafcafebeed;
+  tuple_write_element(tuple_ref, 2, reference_of_uint64(&big_number));
+  tuple_write_element(tuple_ref, 1, reference_of_uint64(&big_number));
+  tuple_write_element(tuple_ref, 0, reference_of_uint64(&big_number));
+  reference_t element;
+  element = tuple_reference_of_element(tuple_ref, 2);
+  if (dereference_uint64(element) != big_number) {
+    ARMYKNIFE_TEST_FAIL("element got overwritten?");
+  }
+  element = tuple_reference_of_element(tuple_ref, 1);
+  if (dereference_uint64(element) != big_number) {
+    ARMYKNIFE_TEST_FAIL("element got overwritten?");
+  }
+  element = tuple_reference_of_element(tuple_ref, 0);
+  if (dereference_uint64(element) != big_number) {
+    ARMYKNIFE_TEST_FAIL("element got overwritten?");
+  }
+}
+
 void test_sizes() {
   type_t* type = intern_tuple_type(1, uint64_type());
   if (type->size != 8) {
@@ -124,5 +147,6 @@ void test_string_tuple() {
 int main(int argc, char** argv) {
   test_sizes();
   test_offsets();
+  test_writing_in_reverse();
   exit(0);
 }

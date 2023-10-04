@@ -61,6 +61,6 @@ array_t(char*) * tokenize(const char* str, const char* delimiters) {
  * Add a *copy* of the string named data to the token list.
  */
 array_t(char*) * add_duplicate(array_t(char*) * token_array, const char* data) {
-  return array_add(token_array, reference_of(token_array->element_type,
-                                             string_duplicate(data)));
+  char* duplicate = string_duplicate(data);
+  return array_add(token_array, reference_of_char_ptr(&duplicate));
 }

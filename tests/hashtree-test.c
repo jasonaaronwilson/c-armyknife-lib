@@ -40,9 +40,14 @@ void test_string_to_string_htree() {
   value_ref
       = hashtree_get_reference_to_value(htree, char_ptr_type(), char_ptr_type(),
                                         1000, reference_of_char_ptr(&key_1000));
-  if (value_ref.underlying_type == nil_type()
-      || dereference_char_ptr(value_ref) != value_1000) {
-    ARMYKNIFE_TEST_FAIL("we should have found key1000 in the tree");
+  if (value_ref.underlying_type == nil_type()) {
+    ARMYKNIFE_TEST_FAIL("we should have found key_1000 in the tree");
+  }
+  if (dereference_char_ptr(value_ref) != value_1000) {
+    // HERE: dereference_char_ptr(value_ref) is junky (but apprently
+    // is the correct type)
+    fprintf(stderr, "%s != %s", dereference_char_ptr(value_ref), value_1000);
+    ARMYKNIFE_TEST_FAIL("the value for key_1000 should be value_1000");
   }
 
   // We still better not find the never_in_tree_key

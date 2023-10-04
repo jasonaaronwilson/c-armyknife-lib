@@ -16,15 +16,16 @@
 
 #define MAX_TYPE_PARAMETERS 8
 
-struct byte_buffer_S;
 struct reference_S;
 struct type_S;
 
 typedef int (*compare_references_fn_t)(struct reference_S a,
                                        struct reference_S b);
-typedef void (*append_text_representation_fn_t)(struct byte_buffer_S* buffer,
-                                                struct reference_S object);
+
 typedef uint64_t (*hash_reference_fn_t)(struct reference_S object);
+
+typedef byte_array_t* (*append_text_representation_fn_t)(
+    byte_array_t* byte_array, struct reference_S object);
 
 struct type_S {
   char* name;
@@ -33,8 +34,8 @@ struct type_S {
   uint64_t number_of_parameters;
   struct type_S* parameters[MAX_TYPE_PARAMETERS];
   compare_references_fn_t compare_fn;
-  append_text_representation_fn_t append_fn;
   hash_reference_fn_t hash_fn;
+  append_text_representation_fn_t append_fn;
 };
 typedef struct type_S type_t;
 
@@ -70,6 +71,16 @@ type_t* intern_type(type_t type) {
 
 #include <stdalign.h>
 
+int compare_string_references(reference_t ref_a, reference_t ref_b) {
+  return strcmp(dereference_char_ptr(ref_a), dereference_char_ptr(ref_b));
+}
+
+int compare_uint64_t(struct reference_S a, struct reference_S b) {
+  return dereference_uint64(a) - dereference_uint64(b);
+}
+
+// etc.
+
 uint64_t hash_reference_bytes(reference_t reference) {
   // Actually call fasthash64!
   return 12;
@@ -80,8 +91,22 @@ uint64_t hash_string_reference(reference_t reference) {
   return 12;
 }
 
-int compare_string_references(reference_t ref_a, reference_t ref_b) {
-  return strcmp(dereference_char_ptr(ref_a), dereference_char_ptr(ref_b));
+byte_array_t* append_string_text(byte_array_t* byte_array,
+                                 struct reference_S object) {
+  char* str = dereference_char_ptr(object);
+  byte_array = byte_array_append_byte(byte_array, '"');
+  // TODO(jawilson): quote "
+  byte_array = byte_array_append_string(byte_array, str);
+  byte_array = byte_array_append_byte(byte_array, '"');
+  return byte_array;
+}
+
+struct byte_array_S* append_uint64_text(struct byte_array_S* byte_array,
+                                        struct reference_S object) {
+  char buffer[64];
+  uint64_t number = dereference_uint64(object);
+  int n_written = sprintf(buffer, "%lu", number);
+  return byte_array_append_string(byte_array, buffer);
 }
 
 type_t uint8_type_constant = {
@@ -110,6 +135,7 @@ type_t uint64_type_constant = {
     .size = sizeof(uint64_t),
     .alignment = alignof(uint64_t),
     .hash_fn = &hash_reference_bytes,
+    .append_fn = &append_uint64_text,
 };
 
 type_t char_type_constant = {
@@ -139,6 +165,7 @@ type_t char_ptr_type_constant = {
     .alignment = alignof(char*),
     .hash_fn = &hash_string_reference,
     .compare_fn = &compare_string_references,
+    .append_fn = &append_string_text,
 };
 
 type_t nil_type_constant = {

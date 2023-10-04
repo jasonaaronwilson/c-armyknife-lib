@@ -151,6 +151,45 @@ extern char* string_duplicate(const char* src);
 extern char* string_append(const char* a, const char* b);
 
 #endif /* _STRING_UTIL_H_ */
+// SSCF generated file from: byte-array.c
+
+#line 10 "byte-array.c"
+#ifndef _BYTE_ARRAY_H_
+#define _BYTE_ARRAY_H_
+
+#include <stdint.h>
+#include <string.h>
+
+struct byte_array_S {
+  uint32_t length;
+  uint32_t capacity;
+  uint8_t elements[0];
+};
+
+typedef struct byte_array_S byte_array_t;
+
+extern byte_array_t* make_byte_array(uint32_t initial_capacity);
+
+extern uint64_t byte_array_length(byte_array_t* byte_array);
+
+extern uint8_t byte_array_get(byte_array_t* byte_array, uint64_t position);
+
+extern char* byte_array_c_substring(byte_array_t* byte_array, uint64_t start,
+                                    uint64_t end);
+
+extern char* byte_array_to_c_strring(byte_array_t* byte_array);
+
+__attribute__((warn_unused_result)) extern byte_array_t*
+    byte_array_append_byte(byte_array_t* byte_array, uint8_t byte);
+
+__attribute__((warn_unused_result)) extern byte_array_t*
+    byte_array_append_bytes(byte_array_t* byte_array, uint8_t* bytes,
+                            uint64_t n_bytes);
+
+__attribute__((warn_unused_result)) extern byte_array_t*
+    byte_array_append_string(byte_array_t* byte_array, const char* str);
+
+#endif /* _BYTE_ARRAY_H_ */
 // SSCF generated file from: type.c
 
 #line 10 "type.c"
@@ -163,15 +202,15 @@ extern char* string_append(const char* a, const char* b);
 
 #define MAX_TYPE_PARAMETERS 8
 
-struct byte_buffer_S;
 struct reference_S;
 struct type_S;
 
 typedef int (*compare_references_fn_t)(struct reference_S a,
                                        struct reference_S b);
-typedef void (*append_text_representation_fn_t)(struct byte_buffer_S* buffer,
-                                                struct reference_S object);
+
 typedef uint64_t (*hash_reference_fn_t)(struct reference_S object);
+
+typedef byte_array_t* (*append_text_representation_fn_t)(byte_array_t* byte_array, struct reference_S object);
 
 struct type_S {
   char* name;
@@ -180,8 +219,8 @@ struct type_S {
   uint64_t number_of_parameters;
   struct type_S* parameters[MAX_TYPE_PARAMETERS];
   compare_references_fn_t compare_fn;
-  append_text_representation_fn_t append_fn;
   hash_reference_fn_t hash_fn;
+  append_text_representation_fn_t append_fn;
 };
 typedef struct type_S type_t;
 
@@ -323,10 +362,15 @@ static inline char* dereference_char_ptr(reference_t reference) {
   if (reference.underlying_type != char_ptr_type()) {
     fatal_error(ERROR_REFERENCE_NOT_EXPECTED_TYPE);
   }
-  return ((char*) reference.pointer);
+  return *((char**) reference.pointer);
 }
 
 static inline reference_t nil() { return reference_of(nil_type(), 0); }
+
+static inline byte_array_t* byte_array_append_reference(byte_array_t* byte_array,
+                                                        reference_t reference) {
+  return reference.underlying_type->append_fn(byte_array, reference);
+}
 
 #endif /* _REFERENCE_H_ */
 // SSCF generated file from: tuple.c
@@ -357,6 +401,9 @@ extern reference_t tuple_reference_of_element_from_pointer(
 extern void tuple_write_element(reference_t tuple_ref, uint64_t position,
                                 reference_t value);
 
+extern struct byte_array_S* tuple_append_text(struct byte_array_S* byte_array,
+                                              reference_t tuple_ref);
+
 #endif /* _TUPLE_H_ */
 // SSCF generated file from: array.c
 
@@ -382,43 +429,6 @@ __attribute__((warn_unused_result)) extern array_t(|?|)*
     array_add(array_t(|?|)* arr, reference_t element);
 
 #endif /* _ARRAY_H_ */
-// SSCF generated file from: byte-array.c
-
-#line 10 "byte-array.c"
-#ifndef _BYTE_ARRAY_H_
-#define _BYTE_ARRAY_H_
-
-#include <stdint.h>
-#include <string.h>
-
-typedef struct {
-  uint32_t length;
-  uint32_t capacity;
-  uint8_t elements[0];
-} byte_array_t;
-
-extern byte_array_t* make_byte_array(uint32_t initial_capacity);
-
-extern uint64_t byte_array_length(byte_array_t* byte_array);
-
-extern uint8_t byte_array_get(byte_array_t* byte_array, uint64_t position);
-
-extern char* byte_array_c_substring(byte_array_t* byte_array, uint64_t start,
-                                    uint64_t end);
-
-extern char* byte_array_to_c_strring(byte_array_t* byte_array);
-
-__attribute__((warn_unused_result)) extern byte_array_t*
-    byte_array_append_byte(byte_array_t* byte_array, uint8_t byte);
-
-__attribute__((warn_unused_result)) extern byte_array_t*
-    byte_array_append_bytes(byte_array_t* byte_array, uint8_t* bytes,
-                            uint64_t n_bytes);
-
-__attribute__((warn_unused_result)) extern byte_array_t*
-    byte_array_append_string(byte_array_t* byte_array, const char* str);
-
-#endif /* _BYTE_ARRAY_H_ */
 // SSCF generated file from: hashtree.c
 
 #line 29 "hashtree.c"
@@ -442,14 +452,11 @@ extern reference_t hashtree_get_reference_to_value(hashtree_t(K, V) * htree,
 
 extern boolean_t hashtree_insert(pointer_t(hashtree_t(K, V)) htree,
                                  type_t* key_type, type_t* value_type,
-                                 uint64_t hashcode,
-                                 reference_t key_reference,
+                                 uint64_t hashcode, reference_t key_reference,
                                  reference_t value_reference);
 
-extern void hashtree_delete(pointer_t(hashtree_t(K, V)) htree, 
-                            type_t* key_type,
-                            type_t* value_type,
-                            reference_t key_reference);
+extern void hashtree_delete(pointer_t(hashtree_t(K, V)) htree, type_t* key_type,
+                            type_t* value_type, reference_t key_reference);
 
 #endif /* _HASHTREE_H_ */
 // SSCF generated file from: hashtable.c
@@ -512,9 +519,7 @@ extern array_t(char*) * tokenize(const char* str, const char* delimiters);
 #define _TEST_H_
 
 // Provide a convenient place to set a breakpoint
-void armyknife_test_fail_exit() {
-  exit(1);  
-}
+void armyknife_test_fail_exit() { exit(1); }
 
 #define ARMYKNIFE_TEST_FAIL(msg)                                               \
   do {                                                                         \
@@ -790,11 +795,13 @@ typedef int boolean_t;
 #include <stdint.h>
 #include <string.h>
 
-typedef struct {
+struct byte_array_S {
   uint32_t length;
   uint32_t capacity;
   uint8_t elements[0];
-} byte_array_t;
+};
+
+typedef struct byte_array_S byte_array_t;
 
 extern byte_array_t* make_byte_array(uint32_t initial_capacity);
 
@@ -1285,14 +1292,11 @@ extern reference_t hashtree_get_reference_to_value(hashtree_t(K, V) * htree,
 
 extern boolean_t hashtree_insert(pointer_t(hashtree_t(K, V)) htree,
                                  type_t* key_type, type_t* value_type,
-                                 uint64_t hashcode,
-                                 reference_t key_reference,
+                                 uint64_t hashcode, reference_t key_reference,
                                  reference_t value_reference);
 
-extern void hashtree_delete(pointer_t(hashtree_t(K, V)) htree, 
-                            type_t* key_type,
-                            type_t* value_type,
-                            reference_t key_reference);
+extern void hashtree_delete(pointer_t(hashtree_t(K, V)) htree, type_t* key_type,
+                            type_t* value_type, reference_t key_reference);
 
 #endif /* _HASHTREE_H_ */
 
@@ -1340,11 +1344,8 @@ reference_t hashtree_get_reference_to_value(pointer_t(hashtree_t(K, V)) htree,
     if (left == NULL) {
       return nil();
     } else {
-      return hashtree_get_reference_to_value(left, 
-                                             key_type, 
-                                             value_type, 
-                                             hashcode, 
-                                             key_reference);
+      return hashtree_get_reference_to_value(left, key_type, value_type,
+                                             hashcode, key_reference);
     }
 
   } else {
@@ -1365,10 +1366,8 @@ reference_t hashtree_get_reference_to_value(pointer_t(hashtree_t(K, V)) htree,
  * (simply consistently map zero to any other value like hashtable
  * already does).
  */
-boolean_t hashtree_insert(pointer_t(hashtree_t(K, V)) htree, 
-                          type_t* key_type,
-                          type_t* value_type,
-                          uint64_t hashcode,
+boolean_t hashtree_insert(pointer_t(hashtree_t(K, V)) htree, type_t* key_type,
+                          type_t* value_type, uint64_t hashcode,
                           reference_t key_reference,
                           reference_t value_reference) {
 
@@ -1383,7 +1382,8 @@ boolean_t hashtree_insert(pointer_t(hashtree_t(K, V)) htree,
   uint64_t node_hashcode = dereference_uint64(
       tuple_reference_of_element(node_ref, HTREE_HASHCODE_POSITION));
   if (node_hashcode == 0) {
-    tuple_write(node_ref, HTREE_HASHCODE_POSITION, reference_of_uint64(&hashcode));
+    tuple_write(node_ref, HTREE_HASHCODE_POSITION,
+                reference_of_uint64(&hashcode));
     tuple_write(node_ref, HTREE_KEY_POSITION, key_reference);
     tuple_write(node_ref, HTREE_VALUE_POSITION, value_reference);
     return true;
@@ -1612,10 +1612,15 @@ static inline char* dereference_char_ptr(reference_t reference) {
   if (reference.underlying_type != char_ptr_type()) {
     fatal_error(ERROR_REFERENCE_NOT_EXPECTED_TYPE);
   }
-  return ((char*) reference.pointer);
+  return *((char**) reference.pointer);
 }
 
 static inline reference_t nil() { return reference_of(nil_type(), 0); }
+
+static inline byte_array_t* byte_array_append_reference(byte_array_t* byte_array,
+                                                        reference_t reference) {
+  return reference.underlying_type->append_fn(byte_array, reference);
+}
 
 #endif /* _REFERENCE_H_ */
 #line 2 "string-util.c"
@@ -1896,9 +1901,7 @@ char* string_append(const char* a, const char* b) {
 #define _TEST_H_
 
 // Provide a convenient place to set a breakpoint
-void armyknife_test_fail_exit() {
-  exit(1);  
-}
+void armyknife_test_fail_exit() { exit(1); }
 
 #define ARMYKNIFE_TEST_FAIL(msg)                                               \
   do {                                                                         \
@@ -1976,8 +1979,9 @@ array_t(char*) * tokenize(const char* str, const char* delimiters) {
  * Add a *copy* of the string named data to the token list.
  */
 array_t(char*) * add_duplicate(array_t(char*) * token_array, const char* data) {
-  return array_add(token_array, reference_of(token_array->element_type,
-                                             string_duplicate(data)));
+  char* duplicate = string_duplicate(data);
+  return array_add(token_array, reference_of_char_ptr(&duplicate));
+
 }
 #line 2 "trace.c"
 #ifndef _TRACE_H_
@@ -2036,6 +2040,9 @@ extern reference_t tuple_reference_of_element_from_pointer(
 extern void tuple_write_element(reference_t tuple_ref, uint64_t position,
                                 reference_t value);
 
+extern struct byte_array_S* tuple_append_text(struct byte_array_S* byte_array,
+                                              reference_t tuple_ref);
+
 #endif /* _TUPLE_H_ */
 
 // ======================================================================
@@ -2087,6 +2094,8 @@ type_t* intern_tuple_type(int number_of_parameters, ...) {
   result->name = byte_array_c_substring(name, 0, byte_array_length(name));
   free(name);
 
+  result->append_fn = &tuple_append_text;
+
   // TODO(jawilson): compare_fn, append_fn, hash_fn
   // TODO(jawilson): actually intern the type!
 
@@ -2123,12 +2132,30 @@ void tuple_write_element(reference_t tuple_ref, uint64_t position,
   }
   /*
   TRACE();
-  fprintf(stderr, "Writing size=%d bytes to address %ul\n", 
+  fprintf(stderr, "Writing size=%d bytes to address %ul\n",
           value.underlying_type->size,
           element_reference.pointer);
   */
-  memcpy(element_reference.pointer, value.pointer,
-         value.underlying_type->size);
+  memcpy(element_reference.pointer, value.pointer, value.underlying_type->size);
+}
+
+struct byte_array_S* tuple_append_text(struct byte_array_S* byte_array,
+                                       reference_t tuple_ref) {
+  // Make sure the reference is to a tuple?
+  type_t* type = tuple_ref.underlying_type;
+  tuple_t* tuple_pointer = tuple_ref.pointer;
+
+  byte_array = byte_array_append_string(byte_array, "tuple(");
+  for (int i = 0; (i < tuple_ref.underlying_type->number_of_parameters); i++) {
+    if (i > 0) {
+      byte_array = byte_array_append_string(byte_array, ", ");
+    }
+    type_t* element_type = type->parameters[i];
+    reference_t element_ref = tuple_reference_of_element(tuple_ref, i);
+    byte_array = element_type->append_fn(byte_array, element_ref);
+  }
+  byte_array = byte_array_append_string(byte_array, ")");
+  return byte_array;
 }
 #line 2 "type.c"
 /**
@@ -2148,15 +2175,15 @@ void tuple_write_element(reference_t tuple_ref, uint64_t position,
 
 #define MAX_TYPE_PARAMETERS 8
 
-struct byte_buffer_S;
 struct reference_S;
 struct type_S;
 
 typedef int (*compare_references_fn_t)(struct reference_S a,
                                        struct reference_S b);
-typedef void (*append_text_representation_fn_t)(struct byte_buffer_S* buffer,
-                                                struct reference_S object);
+
 typedef uint64_t (*hash_reference_fn_t)(struct reference_S object);
+
+typedef byte_array_t* (*append_text_representation_fn_t)(byte_array_t* byte_array, struct reference_S object);
 
 struct type_S {
   char* name;
@@ -2165,8 +2192,8 @@ struct type_S {
   uint64_t number_of_parameters;
   struct type_S* parameters[MAX_TYPE_PARAMETERS];
   compare_references_fn_t compare_fn;
-  append_text_representation_fn_t append_fn;
   hash_reference_fn_t hash_fn;
+  append_text_representation_fn_t append_fn;
 };
 typedef struct type_S type_t;
 
@@ -2202,6 +2229,16 @@ type_t* intern_type(type_t type) {
 
 #include <stdalign.h>
 
+int compare_string_references(reference_t ref_a, reference_t ref_b) {
+  return strcmp(dereference_char_ptr(ref_a), dereference_char_ptr(ref_b));
+}
+
+int compare_uint64_t(struct reference_S a, struct reference_S b) {
+  return dereference_uint64(a) - dereference_uint64(b);
+}
+
+// etc.
+
 uint64_t hash_reference_bytes(reference_t reference) {
   // Actually call fasthash64!
   return 12;
@@ -2212,8 +2249,22 @@ uint64_t hash_string_reference(reference_t reference) {
   return 12;
 }
 
-int compare_string_references(reference_t ref_a, reference_t ref_b) {
-  return strcmp(dereference_char_ptr(ref_a), dereference_char_ptr(ref_b));
+byte_array_t* append_string_text(byte_array_t* byte_array,
+                                 struct reference_S object) {
+  char* str = dereference_char_ptr(object);
+  byte_array = byte_array_append_byte(byte_array, '"');
+  // TODO(jawilson): quote "
+  byte_array = byte_array_append_string(byte_array, str);
+  byte_array = byte_array_append_byte(byte_array, '"');
+  return byte_array;
+}
+
+struct byte_array_S* append_uint64_text(struct byte_array_S* byte_array,
+                                        struct reference_S object) {
+  char buffer[64];
+  uint64_t number = dereference_uint64(object);
+  int n_written = sprintf(buffer, "%lu", number);
+  return byte_array_append_string(byte_array, buffer);
 }
 
 type_t uint8_type_constant = {
@@ -2242,6 +2293,7 @@ type_t uint64_type_constant = {
     .size = sizeof(uint64_t),
     .alignment = alignof(uint64_t),
     .hash_fn = &hash_reference_bytes,
+    .append_fn = &append_uint64_text,
 };
 
 type_t char_type_constant = {
@@ -2271,6 +2323,7 @@ type_t char_ptr_type_constant = {
     .alignment = alignof(char*),
     .hash_fn = &hash_string_reference,
     .compare_fn = &compare_string_references,
+    .append_fn = &append_string_text,
 };
 
 type_t nil_type_constant = {

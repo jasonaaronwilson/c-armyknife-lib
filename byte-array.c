@@ -13,11 +13,13 @@
 #include <stdint.h>
 #include <string.h>
 
-typedef struct {
+struct byte_array_S {
   uint32_t length;
   uint32_t capacity;
   uint8_t elements[0];
-} byte_array_t;
+};
+
+typedef struct byte_array_S byte_array_t;
 
 extern byte_array_t* make_byte_array(uint32_t initial_capacity);
 

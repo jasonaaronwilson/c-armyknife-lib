@@ -120,9 +120,15 @@ static inline char* dereference_char_ptr(reference_t reference) {
   if (reference.underlying_type != char_ptr_type()) {
     fatal_error(ERROR_REFERENCE_NOT_EXPECTED_TYPE);
   }
-  return ((char*) reference.pointer);
+  return *((char**) reference.pointer);
 }
 
 static inline reference_t nil() { return reference_of(nil_type(), 0); }
+
+static inline byte_array_t*
+    byte_array_append_reference(byte_array_t* byte_array,
+                                reference_t reference) {
+  return reference.underlying_type->append_fn(byte_array, reference);
+}
 
 #endif /* _REFERENCE_H_ */

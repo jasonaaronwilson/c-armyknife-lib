@@ -25,11 +25,11 @@ ORDERED_H = \
 	ct-assert.h \
 	allocate.h \
 	string-util.h \
+	byte-array.h \
 	type.h \
 	reference.h \
 	tuple.h \
 	array.h \
-	byte-array.h \
 	hashtree.h \
 	hashtable.h \
 	io.h \
@@ -38,6 +38,7 @@ ORDERED_H = \
 
 generate-header-files: ${SRC_C}
 	../c-single-source-file/generate-header-file ${SRC_C}
+	chmod -w ${ORDERED_H}
 
 c-armyknife-lib: ${SRC_C} generate-header-files
 	cat header-comment.txt ${ORDERED_H} >c-armyknife-lib.h
@@ -67,6 +68,7 @@ TESTS= \
 	./tuple-test.sh \
 	./array-test.sh \
 	./tokenizer-test.sh \
+	./append-test.sh \
 	./hashtree-test.sh \
 	./hashtable-test.sh
 
@@ -77,3 +79,5 @@ docs:
 	doxygen
 
 cfd:	clean format diff
+
+cf:	clean format

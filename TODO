@@ -1,5 +1,7 @@
 # TODO
 
+0. being able to print tuples will actually speed up debugging so we
+   should wire things up.
 1. lots of more built in types (double/float/signed ints)
 2. more unit tests, especially the early stuff that don't really have
    any but are actually foundational like byte_array.

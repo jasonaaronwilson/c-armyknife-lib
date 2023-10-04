@@ -38,6 +38,9 @@ extern reference_t tuple_reference_of_element_from_pointer(
 extern void tuple_write_element(reference_t tuple_ref, uint64_t position,
                                 reference_t value);
 
+extern struct byte_array_S* tuple_append_text(struct byte_array_S* byte_array,
+                                              reference_t tuple_ref);
+
 #endif /* _TUPLE_H_ */
 
 // ======================================================================
@@ -89,6 +92,8 @@ type_t* intern_tuple_type(int number_of_parameters, ...) {
   result->name = byte_array_c_substring(name, 0, byte_array_length(name));
   free(name);
 
+  result->append_fn = &tuple_append_text;
+
   // TODO(jawilson): compare_fn, append_fn, hash_fn
   // TODO(jawilson): actually intern the type!
 
@@ -130,4 +135,23 @@ void tuple_write_element(reference_t tuple_ref, uint64_t position,
           element_reference.pointer);
   */
   memcpy(element_reference.pointer, value.pointer, value.underlying_type->size);
+}
+
+struct byte_array_S* tuple_append_text(struct byte_array_S* byte_array,
+                                       reference_t tuple_ref) {
+  // Make sure the reference is to a tuple?
+  type_t* type = tuple_ref.underlying_type;
+  tuple_t* tuple_pointer = tuple_ref.pointer;
+
+  byte_array = byte_array_append_string(byte_array, "tuple(");
+  for (int i = 0; (i < tuple_ref.underlying_type->number_of_parameters); i++) {
+    if (i > 0) {
+      byte_array = byte_array_append_string(byte_array, ", ");
+    }
+    type_t* element_type = type->parameters[i];
+    reference_t element_ref = tuple_reference_of_element(tuple_ref, i);
+    byte_array = element_type->append_fn(byte_array, element_ref);
+  }
+  byte_array = byte_array_append_string(byte_array, ")");
+  return byte_array;
 }

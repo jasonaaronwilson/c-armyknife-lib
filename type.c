@@ -156,24 +156,24 @@ struct byte_array_S* append_int64_text(struct byte_array_S* byte_array,
 struct byte_array_S* append_int32_text(struct byte_array_S* byte_array,
                                        struct reference_S object) {
   char buffer[64];
-  int64_t number = dereference_int32(object);
-  sprintf(buffer, "%ld", number);
+  int32_t number = dereference_int32(object);
+  sprintf(buffer, "%d", number);
   return byte_array_append_string(byte_array, buffer);
 }
 
 struct byte_array_S* append_int16_text(struct byte_array_S* byte_array,
                                        struct reference_S object) {
   char buffer[64];
-  int64_t number = dereference_int16(object);
-  sprintf(buffer, "%ld", number);
+  int16_t number = dereference_int16(object);
+  sprintf(buffer, "%d", number);
   return byte_array_append_string(byte_array, buffer);
 }
 
 struct byte_array_S* append_int8_text(struct byte_array_S* byte_array,
                                       struct reference_S object) {
   char buffer[64];
-  int64_t number = dereference_int8(object);
-  sprintf(buffer, "%ld", number);
+  int8_t number = dereference_int8(object);
+  sprintf(buffer, "%d", number);
   return byte_array_append_string(byte_array, buffer);
 }
 

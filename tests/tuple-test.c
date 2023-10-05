@@ -122,7 +122,7 @@ void test_offsets() {
   }
 
   write_to_uint32_reference(field1_reference, 0xffffffff);
-  uint32_t field_value32 = reference_to_uint32(field1_reference);
+  uint32_t field_value32 = dereference_uint32(field1_reference);
   if (field_value32 != 0xffffffff) {
     ARMYKNIFE_TEST_FAIL("tuple_t(uint64_t,uint32_t,uint64_t)");
   }

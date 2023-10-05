@@ -32,8 +32,24 @@ void test_alist() {
     ARMYKNIFE_TEST_FAIL("should have found 'B'");
   }
 
+  // Add a few more elements to the front of the list.
   list = alist_insert(list, "c", "C");
   list = alist_insert(list, "d", "D");
+
+  // Finally delete a node.
+  list = alist_delete(list, "b");
+  value = alist_find(list, "b");
+  if (value != NULL) {
+    ARMYKNIFE_TEST_FAIL("should not have found a value for 'b'");
+  }
+  value = alist_find(list, "a");
+  if (value == NULL || strcmp("A", (char*) value) != 0) {
+    ARMYKNIFE_TEST_FAIL("should have found 'A'");
+  }
+  value = alist_find(list, "c");
+  if (value == NULL || strcmp("C", (char*) value) != 0) {
+    ARMYKNIFE_TEST_FAIL("should have found 'C'");
+  }
 }
 
 int main(int argc, char** argv) {

@@ -169,6 +169,23 @@ char* string_duplicate(const char* src) {
   return result;
 }
 
+/**
+ * Return a freshly allocated string that is the concatentation of the
+ * two input strings (neither of which should be NULL);
+ */
+char* string_append(const char* a, const char* b) {
+  if (a == NULL || b == NULL) {
+    fatal_error(ERROR_ILLEGAL_NULL_ARGUMENT);
+  }
+  int total_length = strlen(a) + strlen(b) + 1;
+  char* result = (char*) (malloc_bytes(total_length));
+  strcat(result, a);
+  strcat(result, b);
+  return result;
+}
+
+/* ================================================================ */
+
 /* The MIT License
 
    Copyright (C) 2012 Zilong Tan (eric.zltan@gmail.com)
@@ -244,19 +261,4 @@ uint64_t fasthash64(const void* buf, size_t len, uint64_t seed) {
   }
 
   return mix(h);
-}
-
-/**
- * Return a freshly allocated string that is the concatentation of the
- * two input strings (neither of which should be NULL);
- */
-char* string_append(const char* a, const char* b) {
-  if (a == NULL || b == NULL) {
-    fatal_error(ERROR_ILLEGAL_NULL_ARGUMENT);
-  }
-  int total_length = strlen(a) + strlen(b) + 1;
-  char* result = (char*) (malloc_bytes(total_length));
-  strcat(result, a);
-  strcat(result, b);
-  return result;
 }

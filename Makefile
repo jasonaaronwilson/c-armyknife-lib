@@ -11,6 +11,7 @@ SRC_C = allocate.c \
 	io.c \
 	reference.c \
 	string-alist.c \
+	string-hashtable.c \
 	string-util.c \
 	test.c \
 	tokenizer.c \
@@ -28,6 +29,7 @@ ORDERED_H = \
 	string-util.h \
 	byte-array.h \
 	string-alist.h \
+	string-hashtable.h \
 	type.h \
 	reference.h \
 	tuple.h \
@@ -68,6 +70,7 @@ TESTS= \
 	./string-util-test.sh \
 	./byte-array-test.sh \
 	./string-alist-test.sh \
+	./string-hashtable-test.sh \
 	./tuple-test.sh \
 	./array-test.sh \
 	./tokenizer-test.sh \

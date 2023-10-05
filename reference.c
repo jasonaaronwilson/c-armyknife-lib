@@ -42,16 +42,27 @@ static inline int compare_references(reference_t ref_a, reference_t ref_b) {
   return ref_a.underlying_type->compare_fn(ref_a, ref_b);
 }
 
-static inline reference_t reference_of_uint64(uint64_t* pointer) {
-  reference_t result;
-  result.underlying_type = uint64_type();
-  result.pointer = pointer;
-  return result;
-}
+static inline reference_t nil() { return reference_of(nil_type(), 0); }
 
 static inline reference_t reference_of_char_ptr(char** pointer) {
   reference_t result;
   result.underlying_type = char_ptr_type();
+  result.pointer = pointer;
+  return result;
+}
+
+static inline char* dereference_char_ptr(reference_t reference) {
+  if (reference.underlying_type != char_ptr_type()) {
+    fatal_error(ERROR_REFERENCE_NOT_EXPECTED_TYPE);
+  }
+  return *((char**) reference.pointer);
+}
+
+// Unsigned Numbers
+
+static inline reference_t reference_of_uint64(uint64_t* pointer) {
+  reference_t result;
+  result.underlying_type = uint64_type();
   result.pointer = pointer;
   return result;
 }
@@ -78,6 +89,13 @@ static inline uint64_t reference_to_uint32(reference_t reference) {
   return *((uint32_t*) reference.pointer);
 }
 
+static inline uint32_t dereference_uint32(reference_t reference) {
+  if (reference.underlying_type != uint32_type()) {
+    fatal_error(ERROR_REFERENCE_NOT_EXPECTED_TYPE);
+  }
+  return *((uint32_t*) reference.pointer);
+}
+
 static inline void write_to_uint32_reference(reference_t reference,
                                              uint32_t value) {
   if (reference.underlying_type != uint32_type()) {
@@ -87,6 +105,13 @@ static inline void write_to_uint32_reference(reference_t reference,
 }
 
 static inline uint64_t reference_to_uint16(reference_t reference) {
+  if (reference.underlying_type != uint16_type()) {
+    fatal_error(ERROR_REFERENCE_NOT_EXPECTED_TYPE);
+  }
+  return *((uint16_t*) reference.pointer);
+}
+
+static inline uint64_t dereference_uint16(reference_t reference) {
   if (reference.underlying_type != uint16_type()) {
     fatal_error(ERROR_REFERENCE_NOT_EXPECTED_TYPE);
   }
@@ -108,6 +133,13 @@ static inline uint64_t reference_to_uint8(reference_t reference) {
   return *((uint8_t*) reference.pointer);
 }
 
+static inline uint64_t dereference_uint8(reference_t reference) {
+  if (reference.underlying_type != uint8_type()) {
+    fatal_error(ERROR_REFERENCE_NOT_EXPECTED_TYPE);
+  }
+  return *((uint8_t*) reference.pointer);
+}
+
 static inline void write_to_uint8_reference(reference_t reference,
                                             uint8_t value) {
   if (reference.underlying_type != uint8_type()) {
@@ -116,14 +148,95 @@ static inline void write_to_uint8_reference(reference_t reference,
   *((uint8_t*) reference.pointer) = value;
 }
 
-static inline char* dereference_char_ptr(reference_t reference) {
-  if (reference.underlying_type != char_ptr_type()) {
-    fatal_error(ERROR_REFERENCE_NOT_EXPECTED_TYPE);
-  }
-  return *((char**) reference.pointer);
+// Signed Integers
+
+static inline reference_t reference_of_int64(int64_t* pointer) {
+  reference_t result;
+  result.underlying_type = int64_type();
+  result.pointer = pointer;
+  return result;
 }
 
-static inline reference_t nil() { return reference_of(nil_type(), 0); }
+static inline int64_t dereference_int64(reference_t reference) {
+  if (reference.underlying_type != int64_type()) {
+    fatal_error(ERROR_REFERENCE_NOT_EXPECTED_TYPE);
+  }
+  return *((int64_t*) reference.pointer);
+}
+
+static inline void write_to_int64_reference(reference_t reference,
+                                            int64_t value) {
+  if (reference.underlying_type != uint64_type()) {
+    fatal_error(ERROR_REFERENCE_NOT_EXPECTED_TYPE);
+  }
+  *((int64_t*) reference.pointer) = value;
+}
+
+static inline reference_t reference_of_int32(int32_t* pointer) {
+  reference_t result;
+  result.underlying_type = int32_type();
+  result.pointer = pointer;
+  return result;
+}
+
+static inline int32_t dereference_int32(reference_t reference) {
+  if (reference.underlying_type != int32_type()) {
+    fatal_error(ERROR_REFERENCE_NOT_EXPECTED_TYPE);
+  }
+  return *((int32_t*) reference.pointer);
+}
+
+static inline void write_to_int32_reference(reference_t reference,
+                                            int32_t value) {
+  if (reference.underlying_type != int32_type()) {
+    fatal_error(ERROR_REFERENCE_NOT_EXPECTED_TYPE);
+  }
+  *((int32_t*) reference.pointer) = value;
+}
+
+static inline reference_t reference_of_int16(int16_t* pointer) {
+  reference_t result;
+  result.underlying_type = int16_type();
+  result.pointer = pointer;
+  return result;
+}
+
+static inline int16_t dereference_int16(reference_t reference) {
+  if (reference.underlying_type != int16_type()) {
+    fatal_error(ERROR_REFERENCE_NOT_EXPECTED_TYPE);
+  }
+  return *((int16_t*) reference.pointer);
+}
+
+static inline void write_to_int16_reference(reference_t reference,
+                                            int16_t value) {
+  if (reference.underlying_type != int16_type()) {
+    fatal_error(ERROR_REFERENCE_NOT_EXPECTED_TYPE);
+  }
+  *((int16_t*) reference.pointer) = value;
+}
+
+static inline reference_t reference_of_int8(int8_t* pointer) {
+  reference_t result;
+  result.underlying_type = uint8_type();
+  result.pointer = pointer;
+  return result;
+}
+
+static inline uint64_t dereference_int8(reference_t reference) {
+  if (reference.underlying_type != int8_type()) {
+    fatal_error(ERROR_REFERENCE_NOT_EXPECTED_TYPE);
+  }
+  return *((int8_t*) reference.pointer);
+}
+
+static inline void write_to_int8_reference(reference_t reference,
+                                           int8_t value) {
+  if (reference.underlying_type != int8_type()) {
+    fatal_error(ERROR_REFERENCE_NOT_EXPECTED_TYPE);
+  }
+  *((int8_t*) reference.pointer) = value;
+}
 
 static inline byte_array_t*
     byte_array_append_reference(byte_array_t* byte_array,

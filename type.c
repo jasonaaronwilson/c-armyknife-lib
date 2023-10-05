@@ -41,21 +41,33 @@ typedef struct type_S type_t;
 
 extern type_t* intern_type(type_t type);
 
-extern type_t uint8_type_constant;
-extern type_t uint16_type_constant;
-extern type_t uint32_type_constant;
-extern type_t uint64_type_constant;
 extern type_t char_ptr_type_constant;
 extern type_t nil_type_constant;
 extern type_t self_ptr_type_constant;
+
+extern type_t uint64_type_constant;
+extern type_t uint32_type_constant;
+extern type_t uint16_type_constant;
+extern type_t uint8_type_constant;
+
+extern type_t int64_type_constant;
+extern type_t int32_type_constant;
+extern type_t int16_type_constant;
+extern type_t int8_type_constant;
+
+static inline type_t* nil_type() { return &nil_type_constant; }
+static inline type_t* char_ptr_type() { return &char_ptr_type_constant; }
+static inline type_t* self_ptr_type() { return &self_ptr_type_constant; }
 
 static inline type_t* uint64_type() { return &uint64_type_constant; }
 static inline type_t* uint32_type() { return &uint32_type_constant; }
 static inline type_t* uint16_type() { return &uint16_type_constant; }
 static inline type_t* uint8_type() { return &uint8_type_constant; }
-static inline type_t* nil_type() { return &nil_type_constant; }
-static inline type_t* char_ptr_type() { return &char_ptr_type_constant; }
-static inline type_t* self_ptr_type() { return &self_ptr_type_constant; }
+
+static inline type_t* int64_type() { return &int64_type_constant; }
+static inline type_t* int32_type() { return &int32_type_constant; }
+static inline type_t* int16_type() { return &int16_type_constant; }
+static inline type_t* int8_type() { return &int8_type_constant; }
 
 // TODO: global constants for standard types like uint64_t and void*
 
@@ -105,30 +117,65 @@ struct byte_array_S* append_uint64_text(struct byte_array_S* byte_array,
                                         struct reference_S object) {
   char buffer[64];
   uint64_t number = dereference_uint64(object);
-  int n_written = sprintf(buffer, "%lu", number);
+  sprintf(buffer, "%lu", number);
   return byte_array_append_string(byte_array, buffer);
 }
 
-type_t uint8_type_constant = {
-    .name = "uint8_t",
-    .size = sizeof(uint8_t),
-    .alignment = alignof(uint8_t),
-    .hash_fn = &hash_reference_bytes,
-};
+struct byte_array_S* append_uint32_text(struct byte_array_S* byte_array,
+                                        struct reference_S object) {
+  char buffer[64];
+  uint64_t number = dereference_uint32(object);
+  sprintf(buffer, "%lu", number);
+  return byte_array_append_string(byte_array, buffer);
+}
 
-type_t uint16_type_constant = {
-    .name = "uint16_t",
-    .size = sizeof(uint16_t),
-    .alignment = alignof(uint16_t),
-    .hash_fn = &hash_reference_bytes,
-};
+struct byte_array_S* append_uint16_text(struct byte_array_S* byte_array,
+                                        struct reference_S object) {
+  char buffer[64];
+  uint64_t number = dereference_uint16(object);
+  sprintf(buffer, "%lu", number);
+  return byte_array_append_string(byte_array, buffer);
+}
 
-type_t uint32_type_constant = {
-    .name = "uint32_t",
-    .size = sizeof(uint32_t),
-    .alignment = alignof(uint32_t),
-    .hash_fn = &hash_reference_bytes,
-};
+struct byte_array_S* append_uint8_text(struct byte_array_S* byte_array,
+                                       struct reference_S object) {
+  char buffer[64];
+  uint64_t number = dereference_uint8(object);
+  sprintf(buffer, "%lu", number);
+  return byte_array_append_string(byte_array, buffer);
+}
+
+struct byte_array_S* append_int64_text(struct byte_array_S* byte_array,
+                                       struct reference_S object) {
+  char buffer[64];
+  int64_t number = dereference_int64(object);
+  sprintf(buffer, "%ld", number);
+  return byte_array_append_string(byte_array, buffer);
+}
+
+struct byte_array_S* append_int32_text(struct byte_array_S* byte_array,
+                                       struct reference_S object) {
+  char buffer[64];
+  int64_t number = dereference_int32(object);
+  sprintf(buffer, "%ld", number);
+  return byte_array_append_string(byte_array, buffer);
+}
+
+struct byte_array_S* append_int16_text(struct byte_array_S* byte_array,
+                                       struct reference_S object) {
+  char buffer[64];
+  int64_t number = dereference_int16(object);
+  sprintf(buffer, "%ld", number);
+  return byte_array_append_string(byte_array, buffer);
+}
+
+struct byte_array_S* append_int8_text(struct byte_array_S* byte_array,
+                                      struct reference_S object) {
+  char buffer[64];
+  int64_t number = dereference_int8(object);
+  sprintf(buffer, "%ld", number);
+  return byte_array_append_string(byte_array, buffer);
+}
 
 type_t uint64_type_constant = {
     .name = "uint64_t",
@@ -136,6 +183,62 @@ type_t uint64_type_constant = {
     .alignment = alignof(uint64_t),
     .hash_fn = &hash_reference_bytes,
     .append_fn = &append_uint64_text,
+};
+
+type_t uint32_type_constant = {
+    .name = "uint32_t",
+    .size = sizeof(uint32_t),
+    .alignment = alignof(uint32_t),
+    .hash_fn = &hash_reference_bytes,
+    .append_fn = &append_uint32_text,
+};
+
+type_t uint16_type_constant = {
+    .name = "uint16_t",
+    .size = sizeof(uint16_t),
+    .alignment = alignof(uint16_t),
+    .hash_fn = &hash_reference_bytes,
+    .append_fn = &append_uint16_text,
+};
+
+type_t uint8_type_constant = {
+    .name = "uint8_t",
+    .size = sizeof(uint8_t),
+    .alignment = alignof(uint8_t),
+    .hash_fn = &hash_reference_bytes,
+    .append_fn = &append_uint8_text,
+};
+
+type_t int64_type_constant = {
+    .name = "int64_t",
+    .size = sizeof(int64_t),
+    .alignment = alignof(int64_t),
+    .hash_fn = &hash_reference_bytes,
+    .append_fn = &append_int64_text,
+};
+
+type_t int32_type_constant = {
+    .name = "int32_t",
+    .size = sizeof(int32_t),
+    .alignment = alignof(int32_t),
+    .hash_fn = &hash_reference_bytes,
+    .append_fn = &append_int32_text,
+};
+
+type_t int16_type_constant = {
+    .name = "int16_t",
+    .size = sizeof(int16_t),
+    .alignment = alignof(int16_t),
+    .hash_fn = &hash_reference_bytes,
+    .append_fn = &append_int16_text,
+};
+
+type_t int8_type_constant = {
+    .name = "int8_t",
+    .size = sizeof(int8_t),
+    .alignment = alignof(int8_t),
+    .hash_fn = &hash_reference_bytes,
+    .append_fn = &append_int8_text,
 };
 
 type_t char_type_constant = {

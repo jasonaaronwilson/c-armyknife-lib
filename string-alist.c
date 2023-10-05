@@ -47,7 +47,7 @@ string_alist_t* alist_delete(string_alist_t* list, char* key) {
   return list;
 }
 
-void* find(string_alist_t* list, char* key) {
+void* alist_find(string_alist_t* list, char* key) {
   while (list) {
     if (strcmp(key, list->key) == 0) {
       return list->value;

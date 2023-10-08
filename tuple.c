@@ -38,8 +38,8 @@ extern reference_t tuple_reference_of_element_from_pointer(
 extern void tuple_write_element(reference_t tuple_ref, uint64_t position,
                                 reference_t value);
 
-extern struct byte_array_S* tuple_append_text(struct byte_array_S* byte_array,
-                                              reference_t tuple_ref);
+extern struct buffer_S* tuple_append_text(struct buffer_S* buffer,
+                                          reference_t tuple_ref);
 
 #endif /* _TUPLE_H_ */
 
@@ -57,8 +57,8 @@ extern struct byte_array_S* tuple_append_text(struct byte_array_S* byte_array,
 type_t* intern_tuple_type(int number_of_parameters, ...) {
   type_t* result = (malloc_struct(type_t));
 
-  byte_array_t* name = make_byte_array(32);
-  name = byte_array_append_string(name, "tuple(");
+  buffer_t* name = make_buffer(32);
+  name = buffer_append_string(name, "tuple(");
 
   int offset = 0;
   int alignment = 1;
@@ -77,9 +77,9 @@ type_t* intern_tuple_type(int number_of_parameters, ...) {
       alignment = element_type->alignment;
     }
     if (i > 0) {
-      name = byte_array_append_string(name, ",");
+      name = buffer_append_string(name, ",");
     }
-    name = byte_array_append_string(name, element_type->name);
+    name = buffer_append_string(name, element_type->name);
     offset += element_type->size;
   }
   va_end(args);
@@ -88,8 +88,8 @@ type_t* intern_tuple_type(int number_of_parameters, ...) {
 
   result->size = offset;
   result->alignment = alignment;
-  name = byte_array_append_string(name, ")");
-  result->name = byte_array_c_substring(name, 0, byte_array_length(name));
+  name = buffer_append_string(name, ")");
+  result->name = buffer_c_substring(name, 0, buffer_length(name));
   free(name);
 
   result->append_fn = &tuple_append_text;
@@ -137,21 +137,21 @@ void tuple_write_element(reference_t tuple_ref, uint64_t position,
   memcpy(element_reference.pointer, value.pointer, value.underlying_type->size);
 }
 
-struct byte_array_S* tuple_append_text(struct byte_array_S* byte_array,
-                                       reference_t tuple_ref) {
+struct buffer_S* tuple_append_text(struct buffer_S* buffer,
+                                   reference_t tuple_ref) {
   // Make sure the reference is to a tuple?
   type_t* type = tuple_ref.underlying_type;
   tuple_t* tuple_pointer = tuple_ref.pointer;
 
-  byte_array = byte_array_append_string(byte_array, "tuple(");
+  buffer = buffer_append_string(buffer, "tuple(");
   for (int i = 0; (i < tuple_ref.underlying_type->number_of_parameters); i++) {
     if (i > 0) {
-      byte_array = byte_array_append_string(byte_array, ", ");
+      buffer = buffer_append_string(buffer, ", ");
     }
     type_t* element_type = type->parameters[i];
     reference_t element_ref = tuple_reference_of_element(tuple_ref, i);
-    byte_array = element_type->append_fn(byte_array, element_ref);
+    buffer = element_type->append_fn(buffer, element_ref);
   }
-  byte_array = byte_array_append_string(byte_array, ")");
-  return byte_array;
+  buffer = buffer_append_string(buffer, ")");
+  return buffer;
 }

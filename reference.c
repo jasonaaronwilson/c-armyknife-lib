@@ -256,10 +256,9 @@ static inline void write_to_int8_reference(reference_t reference,
 
 // -----
 
-static inline byte_array_t*
-    byte_array_append_reference(byte_array_t* byte_array,
-                                reference_t reference) {
-  return reference.underlying_type->append_fn(byte_array, reference);
+static inline buffer_t* buffer_append_reference(buffer_t* buffer,
+                                                reference_t reference) {
+  return reference.underlying_type->append_fn(buffer, reference);
 }
 
 #endif /* _REFERENCE_H_ */

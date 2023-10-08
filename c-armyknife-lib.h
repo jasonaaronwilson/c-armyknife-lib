@@ -161,34 +161,34 @@ extern char* string_append(const char* a, const char* b);
 #include <stdint.h>
 #include <string.h>
 
-struct byte_array_S {
+struct buffer_S {
   uint32_t length;
   uint32_t capacity;
   uint8_t elements[0];
 };
 
-typedef struct byte_array_S byte_array_t;
+typedef struct buffer_S buffer_t;
 
-extern byte_array_t* make_byte_array(uint32_t initial_capacity);
+extern buffer_t* make_buffer(uint32_t initial_capacity);
 
-extern uint64_t byte_array_length(byte_array_t* byte_array);
+extern uint64_t buffer_length(buffer_t* buffer);
 
-extern uint8_t byte_array_get(byte_array_t* byte_array, uint64_t position);
+extern uint8_t buffer_get(buffer_t* buffer, uint64_t position);
 
-extern char* byte_array_c_substring(byte_array_t* byte_array, uint64_t start,
+extern char* buffer_c_substring(buffer_t* buffer, uint64_t start,
                                     uint64_t end);
 
-extern char* byte_array_to_c_strring(byte_array_t* byte_array);
+extern char* buffer_to_c_strring(buffer_t* buffer);
 
-__attribute__((warn_unused_result)) extern byte_array_t*
-    byte_array_append_byte(byte_array_t* byte_array, uint8_t byte);
+__attribute__((warn_unused_result)) extern buffer_t*
+    buffer_append_byte(buffer_t* buffer, uint8_t byte);
 
-__attribute__((warn_unused_result)) extern byte_array_t*
-    byte_array_append_bytes(byte_array_t* byte_array, uint8_t* bytes,
+__attribute__((warn_unused_result)) extern buffer_t*
+    buffer_append_bytes(buffer_t* buffer, uint8_t* bytes,
                             uint64_t n_bytes);
 
-__attribute__((warn_unused_result)) extern byte_array_t*
-    byte_array_append_string(byte_array_t* byte_array, const char* str);
+__attribute__((warn_unused_result)) extern buffer_t*
+    buffer_append_string(buffer_t* buffer, const char* str);
 
 #endif /* _BUFFER_H_ */
 // SSCF generated file from: string-alist.c
@@ -256,8 +256,8 @@ typedef int (*compare_references_fn_t)(struct reference_S a,
 
 typedef uint64_t (*hash_reference_fn_t)(struct reference_S object);
 
-typedef byte_array_t* (*append_text_representation_fn_t)(
-    byte_array_t* byte_array, struct reference_S object);
+typedef buffer_t* (*append_text_representation_fn_t)(
+    buffer_t* buffer, struct reference_S object);
 
 struct type_S {
   char* name;
@@ -557,10 +557,10 @@ static inline void write_to_int8_reference(reference_t reference,
 
 // -----
 
-static inline byte_array_t*
-    byte_array_append_reference(byte_array_t* byte_array,
+static inline buffer_t*
+    buffer_append_reference(buffer_t* buffer,
                                 reference_t reference) {
-  return reference.underlying_type->append_fn(byte_array, reference);
+  return reference.underlying_type->append_fn(buffer, reference);
 }
 
 #endif /* _REFERENCE_H_ */
@@ -592,7 +592,7 @@ extern reference_t tuple_reference_of_element_from_pointer(
 extern void tuple_write_element(reference_t tuple_ref, uint64_t position,
                                 reference_t value);
 
-extern struct byte_array_S* tuple_append_text(struct byte_array_S* byte_array,
+extern struct buffer_S* tuple_append_text(struct buffer_S* buffer,
                                               reference_t tuple_ref);
 
 #endif /* _TUPLE_H_ */
@@ -704,9 +704,9 @@ extern int hashtable_compare(hashtable_t(K, V) * a, hashtable_t(K, V) * b);
 
 #include <stdint.h>
 
-__attribute__((warn_unused_result)) extern byte_array_t*
-    byte_array_append_file_contents(byte_array_t* bytes, char* file_name);
-extern void byte_array_write_file(byte_array_t* bytes, char* file_name);
+__attribute__((warn_unused_result)) extern buffer_t*
+    buffer_append_file_contents(buffer_t* bytes, char* file_name);
+extern void buffer_write_file(buffer_t* bytes, char* file_name);
 
 #endif /* _IO_H_ */
 // SSCF generated file from: tokenizer.c
@@ -1003,34 +1003,34 @@ typedef int boolean_t;
 #include <stdint.h>
 #include <string.h>
 
-struct byte_array_S {
+struct buffer_S {
   uint32_t length;
   uint32_t capacity;
   uint8_t elements[0];
 };
 
-typedef struct byte_array_S byte_array_t;
+typedef struct buffer_S buffer_t;
 
-extern byte_array_t* make_byte_array(uint32_t initial_capacity);
+extern buffer_t* make_buffer(uint32_t initial_capacity);
 
-extern uint64_t byte_array_length(byte_array_t* byte_array);
+extern uint64_t buffer_length(buffer_t* buffer);
 
-extern uint8_t byte_array_get(byte_array_t* byte_array, uint64_t position);
+extern uint8_t buffer_get(buffer_t* buffer, uint64_t position);
 
-extern char* byte_array_c_substring(byte_array_t* byte_array, uint64_t start,
+extern char* buffer_c_substring(buffer_t* buffer, uint64_t start,
                                     uint64_t end);
 
-extern char* byte_array_to_c_strring(byte_array_t* byte_array);
+extern char* buffer_to_c_strring(buffer_t* buffer);
 
-__attribute__((warn_unused_result)) extern byte_array_t*
-    byte_array_append_byte(byte_array_t* byte_array, uint8_t byte);
+__attribute__((warn_unused_result)) extern buffer_t*
+    buffer_append_byte(buffer_t* buffer, uint8_t byte);
 
-__attribute__((warn_unused_result)) extern byte_array_t*
-    byte_array_append_bytes(byte_array_t* byte_array, uint8_t* bytes,
+__attribute__((warn_unused_result)) extern buffer_t*
+    buffer_append_bytes(buffer_t* buffer, uint8_t* bytes,
                             uint64_t n_bytes);
 
-__attribute__((warn_unused_result)) extern byte_array_t*
-    byte_array_append_string(byte_array_t* byte_array, const char* str);
+__attribute__((warn_unused_result)) extern buffer_t*
+    buffer_append_string(buffer_t* buffer, const char* str);
 
 #endif /* _BUFFER_H_ */
 
@@ -1045,7 +1045,7 @@ __attribute__((warn_unused_result)) extern byte_array_t*
 /**
  * Make an empty byte array with the given initial capacity.
  */
-byte_array_t* make_byte_array(uint32_t initial_capacity) {
+buffer_t* make_buffer(uint32_t initial_capacity) {
 
   // We make the assumption that casting (char*) to (uint8_t*) and
   // vice-versa is completely reasonable which it is on all modern
@@ -1056,8 +1056,8 @@ byte_array_t* make_byte_array(uint32_t initial_capacity) {
     fatal_error(ERROR_ILLEGAL_INITIAL_CAPACITY);
   }
 
-  byte_array_t* result
-      = (byte_array_t*) (malloc_bytes(initial_capacity + sizeof(byte_array_t)));
+  buffer_t* result
+      = (buffer_t*) (malloc_bytes(initial_capacity + sizeof(buffer_t)));
   result->capacity = initial_capacity;
   return result;
 }
@@ -1065,14 +1065,14 @@ byte_array_t* make_byte_array(uint32_t initial_capacity) {
 /**
  * Return the number of bytes that have been added to this byte array.
  */
-uint64_t byte_array_length(byte_array_t* array) { return array->length; }
+uint64_t buffer_length(buffer_t* array) { return array->length; }
 
 /**
  * Get a single byte from a byte array.
  */
-uint8_t byte_array_get(byte_array_t* byte_array, uint64_t position) {
-  if (position < byte_array->length) {
-    return byte_array->elements[position];
+uint8_t buffer_get(buffer_t* buffer, uint64_t position) {
+  if (position < buffer->length) {
+    return buffer->elements[position];
   } else {
     fatal_error(ERROR_ACCESS_OUT_OF_BOUNDS);
   }
@@ -1082,12 +1082,12 @@ uint8_t byte_array_get(byte_array_t* byte_array, uint64_t position) {
  * Extract a newly allocated string that contain the bytes from start
  * to end (appending a zero byte to make sure it's a legal C string).
  */
-char* byte_array_c_substring(byte_array_t* byte_array, uint64_t start,
+char* buffer_c_substring(buffer_t* buffer, uint64_t start,
                              uint64_t end) {
   // Add one extra byte for a NUL string terminator byte
   char* result = (char*) (malloc_bytes(end - start + 1));
   for (int i = start; i < end; i++) {
-    result[i - start] = byte_array->elements[i];
+    result[i - start] = buffer->elements[i];
   }
   return result;
 }
@@ -1096,49 +1096,49 @@ char* byte_array_c_substring(byte_array_t* byte_array, uint64_t start,
  * Extract a newly allocated string that contain all of the bytes in the byte
  * buffer as a NU * terminated C string.
  */
-char* byte_array_to_c_string(byte_array_t* byte_array) {
-  return byte_array_c_substring(byte_array, 0, byte_array->length);
+char* buffer_to_c_string(buffer_t* buffer) {
+  return buffer_c_substring(buffer, 0, buffer->length);
 }
 
 /**
  * Append a single byte to the byte array.
  */
-__attribute__((warn_unused_result)) byte_array_t*
-    byte_array_append_byte(byte_array_t* byte_array, uint8_t element) {
-  if (byte_array->length < byte_array->capacity) {
-    byte_array->elements[byte_array->length] = element;
-    byte_array->length++;
-    return byte_array;
+__attribute__((warn_unused_result)) buffer_t*
+    buffer_append_byte(buffer_t* buffer, uint8_t element) {
+  if (buffer->length < buffer->capacity) {
+    buffer->elements[buffer->length] = element;
+    buffer->length++;
+    return buffer;
   } else {
-    byte_array_t* result = make_byte_array(byte_array->capacity * 2);
-    for (int i = 0; i < byte_array->length; i++) {
-      result = byte_array_append_byte(result, byte_array_get(byte_array, i));
+    buffer_t* result = make_buffer(buffer->capacity * 2);
+    for (int i = 0; i < buffer->length; i++) {
+      result = buffer_append_byte(result, buffer_get(buffer, i));
     }
-    free_bytes(byte_array);
-    return byte_array_append_byte(result, element);
+    free_bytes(buffer);
+    return buffer_append_byte(result, element);
   }
 }
 
 /**
  * Append multiple bytes to the byte array.
  */
-__attribute__((warn_unused_result)) byte_array_t*
-    byte_array_append_bytes(byte_array_t* byte_array, uint8_t* bytes,
+__attribute__((warn_unused_result)) buffer_t*
+    buffer_append_bytes(buffer_t* buffer, uint8_t* bytes,
                             uint64_t n_bytes) {
   // Obviously this can be optimized...
   for (int i = 0; i < n_bytes; i++) {
-    byte_array = byte_array_append_byte(byte_array, bytes[i]);
+    buffer = buffer_append_byte(buffer, bytes[i]);
   }
-  return byte_array;
+  return buffer;
 }
 
 /**
  * Append all of the bytes from a C string (except the ending NUL
  * char).
  */
-__attribute__((warn_unused_result)) byte_array_t*
-    byte_array_append_string(byte_array_t* byte_array, const char* str) {
-  return byte_array_append_bytes(byte_array, (uint8_t*) str, strlen(str));
+__attribute__((warn_unused_result)) buffer_t*
+    buffer_append_string(buffer_t* buffer, const char* str) {
+  return buffer_append_bytes(buffer, (uint8_t*) str, strlen(str));
 }
 #line 2 "command-line-parser.c"
 /**
@@ -1503,13 +1503,13 @@ void hashtable_set_value(hashtable_t(K, V) * ht, reference_t key_reference,
 // ----------------------------------------------------------------------
 
 char* construct_hashtable_type_name(type_t* key_type, type_t* value_type) {
-  byte_array_t* name = make_byte_array(32);
-  name = byte_array_append_string(name, "hashtable_t(");
-  name = byte_array_append_string(name, key_type->name);
-  name = byte_array_append_string(name, ",");
-  name = byte_array_append_string(name, value_type->name);
-  name = byte_array_append_string(name, ")");
-  char* result = byte_array_c_substring(name, 0, byte_array_length(name));
+  buffer_t* name = make_buffer(32);
+  name = buffer_append_string(name, "hashtable_t(");
+  name = buffer_append_string(name, key_type->name);
+  name = buffer_append_string(name, ",");
+  name = buffer_append_string(name, value_type->name);
+  name = buffer_append_string(name, ")");
+  char* result = buffer_c_substring(name, 0, buffer_length(name));
   free(name);
   return result;
 }
@@ -1737,9 +1737,9 @@ void hashtree_delete(pointer_t(hashtree_t(K, V)) htree, type_t* key_type,
 
 #include <stdint.h>
 
-__attribute__((warn_unused_result)) extern byte_array_t*
-    byte_array_append_file_contents(byte_array_t* bytes, char* file_name);
-extern void byte_array_write_file(byte_array_t* bytes, char* file_name);
+__attribute__((warn_unused_result)) extern buffer_t*
+    buffer_append_file_contents(buffer_t* bytes, char* file_name);
+extern void buffer_write_file(buffer_t* bytes, char* file_name);
 
 #endif /* _IO_H_ */
 
@@ -1749,8 +1749,8 @@ extern void byte_array_write_file(byte_array_t* bytes, char* file_name);
 
 #include "io.h"
 
-__attribute__((warn_unused_result)) byte_array_t*
-    byte_array_append_file_contents(byte_array_t* bytes, char* file_name) {
+__attribute__((warn_unused_result)) buffer_t*
+    buffer_append_file_contents(buffer_t* bytes, char* file_name) {
   FILE* file = fopen(file_name, "r");
   uint8_t buffer[1024];
 
@@ -1759,7 +1759,7 @@ __attribute__((warn_unused_result)) byte_array_t*
     if (n_read == 0) {
       break;
     }
-    bytes = byte_array_append_bytes(bytes, buffer, n_read);
+    bytes = buffer_append_bytes(bytes, buffer, n_read);
   }
 
   fclose(file);
@@ -1767,7 +1767,7 @@ __attribute__((warn_unused_result)) byte_array_t*
   return bytes;
 }
 
-void byte_array_write_file(byte_array_t* bytes, char* file_name) {
+void buffer_write_file(buffer_t* bytes, char* file_name) {
   FILE* file = fopen(file_name, "r");
   fwrite(&bytes->elements, 1, bytes->length, file);
   fclose(file);
@@ -2030,10 +2030,10 @@ static inline void write_to_int8_reference(reference_t reference,
 
 // -----
 
-static inline byte_array_t*
-    byte_array_append_reference(byte_array_t* byte_array,
+static inline buffer_t*
+    buffer_append_reference(buffer_t* buffer,
                                 reference_t reference) {
-  return reference.underlying_type->append_fn(byte_array, reference);
+  return reference.underlying_type->append_fn(buffer, reference);
 }
 
 #endif /* _REFERENCE_H_ */
@@ -2597,7 +2597,7 @@ extern reference_t tuple_reference_of_element_from_pointer(
 extern void tuple_write_element(reference_t tuple_ref, uint64_t position,
                                 reference_t value);
 
-extern struct byte_array_S* tuple_append_text(struct byte_array_S* byte_array,
+extern struct buffer_S* tuple_append_text(struct buffer_S* buffer,
                                               reference_t tuple_ref);
 
 #endif /* _TUPLE_H_ */
@@ -2616,8 +2616,8 @@ extern struct byte_array_S* tuple_append_text(struct byte_array_S* byte_array,
 type_t* intern_tuple_type(int number_of_parameters, ...) {
   type_t* result = (malloc_struct(type_t));
 
-  byte_array_t* name = make_byte_array(32);
-  name = byte_array_append_string(name, "tuple(");
+  buffer_t* name = make_buffer(32);
+  name = buffer_append_string(name, "tuple(");
 
   int offset = 0;
   int alignment = 1;
@@ -2636,9 +2636,9 @@ type_t* intern_tuple_type(int number_of_parameters, ...) {
       alignment = element_type->alignment;
     }
     if (i > 0) {
-      name = byte_array_append_string(name, ",");
+      name = buffer_append_string(name, ",");
     }
-    name = byte_array_append_string(name, element_type->name);
+    name = buffer_append_string(name, element_type->name);
     offset += element_type->size;
   }
   va_end(args);
@@ -2647,8 +2647,8 @@ type_t* intern_tuple_type(int number_of_parameters, ...) {
 
   result->size = offset;
   result->alignment = alignment;
-  name = byte_array_append_string(name, ")");
-  result->name = byte_array_c_substring(name, 0, byte_array_length(name));
+  name = buffer_append_string(name, ")");
+  result->name = buffer_c_substring(name, 0, buffer_length(name));
   free(name);
 
   result->append_fn = &tuple_append_text;
@@ -2696,23 +2696,23 @@ void tuple_write_element(reference_t tuple_ref, uint64_t position,
   memcpy(element_reference.pointer, value.pointer, value.underlying_type->size);
 }
 
-struct byte_array_S* tuple_append_text(struct byte_array_S* byte_array,
+struct buffer_S* tuple_append_text(struct buffer_S* buffer,
                                        reference_t tuple_ref) {
   // Make sure the reference is to a tuple?
   type_t* type = tuple_ref.underlying_type;
   tuple_t* tuple_pointer = tuple_ref.pointer;
 
-  byte_array = byte_array_append_string(byte_array, "tuple(");
+  buffer = buffer_append_string(buffer, "tuple(");
   for (int i = 0; (i < tuple_ref.underlying_type->number_of_parameters); i++) {
     if (i > 0) {
-      byte_array = byte_array_append_string(byte_array, ", ");
+      buffer = buffer_append_string(buffer, ", ");
     }
     type_t* element_type = type->parameters[i];
     reference_t element_ref = tuple_reference_of_element(tuple_ref, i);
-    byte_array = element_type->append_fn(byte_array, element_ref);
+    buffer = element_type->append_fn(buffer, element_ref);
   }
-  byte_array = byte_array_append_string(byte_array, ")");
-  return byte_array;
+  buffer = buffer_append_string(buffer, ")");
+  return buffer;
 }
 #line 2 "type.c"
 /**
@@ -2740,8 +2740,8 @@ typedef int (*compare_references_fn_t)(struct reference_S a,
 
 typedef uint64_t (*hash_reference_fn_t)(struct reference_S object);
 
-typedef byte_array_t* (*append_text_representation_fn_t)(
-    byte_array_t* byte_array, struct reference_S object);
+typedef buffer_t* (*append_text_representation_fn_t)(
+    buffer_t* buffer, struct reference_S object);
 
 struct type_S {
   char* name;
@@ -2819,78 +2819,78 @@ uint64_t hash_string_reference(reference_t reference) {
   return 12;
 }
 
-byte_array_t* append_string_text(byte_array_t* byte_array,
+buffer_t* append_string_text(buffer_t* buffer,
                                  struct reference_S object) {
   char* str = dereference_char_ptr(object);
-  byte_array = byte_array_append_byte(byte_array, '"');
+  buffer = buffer_append_byte(buffer, '"');
   // TODO(jawilson): quote "
-  byte_array = byte_array_append_string(byte_array, str);
-  byte_array = byte_array_append_byte(byte_array, '"');
-  return byte_array;
+  buffer = buffer_append_string(buffer, str);
+  buffer = buffer_append_byte(buffer, '"');
+  return buffer;
 }
 
-struct byte_array_S* append_uint64_text(struct byte_array_S* byte_array,
+struct buffer_S* append_uint64_text(struct buffer_S* buffer,
                                         struct reference_S object) {
-  char buffer[64];
+  char buf[64];
   uint64_t number = dereference_uint64(object);
-  sprintf(buffer, "%lu", number);
-  return byte_array_append_string(byte_array, buffer);
+  sprintf(buf, "%lu", number);
+  return buffer_append_string(buffer, buf);
 }
 
-struct byte_array_S* append_uint32_text(struct byte_array_S* byte_array,
+struct buffer_S* append_uint32_text(struct buffer_S* buffer,
                                         struct reference_S object) {
-  char buffer[64];
+  char buf[64];
   uint64_t number = dereference_uint32(object);
-  sprintf(buffer, "%lu", number);
-  return byte_array_append_string(byte_array, buffer);
+  sprintf(buf, "%lu", number);
+  return buffer_append_string(buffer, buf);
 }
 
-struct byte_array_S* append_uint16_text(struct byte_array_S* byte_array,
+struct buffer_S* append_uint16_text(struct buffer_S* buffer,
                                         struct reference_S object) {
-  char buffer[64];
+  char buf[64];
   uint64_t number = dereference_uint16(object);
-  sprintf(buffer, "%lu", number);
-  return byte_array_append_string(byte_array, buffer);
+  sprintf(buf, "%lu", number);
+  return buffer_append_string(buffer, buf);
 }
 
-struct byte_array_S* append_uint8_text(struct byte_array_S* byte_array,
+struct buffer_S* append_uint8_text(struct buffer_S* buffer,
                                        struct reference_S object) {
-  char buffer[64];
+  char buf[64];
   uint64_t number = dereference_uint8(object);
-  sprintf(buffer, "%lu", number);
-  return byte_array_append_string(byte_array, buffer);
+  sprintf(buf, "%lu", number);
+  return buffer_append_string(buffer, buf);
 }
 
-struct byte_array_S* append_int64_text(struct byte_array_S* byte_array,
+struct buffer_S* append_int64_text(struct buffer_S* buffer,
                                        struct reference_S object) {
-  char buffer[64];
+  char buf[64];
   int64_t number = dereference_int64(object);
-  sprintf(buffer, "%ld", number);
-  return byte_array_append_string(byte_array, buffer);
+  sprintf(buf, "%ld", number);
+  return buffer_append_string(buffer, buf);
 }
 
-struct byte_array_S* append_int32_text(struct byte_array_S* byte_array,
+struct buffer_S* append_int32_text(struct buffer_S* buffer,
                                        struct reference_S object) {
-  char buffer[64];
+  char buf[64];
   int32_t number = dereference_int32(object);
-  sprintf(buffer, "%d", number);
-  return byte_array_append_string(byte_array, buffer);
+  sprintf(buf, "%d", number);
+  return buffer_append_string(buffer, buf);
 }
 
-struct byte_array_S* append_int16_text(struct byte_array_S* byte_array,
+struct buffer_S* append_int16_text(struct buffer_S* buffer,
                                        struct reference_S object) {
-  char buffer[64];
+  char buf[64];
   int16_t number = dereference_int16(object);
-  sprintf(buffer, "%d", number);
-  return byte_array_append_string(byte_array, buffer);
+  sprintf(buf, "%d", number);
+  return buffer_append_string(buffer, buf);
 }
 
-struct byte_array_S* append_int8_text(struct byte_array_S* byte_array,
+struct buffer_S* append_int8_text(struct buffer_S* buffer,
                                       struct reference_S object) {
-  char buffer[64];
+  char buf[64];
   int8_t number = dereference_int8(object);
-  sprintf(buffer, "%d", number);
-  return byte_array_append_string(byte_array, buffer);
+  sprintf(buf, "%d", number);
+  return buffer_append_string(buffer, buf);
 }
 
 type_t uint64_type_constant = {

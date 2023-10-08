@@ -142,13 +142,13 @@ void hashtable_set_value(hashtable_t(K, V) * ht, reference_t key_reference,
 // ----------------------------------------------------------------------
 
 char* construct_hashtable_type_name(type_t* key_type, type_t* value_type) {
-  byte_array_t* name = make_byte_array(32);
-  name = byte_array_append_string(name, "hashtable_t(");
-  name = byte_array_append_string(name, key_type->name);
-  name = byte_array_append_string(name, ",");
-  name = byte_array_append_string(name, value_type->name);
-  name = byte_array_append_string(name, ")");
-  char* result = byte_array_c_substring(name, 0, byte_array_length(name));
+  buffer_t* name = make_buffer(32);
+  name = buffer_append_string(name, "hashtable_t(");
+  name = buffer_append_string(name, key_type->name);
+  name = buffer_append_string(name, ",");
+  name = buffer_append_string(name, value_type->name);
+  name = buffer_append_string(name, ")");
+  char* result = buffer_c_substring(name, 0, buffer_length(name));
   free(name);
   return result;
 }

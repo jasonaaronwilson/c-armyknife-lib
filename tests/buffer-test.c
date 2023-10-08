@@ -8,51 +8,51 @@
 #include "../c-armyknife-lib.h"
 
 void test_append_byte() {
-  byte_array_t* byte_array = make_byte_array(1);
+  buffer_t* buffer = make_buffer(1);
 
-  if (byte_array_length(byte_array) != strlen("")) {
+  if (buffer_length(buffer) != strlen("")) {
     ARMYKNIFE_TEST_FAIL("length should be 0");
   }
 
-  byte_array = byte_array_append_byte(byte_array, 'a');
-  byte_array = byte_array_append_byte(byte_array, 'b');
-  byte_array = byte_array_append_byte(byte_array, 'c');
-  byte_array = byte_array_append_byte(byte_array, 'd');
-  byte_array = byte_array_append_byte(byte_array, 'e');
-  byte_array = byte_array_append_byte(byte_array, 'f');
-  byte_array = byte_array_append_byte(byte_array, 'g');
-  char* contents = byte_array_c_substring(byte_array, 0, strlen("abcdefg"));
+  buffer = buffer_append_byte(buffer, 'a');
+  buffer = buffer_append_byte(buffer, 'b');
+  buffer = buffer_append_byte(buffer, 'c');
+  buffer = buffer_append_byte(buffer, 'd');
+  buffer = buffer_append_byte(buffer, 'e');
+  buffer = buffer_append_byte(buffer, 'f');
+  buffer = buffer_append_byte(buffer, 'g');
+  char* contents = buffer_c_substring(buffer, 0, strlen("abcdefg"));
   if (!string_equal("abcdefg", contents)) {
     fprintf(stderr, "contents='%s'\n", contents);
     ARMYKNIFE_TEST_FAIL(
         "stringified version of byte array does not match what we added");
   }
-  if (byte_array_length(byte_array) != strlen("abcdefg")) {
+  if (buffer_length(buffer) != strlen("abcdefg")) {
     ARMYKNIFE_TEST_FAIL("length should be 7");
   }
 
-  if (byte_array_get(byte_array, 2) != 'c') {
+  if (buffer_get(buffer, 2) != 'c') {
     ARMYKNIFE_TEST_FAIL("char at position 2 should be 'c'");
   }
 
   free(contents);
-  free(byte_array);
+  free(buffer);
 }
 
 void test_append_string() {
-  byte_array_t* byte_array = make_byte_array(3);
-  byte_array = byte_array_append_string(byte_array, "Hello");
-  byte_array = byte_array_append_string(byte_array, " ");
-  byte_array = byte_array_append_string(byte_array, "");
-  byte_array = byte_array_append_string(byte_array, "World!");
-  char* contents = byte_array_to_c_string(byte_array);
+  buffer_t* buffer = make_buffer(3);
+  buffer = buffer_append_string(buffer, "Hello");
+  buffer = buffer_append_string(buffer, " ");
+  buffer = buffer_append_string(buffer, "");
+  buffer = buffer_append_string(buffer, "World!");
+  char* contents = buffer_to_c_string(buffer);
   if (!string_equal("Hello World!", contents)) {
     fprintf(stderr, "contents='%s'\n", contents);
     ARMYKNIFE_TEST_FAIL(
         "stringified version of byte array does not match what we added");
   }
   free(contents);
-  free(byte_array);
+  free(buffer);
 }
 
 int main(int argc, char** argv) {

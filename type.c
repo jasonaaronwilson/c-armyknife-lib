@@ -24,8 +24,8 @@ typedef int (*compare_references_fn_t)(struct reference_S a,
 
 typedef uint64_t (*hash_reference_fn_t)(struct reference_S object);
 
-typedef byte_array_t* (*append_text_representation_fn_t)(
-    byte_array_t* byte_array, struct reference_S object);
+typedef buffer_t* (*append_text_representation_fn_t)(buffer_t* buffer,
+                                                     struct reference_S object);
 
 struct type_S {
   char* name;
@@ -103,78 +103,77 @@ uint64_t hash_string_reference(reference_t reference) {
   return 12;
 }
 
-byte_array_t* append_string_text(byte_array_t* byte_array,
-                                 struct reference_S object) {
+buffer_t* append_string_text(buffer_t* buffer, struct reference_S object) {
   char* str = dereference_char_ptr(object);
-  byte_array = byte_array_append_byte(byte_array, '"');
+  buffer = buffer_append_byte(buffer, '"');
   // TODO(jawilson): quote "
-  byte_array = byte_array_append_string(byte_array, str);
-  byte_array = byte_array_append_byte(byte_array, '"');
-  return byte_array;
+  buffer = buffer_append_string(buffer, str);
+  buffer = buffer_append_byte(buffer, '"');
+  return buffer;
 }
 
-struct byte_array_S* append_uint64_text(struct byte_array_S* byte_array,
-                                        struct reference_S object) {
-  char buffer[64];
+struct buffer_S* append_uint64_text(struct buffer_S* buffer,
+                                    struct reference_S object) {
+  char buf[64];
   uint64_t number = dereference_uint64(object);
-  sprintf(buffer, "%lu", number);
-  return byte_array_append_string(byte_array, buffer);
+  sprintf(buf, "%lu", number);
+  return buffer_append_string(buffer, buf);
 }
 
-struct byte_array_S* append_uint32_text(struct byte_array_S* byte_array,
-                                        struct reference_S object) {
-  char buffer[64];
+struct buffer_S* append_uint32_text(struct buffer_S* buffer,
+                                    struct reference_S object) {
+  char buf[64];
   uint64_t number = dereference_uint32(object);
-  sprintf(buffer, "%lu", number);
-  return byte_array_append_string(byte_array, buffer);
+  sprintf(buf, "%lu", number);
+  return buffer_append_string(buffer, buf);
 }
 
-struct byte_array_S* append_uint16_text(struct byte_array_S* byte_array,
-                                        struct reference_S object) {
-  char buffer[64];
+struct buffer_S* append_uint16_text(struct buffer_S* buffer,
+                                    struct reference_S object) {
+  char buf[64];
   uint64_t number = dereference_uint16(object);
-  sprintf(buffer, "%lu", number);
-  return byte_array_append_string(byte_array, buffer);
+  sprintf(buf, "%lu", number);
+  return buffer_append_string(buffer, buf);
 }
 
-struct byte_array_S* append_uint8_text(struct byte_array_S* byte_array,
-                                       struct reference_S object) {
-  char buffer[64];
+struct buffer_S* append_uint8_text(struct buffer_S* buffer,
+                                   struct reference_S object) {
+  char buf[64];
   uint64_t number = dereference_uint8(object);
-  sprintf(buffer, "%lu", number);
-  return byte_array_append_string(byte_array, buffer);
+  sprintf(buf, "%lu", number);
+  return buffer_append_string(buffer, buf);
 }
 
-struct byte_array_S* append_int64_text(struct byte_array_S* byte_array,
-                                       struct reference_S object) {
-  char buffer[64];
+struct buffer_S* append_int64_text(struct buffer_S* buffer,
+                                   struct reference_S object) {
+  char buf[64];
   int64_t number = dereference_int64(object);
-  sprintf(buffer, "%ld", number);
-  return byte_array_append_string(byte_array, buffer);
+  sprintf(buf, "%ld", number);
+  return buffer_append_string(buffer, buf);
 }
 
-struct byte_array_S* append_int32_text(struct byte_array_S* byte_array,
-                                       struct reference_S object) {
-  char buffer[64];
+struct buffer_S* append_int32_text(struct buffer_S* buffer,
+                                   struct reference_S object) {
+  char buf[64];
   int32_t number = dereference_int32(object);
-  sprintf(buffer, "%d", number);
-  return byte_array_append_string(byte_array, buffer);
+  sprintf(buf, "%d", number);
+  return buffer_append_string(buffer, buf);
 }
 
-struct byte_array_S* append_int16_text(struct byte_array_S* byte_array,
-                                       struct reference_S object) {
-  char buffer[64];
+struct buffer_S* append_int16_text(struct buffer_S* buffer,
+                                   struct reference_S object) {
+  char buf[64];
   int16_t number = dereference_int16(object);
-  sprintf(buffer, "%d", number);
-  return byte_array_append_string(byte_array, buffer);
+  sprintf(buf, "%d", number);
+  return buffer_append_string(buffer, buf);
 }
 
-struct byte_array_S* append_int8_text(struct byte_array_S* byte_array,
-                                      struct reference_S object) {
-  char buffer[64];
+struct buffer_S* append_int8_text(struct buffer_S* buffer,
+                                  struct reference_S object) {
+  char buf[64];
   int8_t number = dereference_int8(object);
-  sprintf(buffer, "%d", number);
-  return byte_array_append_string(byte_array, buffer);
+  sprintf(buf, "%d", number);
+  return buffer_append_string(buffer, buf);
 }
 
 type_t uint64_type_constant = {

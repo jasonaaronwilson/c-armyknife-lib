@@ -13,34 +13,32 @@
 #include <stdint.h>
 #include <string.h>
 
-struct byte_array_S {
+struct buffer_S {
   uint32_t length;
   uint32_t capacity;
   uint8_t elements[0];
 };
 
-typedef struct byte_array_S byte_array_t;
+typedef struct buffer_S buffer_t;
 
-extern byte_array_t* make_byte_array(uint32_t initial_capacity);
+extern buffer_t* make_buffer(uint32_t initial_capacity);
 
-extern uint64_t byte_array_length(byte_array_t* byte_array);
+extern uint64_t buffer_length(buffer_t* buffer);
 
-extern uint8_t byte_array_get(byte_array_t* byte_array, uint64_t position);
+extern uint8_t buffer_get(buffer_t* buffer, uint64_t position);
 
-extern char* byte_array_c_substring(byte_array_t* byte_array, uint64_t start,
-                                    uint64_t end);
+extern char* buffer_c_substring(buffer_t* buffer, uint64_t start, uint64_t end);
 
-extern char* byte_array_to_c_strring(byte_array_t* byte_array);
+extern char* buffer_to_c_strring(buffer_t* buffer);
 
-__attribute__((warn_unused_result)) extern byte_array_t*
-    byte_array_append_byte(byte_array_t* byte_array, uint8_t byte);
+__attribute__((warn_unused_result)) extern buffer_t*
+    buffer_append_byte(buffer_t* buffer, uint8_t byte);
 
-__attribute__((warn_unused_result)) extern byte_array_t*
-    byte_array_append_bytes(byte_array_t* byte_array, uint8_t* bytes,
-                            uint64_t n_bytes);
+__attribute__((warn_unused_result)) extern buffer_t*
+    buffer_append_bytes(buffer_t* buffer, uint8_t* bytes, uint64_t n_bytes);
 
-__attribute__((warn_unused_result)) extern byte_array_t*
-    byte_array_append_string(byte_array_t* byte_array, const char* str);
+__attribute__((warn_unused_result)) extern buffer_t*
+    buffer_append_string(buffer_t* buffer, const char* str);
 
 #endif /* _BUFFER_H_ */
 
@@ -55,7 +53,7 @@ __attribute__((warn_unused_result)) extern byte_array_t*
 /**
  * Make an empty byte array with the given initial capacity.
  */
-byte_array_t* make_byte_array(uint32_t initial_capacity) {
+buffer_t* make_buffer(uint32_t initial_capacity) {
 
   // We make the assumption that casting (char*) to (uint8_t*) and
   // vice-versa is completely reasonable which it is on all modern
@@ -66,8 +64,8 @@ byte_array_t* make_byte_array(uint32_t initial_capacity) {
     fatal_error(ERROR_ILLEGAL_INITIAL_CAPACITY);
   }
 
-  byte_array_t* result
-      = (byte_array_t*) (malloc_bytes(initial_capacity + sizeof(byte_array_t)));
+  buffer_t* result
+      = (buffer_t*) (malloc_bytes(initial_capacity + sizeof(buffer_t)));
   result->capacity = initial_capacity;
   return result;
 }
@@ -75,14 +73,14 @@ byte_array_t* make_byte_array(uint32_t initial_capacity) {
 /**
  * Return the number of bytes that have been added to this byte array.
  */
-uint64_t byte_array_length(byte_array_t* array) { return array->length; }
+uint64_t buffer_length(buffer_t* array) { return array->length; }
 
 /**
  * Get a single byte from a byte array.
  */
-uint8_t byte_array_get(byte_array_t* byte_array, uint64_t position) {
-  if (position < byte_array->length) {
-    return byte_array->elements[position];
+uint8_t buffer_get(buffer_t* buffer, uint64_t position) {
+  if (position < buffer->length) {
+    return buffer->elements[position];
   } else {
     fatal_error(ERROR_ACCESS_OUT_OF_BOUNDS);
   }
@@ -92,12 +90,11 @@ uint8_t byte_array_get(byte_array_t* byte_array, uint64_t position) {
  * Extract a newly allocated string that contain the bytes from start
  * to end (appending a zero byte to make sure it's a legal C string).
  */
-char* byte_array_c_substring(byte_array_t* byte_array, uint64_t start,
-                             uint64_t end) {
+char* buffer_c_substring(buffer_t* buffer, uint64_t start, uint64_t end) {
   // Add one extra byte for a NUL string terminator byte
   char* result = (char*) (malloc_bytes(end - start + 1));
   for (int i = start; i < end; i++) {
-    result[i - start] = byte_array->elements[i];
+    result[i - start] = buffer->elements[i];
   }
   return result;
 }
@@ -106,47 +103,46 @@ char* byte_array_c_substring(byte_array_t* byte_array, uint64_t start,
  * Extract a newly allocated string that contain all of the bytes in the byte
  * buffer as a NU * terminated C string.
  */
-char* byte_array_to_c_string(byte_array_t* byte_array) {
-  return byte_array_c_substring(byte_array, 0, byte_array->length);
+char* buffer_to_c_string(buffer_t* buffer) {
+  return buffer_c_substring(buffer, 0, buffer->length);
 }
 
 /**
  * Append a single byte to the byte array.
  */
-__attribute__((warn_unused_result)) byte_array_t*
-    byte_array_append_byte(byte_array_t* byte_array, uint8_t element) {
-  if (byte_array->length < byte_array->capacity) {
-    byte_array->elements[byte_array->length] = element;
-    byte_array->length++;
-    return byte_array;
+__attribute__((warn_unused_result)) buffer_t*
+    buffer_append_byte(buffer_t* buffer, uint8_t element) {
+  if (buffer->length < buffer->capacity) {
+    buffer->elements[buffer->length] = element;
+    buffer->length++;
+    return buffer;
   } else {
-    byte_array_t* result = make_byte_array(byte_array->capacity * 2);
-    for (int i = 0; i < byte_array->length; i++) {
-      result = byte_array_append_byte(result, byte_array_get(byte_array, i));
+    buffer_t* result = make_buffer(buffer->capacity * 2);
+    for (int i = 0; i < buffer->length; i++) {
+      result = buffer_append_byte(result, buffer_get(buffer, i));
     }
-    free_bytes(byte_array);
-    return byte_array_append_byte(result, element);
+    free_bytes(buffer);
+    return buffer_append_byte(result, element);
   }
 }
 
 /**
  * Append multiple bytes to the byte array.
  */
-__attribute__((warn_unused_result)) byte_array_t*
-    byte_array_append_bytes(byte_array_t* byte_array, uint8_t* bytes,
-                            uint64_t n_bytes) {
+__attribute__((warn_unused_result)) buffer_t*
+    buffer_append_bytes(buffer_t* buffer, uint8_t* bytes, uint64_t n_bytes) {
   // Obviously this can be optimized...
   for (int i = 0; i < n_bytes; i++) {
-    byte_array = byte_array_append_byte(byte_array, bytes[i]);
+    buffer = buffer_append_byte(buffer, bytes[i]);
   }
-  return byte_array;
+  return buffer;
 }
 
 /**
  * Append all of the bytes from a C string (except the ending NUL
  * char).
  */
-__attribute__((warn_unused_result)) byte_array_t*
-    byte_array_append_string(byte_array_t* byte_array, const char* str) {
-  return byte_array_append_bytes(byte_array, (uint8_t*) str, strlen(str));
+__attribute__((warn_unused_result)) buffer_t*
+    buffer_append_string(buffer_t* buffer, const char* str) {
+  return buffer_append_bytes(buffer, (uint8_t*) str, strlen(str));
 }

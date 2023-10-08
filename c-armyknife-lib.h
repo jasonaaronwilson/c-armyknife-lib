@@ -152,11 +152,11 @@ extern char* string_duplicate(const char* src);
 extern char* string_append(const char* a, const char* b);
 
 #endif /* _STRING_UTIL_H_ */
-// SSCF generated file from: byte-array.c
+// SSCF generated file from: buffer.c
 
-#line 10 "byte-array.c"
-#ifndef _BYTE_ARRAY_H_
-#define _BYTE_ARRAY_H_
+#line 10 "buffer.c"
+#ifndef _BUFFER_H_
+#define _BUFFER_H_
 
 #include <stdint.h>
 #include <string.h>
@@ -190,7 +190,7 @@ __attribute__((warn_unused_result)) extern byte_array_t*
 __attribute__((warn_unused_result)) extern byte_array_t*
     byte_array_append_string(byte_array_t* byte_array, const char* str);
 
-#endif /* _BYTE_ARRAY_H_ */
+#endif /* _BUFFER_H_ */
 // SSCF generated file from: string-alist.c
 
 #line 9 "string-alist.c"
@@ -629,7 +629,7 @@ __attribute__((warn_unused_result)) extern array_t(|?|)*
 struct command_line_parse_result_S {
   char* program;
   string_hashtable_t* flags;
-  array_t(char*)* files;
+  array_t(char*) * files;
 };
 
 typedef struct command_line_parse_result_S command_line_parse_result_t;
@@ -988,17 +988,17 @@ typedef int boolean_t;
 // ======================================================================
 // Currently no implementation
 // ======================================================================
-#line 2 "byte-array.c"
+#line 2 "buffer.c"
 /**
- * @file byte-array.c
+ * @file buffer.c
  */
 
 // ======================================================================
 // This is block is extraced to byte-array.h
 // ======================================================================
 
-#ifndef _BYTE_ARRAY_H_
-#define _BYTE_ARRAY_H_
+#ifndef _BUFFER_H_
+#define _BUFFER_H_
 
 #include <stdint.h>
 #include <string.h>
@@ -1032,14 +1032,13 @@ __attribute__((warn_unused_result)) extern byte_array_t*
 __attribute__((warn_unused_result)) extern byte_array_t*
     byte_array_append_string(byte_array_t* byte_array, const char* str);
 
-#endif /* _BYTE_ARRAY_H_ */
+#endif /* _BUFFER_H_ */
 
 // ======================================================================
 
 #include <stdlib.h>
 
 #include "allocate.h"
-#include "byte-array.h"
 #include "ct-assert.h"
 #include "fatal-error.h"
 
@@ -1158,7 +1157,7 @@ __attribute__((warn_unused_result)) byte_array_t*
 struct command_line_parse_result_S {
   char* program;
   string_hashtable_t* flags;
-  array_t(char*)* files;
+  array_t(char*) * files;
 };
 
 typedef struct command_line_parse_result_S command_line_parse_result_t;
@@ -1184,7 +1183,7 @@ command_line_parse_result_t parse_command_line(int argc, char** argv) {
   boolean_t parse_flags = true;
   for (int i = 1; i < argc; i++) {
     char* arg = argv[i];
-    
+
     if (parse_flags) {
       if (string_starts_with(arg, "--")) {
         if (string_equal(arg, "--")) {
@@ -1192,12 +1191,12 @@ command_line_parse_result_t parse_command_line(int argc, char** argv) {
           continue;
         }
         int equal_sign_index = string_index_of_char(arg, '=');
-        
+
         char* key = "";
         char* value = "";
         if (equal_sign_index >= 0) {
           key = string_substring(arg, 2, equal_sign_index);
-          value = string_substring(arg, equal_sign_index+1, strlen(arg));
+          value = string_substring(arg, equal_sign_index + 1, strlen(arg));
         } else {
           key = string_substring(arg, 2, strlen(arg));
         }
@@ -1211,10 +1210,10 @@ command_line_parse_result_t parse_command_line(int argc, char** argv) {
     files = array_add(files, reference_of_char_ptr(&arg));
   }
 
-  return (command_line_parse_result_t) {
-    .program = argv[0],
-    .flags = flags,
-    .files = files,
+  return (command_line_parse_result_t){
+      .program = argv[0],
+      .flags = flags,
+      .files = files,
   };
 }
 #line 2 "ct-assert.c"
@@ -1748,7 +1747,6 @@ extern void byte_array_write_file(byte_array_t* bytes, char* file_name);
 
 #include <stdio.h>
 
-#include "byte-array.h"
 #include "io.h"
 
 __attribute__((warn_unused_result)) byte_array_t*

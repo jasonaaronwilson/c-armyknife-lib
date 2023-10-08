@@ -1,14 +1,14 @@
-#line 2 "byte-array.c"
+#line 2 "buffer.c"
 /**
- * @file byte-array.c
+ * @file buffer.c
  */
 
 // ======================================================================
 // This is block is extraced to byte-array.h
 // ======================================================================
 
-#ifndef _BYTE_ARRAY_H_
-#define _BYTE_ARRAY_H_
+#ifndef _BUFFER_H_
+#define _BUFFER_H_
 
 #include <stdint.h>
 #include <string.h>
@@ -42,14 +42,13 @@ __attribute__((warn_unused_result)) extern byte_array_t*
 __attribute__((warn_unused_result)) extern byte_array_t*
     byte_array_append_string(byte_array_t* byte_array, const char* str);
 
-#endif /* _BYTE_ARRAY_H_ */
+#endif /* _BUFFER_H_ */
 
 // ======================================================================
 
 #include <stdlib.h>
 
 #include "allocate.h"
-#include "byte-array.h"
 #include "ct-assert.h"
 #include "fatal-error.h"
 

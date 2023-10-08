@@ -3,7 +3,7 @@ all: c-armyknife-lib
 SRC_C = allocate.c \
 	array.c \
 	boolean.c \
-	byte-array.c \
+	buffer.c \
 	command-line-parser.c \
 	ct-assert.c \
 	fatal-error.c \
@@ -28,7 +28,7 @@ ORDERED_H = \
 	ct-assert.h \
 	allocate.h \
 	string-util.h \
-	byte-array.h \
+	buffer.h \
 	string-alist.h \
 	string-hashtable.h \
 	type.h \
@@ -70,7 +70,7 @@ tags:
 TESTS= \
 	./compile-test.sh \
 	./string-util-test.sh \
-	./byte-array-test.sh \
+	./buffer-test.sh \
 	./string-alist-test.sh \
 	./string-hashtable-test.sh \
 	./tuple-test.sh \

@@ -25,7 +25,6 @@ extern void byte_array_write_file(byte_array_t* bytes, char* file_name);
 
 #include <stdio.h>
 
-#include "byte-array.h"
 #include "io.h"
 
 __attribute__((warn_unused_result)) byte_array_t*

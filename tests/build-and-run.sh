@@ -2,6 +2,8 @@
 
 C_FILE=$1
 EXE_FILE=$2
+shift
+shift
 
 echo ${C_FILE}
 
@@ -16,7 +18,8 @@ if [[ $? != 0 ]] ; then
     exit 1
 fi
 
-./build/${EXE_FILE}
+./build/${EXE_FILE} $*
+
 if [[ $? != 0 ]] ; then
     echo "-- the built binary build/${EXE_FILE} returned non-zero return code"
     exit 1

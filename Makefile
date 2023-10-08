@@ -4,6 +4,7 @@ SRC_C = allocate.c \
 	array.c \
 	boolean.c \
 	byte-array.c \
+	command-line-parser.c \
 	ct-assert.c \
 	fatal-error.c \
 	hashtable.c \
@@ -34,6 +35,7 @@ ORDERED_H = \
 	reference.h \
 	tuple.h \
 	array.h \
+	command-line-parser.h \
 	hashtree.h \
 	hashtable.h \
 	io.h \
@@ -73,6 +75,7 @@ TESTS= \
 	./string-hashtable-test.sh \
 	./tuple-test.sh \
 	./array-test.sh \
+	./command-line-parser-test.sh \
 	./tokenizer-test.sh \
 	./append-test.sh \
 	./hashtree-test.sh \

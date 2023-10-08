@@ -44,12 +44,18 @@ int main(int argc, char** argv) {
     ARMYKNIFE_TEST_FAIL("string_ends_with");
   }
 
-
   if (!(string_contains_char("The quick brown fox", 'q'))) {
     ARMYKNIFE_TEST_FAIL("string_contains_char");
   }
   if (string_contains_char("The quick brown fox", 'Z')) {
     ARMYKNIFE_TEST_FAIL("string_contains_char");
+  }
+
+  if (string_index_of_char("The quick brown fox", 'q') != 4) {
+    ARMYKNIFE_TEST_FAIL("string_index_of_char");
+  }
+  if (string_index_of_char("The quick brown fox", 'Z') >= 0) {
+    ARMYKNIFE_TEST_FAIL("string_index_of_char");
   }
 
   if (string_hash("The quick brown fox")

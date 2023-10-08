@@ -19,7 +19,8 @@ extern int string_is_null_or_empty(const char* str1);
 extern int string_equal(const char* str1, const char* str2);
 extern int string_starts_with(const char* str1, const char* str2);
 extern int string_ends_with(const char* str1, const char* str2);
-extern int string_contains_char(const char* str, const char ch);
+extern boolean_t string_contains_char(const char* str, char ch);
+extern int string_index_of_char(const char* a, char ch);
 extern uint64_t string_to_uint64(const char* str);
 extern uint64_t string_hash(const char* str);
 extern char* string_substring(const char* str, int start, int end);
@@ -65,17 +66,23 @@ int string_ends_with(const char* str1, const char* str2) {
   return strcmp(str1 + (len1 - len2), str2) == 0;
 }
 
-int string_contains_char(const char* str, char ch) {
+boolean_t string_contains_char(const char* str, char ch) {
+  return string_index_of_char(str, ch) >= 0;
+}
+
+int string_index_of_char(const char* str, char ch) {
   if (string_is_null_or_empty(str)) {
-    return 0;
+    return -1;
   }
-  for (int i = 0; i < strlen(str); i++) {
+  int str_length = strlen(str);
+  for (int i = 0; i < str_length; i++) {
     if (str[i] == ch) {
-      return 1;
+      return i;
     }
   }
-  return 0;
+  return -1;
 }
+
 
 uint64_t string_hash(const char* str) {
   return fasthash64(str, strlen(str), 0);

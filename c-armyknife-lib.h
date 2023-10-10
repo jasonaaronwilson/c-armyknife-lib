@@ -895,10 +895,6 @@ __attribute__((warn_unused_result)) extern array_t(|?|)*
 
 #include <stdlib.h>
 
-#include "allocate.h"
-#include "array.h"
-#include "fatal-error.h"
-
 static inline void* array_address_of_element(array_t(|?|)* array,
                                              uint64_t position) {
   void* result = &(array->data[0]) + position * array->element_type->size;
@@ -1040,10 +1036,6 @@ __attribute__((warn_unused_result)) extern buffer_t*
 // ======================================================================
 
 #include <stdlib.h>
-
-#include "allocate.h"
-#include "ct-assert.h"
-#include "fatal-error.h"
 
 /**
  * Make an empty byte array with the given initial capacity.
@@ -1293,8 +1285,6 @@ extern const char* fatal_error_code_to_string(int error_code);
 #include <execinfo.h>
 #include <stdio.h>
 #include <stdlib.h>
-
-#include "fatal-error.h"
 
 void print_fatal_error_banner();
 void print_backtrace();
@@ -1753,8 +1743,6 @@ extern void buffer_write_file(buffer_t* bytes, char* file_name);
 
 #include <stdio.h>
 
-#include "io.h"
-
 __attribute__((warn_unused_result)) buffer_t*
     buffer_append_file_contents(buffer_t* bytes, char* file_name) {
   FILE* file = fopen(file_name, "r");
@@ -2153,8 +2141,6 @@ extern void* string_ht_find(string_hashtable_t* ht, char* key);
 
 #endif /* _STRING_HASHTABLE_H_ */
 
-#include "string-util.h"
-
 /**
  * Create a hashtable with the given initial capacity.
  */
@@ -2236,9 +2222,6 @@ extern char* string_append(const char* a, const char* b);
 
 #include <stdlib.h>
 #include <string.h>
-
-#include "allocate.h"
-#include "string-util.h"
 
 uint64_t fasthash64(const void* buf, size_t len, uint64_t seed);
 
@@ -2515,12 +2498,6 @@ extern array_t(char*) * tokenize(const char* str, const char* delimiters);
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-#include "allocate.h"
-#include "array.h"
-#include "fatal-error.h"
-#include "string-util.h"
-#include "tokenizer.h"
 
 array_t(char*) * add_duplicate(array_t(char*) * token_array, const char* data);
 

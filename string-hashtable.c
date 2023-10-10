@@ -39,8 +39,6 @@ extern void* string_ht_find(string_hashtable_t* ht, char* key);
 
 #endif /* _STRING_HASHTABLE_H_ */
 
-#include "string-util.h"
-
 /**
  * Create a hashtable with the given initial capacity.
  */

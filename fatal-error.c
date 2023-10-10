@@ -46,8 +46,6 @@ extern const char* fatal_error_code_to_string(int error_code);
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "fatal-error.h"
-
 void print_fatal_error_banner();
 void print_backtrace();
 void print_error_code_name(int error_code);

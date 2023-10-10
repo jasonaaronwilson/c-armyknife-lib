@@ -46,10 +46,6 @@ __attribute__((warn_unused_result)) extern buffer_t*
 
 #include <stdlib.h>
 
-#include "allocate.h"
-#include "ct-assert.h"
-#include "fatal-error.h"
-
 /**
  * Make an empty byte array with the given initial capacity.
  */

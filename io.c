@@ -25,8 +25,6 @@ extern void buffer_write_file(buffer_t* bytes, char* file_name);
 
 #include <stdio.h>
 
-#include "io.h"
-
 __attribute__((warn_unused_result)) buffer_t*
     buffer_append_file_contents(buffer_t* bytes, char* file_name) {
   FILE* file = fopen(file_name, "r");

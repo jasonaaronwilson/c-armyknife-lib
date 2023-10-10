@@ -35,9 +35,6 @@ extern char* string_append(const char* a, const char* b);
 #include <stdlib.h>
 #include <string.h>
 
-#include "allocate.h"
-#include "string-util.h"
-
 uint64_t fasthash64(const void* buf, size_t len, uint64_t seed);
 
 int string_is_null_or_empty(const char* str) {

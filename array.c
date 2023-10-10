@@ -36,10 +36,6 @@ __attribute__((warn_unused_result)) extern array_t(|?|)*
 
 #include <stdlib.h>
 
-#include "allocate.h"
-#include "array.h"
-#include "fatal-error.h"
-
 static inline void* array_address_of_element(array_t(|?|)* array,
                                              uint64_t position) {
   void* result = &(array->data[0]) + position * array->element_type->size;

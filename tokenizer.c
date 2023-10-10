@@ -17,12 +17,6 @@ extern array_t(char*) * tokenize(const char* str, const char* delimiters);
 #include <stdlib.h>
 #include <string.h>
 
-#include "allocate.h"
-#include "array.h"
-#include "fatal-error.h"
-#include "string-util.h"
-#include "tokenizer.h"
-
 array_t(char*) * add_duplicate(array_t(char*) * token_array, const char* data);
 
 /**

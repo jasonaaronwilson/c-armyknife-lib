@@ -8,7 +8,10 @@
 #include "../c-armyknife-lib.h"
 
 int main(int argc, char** argv) {
-  command_line_parse_result_t args_and_files = parse_command_line(argc, argv);
+  command_line_parse_result_t args_and_files
+      = parse_command_line(argc, argv, true);
+
+  fprintf(stdout, "command is %s\n", args_and_files.command);
 
   void* value = string_ht_find(args_and_files.flags, "foo");
   fprintf(stdout, "foo is %s\n", (char*) value);

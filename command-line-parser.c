@@ -14,13 +14,15 @@
 
 struct command_line_parse_result_S {
   char* program;
+  char* command;
   string_hashtable_t* flags;
   array_t(char*) * files;
 };
 
 typedef struct command_line_parse_result_S command_line_parse_result_t;
 
-extern command_line_parse_result_t parse_command_line(int argc, char** argv);
+extern command_line_parse_result_t parse_command_line(int argc, char** argv,
+                                                      boolean_t has_command);
 
 #endif /* _COMMAND_LINE_PARSER_H_ */
 
@@ -34,12 +36,13 @@ extern command_line_parse_result_t parse_command_line(int argc, char** argv);
  * The map: "count" -> "10", "type" -> "bar", "no-arg" -> ""
  * The array: "file1.c" "file2.c"
  */
-command_line_parse_result_t parse_command_line(int argc, char** argv) {
+command_line_parse_result_t parse_command_line(int argc, char** argv,
+                                               boolean_t has_command) {
   array_t(uint64_t)* files = make_array(char_ptr_type(), 16);
   string_hashtable_t* flags = make_string_hashtable(32);
 
   boolean_t parse_flags = true;
-  for (int i = 1; i < argc; i++) {
+  for (int i = (has_command ? 2 : 1); i < argc; i++) {
     char* arg = argv[i];
 
     if (parse_flags) {
@@ -68,8 +71,10 @@ command_line_parse_result_t parse_command_line(int argc, char** argv) {
     files = array_add(files, reference_of_char_ptr(&arg));
   }
 
+  char* command = has_command ? argv[1] : NULL;
   return (command_line_parse_result_t){
       .program = argv[0],
+      .command = command,
       .flags = flags,
       .files = files,
   };

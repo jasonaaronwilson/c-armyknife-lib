@@ -22,6 +22,18 @@ extern string_alist_t* alist_insert(string_alist_t* list, char* key,
 extern string_alist_t* alist_delete(string_alist_t* list, char* key);
 extern void* alist_find(string_alist_t* list, char* key);
 
+#define string_alist_foreach(alist, key_var, value_type, value_var,            \
+                             statements)                                       \
+  do {                                                                         \
+    string_alist_t* head = alist;                                              \
+    while (head) {                                                             \
+      char* key_var = head->key;                                               \
+      value_type value_var = (value_type) head->value;                         \
+      statements;                                                              \
+      head = head->next;                                                       \
+    }                                                                          \
+  } while (0)
+
 #endif /* _STRING_ALIST_H_ */
 
 string_alist_t* alist_insert(string_alist_t* list, char* key, void* value) {

@@ -175,8 +175,7 @@ extern uint64_t buffer_length(buffer_t* buffer);
 
 extern uint8_t buffer_get(buffer_t* buffer, uint64_t position);
 
-extern char* buffer_c_substring(buffer_t* buffer, uint64_t start,
-                                    uint64_t end);
+extern char* buffer_c_substring(buffer_t* buffer, uint64_t start, uint64_t end);
 
 extern char* buffer_to_c_strring(buffer_t* buffer);
 
@@ -184,8 +183,7 @@ __attribute__((warn_unused_result)) extern buffer_t*
     buffer_append_byte(buffer_t* buffer, uint8_t byte);
 
 __attribute__((warn_unused_result)) extern buffer_t*
-    buffer_append_bytes(buffer_t* buffer, uint8_t* bytes,
-                            uint64_t n_bytes);
+    buffer_append_bytes(buffer_t* buffer, uint8_t* bytes, uint64_t n_bytes);
 
 __attribute__((warn_unused_result)) extern buffer_t*
     buffer_append_string(buffer_t* buffer, const char* str);
@@ -209,6 +207,17 @@ extern string_alist_t* alist_insert(string_alist_t* list, char* key,
                                     void* value);
 extern string_alist_t* alist_delete(string_alist_t* list, char* key);
 extern void* alist_find(string_alist_t* list, char* key);
+
+#define string_alist_foreach(alist, key_var, value_type, value_var, statements) \
+  do { \
+    string_alist_t* head = alist; \
+    while (head) { \
+      char* key_var = head->key; \
+      value_type value_var = (value_type) head->value; \
+      statements; \
+      head = head->next; \
+    } \
+} while (0)
 
 #endif /* _STRING_ALIST_H_ */
 // SSCF generated file from: string-hashtable.c
@@ -235,6 +244,16 @@ extern string_hashtable_t* string_ht_delete(string_hashtable_t* ht, char* key);
 
 extern void* string_ht_find(string_hashtable_t* ht, char* key);
 
+#define string_ht_foreach(ht, key_var, value_type, value_var, statements)        \
+  do { \
+    for (int ht_index = 0; ht_index < ht->n_buckets; ht_index++) { \
+      string_alist_t* alist = ht->buckets[ht_index]; \
+      if (alist != NULL) { \
+        string_alist_foreach(alist, key_var, value_type, value_var, statements);   \
+      } \
+    } \
+} while (0)
+
 #endif /* _STRING_HASHTABLE_H_ */
 // SSCF generated file from: type.c
 
@@ -256,8 +275,8 @@ typedef int (*compare_references_fn_t)(struct reference_S a,
 
 typedef uint64_t (*hash_reference_fn_t)(struct reference_S object);
 
-typedef buffer_t* (*append_text_representation_fn_t)(
-    buffer_t* buffer, struct reference_S object);
+typedef buffer_t* (*append_text_representation_fn_t)(buffer_t* buffer,
+                                                     struct reference_S object);
 
 struct type_S {
   char* name;
@@ -557,9 +576,8 @@ static inline void write_to_int8_reference(reference_t reference,
 
 // -----
 
-static inline buffer_t*
-    buffer_append_reference(buffer_t* buffer,
-                                reference_t reference) {
+static inline buffer_t* buffer_append_reference(buffer_t* buffer,
+                                                reference_t reference) {
   return reference.underlying_type->append_fn(buffer, reference);
 }
 
@@ -593,7 +611,7 @@ extern void tuple_write_element(reference_t tuple_ref, uint64_t position,
                                 reference_t value);
 
 extern struct buffer_S* tuple_append_text(struct buffer_S* buffer,
-                                              reference_t tuple_ref);
+                                          reference_t tuple_ref);
 
 #endif /* _TUPLE_H_ */
 // SSCF generated file from: array.c
@@ -1017,8 +1035,7 @@ extern uint64_t buffer_length(buffer_t* buffer);
 
 extern uint8_t buffer_get(buffer_t* buffer, uint64_t position);
 
-extern char* buffer_c_substring(buffer_t* buffer, uint64_t start,
-                                    uint64_t end);
+extern char* buffer_c_substring(buffer_t* buffer, uint64_t start, uint64_t end);
 
 extern char* buffer_to_c_strring(buffer_t* buffer);
 
@@ -1026,8 +1043,7 @@ __attribute__((warn_unused_result)) extern buffer_t*
     buffer_append_byte(buffer_t* buffer, uint8_t byte);
 
 __attribute__((warn_unused_result)) extern buffer_t*
-    buffer_append_bytes(buffer_t* buffer, uint8_t* bytes,
-                            uint64_t n_bytes);
+    buffer_append_bytes(buffer_t* buffer, uint8_t* bytes, uint64_t n_bytes);
 
 __attribute__((warn_unused_result)) extern buffer_t*
     buffer_append_string(buffer_t* buffer, const char* str);
@@ -1082,8 +1098,7 @@ uint8_t buffer_get(buffer_t* buffer, uint64_t position) {
  * Extract a newly allocated string that contain the bytes from start
  * to end (appending a zero byte to make sure it's a legal C string).
  */
-char* buffer_c_substring(buffer_t* buffer, uint64_t start,
-                             uint64_t end) {
+char* buffer_c_substring(buffer_t* buffer, uint64_t start, uint64_t end) {
   // Add one extra byte for a NUL string terminator byte
   char* result = (char*) (malloc_bytes(end - start + 1));
   for (int i = start; i < end; i++) {
@@ -1123,8 +1138,7 @@ __attribute__((warn_unused_result)) buffer_t*
  * Append multiple bytes to the byte array.
  */
 __attribute__((warn_unused_result)) buffer_t*
-    buffer_append_bytes(buffer_t* buffer, uint8_t* bytes,
-                            uint64_t n_bytes) {
+    buffer_append_bytes(buffer_t* buffer, uint8_t* bytes, uint64_t n_bytes) {
   // Obviously this can be optimized...
   for (int i = 0; i < n_bytes; i++) {
     buffer = buffer_append_byte(buffer, bytes[i]);
@@ -2030,9 +2044,8 @@ static inline void write_to_int8_reference(reference_t reference,
 
 // -----
 
-static inline buffer_t*
-    buffer_append_reference(buffer_t* buffer,
-                                reference_t reference) {
+static inline buffer_t* buffer_append_reference(buffer_t* buffer,
+                                                reference_t reference) {
   return reference.underlying_type->append_fn(buffer, reference);
 }
 
@@ -2060,6 +2073,17 @@ extern string_alist_t* alist_insert(string_alist_t* list, char* key,
                                     void* value);
 extern string_alist_t* alist_delete(string_alist_t* list, char* key);
 extern void* alist_find(string_alist_t* list, char* key);
+
+#define string_alist_foreach(alist, key_var, value_type, value_var, statements) \
+  do { \
+    string_alist_t* head = alist; \
+    while (head) { \
+      char* key_var = head->key; \
+      value_type value_var = (value_type) head->value; \
+      statements; \
+      head = head->next; \
+    } \
+} while (0)
 
 #endif /* _STRING_ALIST_H_ */
 
@@ -2122,6 +2146,16 @@ extern string_hashtable_t* string_ht_insert(string_hashtable_t* ht, char* key,
 extern string_hashtable_t* string_ht_delete(string_hashtable_t* ht, char* key);
 
 extern void* string_ht_find(string_hashtable_t* ht, char* key);
+
+#define string_ht_foreach(ht, key_var, value_type, value_var, statements)        \
+  do { \
+    for (int ht_index = 0; ht_index < ht->n_buckets; ht_index++) { \
+      string_alist_t* alist = ht->buckets[ht_index]; \
+      if (alist != NULL) { \
+        string_alist_foreach(alist, key_var, value_type, value_var, statements);   \
+      } \
+    } \
+} while (0)
 
 #endif /* _STRING_HASHTABLE_H_ */
 
@@ -2598,7 +2632,7 @@ extern void tuple_write_element(reference_t tuple_ref, uint64_t position,
                                 reference_t value);
 
 extern struct buffer_S* tuple_append_text(struct buffer_S* buffer,
-                                              reference_t tuple_ref);
+                                          reference_t tuple_ref);
 
 #endif /* _TUPLE_H_ */
 
@@ -2697,7 +2731,7 @@ void tuple_write_element(reference_t tuple_ref, uint64_t position,
 }
 
 struct buffer_S* tuple_append_text(struct buffer_S* buffer,
-                                       reference_t tuple_ref) {
+                                   reference_t tuple_ref) {
   // Make sure the reference is to a tuple?
   type_t* type = tuple_ref.underlying_type;
   tuple_t* tuple_pointer = tuple_ref.pointer;
@@ -2740,8 +2774,8 @@ typedef int (*compare_references_fn_t)(struct reference_S a,
 
 typedef uint64_t (*hash_reference_fn_t)(struct reference_S object);
 
-typedef buffer_t* (*append_text_representation_fn_t)(
-    buffer_t* buffer, struct reference_S object);
+typedef buffer_t* (*append_text_representation_fn_t)(buffer_t* buffer,
+                                                     struct reference_S object);
 
 struct type_S {
   char* name;
@@ -2819,8 +2853,7 @@ uint64_t hash_string_reference(reference_t reference) {
   return 12;
 }
 
-buffer_t* append_string_text(buffer_t* buffer,
-                                 struct reference_S object) {
+buffer_t* append_string_text(buffer_t* buffer, struct reference_S object) {
   char* str = dereference_char_ptr(object);
   buffer = buffer_append_byte(buffer, '"');
   // TODO(jawilson): quote "
@@ -2830,7 +2863,7 @@ buffer_t* append_string_text(buffer_t* buffer,
 }
 
 struct buffer_S* append_uint64_text(struct buffer_S* buffer,
-                                        struct reference_S object) {
+                                    struct reference_S object) {
   char buf[64];
   uint64_t number = dereference_uint64(object);
   sprintf(buf, "%lu", number);
@@ -2838,7 +2871,7 @@ struct buffer_S* append_uint64_text(struct buffer_S* buffer,
 }
 
 struct buffer_S* append_uint32_text(struct buffer_S* buffer,
-                                        struct reference_S object) {
+                                    struct reference_S object) {
   char buf[64];
   uint64_t number = dereference_uint32(object);
   sprintf(buf, "%lu", number);
@@ -2846,7 +2879,7 @@ struct buffer_S* append_uint32_text(struct buffer_S* buffer,
 }
 
 struct buffer_S* append_uint16_text(struct buffer_S* buffer,
-                                        struct reference_S object) {
+                                    struct reference_S object) {
   char buf[64];
   uint64_t number = dereference_uint16(object);
   sprintf(buf, "%lu", number);
@@ -2854,7 +2887,7 @@ struct buffer_S* append_uint16_text(struct buffer_S* buffer,
 }
 
 struct buffer_S* append_uint8_text(struct buffer_S* buffer,
-                                       struct reference_S object) {
+                                   struct reference_S object) {
   char buf[64];
   uint64_t number = dereference_uint8(object);
   sprintf(buf, "%lu", number);
@@ -2862,7 +2895,7 @@ struct buffer_S* append_uint8_text(struct buffer_S* buffer,
 }
 
 struct buffer_S* append_int64_text(struct buffer_S* buffer,
-                                       struct reference_S object) {
+                                   struct reference_S object) {
   char buf[64];
   int64_t number = dereference_int64(object);
   sprintf(buf, "%ld", number);
@@ -2870,7 +2903,7 @@ struct buffer_S* append_int64_text(struct buffer_S* buffer,
 }
 
 struct buffer_S* append_int32_text(struct buffer_S* buffer,
-                                       struct reference_S object) {
+                                   struct reference_S object) {
   char buf[64];
   int32_t number = dereference_int32(object);
   sprintf(buf, "%d", number);
@@ -2878,7 +2911,7 @@ struct buffer_S* append_int32_text(struct buffer_S* buffer,
 }
 
 struct buffer_S* append_int16_text(struct buffer_S* buffer,
-                                       struct reference_S object) {
+                                   struct reference_S object) {
   char buf[64];
   int16_t number = dereference_int16(object);
   sprintf(buf, "%d", number);
@@ -2886,7 +2919,7 @@ struct buffer_S* append_int16_text(struct buffer_S* buffer,
 }
 
 struct buffer_S* append_int8_text(struct buffer_S* buffer,
-                                      struct reference_S object) {
+                                  struct reference_S object) {
   char buf[64];
   int8_t number = dereference_int8(object);
   sprintf(buf, "%d", number);

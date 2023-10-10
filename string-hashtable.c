@@ -26,6 +26,17 @@ extern string_hashtable_t* string_ht_delete(string_hashtable_t* ht, char* key);
 
 extern void* string_ht_find(string_hashtable_t* ht, char* key);
 
+#define string_ht_foreach(ht, key_var, value_type, value_var, statements)      \
+  do {                                                                         \
+    for (int ht_index = 0; ht_index < ht->n_buckets; ht_index++) {             \
+      string_alist_t* alist = ht->buckets[ht_index];                           \
+      if (alist != NULL) {                                                     \
+        string_alist_foreach(alist, key_var, value_type, value_var,            \
+                             statements);                                      \
+      }                                                                        \
+    }                                                                          \
+  } while (0)
+
 #endif /* _STRING_HASHTABLE_H_ */
 
 #include "string-util.h"

@@ -50,6 +50,9 @@ void test_string_ht() {
   if (value == NULL || strcmp("C", (char*) value) != 0) {
     ARMYKNIFE_TEST_FAIL("should have found 'C'");
   }
+
+  string_ht_foreach(ht, key, char*, value,
+                    { fprintf(stderr, "key=%s value = %s\n", key, value); });
 }
 
 int main(int argc, char** argv) {

@@ -2,6 +2,7 @@
 /// Test string-alist.c
 ///
 
+#include <stdio.h>
 #include <stdlib.h>
 
 #define C_ARMYKNIFE_LIB_IMPL
@@ -50,6 +51,9 @@ void test_alist() {
   if (value == NULL || strcmp("C", (char*) value) != 0) {
     ARMYKNIFE_TEST_FAIL("should have found 'C'");
   }
+
+  string_alist_foreach(list, key, char*, value,
+                       { fprintf(stderr, "key=%s value = %s\n", key, value); });
 }
 
 int main(int argc, char** argv) {

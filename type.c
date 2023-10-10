@@ -69,19 +69,17 @@ static inline type_t* int32_type() { return &int32_type_constant; }
 static inline type_t* int16_type() { return &int16_type_constant; }
 static inline type_t* int8_type() { return &int8_type_constant; }
 
-// TODO: global constants for standard types like uint64_t and void*
+#define pointer_t(t) t*
+
+#endif /* _TYPE_H_ */
+
+#include <stdalign.h>
 
 type_t* intern_type(type_t type) {
   WARN("intern_type is not actually doing interning");
   type_t* result = (type_t*) malloc_copy_of((uint8_t*) &type, sizeof(type));
   return result;
 }
-
-#define pointer_t(t) t*
-
-#endif /* _TYPE_H_ */
-
-#include <stdalign.h>
 
 int compare_string_references(reference_t ref_a, reference_t ref_b) {
   return strcmp(dereference_char_ptr(ref_a), dereference_char_ptr(ref_b));

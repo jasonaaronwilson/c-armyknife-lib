@@ -37,10 +37,6 @@ extern void checked_free(char* file, int line, void* pointer);
 #include <stdlib.h>
 #include <string.h>
 
-#include "allocate.h"
-#include "boolean.h"
-#include "fatal-error.h"
-
 boolean_t is_initialized = false;
 boolean_t should_log_value = false;
 

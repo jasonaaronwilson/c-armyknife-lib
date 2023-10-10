@@ -13,9 +13,6 @@
 #ifndef _TEST_H_
 #define _TEST_H_
 
-// Provide a convenient place to set a breakpoint
-void armyknife_test_fail_exit() { exit(1); }
-
 #define ARMYKNIFE_TEST_FAIL(msg)                                               \
   do {                                                                         \
     fprintf(stderr, "%s:%d: -- FAIL (fn=%s, msg='%s')\n", __FILE__, __LINE__,  \
@@ -25,7 +22,5 @@ void armyknife_test_fail_exit() { exit(1); }
 
 #endif /* _TEST_H_ */
 
-// ======================================================================
-// In order to not increase the runtime footprint, we don't actually
-// have any non-macros (or inlined functions).
-// ======================================================================
+// Provide a convenient place to set a breakpoint
+void armyknife_test_fail_exit() { exit(1); }

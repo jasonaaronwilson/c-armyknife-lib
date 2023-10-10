@@ -322,14 +322,6 @@ static inline type_t* int32_type() { return &int32_type_constant; }
 static inline type_t* int16_type() { return &int16_type_constant; }
 static inline type_t* int8_type() { return &int8_type_constant; }
 
-// TODO: global constants for standard types like uint64_t and void*
-
-type_t* intern_type(type_t type) {
-  WARN("intern_type is not actually doing interning");
-  type_t* result = (type_t*) malloc_copy_of((uint8_t*) &type, sizeof(type));
-  return result;
-}
-
 #define pointer_t(t) t*
 
 #endif /* _TYPE_H_ */
@@ -746,9 +738,6 @@ extern array_t(char*) * tokenize(const char* str, const char* delimiters);
 #ifndef _TEST_H_
 #define _TEST_H_
 
-// Provide a convenient place to set a breakpoint
-void armyknife_test_fail_exit() { exit(1); }
-
 #define ARMYKNIFE_TEST_FAIL(msg)                                               \
   do {                                                                         \
     fprintf(stderr, "%s:%d: -- FAIL (fn=%s, msg='%s')\n", __FILE__, __LINE__,  \
@@ -796,10 +785,6 @@ extern void checked_free(char* file, int line, void* pointer);
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-#include "allocate.h"
-#include "boolean.h"
-#include "fatal-error.h"
 
 boolean_t is_initialized = false;
 boolean_t should_log_value = false;
@@ -2501,9 +2486,6 @@ uint64_t fasthash64(const void* buf, size_t len, uint64_t seed) {
 #ifndef _TEST_H_
 #define _TEST_H_
 
-// Provide a convenient place to set a breakpoint
-void armyknife_test_fail_exit() { exit(1); }
-
 #define ARMYKNIFE_TEST_FAIL(msg)                                               \
   do {                                                                         \
     fprintf(stderr, "%s:%d: -- FAIL (fn=%s, msg='%s')\n", __FILE__, __LINE__,  \
@@ -2513,10 +2495,8 @@ void armyknife_test_fail_exit() { exit(1); }
 
 #endif /* _TEST_H_ */
 
-// ======================================================================
-// In order to not increase the runtime footprint, we don't actually
-// have any non-macros (or inlined functions).
-// ======================================================================
+// Provide a convenient place to set a breakpoint
+void armyknife_test_fail_exit() { exit(1); }
 #line 2 "tokenizer.c"
 /**
  * @file tokenizer.c
@@ -2826,19 +2806,17 @@ static inline type_t* int32_type() { return &int32_type_constant; }
 static inline type_t* int16_type() { return &int16_type_constant; }
 static inline type_t* int8_type() { return &int8_type_constant; }
 
-// TODO: global constants for standard types like uint64_t and void*
+#define pointer_t(t) t*
+
+#endif /* _TYPE_H_ */
+
+#include <stdalign.h>
 
 type_t* intern_type(type_t type) {
   WARN("intern_type is not actually doing interning");
   type_t* result = (type_t*) malloc_copy_of((uint8_t*) &type, sizeof(type));
   return result;
 }
-
-#define pointer_t(t) t*
-
-#endif /* _TYPE_H_ */
-
-#include <stdalign.h>
 
 int compare_string_references(reference_t ref_a, reference_t ref_b) {
   return strcmp(dereference_char_ptr(ref_a), dereference_char_ptr(ref_b));

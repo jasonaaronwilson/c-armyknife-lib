@@ -208,16 +208,17 @@ extern string_alist_t* alist_insert(string_alist_t* list, char* key,
 extern string_alist_t* alist_delete(string_alist_t* list, char* key);
 extern void* alist_find(string_alist_t* list, char* key);
 
-#define string_alist_foreach(alist, key_var, value_type, value_var, statements) \
-  do { \
-    string_alist_t* head = alist; \
-    while (head) { \
-      char* key_var = head->key; \
-      value_type value_var = (value_type) head->value; \
-      statements; \
-      head = head->next; \
-    } \
-} while (0)
+#define string_alist_foreach(alist, key_var, value_type, value_var,            \
+                             statements)                                       \
+  do {                                                                         \
+    string_alist_t* head = alist;                                              \
+    while (head) {                                                             \
+      char* key_var = head->key;                                               \
+      value_type value_var = (value_type) head->value;                         \
+      statements;                                                              \
+      head = head->next;                                                       \
+    }                                                                          \
+  } while (0)
 
 #endif /* _STRING_ALIST_H_ */
 // SSCF generated file from: string-hashtable.c
@@ -244,15 +245,16 @@ extern string_hashtable_t* string_ht_delete(string_hashtable_t* ht, char* key);
 
 extern void* string_ht_find(string_hashtable_t* ht, char* key);
 
-#define string_ht_foreach(ht, key_var, value_type, value_var, statements)        \
-  do { \
-    for (int ht_index = 0; ht_index < ht->n_buckets; ht_index++) { \
-      string_alist_t* alist = ht->buckets[ht_index]; \
-      if (alist != NULL) { \
-        string_alist_foreach(alist, key_var, value_type, value_var, statements);   \
-      } \
-    } \
-} while (0)
+#define string_ht_foreach(ht, key_var, value_type, value_var, statements)      \
+  do {                                                                         \
+    for (int ht_index = 0; ht_index < ht->n_buckets; ht_index++) {             \
+      string_alist_t* alist = ht->buckets[ht_index];                           \
+      if (alist != NULL) {                                                     \
+        string_alist_foreach(alist, key_var, value_type, value_var,            \
+                             statements);                                      \
+      }                                                                        \
+    }                                                                          \
+  } while (0)
 
 #endif /* _STRING_HASHTABLE_H_ */
 // SSCF generated file from: type.c
@@ -732,8 +734,6 @@ extern void buffer_write_file(buffer_t* bytes, char* file_name);
 #line 9 "tokenizer.c"
 #ifndef _TOKENIZER_H_
 #define _TOKENIZER_H_
-
-#include "array.h"
 
 extern array_t(char*) * tokenize(const char* str, const char* delimiters);
 
@@ -2074,16 +2074,17 @@ extern string_alist_t* alist_insert(string_alist_t* list, char* key,
 extern string_alist_t* alist_delete(string_alist_t* list, char* key);
 extern void* alist_find(string_alist_t* list, char* key);
 
-#define string_alist_foreach(alist, key_var, value_type, value_var, statements) \
-  do { \
-    string_alist_t* head = alist; \
-    while (head) { \
-      char* key_var = head->key; \
-      value_type value_var = (value_type) head->value; \
-      statements; \
-      head = head->next; \
-    } \
-} while (0)
+#define string_alist_foreach(alist, key_var, value_type, value_var,            \
+                             statements)                                       \
+  do {                                                                         \
+    string_alist_t* head = alist;                                              \
+    while (head) {                                                             \
+      char* key_var = head->key;                                               \
+      value_type value_var = (value_type) head->value;                         \
+      statements;                                                              \
+      head = head->next;                                                       \
+    }                                                                          \
+  } while (0)
 
 #endif /* _STRING_ALIST_H_ */
 
@@ -2147,15 +2148,16 @@ extern string_hashtable_t* string_ht_delete(string_hashtable_t* ht, char* key);
 
 extern void* string_ht_find(string_hashtable_t* ht, char* key);
 
-#define string_ht_foreach(ht, key_var, value_type, value_var, statements)        \
-  do { \
-    for (int ht_index = 0; ht_index < ht->n_buckets; ht_index++) { \
-      string_alist_t* alist = ht->buckets[ht_index]; \
-      if (alist != NULL) { \
-        string_alist_foreach(alist, key_var, value_type, value_var, statements);   \
-      } \
-    } \
-} while (0)
+#define string_ht_foreach(ht, key_var, value_type, value_var, statements)      \
+  do {                                                                         \
+    for (int ht_index = 0; ht_index < ht->n_buckets; ht_index++) {             \
+      string_alist_t* alist = ht->buckets[ht_index];                           \
+      if (alist != NULL) {                                                     \
+        string_alist_foreach(alist, key_var, value_type, value_var,            \
+                             statements);                                      \
+      }                                                                        \
+    }                                                                          \
+  } while (0)
 
 #endif /* _STRING_HASHTABLE_H_ */
 
@@ -2518,8 +2520,6 @@ void armyknife_test_fail_exit() { exit(1); }
 
 #ifndef _TOKENIZER_H_
 #define _TOKENIZER_H_
-
-#include "array.h"
 
 extern array_t(char*) * tokenize(const char* str, const char* delimiters);
 

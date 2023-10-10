@@ -9,8 +9,6 @@
 #ifndef _TOKENIZER_H_
 #define _TOKENIZER_H_
 
-#include "array.h"
-
 extern array_t(char*) * tokenize(const char* str, const char* delimiters);
 
 #endif /* _TOKENIZER_H_ */

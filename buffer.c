@@ -88,10 +88,12 @@ uint8_t buffer_get(buffer_t* buffer, uint64_t position) {
  */
 char* buffer_c_substring(buffer_t* buffer, uint64_t start, uint64_t end) {
   // Add one extra byte for a NUL string terminator byte
-  char* result = (char*) (malloc_bytes(end - start + 1));
+  char* result = (char*) (malloc_bytes((end - start) + 1));
   for (int i = start; i < end; i++) {
     result[i - start] = buffer->elements[i];
   }
+  // This should not be necessary. malloc_bytes is supposed to zero
+  // initialize bytes. yet this seems to have fixed a bug!
   result[end - start] = '\0';
   return result;
 }

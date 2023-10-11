@@ -63,10 +63,12 @@ extern const char* fatal_error_code_to_string(int error_code);
 #ifndef _BOOLEAN_H_
 #define _BOOLEAN_H_
 
-typedef int boolean_t;
+#include <stdbool.h>
 
-#define true ((boolean_t) 1)
-#define false ((boolean_t) 0)
+typedef bool boolean_t;
+
+// #define true ((boolean_t) 1)
+// #define false ((boolean_t) 0)
 
 #endif /* _BOOLEAN_H_ */
 // SSCF generated file from: trace.c
@@ -1000,16 +1002,14 @@ __attribute__((warn_unused_result)) array_t(|?|)* array_add(array_t(|?|)* array,
 #ifndef _BOOLEAN_H_
 #define _BOOLEAN_H_
 
-typedef int boolean_t;
+#include <stdbool.h>
 
-#define true ((boolean_t) 1)
-#define false ((boolean_t) 0)
+typedef bool boolean_t;
+
+// #define true ((boolean_t) 1)
+// #define false ((boolean_t) 0)
 
 #endif /* _BOOLEAN_H_ */
-
-// ======================================================================
-// Currently no implementation
-// ======================================================================
 #line 2 "buffer.c"
 /**
  * @file buffer.c
@@ -1100,11 +1100,13 @@ uint8_t buffer_get(buffer_t* buffer, uint64_t position) {
  */
 char* buffer_c_substring(buffer_t* buffer, uint64_t start, uint64_t end) {
   // Add one extra byte for a NUL string terminator byte
-  char* result = (char*) (malloc_bytes(end - start + 1));
+  char* result = (char*) (malloc_bytes((end - start) + 1));
   for (int i = start; i < end; i++) {
     result[i - start] = buffer->elements[i];
   }
-  result[end-start] = '\0';
+  // This should not be necessary. malloc_bytes is supposed to zero
+  // initialize bytes. yet this seems to have fixed a bug!
+  result[end - start] = '\0';
   return result;
 }
 

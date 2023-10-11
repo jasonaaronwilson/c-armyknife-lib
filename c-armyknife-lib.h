@@ -1133,14 +1133,9 @@ __attribute__((warn_unused_result)) buffer_t*
     buffer->elements[buffer->length] = element;
     buffer->length++;
     return buffer;
-  } else {
-    buffer_t* result = make_buffer(buffer->capacity * 2);
-    for (int i = 0; i < buffer->length; i++) {
-      result = buffer_append_byte(result, buffer_get(buffer, i));
-    }
-    free_bytes(buffer);
-    return buffer_append_byte(result, element);
   }
+  buffer = buffer_increase_capacity(buffer, buffer->capacity * 2);
+  return buffer_append_byte(buffer, element);
 }
 
 /**
@@ -1166,7 +1161,14 @@ __attribute__((warn_unused_result)) buffer_t*
 
 __attribute__((warn_unused_result)) extern buffer_t*
     buffer_increase_capacity(buffer_t* buffer, uint64_t capacity) {
-  // This currently doesn't do anything...
+  if (buffer->capacity < capacity) {
+    buffer_t* result = make_buffer(capacity);
+    for (int i = 0; i < buffer->length; i++) {
+      result = buffer_append_byte(result, buffer_get(buffer, i));
+    }
+    free_bytes(buffer);
+    return result;
+  }
   return buffer;
 }
 #line 2 "command-line-parser.c"

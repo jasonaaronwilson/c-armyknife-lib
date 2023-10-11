@@ -662,7 +662,7 @@ struct command_line_parse_result_S {
   char* program;
   char* command;
   string_hashtable_t* flags;
-  array_t(char*) * files;
+  ptr_array_t* files;
 };
 
 typedef struct command_line_parse_result_S command_line_parse_result_t;
@@ -1172,7 +1172,7 @@ struct command_line_parse_result_S {
   char* program;
   char* command;
   string_hashtable_t* flags;
-  array_t(char*) * files;
+  ptr_array_t* files;
 };
 
 typedef struct command_line_parse_result_S command_line_parse_result_t;
@@ -1194,7 +1194,7 @@ extern command_line_parse_result_t parse_command_line(int argc, char** argv,
  */
 command_line_parse_result_t parse_command_line(int argc, char** argv,
                                                boolean_t has_command) {
-  array_t(uint64_t)* files = make_array(char_ptr_type(), 16);
+  ptr_array_t* files = make_ptr_array(argc);
   string_hashtable_t* flags = make_string_hashtable(32);
 
   boolean_t parse_flags = true;
@@ -1224,7 +1224,7 @@ command_line_parse_result_t parse_command_line(int argc, char** argv,
       }
     }
 
-    files = array_add(files, reference_of_char_ptr(&arg));
+    ptr_array_add(files, arg);
   }
 
   char* command = has_command && argc >= 2 ? argv[1] : NULL;
@@ -1800,7 +1800,7 @@ void buffer_write_file(buffer_t* bytes, char* file_name) {
  *
  * This file contains a growable array of pointers which is
  * significantly easier to use than array.c though it is not
- * contiguous like 
+ * contiguous like
  */
 
 #ifndef _PTR_ARRAY_H_

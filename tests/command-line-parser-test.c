@@ -20,8 +20,8 @@ int main(int argc, char** argv) {
   fprintf(stdout, "bar is %s\n", (char*) value);
 
   for (int i = 0; i < args_and_files.files->length; i++) {
-    reference_t file = array_get_reference(args_and_files.files, i);
-    fprintf(stdout, "bar is %s\n", dereference_char_ptr(file));
+    fprintf(stdout, "bar is %s\n",
+            (char*) ptr_array_get(args_and_files.files, i));
   }
 
   exit(0);

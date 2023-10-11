@@ -10,6 +10,7 @@ SRC_C = allocate.c \
 	hashtable.c \
 	hashtree.c \
 	io.c \
+	ptr-array.c \
 	reference.c \
 	string-alist.c \
 	string-hashtable.c \
@@ -29,6 +30,7 @@ ORDERED_H = \
 	allocate.h \
 	string-util.h \
 	buffer.h \
+	ptr-array.h \
 	string-alist.h \
 	string-hashtable.h \
 	type.h \

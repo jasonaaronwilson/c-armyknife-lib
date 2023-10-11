@@ -71,7 +71,12 @@ command_line_parse_result_t parse_command_line(int argc, char** argv,
     files = array_add(files, reference_of_char_ptr(&arg));
   }
 
-  char* command = has_command ? argv[1] : NULL;
+  char* command = has_command && argc >= 2 ? argv[1] : NULL;
+  if (command && string_starts_with(command, "-")) {
+    fprintf(stdout, "Flags should not appear before a command.");
+    fatal_error(ERROR_BAD_COMMAND_LINE);
+  }
+
   return (command_line_parse_result_t){
       .program = argv[0],
       .command = command,

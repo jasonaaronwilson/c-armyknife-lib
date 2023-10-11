@@ -28,6 +28,7 @@ typedef enum {
   ERROR_ILLEGAL_ZERO_HASHCODE_VALUE,
   ERROR_UNIMPLEMENTED,
   ERROR_ILLEGAL_NULL_ARGUMENT,
+  ERROR_BAD_COMMAND_LINE,
 } error_code_t;
 
 extern _Noreturn void fatal_error_impl(char* file, int line, int error_code);
@@ -189,6 +190,25 @@ __attribute__((warn_unused_result)) extern buffer_t*
     buffer_append_string(buffer_t* buffer, const char* str);
 
 #endif /* _BUFFER_H_ */
+// SSCF generated file from: ptr-array.c
+
+#line 11 "ptr-array.c"
+#ifndef _PTR_ARRAY_H_
+#define _PTR_ARRAY_H_
+
+struct ptr_array_S {
+  uint32_t length;
+  uint32_t capacity;
+  void** elements;
+};
+
+typedef struct ptr_array_S ptr_array_t;
+
+extern ptr_array_t* make_ptr_array(uint32_t initial_capacity);
+extern void* ptr_array_get(ptr_array_t* array, uint32_t index);
+extern void ptr_array_add(ptr_array_t* array, void* element);
+
+#endif /* _PTR_ARRAY_H_ */
 // SSCF generated file from: string-alist.c
 
 #line 9 "string-alist.c"
@@ -610,7 +630,7 @@ extern struct buffer_S* tuple_append_text(struct buffer_S* buffer,
 #endif /* _TUPLE_H_ */
 // SSCF generated file from: array.c
 
-#line 13 "array.c"
+#line 14 "array.c"
 #ifndef _ARRAY_H_
 #define _ARRAY_H_
 
@@ -858,6 +878,7 @@ void checked_free(char* file, int line, void* pointer) {
   free(pointer);
 }
 #line 2 "array.c"
+
 /**
  * @file array.c
  *
@@ -1206,7 +1227,12 @@ command_line_parse_result_t parse_command_line(int argc, char** argv,
     files = array_add(files, reference_of_char_ptr(&arg));
   }
 
-  char* command = has_command ? argv[1] : NULL;
+  char* command = has_command && argc >= 2 ? argv[1] : NULL;
+  if (command && string_starts_with(command, "-")) {
+    fprintf(stdout, "Flags should not appear before a command.");
+    fatal_error(ERROR_BAD_COMMAND_LINE);
+  }
+
   return (command_line_parse_result_t){
       .program = argv[0],
       .command = command,
@@ -1271,6 +1297,7 @@ typedef enum {
   ERROR_ILLEGAL_ZERO_HASHCODE_VALUE,
   ERROR_UNIMPLEMENTED,
   ERROR_ILLEGAL_NULL_ARGUMENT,
+  ERROR_BAD_COMMAND_LINE,
 } error_code_t;
 
 extern _Noreturn void fatal_error_impl(char* file, int line, int error_code);
@@ -1765,6 +1792,67 @@ void buffer_write_file(buffer_t* bytes, char* file_name) {
   FILE* file = fopen(file_name, "r");
   fwrite(&bytes->elements, 1, bytes->length, file);
   fclose(file);
+}
+#line 2 "ptr-array.c"
+
+/**
+ * @file ptr-array.c
+ *
+ * This file contains a growable array of pointers which is
+ * significantly easier to use than array.c though it is not
+ * contiguous like 
+ */
+
+#ifndef _PTR_ARRAY_H_
+#define _PTR_ARRAY_H_
+
+struct ptr_array_S {
+  uint32_t length;
+  uint32_t capacity;
+  void** elements;
+};
+
+typedef struct ptr_array_S ptr_array_t;
+
+extern ptr_array_t* make_ptr_array(uint32_t initial_capacity);
+extern void* ptr_array_get(ptr_array_t* array, uint32_t index);
+extern void ptr_array_add(ptr_array_t* array, void* element);
+
+#endif /* _PTR_ARRAY_H_ */
+
+ptr_array_t* make_ptr_array(uint32_t initial_capacity) {
+  if (initial_capacity == 0) {
+    fatal_error(ERROR_ILLEGAL_INITIAL_CAPACITY);
+  }
+
+  ptr_array_t* result = malloc_struct(ptr_array_t);
+  result->capacity = initial_capacity;
+  result->elements = (void**) malloc_bytes(sizeof(void*) * initial_capacity);
+
+  return result;
+}
+
+void* ptr_array_get(ptr_array_t* array, uint32_t index) {
+  if (index < array->length) {
+    return array->elements[index];
+  }
+  fatal_error(ERROR_ACCESS_OUT_OF_BOUNDS);
+}
+
+void ptr_array_add(ptr_array_t* array, void* element) {
+  if (array->length == array->capacity) {
+    uint32_t new_capacity = array->capacity * 2;
+    void** new_elements = (void**) (malloc_bytes(sizeof(void*) * new_capacity));
+    for (int i = 0; i < array->capacity; i++) {
+      new_elements[i] = array->elements[i];
+    }
+    array->capacity = new_capacity;
+    free(array->elements);
+    array->elements = new_elements;
+    ptr_array_add(array, element);
+    return;
+  }
+  array->elements[(array->length)++] = element;
 }
 #line 2 "reference.c"
 /**

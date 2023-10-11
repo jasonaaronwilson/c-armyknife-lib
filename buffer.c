@@ -32,6 +32,9 @@ extern char* buffer_c_substring(buffer_t* buffer, uint64_t start, uint64_t end);
 extern char* buffer_to_c_string(buffer_t* buffer);
 
 __attribute__((warn_unused_result)) extern buffer_t*
+    buffer_increase_capacity(buffer_t* buffer, uint64_t capacity);
+
+__attribute__((warn_unused_result)) extern buffer_t*
     buffer_append_byte(buffer_t* buffer, uint8_t byte);
 
 __attribute__((warn_unused_result)) extern buffer_t*
@@ -144,4 +147,10 @@ __attribute__((warn_unused_result)) buffer_t*
 __attribute__((warn_unused_result)) buffer_t*
     buffer_append_string(buffer_t* buffer, const char* str) {
   return buffer_append_bytes(buffer, (uint8_t*) str, strlen(str));
+}
+
+__attribute__((warn_unused_result)) extern buffer_t*
+    buffer_increase_capacity(buffer_t* buffer, uint64_t capacity) {
+  // This currently doesn't do anything...
+  return buffer;
 }

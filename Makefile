@@ -80,6 +80,7 @@ TESTS= \
 	./command-line-parser-test.sh \
 	./tokenizer-test.sh \
 	./append-test.sh \
+	./io-test.sh \
 	./hashtree-test.sh \
 	./hashtable-test.sh
 

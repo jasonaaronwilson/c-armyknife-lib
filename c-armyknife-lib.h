@@ -183,6 +183,9 @@ extern char* buffer_c_substring(buffer_t* buffer, uint64_t start, uint64_t end);
 extern char* buffer_to_c_string(buffer_t* buffer);
 
 __attribute__((warn_unused_result)) extern buffer_t*
+    buffer_increase_capacity(buffer_t* buffer, uint64_t capacity);
+
+__attribute__((warn_unused_result)) extern buffer_t*
     buffer_append_byte(buffer_t* buffer, uint8_t byte);
 
 __attribute__((warn_unused_result)) extern buffer_t*
@@ -1044,6 +1047,9 @@ extern char* buffer_c_substring(buffer_t* buffer, uint64_t start, uint64_t end);
 extern char* buffer_to_c_string(buffer_t* buffer);
 
 __attribute__((warn_unused_result)) extern buffer_t*
+    buffer_increase_capacity(buffer_t* buffer, uint64_t capacity);
+
+__attribute__((warn_unused_result)) extern buffer_t*
     buffer_append_byte(buffer_t* buffer, uint8_t byte);
 
 __attribute__((warn_unused_result)) extern buffer_t*
@@ -1156,6 +1162,12 @@ __attribute__((warn_unused_result)) buffer_t*
 __attribute__((warn_unused_result)) buffer_t*
     buffer_append_string(buffer_t* buffer, const char* str) {
   return buffer_append_bytes(buffer, (uint8_t*) str, strlen(str));
+}
+
+__attribute__((warn_unused_result)) extern buffer_t*
+    buffer_increase_capacity(buffer_t* buffer, uint64_t capacity) {
+  // This currently doesn't do anything...
+  return buffer;
 }
 #line 2 "command-line-parser.c"
 /**
@@ -1773,8 +1785,23 @@ extern void buffer_write_file(buffer_t* bytes, char* file_name);
 
 #include <stdio.h>
 
+// This is optional...
+#include <sys/stat.h>
+
 __attribute__((warn_unused_result)) buffer_t*
     buffer_append_file_contents(buffer_t* bytes, char* file_name) {
+
+  uint64_t capacity = bytes->capacity;
+
+  // This is optional
+  {
+    struct stat st;
+    stat(file_name, &st);
+    capacity = st.st_size;
+  }
+
+  bytes = buffer_increase_capacity(bytes, capacity);
+
   FILE* file = fopen(file_name, "r");
   uint8_t buffer[1024];
 
@@ -1792,7 +1819,7 @@ __attribute__((warn_unused_result)) buffer_t*
 }
 
 void buffer_write_file(buffer_t* bytes, char* file_name) {
-  FILE* file = fopen(file_name, "r");
+  FILE* file = fopen(file_name, "w");
   fwrite(&bytes->elements, 1, bytes->length, file);
   fclose(file);
 }

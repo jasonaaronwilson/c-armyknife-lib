@@ -29,7 +29,7 @@ extern uint8_t buffer_get(buffer_t* buffer, uint64_t position);
 
 extern char* buffer_c_substring(buffer_t* buffer, uint64_t start, uint64_t end);
 
-extern char* buffer_to_c_strring(buffer_t* buffer);
+extern char* buffer_to_c_string(buffer_t* buffer);
 
 __attribute__((warn_unused_result)) extern buffer_t*
     buffer_append_byte(buffer_t* buffer, uint8_t byte);
@@ -92,6 +92,7 @@ char* buffer_c_substring(buffer_t* buffer, uint64_t start, uint64_t end) {
   for (int i = start; i < end; i++) {
     result[i - start] = buffer->elements[i];
   }
+  result[end - start] = '\0';
   return result;
 }
 

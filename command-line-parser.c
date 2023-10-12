@@ -62,7 +62,7 @@ command_line_parse_result_t parse_command_line(int argc, char** argv,
           key = string_substring(arg, 2, strlen(arg));
         }
 
-        flags = string_ht_insert(flags, key, value);
+        flags = string_ht_insert(flags, key, (value_t) value);
 
         continue;
       }

@@ -5,7 +5,7 @@
  *
  * This file contains a growable array of pointers which is
  * significantly easier to use than array.c though it is not
- * contiguous like
+ * contiguous.
  */
 
 #ifndef _PTR_ARRAY_H_

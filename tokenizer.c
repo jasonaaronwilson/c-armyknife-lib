@@ -9,7 +9,7 @@
 #ifndef _TOKENIZER_H_
 #define _TOKENIZER_H_
 
-extern array_t(char*) * tokenize(const char* str, const char* delimiters);
+extern ptr_array_t* tokenize(const char* str, const char* delimiters);
 
 #endif /* _TOKENIZER_H_ */
 
@@ -17,7 +17,7 @@ extern array_t(char*) * tokenize(const char* str, const char* delimiters);
 #include <stdlib.h>
 #include <string.h>
 
-array_t(char*) * add_duplicate(array_t(char*) * token_array, const char* data);
+void add_duplicate(ptr_array_t* token_array, const char* data);
 
 /**
  * Tokenize a string.
@@ -25,8 +25,8 @@ array_t(char*) * add_duplicate(array_t(char*) * token_array, const char* data);
  * Delimiters terminate the current token and are thrown away.
  */
 
-array_t(char*) * tokenize(const char* str, const char* delimiters) {
-  array_t(char*)* result = make_array(char_ptr_type(), 4);
+ptr_array_t* tokenize(const char* str, const char* delimiters) {
+  ptr_array_t* result = make_ptr_array(1);
   char token_data[1024];
   int cpos = 0;
   for (int i = 0; (i < strlen(str)); i++) {
@@ -34,7 +34,7 @@ array_t(char*) * tokenize(const char* str, const char* delimiters) {
     if (string_contains_char(delimiters, ch)) {
       token_data[cpos++] = '\0';
       if (strlen(token_data) > 0) {
-        result = add_duplicate(result, token_data);
+        add_duplicate(result, token_data);
       }
       cpos = 0;
     } else {
@@ -43,7 +43,7 @@ array_t(char*) * tokenize(const char* str, const char* delimiters) {
   }
   token_data[cpos++] = '\0';
   if (strlen(token_data) > 0) {
-    result = add_duplicate(result, token_data);
+    add_duplicate(result, token_data);
   }
 
   return result;
@@ -52,7 +52,6 @@ array_t(char*) * tokenize(const char* str, const char* delimiters) {
 /**
  * Add a *copy* of the string named data to the token list.
  */
-array_t(char*) * add_duplicate(array_t(char*) * token_array, const char* data) {
-  char* duplicate = string_duplicate(data);
-  return array_add(token_array, reference_of_char_ptr(&duplicate));
+void add_duplicate(ptr_array_t* token_array, const char* data) {
+  ptr_array_add(token_array, string_duplicate(data));
 }

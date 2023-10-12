@@ -54,11 +54,6 @@ __attribute__((warn_unused_result)) extern buffer_t*
  */
 buffer_t* make_buffer(uint32_t initial_capacity) {
 
-  // We make the assumption that casting (char*) to (uint8_t*) and
-  // vice-versa is completely reasonable which it is on all modern
-  // architecures.
-  ct_assert(sizeof(char) == 1);
-
   if (initial_capacity < 1) {
     fatal_error(ERROR_ILLEGAL_INITIAL_CAPACITY);
   }

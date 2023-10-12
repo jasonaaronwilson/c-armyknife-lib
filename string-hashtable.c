@@ -2,7 +2,7 @@
 /**
  * @file string-hashtable.c
  *
- * A hash map of string to an untyped pointer.
+ * A hash map of string to a value_t.
  */
 
 #ifndef _STRING_HASHTABLE_H_
@@ -20,19 +20,18 @@ typedef struct string_hashtable_S string_hashtable_t;
 extern string_hashtable_t* make_string_hashtable(uint64_t n_buckets);
 
 extern string_hashtable_t* string_ht_insert(string_hashtable_t* ht, char* key,
-                                            void* value);
+                                            value_t value);
 
 extern string_hashtable_t* string_ht_delete(string_hashtable_t* ht, char* key);
 
-extern void* string_ht_find(string_hashtable_t* ht, char* key);
+extern value_result_t string_ht_find(string_hashtable_t* ht, char* key);
 
-#define string_ht_foreach(ht, key_var, value_type, value_var, statements)      \
+#define string_ht_foreach(ht, key_var, value_var, statements)                  \
   do {                                                                         \
     for (int ht_index = 0; ht_index < ht->n_buckets; ht_index++) {             \
       string_alist_t* alist = ht->buckets[ht_index];                           \
       if (alist != NULL) {                                                     \
-        string_alist_foreach(alist, key_var, value_type, value_var,            \
-                             statements);                                      \
+        string_alist_foreach(alist, key_var, value_var, statements);           \
       }                                                                        \
     }                                                                          \
   } while (0)
@@ -56,7 +55,7 @@ string_hashtable_t* make_string_hashtable(uint64_t n_buckets) {
  * Insert an association into the hashtable.
  */
 string_hashtable_t* string_ht_insert(string_hashtable_t* ht, char* key,
-                                     void* value) {
+                                     value_t value) {
   uint64_t hashcode = string_hash(key);
   int bucket = hashcode % ht->n_buckets;
   string_alist_t* list = ht->buckets[bucket];
@@ -78,7 +77,7 @@ string_hashtable_t* string_ht_delete(string_hashtable_t* ht, char* key) {
 /**
  * Find an association in the hashtable.
  */
-void* string_ht_find(string_hashtable_t* ht, char* key) {
+value_result_t string_ht_find(string_hashtable_t* ht, char* key) {
   uint64_t hashcode = string_hash(key);
   int bucket = hashcode % ht->n_buckets;
   string_alist_t* list = ht->buckets[bucket];

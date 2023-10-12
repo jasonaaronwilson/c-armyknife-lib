@@ -16,9 +16,6 @@ It provides very little actually:
 * easy to use string-->void* maps (hashtables and association lists
   including iterator macros).
 * easy to grow arrays of pointers (poor mans "collect")
-* an ambitious plan for more generic tuples, arrays, and hashtables
-  that **seems to be to painful to use in practice** so I will
-  probably change course.
 
 ## Status
 
@@ -29,7 +26,8 @@ that relies on c-armyknife-lib.
 More interesting is the whole way [header file
 extraction](https://github.com/jasonaaronwilson/c-single-source-file)
 is kind of working out not only on how to structure this library but
-also for a static binary target though there are hitches.
+also for a static binary target though there are hitches with
+debuggers (stuff compiles fine).
 
 ## Test Infrastructure
 

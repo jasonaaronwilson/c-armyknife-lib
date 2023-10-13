@@ -16,13 +16,13 @@ void test_string_ht() {
     ARMYKNIFE_TEST_FAIL("find in empty ht should return NULL");
   }
 
-  ht = string_ht_insert(ht, "a", (value_t) "A");
+  ht = string_ht_insert(ht, "a", str_to_value("A"));
   value = string_ht_find(ht, "a");
   if (!value.found || strcmp("A", value.str) != 0) {
     ARMYKNIFE_TEST_FAIL("should have found 'A'");
   }
 
-  ht = string_ht_insert(ht, "b", (value_t) "B");
+  ht = string_ht_insert(ht, "b", str_to_value("B"));
   value = string_ht_find(ht, "a");
   if (!value.found || strcmp("A", value.str) != 0) {
     ARMYKNIFE_TEST_FAIL("should have found 'A'");
@@ -33,8 +33,8 @@ void test_string_ht() {
   }
 
   // Add a few more elements to the front of the ht.
-  ht = string_ht_insert(ht, "c", (value_t) "C");
-  ht = string_ht_insert(ht, "d", (value_t) "D");
+  ht = string_ht_insert(ht, "c", str_to_value("C"));
+  ht = string_ht_insert(ht, "d", str_to_value("D"));
 
   // Finally delete a node.
   ht = string_ht_delete(ht, "b");

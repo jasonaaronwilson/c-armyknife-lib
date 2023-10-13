@@ -17,13 +17,13 @@ void test_alist() {
     ARMYKNIFE_TEST_FAIL("find in empty list should return NULL");
   }
 
-  list = alist_insert(list, "a", (value_t) "A");
+  list = alist_insert(list, "a", str_to_value("A"));
   value = alist_find(list, "a");
   if (!value.found || strcmp("A", value.str) != 0) {
     ARMYKNIFE_TEST_FAIL("should have found 'A'");
   }
 
-  list = alist_insert(list, "b", (value_t) "B");
+  list = alist_insert(list, "b", str_to_value("B"));
   value = alist_find(list, "a");
   if (!value.found || strcmp("A", value.str) != 0) {
     ARMYKNIFE_TEST_FAIL("should have found 'A'");
@@ -34,8 +34,8 @@ void test_alist() {
   }
 
   // Add a few more elements to the front of the list.
-  list = alist_insert(list, "c", (value_t) "C");
-  list = alist_insert(list, "d", (value_t) "D");
+  list = alist_insert(list, "c", str_to_value("C"));
+  list = alist_insert(list, "d", str_to_value("D"));
 
   // Finally delete a node.
   list = alist_delete(list, "b");

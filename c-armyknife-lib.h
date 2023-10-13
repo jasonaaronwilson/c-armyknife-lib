@@ -597,6 +597,10 @@ uint8_t buffer_get(buffer_t* buffer, uint64_t position) {
     return buffer->elements[position];
   } else {
     fatal_error(ERROR_ACCESS_OUT_OF_BOUNDS);
+#ifdef __TINYC__
+    /* gcc and clang know fatal_error is _Noreturn but tcc doesn't */
+    return 0;
+#endif
   }
 }
 
@@ -1824,6 +1828,10 @@ value_t value_array_get(value_array_t* array, uint32_t index) {
     return array->elements[index];
   }
   fatal_error(ERROR_ACCESS_OUT_OF_BOUNDS);
+#ifdef __TINYC__
+    /* gcc and clang know fatal_error is _Noreturn but tcc doesn't */
+  return (value_t) {.u64 = 0};
+#endif
 }
 
 void value_array_add(value_array_t* array, value_t element) {

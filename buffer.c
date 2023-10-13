@@ -77,6 +77,10 @@ uint8_t buffer_get(buffer_t* buffer, uint64_t position) {
     return buffer->elements[position];
   } else {
     fatal_error(ERROR_ACCESS_OUT_OF_BOUNDS);
+#ifdef __TINYC__
+    /* gcc and clang know fatal_error is _Noreturn but tcc doesn't */
+    return 0;
+#endif
   }
 }
 

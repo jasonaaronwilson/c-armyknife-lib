@@ -17,13 +17,13 @@ void test_tree() {
     ARMYKNIFE_TEST_FAIL("find in empty list should return NULL");
   }
 
-  tree = string_tree_insert(tree, "a", (value_t) "A");
+  tree = string_tree_insert(tree, "a", str_to_value("A"));
   value = string_tree_find(tree, "a");
   if (!value.found || strcmp("A", value.str) != 0) {
     ARMYKNIFE_TEST_FAIL("should have found 'A'");
   }
 
-  tree = string_tree_insert(tree, "b", (value_t) "B");
+  tree = string_tree_insert(tree, "b", str_to_value("B"));
   value = string_tree_find(tree, "a");
   if (!value.found || strcmp("A", value.str) != 0) {
     ARMYKNIFE_TEST_FAIL("should have found 'A'");
@@ -34,8 +34,8 @@ void test_tree() {
   }
 
   // Add a few more elements
-  tree = string_tree_insert(tree, "c", (value_t) "C");
-  tree = string_tree_insert(tree, "d", (value_t) "D");
+  tree = string_tree_insert(tree, "c", str_to_value("C"));
+  tree = string_tree_insert(tree, "d", str_to_value("D"));
 
   // Finally delete a node.
   tree = string_tree_delete(tree, "b");
@@ -73,7 +73,7 @@ void check_values(string_tree_t* t) {
   }
 }
 
-void check_sequence(char* file, uint64_t line, string_tree_t* tree,
+void check_sequence(char* file, int line, string_tree_t* tree,
                     string_hashtable_t* ht, int index) {
 
   random_state_t state = random_state_for_test();
@@ -86,10 +86,10 @@ void check_sequence(char* file, uint64_t line, string_tree_t* tree,
 
     if (lookup_result.found != lookup_result_reference.found) {
       fprintf(stdout,
-              "CHECK SEQUENCE %s%d: tree and hashtable reference are not in "
+              "CHECK SEQUENCE %s:%d: tree and hashtable reference are not in "
               "agreement!",
               file, line);
-      ARMYKNIFE_TEST_FAIL(ERROR_TEST);
+      ARMYKNIFE_TEST_FAIL("check sequence failure");
     }
   }
 }

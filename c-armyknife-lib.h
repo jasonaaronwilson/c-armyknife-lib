@@ -144,6 +144,7 @@ extern int string_ends_with(const char* str1, const char* str2);
 extern boolean_t string_contains_char(const char* str, char ch);
 extern int string_index_of_char(const char* a, char ch);
 extern uint64_t string_to_uint64(const char* str);
+extern char* uint64_to_string(uint64_t number);
 extern uint64_t string_hash(const char* str);
 extern char* string_substring(const char* str, int start, int end);
 extern uint64_t string_parse_uint64(const char* string);
@@ -967,7 +968,7 @@ extern uint64_t random_next(random_state_t* state);
  * Return a consistent initial random state for tests.
  */
 random_state_t random_state_for_test(void) {
-  return (random_state_t) {.a = 0x1E1D43C2CA44B1F5, .b = 0x4FDD267452CEDBAC};
+  return (random_state_t){.a = 0x1E1D43C2CA44B1F5, .b = 0x4FDD267452CEDBAC};
 }
 
 static inline uint64_t rotl(uint64_t x, int k) {
@@ -980,7 +981,7 @@ uint64_t random_next(random_state_t* state) {
   uint64_t result = rotl(s0 * 5, 7) * 9;
   s1 ^= s0;
   state->a = rotl(s0, 24) ^ s1 ^ (s1 << 16); // a, b
-  state->b = rotl(s1, 37); // c
+  state->b = rotl(s1, 37);                   // c
 
   return result;
 }
@@ -1370,6 +1371,7 @@ extern int string_ends_with(const char* str1, const char* str2);
 extern boolean_t string_contains_char(const char* str, char ch);
 extern int string_index_of_char(const char* a, char ch);
 extern uint64_t string_to_uint64(const char* str);
+extern char* uint64_to_string(uint64_t number);
 extern uint64_t string_hash(const char* str);
 extern char* string_substring(const char* str, int start, int end);
 extern uint64_t string_parse_uint64(const char* string);
@@ -1534,6 +1536,15 @@ char* string_append(const char* a, const char* b) {
   strcat(result, a);
   strcat(result, b);
   return result;
+}
+
+/**
+ * Convert a uint64_t number to a string.
+ */
+char* uint64_to_string(uint64_t number) {
+  char buffer[32];
+  sprintf(buffer, "%lu", number);
+  return string_duplicate(buffer);
 }
 
 /* ================================================================ */

@@ -16,7 +16,7 @@ struct command_line_parse_result_S {
   char* program;
   char* command;
   string_hashtable_t* flags;
-  ptr_array_t* files;
+  value_array_t* files;
 };
 
 typedef struct command_line_parse_result_S command_line_parse_result_t;
@@ -38,7 +38,7 @@ extern command_line_parse_result_t parse_command_line(int argc, char** argv,
  */
 command_line_parse_result_t parse_command_line(int argc, char** argv,
                                                boolean_t has_command) {
-  ptr_array_t* files = make_ptr_array(argc);
+  value_array_t* files = make_value_array(argc);
   string_hashtable_t* flags = make_string_hashtable(32);
 
   boolean_t parse_flags = true;
@@ -62,13 +62,13 @@ command_line_parse_result_t parse_command_line(int argc, char** argv,
           key = string_substring(arg, 2, strlen(arg));
         }
 
-        flags = string_ht_insert(flags, key, (value_t) value);
+        flags = string_ht_insert(flags, key, str_to_value(value));
 
         continue;
       }
     }
 
-    ptr_array_add(files, arg);
+    value_array_add(files, str_to_value(arg));
   }
 
   char* command = has_command && argc >= 2 ? argv[1] : NULL;

@@ -21,7 +21,7 @@ int main(int argc, char** argv) {
 
   for (int i = 0; i < args_and_files.files->length; i++) {
     fprintf(stdout, "bar is %s\n",
-            (char*) ptr_array_get(args_and_files.files, i));
+            value_array_get(args_and_files.files, i).str);
   }
 
   exit(0);

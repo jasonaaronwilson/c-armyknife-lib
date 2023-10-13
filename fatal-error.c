@@ -32,6 +32,7 @@ typedef enum {
   ERROR_UNIMPLEMENTED,
   ERROR_ILLEGAL_NULL_ARGUMENT,
   ERROR_BAD_COMMAND_LINE,
+  ERROR_ILLEGAL_ENUM_VALUE
 } error_code_t;
 
 extern _Noreturn void fatal_error_impl(char* file, int line, int error_code);

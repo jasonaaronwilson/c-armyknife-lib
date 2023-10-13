@@ -9,7 +9,7 @@
 #ifndef _TOKENIZER_H_
 #define _TOKENIZER_H_
 
-extern ptr_array_t* tokenize(const char* str, const char* delimiters);
+extern value_array_t* tokenize(const char* str, const char* delimiters);
 
 #endif /* _TOKENIZER_H_ */
 
@@ -17,7 +17,7 @@ extern ptr_array_t* tokenize(const char* str, const char* delimiters);
 #include <stdlib.h>
 #include <string.h>
 
-void add_duplicate(ptr_array_t* token_array, const char* data);
+void add_duplicate(value_array_t* token_array, const char* data);
 
 /**
  * Tokenize a string.
@@ -25,8 +25,8 @@ void add_duplicate(ptr_array_t* token_array, const char* data);
  * Delimiters terminate the current token and are thrown away.
  */
 
-ptr_array_t* tokenize(const char* str, const char* delimiters) {
-  ptr_array_t* result = make_ptr_array(1);
+value_array_t* tokenize(const char* str, const char* delimiters) {
+  value_array_t* result = make_value_array(1);
   char token_data[1024];
   int cpos = 0;
   for (int i = 0; (i < strlen(str)); i++) {
@@ -52,6 +52,6 @@ ptr_array_t* tokenize(const char* str, const char* delimiters) {
 /**
  * Add a *copy* of the string named data to the token list.
  */
-void add_duplicate(ptr_array_t* token_array, const char* data) {
-  ptr_array_add(token_array, string_duplicate(data));
+void add_duplicate(value_array_t* token_array, const char* data) {
+  value_array_add(token_array, str_to_value(string_duplicate(data)));
 }

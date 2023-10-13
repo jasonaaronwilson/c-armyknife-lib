@@ -29,6 +29,7 @@ typedef enum {
   ERROR_UNIMPLEMENTED,
   ERROR_ILLEGAL_NULL_ARGUMENT,
   ERROR_BAD_COMMAND_LINE,
+  ERROR_ILLEGAL_ENUM_VALUE
 } error_code_t;
 
 extern _Noreturn void fatal_error_impl(char* file, int line, int error_code);
@@ -78,6 +79,12 @@ typedef struct {
   };
   boolean_t found;
 } value_result_t;
+
+#define u64_to_value(x) ((value_t){.u64 = x})
+#define i64_to_value(x) ((value_t){.i64 = x})
+#define str_to_value(x) ((value_t){.str = x})
+#define ptr_to_value(x) ((value_t){.ptr = x})
+#define dbl_to_value(x) ((value_t){.dbl = x})
 
 #endif /* _VALUE_H_ */
 // SSCF generated file from: trace.c
@@ -184,25 +191,25 @@ __attribute__((warn_unused_result)) extern buffer_t*
     buffer_append_string(buffer_t* buffer, const char* str);
 
 #endif /* _BUFFER_H_ */
-// SSCF generated file from: ptr-array.c
+// SSCF generated file from: value-array.c
 
-#line 11 "ptr-array.c"
-#ifndef _PTR_ARRAY_H_
-#define _PTR_ARRAY_H_
+#line 11 "value-array.c"
+#ifndef _VALUE_ARRAY_H_
+#define _VALUE_ARRAY_H_
 
-struct ptr_array_S {
+struct value_array_S {
   uint32_t length;
   uint32_t capacity;
-  void** elements;
+  value_t* elements;
 };
 
-typedef struct ptr_array_S ptr_array_t;
+typedef struct value_array_S value_array_t;
 
-extern ptr_array_t* make_ptr_array(uint32_t initial_capacity);
-extern void* ptr_array_get(ptr_array_t* array, uint32_t index);
-extern void ptr_array_add(ptr_array_t* array, void* element);
+extern value_array_t* make_value_array(uint32_t initial_capacity);
+extern value_t value_array_get(value_array_t* array, uint32_t index);
+extern void value_array_add(value_array_t* array, value_t element);
 
-#endif /* _PTR_ARRAY_H_ */
+#endif /* _VALUE_ARRAY_H_ */
 // SSCF generated file from: string-alist.c
 
 #line 9 "string-alist.c"
@@ -279,7 +286,7 @@ struct command_line_parse_result_S {
   char* program;
   char* command;
   string_hashtable_t* flags;
-  ptr_array_t* files;
+  value_array_t* files;
 };
 
 typedef struct command_line_parse_result_S command_line_parse_result_t;
@@ -307,7 +314,7 @@ extern void buffer_write_file(buffer_t* bytes, char* file_name);
 #ifndef _TOKENIZER_H_
 #define _TOKENIZER_H_
 
-extern ptr_array_t* tokenize(const char* str, const char* delimiters);
+extern value_array_t* tokenize(const char* str, const char* delimiters);
 
 #endif /* _TOKENIZER_H_ */
 // SSCF generated file from: test.c
@@ -629,7 +636,7 @@ struct command_line_parse_result_S {
   char* program;
   char* command;
   string_hashtable_t* flags;
-  ptr_array_t* files;
+  value_array_t* files;
 };
 
 typedef struct command_line_parse_result_S command_line_parse_result_t;
@@ -651,7 +658,7 @@ extern command_line_parse_result_t parse_command_line(int argc, char** argv,
  */
 command_line_parse_result_t parse_command_line(int argc, char** argv,
                                                boolean_t has_command) {
-  ptr_array_t* files = make_ptr_array(argc);
+  value_array_t* files = make_value_array(argc);
   string_hashtable_t* flags = make_string_hashtable(32);
 
   boolean_t parse_flags = true;
@@ -675,13 +682,13 @@ command_line_parse_result_t parse_command_line(int argc, char** argv,
           key = string_substring(arg, 2, strlen(arg));
         }
 
-        flags = string_ht_insert(flags, key, (value_t) value);
+        flags = string_ht_insert(flags, key, str_to_value(value));
 
         continue;
       }
     }
 
-    ptr_array_add(files, arg);
+    value_array_add(files, str_to_value(arg));
   }
 
   char* command = has_command && argc >= 2 ? argv[1] : NULL;
@@ -731,6 +738,7 @@ typedef enum {
   ERROR_UNIMPLEMENTED,
   ERROR_ILLEGAL_NULL_ARGUMENT,
   ERROR_BAD_COMMAND_LINE,
+  ERROR_ILLEGAL_ENUM_VALUE
 } error_code_t;
 
 extern _Noreturn void fatal_error_impl(char* file, int line, int error_code);
@@ -879,67 +887,6 @@ void buffer_write_file(buffer_t* bytes, char* file_name) {
   FILE* file = fopen(file_name, "w");
   fwrite(&bytes->elements, 1, bytes->length, file);
   fclose(file);
-}
-#line 2 "ptr-array.c"
-
-/**
- * @file ptr-array.c
- *
- * This file contains a growable array of pointers which is
- * significantly easier to use than array.c though it is not
- * contiguous.
- */
-
-#ifndef _PTR_ARRAY_H_
-#define _PTR_ARRAY_H_
-
-struct ptr_array_S {
-  uint32_t length;
-  uint32_t capacity;
-  void** elements;
-};
-
-typedef struct ptr_array_S ptr_array_t;
-
-extern ptr_array_t* make_ptr_array(uint32_t initial_capacity);
-extern void* ptr_array_get(ptr_array_t* array, uint32_t index);
-extern void ptr_array_add(ptr_array_t* array, void* element);
-
-#endif /* _PTR_ARRAY_H_ */
-
-ptr_array_t* make_ptr_array(uint32_t initial_capacity) {
-  if (initial_capacity == 0) {
-    fatal_error(ERROR_ILLEGAL_INITIAL_CAPACITY);
-  }
-
-  ptr_array_t* result = malloc_struct(ptr_array_t);
-  result->capacity = initial_capacity;
-  result->elements = (void**) malloc_bytes(sizeof(void*) * initial_capacity);
-
-  return result;
-}
-
-void* ptr_array_get(ptr_array_t* array, uint32_t index) {
-  if (index < array->length) {
-    return array->elements[index];
-  }
-  fatal_error(ERROR_ACCESS_OUT_OF_BOUNDS);
-}
-
-void ptr_array_add(ptr_array_t* array, void* element) {
-  if (array->length == array->capacity) {
-    uint32_t new_capacity = array->capacity * 2;
-    void** new_elements = (void**) (malloc_bytes(sizeof(void*) * new_capacity));
-    for (int i = 0; i < array->capacity; i++) {
-      new_elements[i] = array->elements[i];
-    }
-    array->capacity = new_capacity;
-    free(array->elements);
-    array->elements = new_elements;
-    ptr_array_add(array, element);
-    return;
-  }
-  array->elements[(array->length)++] = element;
 }
 #line 2 "string-alist.c"
 /**
@@ -1400,7 +1347,7 @@ void armyknife_test_fail_exit() { exit(1); }
 #ifndef _TOKENIZER_H_
 #define _TOKENIZER_H_
 
-extern ptr_array_t* tokenize(const char* str, const char* delimiters);
+extern value_array_t* tokenize(const char* str, const char* delimiters);
 
 #endif /* _TOKENIZER_H_ */
 
@@ -1408,7 +1355,7 @@ extern ptr_array_t* tokenize(const char* str, const char* delimiters);
 #include <stdlib.h>
 #include <string.h>
 
-void add_duplicate(ptr_array_t* token_array, const char* data);
+void add_duplicate(value_array_t* token_array, const char* data);
 
 /**
  * Tokenize a string.
@@ -1416,8 +1363,8 @@ void add_duplicate(ptr_array_t* token_array, const char* data);
  * Delimiters terminate the current token and are thrown away.
  */
 
-ptr_array_t* tokenize(const char* str, const char* delimiters) {
-  ptr_array_t* result = make_ptr_array(1);
+value_array_t* tokenize(const char* str, const char* delimiters) {
+  value_array_t* result = make_value_array(1);
   char token_data[1024];
   int cpos = 0;
   for (int i = 0; (i < strlen(str)); i++) {
@@ -1443,8 +1390,8 @@ ptr_array_t* tokenize(const char* str, const char* delimiters) {
 /**
  * Add a *copy* of the string named data to the token list.
  */
-void add_duplicate(ptr_array_t* token_array, const char* data) {
-  ptr_array_add(token_array, string_duplicate(data));
+void add_duplicate(value_array_t* token_array, const char* data) {
+  value_array_add(token_array, str_to_value(string_duplicate(data)));
 }
 #line 2 "trace.c"
 #ifndef _TRACE_H_
@@ -1490,5 +1437,72 @@ typedef struct {
   boolean_t found;
 } value_result_t;
 
+#define u64_to_value(x) ((value_t){.u64 = x})
+#define i64_to_value(x) ((value_t){.i64 = x})
+#define str_to_value(x) ((value_t){.str = x})
+#define ptr_to_value(x) ((value_t){.ptr = x})
+#define dbl_to_value(x) ((value_t){.dbl = x})
+
 #endif /* _VALUE_H_ */
+#line 2 "value-array.c"
+
+/**
+ * @file ptr-array.c
+ *
+ * This file contains a growable array of pointers which is
+ * significantly easier to use than array.c though it is not
+ * contiguous.
+ */
+
+#ifndef _VALUE_ARRAY_H_
+#define _VALUE_ARRAY_H_
+
+struct value_array_S {
+  uint32_t length;
+  uint32_t capacity;
+  value_t* elements;
+};
+
+typedef struct value_array_S value_array_t;
+
+extern value_array_t* make_value_array(uint32_t initial_capacity);
+extern value_t value_array_get(value_array_t* array, uint32_t index);
+extern void value_array_add(value_array_t* array, value_t element);
+
+#endif /* _VALUE_ARRAY_H_ */
+
+value_array_t* make_value_array(uint32_t initial_capacity) {
+  if (initial_capacity == 0) {
+    fatal_error(ERROR_ILLEGAL_INITIAL_CAPACITY);
+  }
+
+  value_array_t* result = malloc_struct(value_array_t);
+  result->capacity = initial_capacity;
+  result->elements = (value_t*) malloc_bytes(sizeof(value_t) * initial_capacity);
+
+  return result;
+}
+
+value_t value_array_get(value_array_t* array, uint32_t index) {
+  if (index < array->length) {
+    return array->elements[index];
+  }
+  fatal_error(ERROR_ACCESS_OUT_OF_BOUNDS);
+}
+
+void value_array_add(value_array_t* array, value_t element) {
+  if (array->length == array->capacity) {
+    uint32_t new_capacity = array->capacity * 2;
+    value_t* new_elements = (value_t*) (malloc_bytes(sizeof(value_t) * new_capacity));
+    for (int i = 0; i < array->capacity; i++) {
+      new_elements[i] = array->elements[i];
+    }
+    array->capacity = new_capacity;
+    free(array->elements);
+    array->elements = new_elements;
+    value_array_add(array, element);
+    return;
+  }
+  array->elements[(array->length)++] = element;
+}
 #endif /* C_ARMYKNIFE_LIB_IMPL */

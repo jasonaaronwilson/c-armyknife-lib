@@ -6,14 +6,14 @@ SRC_C = allocate.c \
 	command-line-parser.c \
 	fatal-error.c \
 	io.c \
-	ptr-array.c \
 	string-alist.c \
 	string-hashtable.c \
 	string-util.c \
 	test.c \
 	tokenizer.c \
 	trace.c \
-	value.c
+	value.c \
+	value-array.c
 
 ORDERED_H = \
 	fatal-error.h \
@@ -23,7 +23,7 @@ ORDERED_H = \
 	allocate.h \
 	string-util.h \
 	buffer.h \
-	ptr-array.h \
+	value-array.h \
 	string-alist.h \
 	string-hashtable.h \
 	command-line-parser.h \
@@ -64,7 +64,8 @@ TESTS= \
 	./string-hashtable-test.sh \
 	./command-line-parser-test.sh \
 	./tokenizer-test.sh \
-	./io-test.sh
+	./io-test.sh \
+	./value-array-test.sh
 
 test:
 	(cd tests && ../run-tests.sh ${TESTS})

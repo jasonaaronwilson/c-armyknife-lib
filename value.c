@@ -25,4 +25,10 @@ typedef struct {
   boolean_t found;
 } value_result_t;
 
+#define u64_to_value(x) ((value_t){.u64 = x})
+#define i64_to_value(x) ((value_t){.i64 = x})
+#define str_to_value(x) ((value_t){.str = x})
+#define ptr_to_value(x) ((value_t){.ptr = x})
+#define dbl_to_value(x) ((value_t){.dbl = x})
+
 #endif /* _VALUE_H_ */

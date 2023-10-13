@@ -85,7 +85,7 @@ string_tree_t* string_tree_split(string_tree_t* t) {
     string_tree_t* R = t->right;
     t->right = R->left;
     R->left = t;
-    R->level = R->level + 1;
+    R->level++;
     return R;
   }
   return t;
@@ -113,12 +113,16 @@ string_tree_t* string_tree_insert(string_tree_t* t, char* key, value_t value) {
   } else if (cmp_result > 0) {
     t->right = string_tree_insert(t->right, key, value);
   } else {
-    // might need to free either key or t->key...
+    // Either key or t->key might need to be freed but it isn't even
+    // possible to tell if either has been "malloced" so good luck
+    // figuring that out.
     t->value = value;
     return t;
   }
+
   t = string_tree_skew(t);
   t = string_tree_split(t);
+
   return t;
 }
 
@@ -169,24 +173,33 @@ string_tree_t* string_tree_delete(string_tree_t* t, char* key) {
   }
 
   int cmp_result = strcmp(key, t->key);
-  if (cmp_result > 0) {
-    t->right = string_tree_delete(t->right, key);
-  } else if (cmp_result < 0) {
+  if (cmp_result < 0) {
     t->left = string_tree_delete(t->left, key);
+  } else if (cmp_result > 0) {
+    t->right = string_tree_delete(t->right, key);
   } else {
-    // If we're a leaf, easy, otherwise reduce to leaf case.
     if (string_tree_is_leaf(t)) {
-      return t->right;
+      // Since we are a leaf, nothing special to do except make sure
+      // this leaf node is no longer in the tree. wikipedia says
+      // "return right(T)" which is technically correct, but this is
+      // clearer.
+      return NULL;
     } else if (t->left == NULL) {
       string_tree_t* L = string_tree_successor(t);
-      t->right = string_tree_delete(t->right, L->key);
+      // Note: wikipedia or the orginal article may have a bug. Doing
+      // the delete and then the key/value assignment leads to a
+      // divergence with a reference implementation.
       t->key = L->key;
       t->value = L->value;
+      t->right = string_tree_delete(t->right, L->key);
     } else {
       string_tree_t* L = string_tree_predecessor(t);
-      t->left = string_tree_delete(t->left, L->key);
+      // Note: wikipedia or the orginal article may have a bug. Doing
+      // the delete and then the key/value assignment leads to a
+      // divergence with a reference implementation.
       t->key = L->key;
       t->value = L->value;
+      t->left = string_tree_delete(t->left, L->key);
     }
   }
 

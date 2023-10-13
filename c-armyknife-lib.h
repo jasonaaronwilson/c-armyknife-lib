@@ -18,18 +18,19 @@
 
 typedef enum {
   ERROR_UKNOWN,
+  ERROR_ACCESS_OUT_OF_BOUNDS,
+  ERROR_BAD_COMMAND_LINE,
+  ERROR_DYNAMICALLY_SIZED_TYPE_ILLEGAL_IN_CONTAINER,
+  ERROR_ILLEGAL_ENUM_VALUE,
+  ERROR_ILLEGAL_INITIAL_CAPACITY,
+  ERROR_ILLEGAL_NULL_ARGUMENT,
+  ERROR_ILLEGAL_ZERO_HASHCODE_VALUE,
   ERROR_MEMORY_ALLOCATION,
   ERROR_MEMORY_FREE_NULL,
-  ERROR_REFERENCE_NOT_EXPECTED_TYPE,
-  ERROR_ILLEGAL_INITIAL_CAPACITY,
-  ERROR_DYNAMICALLY_SIZED_TYPE_ILLEGAL_IN_CONTAINER,
-  ERROR_ACCESS_OUT_OF_BOUNDS,
   ERROR_NOT_REACHED,
-  ERROR_ILLEGAL_ZERO_HASHCODE_VALUE,
+  ERROR_REFERENCE_NOT_EXPECTED_TYPE,
   ERROR_UNIMPLEMENTED,
-  ERROR_ILLEGAL_NULL_ARGUMENT,
-  ERROR_BAD_COMMAND_LINE,
-  ERROR_ILLEGAL_ENUM_VALUE
+  ERROR_TEST
 } error_code_t;
 
 extern _Noreturn void fatal_error_impl(char* file, int line, int error_code);
@@ -262,10 +263,11 @@ typedef struct string_hashtable_S string_hashtable_t;
 
 extern string_hashtable_t* make_string_hashtable(uint64_t n_buckets);
 
-extern string_hashtable_t* string_ht_insert(string_hashtable_t* ht, char* key,
-                                            value_t value);
+__attribute__((warn_unused_result)) extern string_hashtable_t*
+    string_ht_insert(string_hashtable_t* ht, char* key, value_t value);
 
-extern string_hashtable_t* string_ht_delete(string_hashtable_t* ht, char* key);
+__attribute__((warn_unused_result)) extern string_hashtable_t*
+    string_ht_delete(string_hashtable_t* ht, char* key);
 
 extern value_result_t string_ht_find(string_hashtable_t* ht, char* key);
 
@@ -450,13 +452,16 @@ uint8_t* checked_malloc(char* file, int line, uint64_t amount) {
   if (should_log()) {
     fprintf(stderr, "ALLOCATE %s:%d -- %lu\n", file, line, amount);
   }
+
   uint8_t* result = malloc(amount);
   if (result == NULL) {
     fatal_error_impl(file, line, ERROR_MEMORY_ALLOCATION);
   }
+  memset(result, 0, amount);
+
   number_of_bytes_allocated += amount;
   number_of_malloc_calls++;
-  memset(result, 0, amount);
+
   return result;
 }
 
@@ -775,18 +780,19 @@ command_line_parse_result_t parse_command_line(int argc, char** argv,
 
 typedef enum {
   ERROR_UKNOWN,
+  ERROR_ACCESS_OUT_OF_BOUNDS,
+  ERROR_BAD_COMMAND_LINE,
+  ERROR_DYNAMICALLY_SIZED_TYPE_ILLEGAL_IN_CONTAINER,
+  ERROR_ILLEGAL_ENUM_VALUE,
+  ERROR_ILLEGAL_INITIAL_CAPACITY,
+  ERROR_ILLEGAL_NULL_ARGUMENT,
+  ERROR_ILLEGAL_ZERO_HASHCODE_VALUE,
   ERROR_MEMORY_ALLOCATION,
   ERROR_MEMORY_FREE_NULL,
-  ERROR_REFERENCE_NOT_EXPECTED_TYPE,
-  ERROR_ILLEGAL_INITIAL_CAPACITY,
-  ERROR_DYNAMICALLY_SIZED_TYPE_ILLEGAL_IN_CONTAINER,
-  ERROR_ACCESS_OUT_OF_BOUNDS,
   ERROR_NOT_REACHED,
-  ERROR_ILLEGAL_ZERO_HASHCODE_VALUE,
+  ERROR_REFERENCE_NOT_EXPECTED_TYPE,
   ERROR_UNIMPLEMENTED,
-  ERROR_ILLEGAL_NULL_ARGUMENT,
-  ERROR_BAD_COMMAND_LINE,
-  ERROR_ILLEGAL_ENUM_VALUE
+  ERROR_TEST
 } error_code_t;
 
 extern _Noreturn void fatal_error_impl(char* file, int line, int error_code);
@@ -1078,10 +1084,11 @@ typedef struct string_hashtable_S string_hashtable_t;
 
 extern string_hashtable_t* make_string_hashtable(uint64_t n_buckets);
 
-extern string_hashtable_t* string_ht_insert(string_hashtable_t* ht, char* key,
-                                            value_t value);
+__attribute__((warn_unused_result)) extern string_hashtable_t*
+    string_ht_insert(string_hashtable_t* ht, char* key, value_t value);
 
-extern string_hashtable_t* string_ht_delete(string_hashtable_t* ht, char* key);
+__attribute__((warn_unused_result)) extern string_hashtable_t*
+    string_ht_delete(string_hashtable_t* ht, char* key);
 
 extern value_result_t string_ht_find(string_hashtable_t* ht, char* key);
 
@@ -1229,7 +1236,7 @@ string_tree_t* string_tree_split(string_tree_t* t) {
     string_tree_t* R = t->right;
     t->right = R->left;
     R->left = t;
-    R->level = R->level + 1;
+    R->level++;
     return R;
   }
   return t;
@@ -1257,12 +1264,16 @@ string_tree_t* string_tree_insert(string_tree_t* t, char* key, value_t value) {
   } else if (cmp_result > 0) {
     t->right = string_tree_insert(t->right, key, value);
   } else {
-    // might need to free either key or t->key...
+    // Either key or t->key might need to be freed but it isn't even
+    // possible to tell if either has been "malloced" so good luck
+    // figuring that out.
     t->value = value;
     return t;
   }
+
   t = string_tree_skew(t);
   t = string_tree_split(t);
+
   return t;
 }
 
@@ -1313,24 +1324,33 @@ string_tree_t* string_tree_delete(string_tree_t* t, char* key) {
   }
 
   int cmp_result = strcmp(key, t->key);
-  if (cmp_result > 0) {
-    t->right = string_tree_delete(t->right, key);
-  } else if (cmp_result < 0) {
+  if (cmp_result < 0) {
     t->left = string_tree_delete(t->left, key);
+  } else if (cmp_result > 0) {
+    t->right = string_tree_delete(t->right, key);
   } else {
-    // If we're a leaf, easy, otherwise reduce to leaf case.
     if (string_tree_is_leaf(t)) {
-      return t->right;
+      // Since we are a leaf, nothing special to do except make sure
+      // this leaf node is no longer in the tree. wikipedia says
+      // "return right(T)" which is technically correct, but this is
+      // clearer.
+      return NULL;
     } else if (t->left == NULL) {
       string_tree_t* L = string_tree_successor(t);
-      t->right = string_tree_delete(t->right, L->key);
+      // Note: wikipedia or the orginal article may have a bug. Doing
+      // the delete and then the key/value assignment leads to a
+      // divergence with a reference implementation.
       t->key = L->key;
       t->value = L->value;
+      t->right = string_tree_delete(t->right, L->key);
     } else {
       string_tree_t* L = string_tree_predecessor(t);
-      t->left = string_tree_delete(t->left, L->key);
+      // Note: wikipedia or the orginal article may have a bug. Doing
+      // the delete and then the key/value assignment leads to a
+      // divergence with a reference implementation.
       t->key = L->key;
       t->value = L->value;
+      t->left = string_tree_delete(t->left, L->key);
     }
   }
 

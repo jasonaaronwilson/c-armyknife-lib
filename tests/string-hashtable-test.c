@@ -58,7 +58,43 @@ void test_string_ht() {
   // clang-format on
 }
 
+void test_ht_random() {
+  string_hashtable_t* ht = make_string_hashtable(3);
+
+  int iterations = 1000;
+  random_state_t state = random_state_for_test();
+  for (int i = 0; i < iterations; i++) {
+    uint64_t next = random_next(&state);
+    ht = string_ht_insert(ht, uint64_to_string(next), u64_to_value(next));
+  }
+
+  // Now delete a bunch of things
+  state = random_state_for_test();
+  for (int i = 0; i < iterations; i++) {
+    uint64_t next = random_next(&state);
+    if ((next & 3) == 0) {
+      ht = string_ht_delete(ht, uint64_to_string(next));
+    }
+  }
+
+  // Make sure everything deleted is not found
+  state = random_state_for_test();
+  for (int i = 0; i < iterations; i++) {
+    uint64_t next = random_next(&state);
+    if ((next & 3) == 0) {
+      if (string_ht_find(ht, uint64_to_string(next)).found != false) {
+        ARMYKNIFE_TEST_FAIL("found an element we deleted");
+      }
+    } else {
+      if (string_ht_find(ht, uint64_to_string(next)).found == false) {
+        ARMYKNIFE_TEST_FAIL("element should be found");
+      }
+    }
+  }
+}
+
 int main(int argc, char** argv) {
   test_string_ht();
+  test_ht_random();
   exit(0);
 }

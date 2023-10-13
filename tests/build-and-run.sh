@@ -7,8 +7,8 @@ shift
 
 echo ${C_FILE}
 
-# CC=gcc
-CC=clang
+CC=gcc
+#CC=clang
 CC_FLAGS="-g -rdynamic"
 
 ${CC} ${CC_FLAGS} ${C_FILE} -o build/${EXE_FILE}

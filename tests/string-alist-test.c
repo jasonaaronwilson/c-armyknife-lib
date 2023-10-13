@@ -59,7 +59,43 @@ void test_alist() {
   // clang-format on
 }
 
+void test_alist_random() {
+  string_alist_t* list = NULL;
+
+  int iterations = 1000;
+  random_state_t state = random_state_for_test();
+  for (int i = 0; i < iterations; i++) {
+    uint64_t next = random_next(&state);
+    list = alist_insert(list, uint64_to_string(next), u64_to_value(next));
+  }
+
+  // Now delete a bunch of things
+  state = random_state_for_test();
+  for (int i = 0; i < iterations; i++) {
+    uint64_t next = random_next(&state);
+    if ((next & 3) == 0) {
+      list = alist_delete(list, uint64_to_string(next));
+    }
+  }
+
+  // Make sure everything deleted is not found
+  state = random_state_for_test();
+  for (int i = 0; i < iterations; i++) {
+    uint64_t next = random_next(&state);
+    if ((next & 3) == 0) {
+      if (alist_find(list, uint64_to_string(next)).found != false) {
+        ARMYKNIFE_TEST_FAIL("found an element we deleted");
+      }
+    } else {
+      if (alist_find(list, uint64_to_string(next)).found == false) {
+        ARMYKNIFE_TEST_FAIL("element should be found");
+      }
+    }
+  }
+}
+
 int main(int argc, char** argv) {
   test_alist();
+  test_alist_random();
   exit(0);
 }

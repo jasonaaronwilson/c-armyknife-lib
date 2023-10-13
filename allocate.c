@@ -68,13 +68,16 @@ uint8_t* checked_malloc(char* file, int line, uint64_t amount) {
   if (should_log()) {
     fprintf(stderr, "ALLOCATE %s:%d -- %lu\n", file, line, amount);
   }
+
   uint8_t* result = malloc(amount);
   if (result == NULL) {
     fatal_error_impl(file, line, ERROR_MEMORY_ALLOCATION);
   }
+  memset(result, 0, amount);
+
   number_of_bytes_allocated += amount;
   number_of_malloc_calls++;
-  memset(result, 0, amount);
+
   return result;
 }
 

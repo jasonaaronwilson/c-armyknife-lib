@@ -62,21 +62,6 @@ void test_tree() {
   */
 }
 
-void check_levels(string_tree_t* t) {
-  if (t) {
-    int left_level = t->left ? t->left->level : 0;
-    int right_level = t->right ? t->right->level : 0;
-    if (t->level != left_level + 1) {
-      ARMYKNIFE_TEST_FAIL("check level failure left");
-    }
-    if (t->level != right_level + 1) {
-      ARMYKNIFE_TEST_FAIL("check level failure right");
-    }
-    check_levels(t->left);
-    check_levels(t->right);
-  }
-}
-
 void check_values(string_tree_t* t) {
   if (t) {
     char* value_to_key_string = uint64_to_string((t->value).u64);
@@ -88,11 +73,29 @@ void check_values(string_tree_t* t) {
   }
 }
 
+void check_sequence(char* file, uint64_t line, string_tree_t* tree,
+                    string_hashtable_t* ht, int index) {
+
+  random_state_t state = random_state_for_test();
+  for (int i = 0; i < index; i++) {
+    uint64_t next = random_next(&state);
+    char* key_string = uint64_to_string(next);
+
+    value_result_t lookup_result = string_tree_find(tree, key_string);
+    value_result_t lookup_result_reference = string_ht_find(ht, key_string);
+
+    if (lookup_result.found != lookup_result_reference.found) {
+      fprintf(stdout,
+              "CHECK SEQUENCE %s%d: tree and hashtable reference are not in "
+              "agreement!",
+              file, line);
+      ARMYKNIFE_TEST_FAIL(ERROR_TEST);
+    }
+  }
+}
+
 void test_random_insertion_and_deletion() {
-  // Could increasing this to 1000 invoke the birthday paradox (since
-  // the reference implementation, string_hashtable, fails to match, I
-  // don't think that is the problem.
-  int iterations = 103;
+  int iterations = 10000;
 
   string_tree_t* tree = NULL;
   string_hashtable_t* ht = make_string_hashtable(100);
@@ -100,17 +103,16 @@ void test_random_insertion_and_deletion() {
   random_state_t state = random_state_for_test();
   for (int i = 0; i < iterations; i++) {
     uint64_t next = random_next(&state);
-    tree = string_tree_insert(tree, uint64_to_string(next), u64_to_value(next));
-    ht = string_ht_insert(ht, uint64_to_string(next), u64_to_value(next));
-    fprintf(stderr, "iteration=%d\n", i);
-    check_levels(tree);
-    check_values(tree);
+    char* key_string = uint64_to_string(next);
+    tree = string_tree_insert(tree, key_string, u64_to_value(next));
+    ht = string_ht_insert(ht, key_string, u64_to_value(next));
+    if (i < 1000) {
+      check_sequence(__FILE__, __LINE__, tree, ht, i);
+    }
   }
 
-  check_levels(tree);
+  check_sequence(__FILE__, __LINE__, tree, ht, iterations);
   check_values(tree);
-
-  // TODO(jawilson): check keys and values being the same
 
   // TODO(jawilson): delete 1/4 of the keys and repeat above checks.
   state = random_state_for_test();
@@ -119,18 +121,26 @@ void test_random_insertion_and_deletion() {
     if ((next & 3) == 0) {
       tree = string_tree_delete(tree, uint64_to_string(next));
       ht = string_ht_delete(ht, uint64_to_string(next));
-      check_levels(tree);
+      if (i < 1000) {
+        check_sequence(__FILE__, __LINE__, tree, ht, i);
+      }
+    } else {
+      if (i < 1000) {
+        check_sequence(__FILE__, __LINE__, tree, ht, i);
+      }
     }
   }
 
-  // Check we have just the correct keys!
+  check_sequence(__FILE__, __LINE__, tree, ht, iterations);
+
+  // Check we have just the correct keys by comparing to the reference
+  // implementation
   state = random_state_for_test();
   for (int i = 0; i < iterations; i++) {
     uint64_t next = random_next(&state);
-    value_result_t lookup_result
-        = string_tree_find(tree, uint64_to_string(next));
-    value_result_t lookup_result_reference
-        = string_ht_find(ht, uint64_to_string(next));
+    char* key = uint64_to_string(next);
+    value_result_t lookup_result = string_tree_find(tree, key);
+    value_result_t lookup_result_reference = string_ht_find(ht, key);
 
     if (lookup_result.found != lookup_result_reference.found) {
       ARMYKNIFE_TEST_FAIL("tree and hashtable reference are not in agreement!");

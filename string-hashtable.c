@@ -19,10 +19,11 @@ typedef struct string_hashtable_S string_hashtable_t;
 
 extern string_hashtable_t* make_string_hashtable(uint64_t n_buckets);
 
-extern string_hashtable_t* string_ht_insert(string_hashtable_t* ht, char* key,
-                                            value_t value);
+__attribute__((warn_unused_result)) extern string_hashtable_t*
+    string_ht_insert(string_hashtable_t* ht, char* key, value_t value);
 
-extern string_hashtable_t* string_ht_delete(string_hashtable_t* ht, char* key);
+__attribute__((warn_unused_result)) extern string_hashtable_t*
+    string_ht_delete(string_hashtable_t* ht, char* key);
 
 extern value_result_t string_ht_find(string_hashtable_t* ht, char* key);
 

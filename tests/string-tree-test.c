@@ -17,26 +17,27 @@ void test_tree() {
     ARMYKNIFE_TEST_FAIL("find in empty list should return NULL");
   }
 
-  /*
-  list = alist_insert(list, "a", (value_t) "A");
-  value = alist_find(list, "a");
+  tree = string_tree_insert(tree, "a", (value_t) "A");
+  value = string_tree_find(tree, "a");
   if (!value.found || strcmp("A", value.str) != 0) {
     ARMYKNIFE_TEST_FAIL("should have found 'A'");
   }
 
-  list = alist_insert(list, "b", (value_t) "B");
-  value = alist_find(list, "a");
+  tree = string_tree_insert(tree, "b", (value_t) "B");
+  value = string_tree_find(tree, "a");
   if (!value.found || strcmp("A", value.str) != 0) {
     ARMYKNIFE_TEST_FAIL("should have found 'A'");
   }
-  value = alist_find(list, "b");
+  value = string_tree_find(tree, "b");
   if (!value.found || strcmp("B", value.str) != 0) {
     ARMYKNIFE_TEST_FAIL("should have found 'B'");
   }
 
-  // Add a few more elements to the front of the list.
-  list = alist_insert(list, "c", (value_t) "C");
-  list = alist_insert(list, "d", (value_t) "D");
+  // Add a few more elements
+  tree = string_tree_insert(tree, "c", (value_t) "C");
+  tree = string_tree_insert(tree, "d", (value_t) "D");
+
+  /*
 
   // Finally delete a node.
   list = alist_delete(list, "b");

@@ -127,11 +127,13 @@ static inline boolean_t min_level(uint32_t a, uint32_t b) {
 }
 
 string_tree_t* string_tree_decrease_level(string_tree_t* t) {
-  uint32_t should_be = min_level(t->left->level, t->right->level) + 1;
-  if (should_be < t->level) {
-    t->level = should_be;
-    if (should_be < t->right->level) {
-      t->right->level = should_be;
+  if (t->left && t->right) {
+    uint32_t should_be = min_level(t->left->level, t->right->level) + 1;
+    if (should_be < t->level) {
+      t->level = should_be;
+      if (should_be < t->right->level) {
+        t->right->level = should_be;
+      }
     }
   }
   return t;

@@ -37,25 +37,25 @@ void test_tree() {
   tree = string_tree_insert(tree, "c", (value_t) "C");
   tree = string_tree_insert(tree, "d", (value_t) "D");
 
-  /*
-
   // Finally delete a node.
-  list = alist_delete(list, "b");
-  value = alist_find(list, "b");
+  tree = string_tree_delete(tree, "b");
+  value = string_tree_find(tree, "b");
   if (value.found) {
     ARMYKNIFE_TEST_FAIL("should not have found a value for 'b'");
   }
-  value = alist_find(list, "a");
+
+  value = string_tree_find(tree, "a");
   if (!value.found || strcmp("A", value.str) != 0) {
     ARMYKNIFE_TEST_FAIL("should have found 'A'");
   }
-  value = alist_find(list, "c");
+  value = string_tree_find(tree, "c");
   if (!value.found || strcmp("C", value.str) != 0) {
     ARMYKNIFE_TEST_FAIL("should have found 'C'");
   }
 
+  /*
   // clang-format off
-  string_alist_foreach(list, key, value, { 
+  string_alist_foreach(list, key, value, {
       fprintf(stderr, "key=%s value = %s\n", key, value.str);
   });
   // clang-format on

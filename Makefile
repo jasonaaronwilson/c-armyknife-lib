@@ -6,6 +6,7 @@ SRC_C = allocate.c \
 	command-line-parser.c \
 	fatal-error.c \
 	io.c \
+	random.c \
 	string-alist.c \
 	string-hashtable.c \
 	string-tree.c \
@@ -31,6 +32,7 @@ ORDERED_H = \
 	command-line-parser.h \
 	io.h \
 	tokenizer.h \
+	random.h \
 	test.h
 
 generate-header-files: ${SRC_C}
@@ -68,6 +70,7 @@ TESTS= \
 	./tokenizer-test.sh \
 	./io-test.sh \
 	./value-array-test.sh \
+	./random-test.sh \
 	./string-tree-test.sh
 
 test:

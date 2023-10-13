@@ -66,10 +66,10 @@ void check_levels(string_tree_t* t) {
   if (t) {
     int left_level = t->left ? t->left->level : 0;
     int right_level = t->right ? t->right->level : 0;
-    if (t->level <= left_level) {
+    if (t->level != left_level + 1) {
       ARMYKNIFE_TEST_FAIL("check level failure left");
     }
-    if (t->level <= right_level) {
+    if (t->level != right_level + 1) {
       ARMYKNIFE_TEST_FAIL("check level failure right");
     }
     check_levels(t->left);

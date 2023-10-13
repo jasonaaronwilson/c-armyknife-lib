@@ -122,7 +122,7 @@ string_tree_t* string_tree_insert(string_tree_t* t, char* key, value_t value) {
   return t;
 }
 
-static inline boolean_t min_level(uint32_t a, uint32_t b) {
+static inline uint64_t min_level(uint32_t a, uint32_t b) {
   return a < b ? a : b;
 }
 

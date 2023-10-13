@@ -226,12 +226,11 @@ typedef struct string_alist_S string_alist_t;
 
 extern value_result_t alist_find(string_alist_t* list, char* key);
 
-__attribute__((warn_unused_result)) 
-extern string_alist_t* alist_insert(string_alist_t* list, char* key,
-                                    value_t value);
+__attribute__((warn_unused_result)) extern string_alist_t*
+    alist_insert(string_alist_t* list, char* key, value_t value);
 
-__attribute__((warn_unused_result)) 
-extern string_alist_t* alist_delete(string_alist_t* list, char* key);
+__attribute__((warn_unused_result)) extern string_alist_t*
+    alist_delete(string_alist_t* list, char* key);
 
 #define string_alist_foreach(alist, key_var, value_var, statements)            \
   do {                                                                         \
@@ -298,11 +297,11 @@ typedef struct string_tree_S string_tree_t;
 
 extern value_result_t string_tree_find(string_tree_t* t, char* key);
 
-__attribute__((warn_unused_result)) 
-extern string_tree_t* string_tree_insert(string_tree_t* t, char* key, value_t value);
+__attribute__((warn_unused_result)) extern string_tree_t*
+    string_tree_insert(string_tree_t* t, char* key, value_t value);
 
-__attribute__((warn_unused_result)) 
-extern string_tree_t* string_tree_delete(string_tree_t* t, char* key);
+__attribute__((warn_unused_result)) extern string_tree_t*
+    string_tree_delete(string_tree_t* t, char* key);
 
 // TODO(jawilson): in order traversal, aka string_tree_foreach
 
@@ -940,12 +939,11 @@ typedef struct string_alist_S string_alist_t;
 
 extern value_result_t alist_find(string_alist_t* list, char* key);
 
-__attribute__((warn_unused_result)) 
-extern string_alist_t* alist_insert(string_alist_t* list, char* key,
-                                    value_t value);
+__attribute__((warn_unused_result)) extern string_alist_t*
+    alist_insert(string_alist_t* list, char* key, value_t value);
 
-__attribute__((warn_unused_result)) 
-extern string_alist_t* alist_delete(string_alist_t* list, char* key);
+__attribute__((warn_unused_result)) extern string_alist_t*
+    alist_delete(string_alist_t* list, char* key);
 
 #define string_alist_foreach(alist, key_var, value_var, statements)            \
   do {                                                                         \
@@ -1108,11 +1106,11 @@ typedef struct string_tree_S string_tree_t;
 
 extern value_result_t string_tree_find(string_tree_t* t, char* key);
 
-__attribute__((warn_unused_result)) 
-extern string_tree_t* string_tree_insert(string_tree_t* t, char* key, value_t value);
+__attribute__((warn_unused_result)) extern string_tree_t*
+    string_tree_insert(string_tree_t* t, char* key, value_t value);
 
-__attribute__((warn_unused_result)) 
-extern string_tree_t* string_tree_delete(string_tree_t* t, char* key);
+__attribute__((warn_unused_result)) extern string_tree_t*
+    string_tree_delete(string_tree_t* t, char* key);
 
 // TODO(jawilson): in order traversal, aka string_tree_foreach
 
@@ -1123,7 +1121,7 @@ extern string_tree_t* string_tree_delete(string_tree_t* t, char* key);
  */
 value_result_t string_tree_find(string_tree_t* t, char* key) {
   if (t == NULL) {
-    return (value_result_t) {.found = 0};
+    return (value_result_t){.found = 0};
   }
   int cmp_result = strcmp(key, t->key);
   if (cmp_result < 0) {
@@ -1131,7 +1129,7 @@ value_result_t string_tree_find(string_tree_t* t, char* key) {
   } else if (cmp_result > 0) {
     return string_tree_find(t->right, key);
   } else {
-    return (value_result_t) {.val = t->value, .found = true };
+    return (value_result_t){.val = t->value, .found = true};
   }
 }
 
@@ -1157,7 +1155,7 @@ string_tree_t* string_tree_split(string_tree_t* t) {
   }
   if (t->right == NULL || t->right->right == NULL) {
     return t;
-  } 
+  }
   if (t->level == t->right->right->level) {
     // We have two horizontal right links.  Take the middle node,
     // elevate it, and return it.

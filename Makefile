@@ -67,7 +67,8 @@ TESTS= \
 	./command-line-parser-test.sh \
 	./tokenizer-test.sh \
 	./io-test.sh \
-	./value-array-test.sh
+	./value-array-test.sh \
+	./string-tree-test.sh
 
 test:
 	(cd tests && ../run-tests.sh ${TESTS})

@@ -17,10 +17,13 @@ struct string_alist_S {
 
 typedef struct string_alist_S string_alist_t;
 
-extern string_alist_t* alist_insert(string_alist_t* list, char* key,
-                                    value_t value);
-extern string_alist_t* alist_delete(string_alist_t* list, char* key);
 extern value_result_t alist_find(string_alist_t* list, char* key);
+
+__attribute__((warn_unused_result)) extern string_alist_t*
+    alist_insert(string_alist_t* list, char* key, value_t value);
+
+__attribute__((warn_unused_result)) extern string_alist_t*
+    alist_delete(string_alist_t* list, char* key);
 
 #define string_alist_foreach(alist, key_var, value_var, statements)            \
   do {                                                                         \

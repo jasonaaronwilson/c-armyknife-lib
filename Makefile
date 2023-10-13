@@ -8,6 +8,7 @@ SRC_C = allocate.c \
 	io.c \
 	string-alist.c \
 	string-hashtable.c \
+	string-tree.c \
 	string-util.c \
 	test.c \
 	tokenizer.c \
@@ -26,6 +27,7 @@ ORDERED_H = \
 	value-array.h \
 	string-alist.h \
 	string-hashtable.h \
+	string-tree.h \
 	command-line-parser.h \
 	io.h \
 	tokenizer.h \

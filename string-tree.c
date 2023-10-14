@@ -35,7 +35,23 @@ __attribute__((warn_unused_result)) extern string_tree_t*
 __attribute__((warn_unused_result)) extern string_tree_t*
     string_tree_delete(string_tree_t* t, char* key);
 
-// TODO(jawilson): in order traversal, aka string_tree_foreach
+#define string_tree_foreach(tree, key_var, value_var, statements)              \
+  do {                                                                         \
+    int stack_n_elements = 0;                                                  \
+    string_tree_t* stack[64];                                                  \
+    string_tree_t* current = tree;                                             \
+    while (current != NULL || stack_n_elements > 0) {                          \
+      while (current != NULL) {                                                \
+        stack[stack_n_elements++] = current;                                   \
+        current = current->left;                                               \
+      }                                                                        \
+      current = stack[--stack_n_elements];                                     \
+      char* key_var = current->key;                                            \
+      value_t value_var = current->value;                                      \
+      statements;                                                              \
+      current = current->right;                                                \
+    }                                                                          \
+  } while (0)
 
 #endif /* _STRING_TREE_H_ */
 

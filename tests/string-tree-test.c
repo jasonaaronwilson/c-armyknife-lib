@@ -53,13 +53,18 @@ void test_tree() {
     ARMYKNIFE_TEST_FAIL("should have found 'C'");
   }
 
-  /*
+  tree = string_tree_insert(tree, "e", str_to_value("E"));
+  tree = string_tree_insert(tree, "f", str_to_value("F"));
+  tree = string_tree_insert(tree, "g", str_to_value("G"));
+  tree = string_tree_insert(tree, "h", str_to_value("H"));
+  tree = string_tree_insert(tree, "i", str_to_value("i"));
+  tree = string_tree_insert(tree, "j", str_to_value("j"));
+
   // clang-format off
-  string_alist_foreach(list, key, value, {
+  string_tree_foreach(tree, key, value, {
       fprintf(stderr, "key=%s value = %s\n", key, value.str);
   });
   // clang-format on
-  */
 }
 
 void check_values(string_tree_t* t) {

@@ -90,5 +90,21 @@ int main(int argc, char** argv) {
     ARMYKNIFE_TEST_FAIL("string_duplicate");
   }
 
+  if (!string_equal("      ", string_left_pad("", 6, ' '))) {
+    ARMYKNIFE_TEST_FAIL("string_left_pad");
+  }
+
+  if (!string_equal("   abc", string_left_pad("abc", 6, ' '))) {
+    ARMYKNIFE_TEST_FAIL("string_left_pad");
+  }
+
+  if (!string_equal("abcxyz", string_left_pad("abcxyz", 6, ' '))) {
+    ARMYKNIFE_TEST_FAIL("string_left_pad");
+  }
+
+  if (!string_equal("abcdefg", string_left_pad("abcdefg", 6, ' '))) {
+    ARMYKNIFE_TEST_FAIL("string_left_pad");
+  }
+
   exit(0);
 }

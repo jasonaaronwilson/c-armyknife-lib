@@ -28,6 +28,7 @@ extern char* string_substring(const char* str, int start, int end);
 extern uint64_t string_parse_uint64(const char* string);
 extern char* string_duplicate(const char* src);
 extern char* string_append(const char* a, const char* b);
+extern char* string_left_pad(const char* a, int count, char ch);
 
 #endif /* _STRING_UTIL_H_ */
 
@@ -196,6 +197,25 @@ char* uint64_to_string(uint64_t number) {
   char buffer[32];
   sprintf(buffer, "%lu", number);
   return string_duplicate(buffer);
+}
+
+/**
+ * Prefix a string with left padding to make it at least N bytes long.
+ */
+char* string_left_pad(const char* str, int n, char ch) {
+  int str_length = strlen(str);
+  if (str_length > n) {
+    return string_duplicate(str);
+  }
+  char* result = (char*) malloc_bytes(n + 1);
+  for (int i = 0; i < n - str_length; i++) {
+    result[i] = ch;
+  }
+  for (int i = 0; i < str_length; i++) {
+    result[i + (n - str_length)] = str[i];
+  }
+  result[n] = '\0';
+  return result;
 }
 
 /* ================================================================ */

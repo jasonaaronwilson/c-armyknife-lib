@@ -3,9 +3,7 @@
 /**
  * @file ptr-array.c
  *
- * This file contains a growable array of pointers which is
- * significantly easier to use than array.c though it is not
- * contiguous.
+ * This file contains a growable array of values/pointers.
  */
 
 #ifndef _VALUE_ARRAY_H_
@@ -22,6 +20,10 @@ typedef struct value_array_S value_array_t;
 extern value_array_t* make_value_array(uint32_t initial_capacity);
 extern value_t value_array_get(value_array_t* array, uint32_t index);
 extern void value_array_add(value_array_t* array, value_t element);
+extern void value_array_push(value_array_t* array, value_t element);
+extern value_t value_array_pop(value_array_t* array);
+
+// TODO(jawilson): insert_at, and delete_at functions.
 
 #endif /* _VALUE_ARRAY_H_ */
 
@@ -64,4 +66,18 @@ void value_array_add(value_array_t* array, value_t element) {
     return;
   }
   array->elements[(array->length)++] = element;
+}
+
+void value_array_push(value_array_t* array, value_t element) {
+  value_array_add(array, element);
+}
+
+value_t value_array_pop(value_array_t* array) {
+  if (array->length == 0) {
+    fatal_error(ERROR_ACCESS_OUT_OF_BOUNDS);
+  }
+  uint32_t last_index = array->length - 1;
+  value_t result = value_array_get(array, last_index);
+  array->length--;
+  return result;
 }

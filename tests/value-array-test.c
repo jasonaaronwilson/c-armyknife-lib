@@ -21,6 +21,23 @@ void test() {
   }
 }
 
+void test_push_pop() {
+  value_array_t* array = make_value_array(1);
+  value_array_push(array, str_to_value("a"));
+  value_array_push(array, str_to_value("b"));
+  value_array_push(array, str_to_value("c"));
+
+  if (!string_equal("c", value_array_pop(array).str)) {
+    ARMYKNIFE_TEST_FAIL("expected 'c'");
+  }
+  if (!string_equal("b", value_array_pop(array).str)) {
+    ARMYKNIFE_TEST_FAIL("expected 'b'");
+  }
+  if (!string_equal("a", value_array_pop(array).str)) {
+    ARMYKNIFE_TEST_FAIL("expected 'a'");
+  }
+}
+
 void test_insert_at_and_delete_at() {
   value_array_t* array = make_value_array(1);
   value_array_insert_at(array, 0, str_to_value("a"));
@@ -56,36 +73,52 @@ void test_insert_at_and_delete_at() {
   }
 }
 
+#define RANDOM_TEST_ITERATION_LIMIT 1000
+
+void check_for_zero_or_duplicates(value_array_t* array) {
+  int counts[RANDOM_TEST_ITERATION_LIMIT] = {0};
+
+  for (int i = 0; i < array->length; i++) {
+    uint64_t value = array->elements[i].u64;
+    if (value == 0) {
+      ARMYKNIFE_TEST_FAIL("shouldn't have a value of zero in the random array");
+    }
+    if (value > RANDOM_TEST_ITERATION_LIMIT) {
+      ARMYKNIFE_TEST_FAIL("we shouldn't see this value in the array");
+    }
+    counts[value]++;
+  }
+
+  for (int i = 0; i < RANDOM_TEST_ITERATION_LIMIT; i++) {
+    if (counts[i] > 1) {
+      ARMYKNIFE_TEST_FAIL(
+          "shouldn't have a duplicate value in the random array");
+    }
+  }
+}
+
 void test_insert_at_and_delete_at_random() {
   value_array_t* array = make_value_array(1);
 
   random_state_t state = random_state_for_test();
-  for (int i = 0; i < 25; i++) {
+  for (int i = 1; i < RANDOM_TEST_ITERATION_LIMIT; i++) {
     uint64_t next = random_next(&state);
     uint32_t position = next % (array->length + 1);
     value_array_insert_at(array, position, u64_to_value(i));
+    if (array->length != i) {
+      ARMYKNIFE_TEST_FAIL("the length of the array was not incremented");
+    }
+    check_for_zero_or_duplicates(array);
   }
-  for (int i = 0; i < 25; i++) {
+
+  for (int i = 1; i < RANDOM_TEST_ITERATION_LIMIT; i++) {
     uint64_t next = random_next(&state);
     uint32_t position = next % array->length;
     value_array_delete_at(array, position);
-  }
-}
-
-void test_push_pop() {
-  value_array_t* array = make_value_array(1);
-  value_array_push(array, str_to_value("a"));
-  value_array_push(array, str_to_value("b"));
-  value_array_push(array, str_to_value("c"));
-
-  if (!string_equal("c", value_array_pop(array).str)) {
-    ARMYKNIFE_TEST_FAIL("expected 'c'");
-  }
-  if (!string_equal("b", value_array_pop(array).str)) {
-    ARMYKNIFE_TEST_FAIL("expected 'b'");
-  }
-  if (!string_equal("a", value_array_pop(array).str)) {
-    ARMYKNIFE_TEST_FAIL("expected 'a'");
+    if (array->length != (RANDOM_TEST_ITERATION_LIMIT - (i + 1))) {
+      ARMYKNIFE_TEST_FAIL("the length of the array was not decremented");
+    }
+    check_for_zero_or_duplicates(array);
   }
 }
 

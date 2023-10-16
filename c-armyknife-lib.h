@@ -1996,7 +1996,7 @@ void value_array_insert_at(value_array_t* array, uint32_t position,
   // because when the position is zero, zero - 1 is 0xffffffff which
   // is still greater than zero (and hence greater than position).
   for (int64_t i = array->length - 1; i >= position; i--) {
-    array->elements[i+1] = array->elements[i];
+    array->elements[i + 1] = array->elements[i];
   }
   array->length++;
   array->elements[position] = element;

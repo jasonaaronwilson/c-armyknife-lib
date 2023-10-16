@@ -73,6 +73,8 @@
 struct logger_state_S {
   boolean_t initialized;
   int level;
+  char* logger_output_filename;
+  FILE* output;
 };
 
 typedef struct logger_state_S logger_state_t;
@@ -106,12 +108,12 @@ __attribute__((format(printf, 4, 5))) extern void
  * statements in your source code and you should easily be able to
  * upgrade them to a real level later.
  */
-#define log_off(format, ...) \
+#define log_off(format, ...)                                                   \
   do {                                                                         \
-  if (0) { \
+    if (0) {                                                                   \
       logger_impl(__FILE__, __LINE__, LOGGER_TRACE, format, ##__VA_ARGS__);    \
-  }
-  } while (0);
+    }                                                                          \
+  } while (0)
 
 /**
  * Log at the TRACE level using printf style formatting.
@@ -158,7 +160,7 @@ __attribute__((format(printf, 4, 5))) extern void
  *
  * Typically this is only done before invoking fatal_error though I
  * don't have a convenient way to enforce this.
-*/
+ */
 #define log_fatal(format, ...)                                                 \
   do {                                                                         \
     if (global_logger_state.level <= LOGGER_FATAL) {                           \
@@ -174,7 +176,9 @@ __attribute__((format(printf, 4, 5))) extern void
  * number).
  *
  * While not required to actually use logging, the logging level will
- * be set to LOGGER_WARN unless you change it in a debugger, etc.
+ * be set to LOGGER_WARN unless you change it in a debugger, and those
+ * logging statements will be sent to stderr which is probably not
+ * convenient.
  */
 void logger_init() {
   char* level_string = getenv("ARMYKNIFE_LIB_LOG_LEVEL");
@@ -182,6 +186,7 @@ void logger_init() {
     uint64_t level = string_parse_uint64(level_string);
     global_logger_state.level = level;
   }
+  global_logger_state.output = stderr;
   global_logger_state.initialized = true;
 }
 
@@ -210,8 +215,8 @@ char* logger_level_to_string(int level) {
  * This is the non macro version entry point into the logger. Normally
  * it wouldn't be called directly since it is inconvenient.
  */
-__attribute__((format(printf, 4, 5))) 
-void logger_impl(char* file, int line_number, int level, char* format, ...) {
+__attribute__((format(printf, 4, 5))) void
+    logger_impl(char* file, int line_number, int level, char* format, ...) {
   if (level >= global_logger_state.level) {
     fprintf(stderr, "%s ", logger_level_to_string(level));
     va_list args;

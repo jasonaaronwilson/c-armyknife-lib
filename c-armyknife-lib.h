@@ -172,6 +172,8 @@ extern char* string_left_pad(const char* a, int count, char ch);
 struct logger_state_S {
   boolean_t initialized;
   int level;
+  char* logger_output_filename;
+  FILE* output;
 };
 
 typedef struct logger_state_S logger_state_t;
@@ -184,14 +186,37 @@ extern void logger_init(void);
 __attribute__((format(printf, 4, 5))) extern void
     logger_impl(char* file, int line_number, int level, char* format, ...);
 
-// This should never ever log. That may not be true yet. It it meant
-// so that you can turn off some logging statements during development
-// but it is considered bad form to check these in.
-#define log_off(format, ...)                                                   \
+/**
+ * This will never ever log and should have essentially zero impact on
+ * compilation (including detecting errors). In other words it should
+ * behave like an empty statment ";".
+ *
+ * On the other hand, errors in these statements will not be caught
+ * and therefore it can't be depended on to keep working as you
+ * refactor code and decide later that you want to turn it on.
+ */
+#define log_nope(format, ...)                                                  \
   do {                                                                         \
   } while (0);
 
-// Log at the trace level using printf style formatting
+/**
+ * This will never log however the compiler *should* still check to
+ * make sure the code is legal and compiles. Any sufficiently smart
+ * compiler with some level of optimization turned on should not
+ * change it's code generation strategy at all if you leave one of these
+ * statements in your source code and you should easily be able to
+ * upgrade them to a real level later.
+ */
+#define log_off(format, ...)                                                   \
+  do {                                                                         \
+    if (0) {                                                                   \
+      logger_impl(__FILE__, __LINE__, LOGGER_TRACE, format, ##__VA_ARGS__);    \
+    }                                                                          \
+  } while (0)
+
+/**
+ * Log at the TRACE level using printf style formatting.
+ */
 #define log_trace(format, ...)                                                 \
   do {                                                                         \
     if (global_logger_state.level <= LOGGER_TRACE) {                           \
@@ -199,7 +224,9 @@ __attribute__((format(printf, 4, 5))) extern void
     }                                                                          \
   } while (0)
 
-// Log at the debug level using printf style formatting
+/**
+ * Log at the DEBUG level using printf style formatting.
+ */
 #define log_debug(format, ...)                                                 \
   do {                                                                         \
     if (global_logger_state.level <= LOGGER_DEBUG) {                           \
@@ -207,7 +234,9 @@ __attribute__((format(printf, 4, 5))) extern void
     }                                                                          \
   } while (0)
 
-// Log at the info level using printf style formatting
+/**
+ * Log at the INFO level using printf style formatting.
+ */
 #define log_info(format, ...)                                                  \
   do {                                                                         \
     if (global_logger_state.level <= LOGGER_INFO) {                            \
@@ -215,7 +244,9 @@ __attribute__((format(printf, 4, 5))) extern void
     }                                                                          \
   } while (0)
 
-// Log at the warn level using printf style formatting
+/**
+ * Log at the WARN level using printf style formatting.
+ */
 #define log_warn(format, ...)                                                  \
   do {                                                                         \
     if (global_logger_state.level <= LOGGER_WARN) {                            \
@@ -223,9 +254,12 @@ __attribute__((format(printf, 4, 5))) extern void
     }                                                                          \
   } while (0)
 
-// Log at the fatal level using printf style formatting. Typically
-// this is only done before invoking fatal_error though I don't have a
-// convenient way to enforce this.
+/**
+ * Log at the FATAL level using printf style formatting.
+ *
+ * Typically this is only done before invoking fatal_error though I
+ * don't have a convenient way to enforce this.
+ */
 #define log_fatal(format, ...)                                                 \
   do {                                                                         \
     if (global_logger_state.level <= LOGGER_FATAL) {                           \
@@ -1123,6 +1157,8 @@ void buffer_write_file(buffer_t* bytes, char* file_name) {
 struct logger_state_S {
   boolean_t initialized;
   int level;
+  char* logger_output_filename;
+  FILE* output;
 };
 
 typedef struct logger_state_S logger_state_t;
@@ -1135,14 +1171,37 @@ extern void logger_init(void);
 __attribute__((format(printf, 4, 5))) extern void
     logger_impl(char* file, int line_number, int level, char* format, ...);
 
-// This should never ever log. That may not be true yet. It it meant
-// so that you can turn off some logging statements during development
-// but it is considered bad form to check these in.
-#define log_off(format, ...)                                                   \
+/**
+ * This will never ever log and should have essentially zero impact on
+ * compilation (including detecting errors). In other words it should
+ * behave like an empty statment ";".
+ *
+ * On the other hand, errors in these statements will not be caught
+ * and therefore it can't be depended on to keep working as you
+ * refactor code and decide later that you want to turn it on.
+ */
+#define log_nope(format, ...)                                                  \
   do {                                                                         \
   } while (0);
 
-// Log at the trace level using printf style formatting
+/**
+ * This will never log however the compiler *should* still check to
+ * make sure the code is legal and compiles. Any sufficiently smart
+ * compiler with some level of optimization turned on should not
+ * change it's code generation strategy at all if you leave one of these
+ * statements in your source code and you should easily be able to
+ * upgrade them to a real level later.
+ */
+#define log_off(format, ...)                                                   \
+  do {                                                                         \
+    if (0) {                                                                   \
+      logger_impl(__FILE__, __LINE__, LOGGER_TRACE, format, ##__VA_ARGS__);    \
+    }                                                                          \
+  } while (0)
+
+/**
+ * Log at the TRACE level using printf style formatting.
+ */
 #define log_trace(format, ...)                                                 \
   do {                                                                         \
     if (global_logger_state.level <= LOGGER_TRACE) {                           \
@@ -1150,7 +1209,9 @@ __attribute__((format(printf, 4, 5))) extern void
     }                                                                          \
   } while (0)
 
-// Log at the debug level using printf style formatting
+/**
+ * Log at the DEBUG level using printf style formatting.
+ */
 #define log_debug(format, ...)                                                 \
   do {                                                                         \
     if (global_logger_state.level <= LOGGER_DEBUG) {                           \
@@ -1158,7 +1219,9 @@ __attribute__((format(printf, 4, 5))) extern void
     }                                                                          \
   } while (0)
 
-// Log at the info level using printf style formatting
+/**
+ * Log at the INFO level using printf style formatting.
+ */
 #define log_info(format, ...)                                                  \
   do {                                                                         \
     if (global_logger_state.level <= LOGGER_INFO) {                            \
@@ -1166,7 +1229,9 @@ __attribute__((format(printf, 4, 5))) extern void
     }                                                                          \
   } while (0)
 
-// Log at the warn level using printf style formatting
+/**
+ * Log at the WARN level using printf style formatting.
+ */
 #define log_warn(format, ...)                                                  \
   do {                                                                         \
     if (global_logger_state.level <= LOGGER_WARN) {                            \
@@ -1174,9 +1239,12 @@ __attribute__((format(printf, 4, 5))) extern void
     }                                                                          \
   } while (0)
 
-// Log at the fatal level using printf style formatting. Typically
-// this is only done before invoking fatal_error though I don't have a
-// convenient way to enforce this.
+/**
+ * Log at the FATAL level using printf style formatting.
+ *
+ * Typically this is only done before invoking fatal_error though I
+ * don't have a convenient way to enforce this.
+ */
 #define log_fatal(format, ...)                                                 \
   do {                                                                         \
     if (global_logger_state.level <= LOGGER_FATAL) {                           \
@@ -1186,35 +1254,55 @@ __attribute__((format(printf, 4, 5))) extern void
 
 #endif /* _LOGGER_H_ */
 
+/**
+ * This routine modifies the logging level based on the environment
+ * variable ARMYKNIFE_LIB_LOG_LEVEL (which currently must be a
+ * number).
+ *
+ * While not required to actually use logging, the logging level will
+ * be set to LOGGER_WARN unless you change it in a debugger, and those
+ * logging statements will be sent to stderr which is probably not
+ * convenient.
+ */
 void logger_init() {
   char* level_string = getenv("ARMYKNIFE_LIB_LOG_LEVEL");
   if (level_string != NULL) {
     uint64_t level = string_parse_uint64(level_string);
     global_logger_state.level = level;
   }
+  global_logger_state.output = stderr;
   global_logger_state.initialized = true;
 }
 
+// Convert the level to a human readable string (which will also
+// appear as the name in the log file).
 char* logger_level_to_string(int level) {
   switch (level) {
-  case LOGGER_OFF: 
+  case LOGGER_OFF:
     return "LOGGER_OFF";
-  case LOGGER_TRACE: 
+  case LOGGER_TRACE:
     return "TRACE";
-  case LOGGER_DEBUG: return "DEBUG";
-  case LOGGER_INFO: return "INFO";
-  case LOGGER_WARN: return "WARN";
-  case LOGGER_FATAL: return "FATAL";
+  case LOGGER_DEBUG:
+    return "DEBUG";
+  case LOGGER_INFO:
+    return "INFO";
+  case LOGGER_WARN:
+    return "WARN";
+  case LOGGER_FATAL:
+    return "FATAL";
   default:
     return "LEVEL_UNKNOWN";
   }
 }
 
+/**
+ * This is the non macro version entry point into the logger. Normally
+ * it wouldn't be called directly since it is inconvenient.
+ */
 __attribute__((format(printf, 4, 5))) void
     logger_impl(char* file, int line_number, int level, char* format, ...) {
   if (level >= global_logger_state.level) {
     fprintf(stderr, "%s ", logger_level_to_string(level));
- 
     va_list args;
     va_start(args, format);
     fprintf(stderr, "%s:%d ", file, line_number);

@@ -24,8 +24,26 @@ void test() {
 void test_insert_at_and_delete_at() {
   value_array_t* array = make_value_array(1);
   value_array_insert_at(array, 0, str_to_value("a"));
+
+  if (!string_equal("a", value_array_get(array, 0).str)) {
+    ARMYKNIFE_TEST_FAIL("insert at failed #0");
+  }
+
   value_array_insert_at(array, 0, str_to_value("b"));
+  if (!string_equal("b", value_array_get(array, 0).str)
+      || !string_equal("a", value_array_get(array, 1).str)) {
+    ARMYKNIFE_TEST_FAIL("insert at failed #1");
+  }
+
   value_array_insert_at(array, 0, str_to_value("c"));
+  if (!string_equal("c", value_array_get(array, 0).str)
+      || !string_equal("b", value_array_get(array, 1).str)
+      || !string_equal("a", value_array_get(array, 2).str)) {
+    for (int i = 0; i < 3; i++) {
+      fprintf(stdout, "%s\n", value_array_get(array, i).str);
+    }
+    ARMYKNIFE_TEST_FAIL("insert at failed #2");
+  }
 
   if (!string_equal("c", value_array_delete_at(array, 0).str)) {
     ARMYKNIFE_TEST_FAIL("expected 'c'");
@@ -36,9 +54,12 @@ void test_insert_at_and_delete_at() {
   if (!string_equal("a", value_array_delete_at(array, 0).str)) {
     ARMYKNIFE_TEST_FAIL("expected 'a'");
   }
+}
+
+void test_insert_at_and_delete_at_random() {
+  value_array_t* array = make_value_array(1);
 
   random_state_t state = random_state_for_test();
-
   for (int i = 0; i < 25; i++) {
     uint64_t next = random_next(&state);
     uint32_t position = next % (array->length + 1);
@@ -72,5 +93,6 @@ int main(int argc, char** argv) {
   test();
   test_push_pop();
   test_insert_at_and_delete_at();
+  test_insert_at_and_delete_at_random();
   exit(0);
 }

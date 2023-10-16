@@ -141,13 +141,18 @@ void value_array_insert_at(value_array_t* array, uint32_t position,
     value_array_add(array, element);
     return;
   }
+
   if (position > array->length) {
     fatal_error(ERROR_ACCESS_OUT_OF_BOUNDS);
     return;
   }
 
   value_array_ensure_capacity(array, array->length + 1);
-  for (uint32_t i = position; i < array->length; i++) {
+
+  // This is the standard loop but we now need to use a signed index
+  // because when the position is zero, zero - 1 is 0xffffffff which
+  // is still greater than zero (and hence greater than position).
+  for (int64_t i = array->length - 1; i >= position; i--) {
     array->elements[i + 1] = array->elements[i];
   }
   array->length++;
@@ -163,10 +168,8 @@ void value_array_insert_at(value_array_t* array, uint32_t position,
  */
 value_t value_array_delete_at(value_array_t* array, uint32_t position) {
   value_t result = value_array_get(array, position);
-  if (array->length > 1) {
-    for (int i = 0; i < array->length - 1; i++) {
-      array->elements[i] = array->elements[i + 1];
-    }
+  for (int i = position; i < array->length - 1; i++) {
+    array->elements[i] = array->elements[i + 1];
   }
   array->length--;
   return result;

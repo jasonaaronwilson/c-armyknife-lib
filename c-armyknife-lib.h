@@ -181,20 +181,55 @@ logger_state_t global_logger_state = (logger_state_t){.level = LOGGER_TRACE};
 
 extern void logger_init(void);
 
-// Add this before the ; __attribute__((format(printf, format, __VA_ARGS__)))
-extern void logger_impl(char* file, int line_number, int level, char* format,
-                        ...);
+__attribute__((format(printf, 4, 5))) extern void
+    logger_impl(char* file, int line_number, int level, char* format, ...);
 
+// This should never ever log. That may not be true yet. It it meant
+// so that you can turn off some logging statements during development
+// but it is considered bad form to check these in.
 #define log_off(format, ...)                                                   \
   do {                                                                         \
   } while (0);
 
-// HERE =       __attribute__((format(printf, format, __VA_ARGS__)))
-
+// Log at the trace level using printf style formatting
 #define log_trace(format, ...)                                                 \
   do {                                                                         \
-    if (global_logger_state.level >= LOGGER_TRACE) {                           \
+    if (global_logger_state.level <= LOGGER_TRACE) {                           \
       logger_impl(__FILE__, __LINE__, LOGGER_TRACE, format, ##__VA_ARGS__);    \
+    }                                                                          \
+  } while (0)
+
+// Log at the debug level using printf style formatting
+#define log_debug(format, ...)                                                 \
+  do {                                                                         \
+    if (global_logger_state.level <= LOGGER_DEBUG) {                           \
+      logger_impl(__FILE__, __LINE__, LOGGER_DEBUG, format, ##__VA_ARGS__);    \
+    }                                                                          \
+  } while (0)
+
+// Log at the info level using printf style formatting
+#define log_info(format, ...)                                                  \
+  do {                                                                         \
+    if (global_logger_state.level <= LOGGER_INFO) {                            \
+      logger_impl(__FILE__, __LINE__, LOGGER_INFO, format, ##__VA_ARGS__);     \
+    }                                                                          \
+  } while (0)
+
+// Log at the warn level using printf style formatting
+#define log_warn(format, ...)                                                  \
+  do {                                                                         \
+    if (global_logger_state.level <= LOGGER_WARN) {                            \
+      logger_impl(__FILE__, __LINE__, LOGGER_WARN, format, ##__VA_ARGS__);     \
+    }                                                                          \
+  } while (0)
+
+// Log at the fatal level using printf style formatting. Typically
+// this is only done before invoking fatal_error though I don't have a
+// convenient way to enforce this.
+#define log_fatal(format, ...)                                                 \
+  do {                                                                         \
+    if (global_logger_state.level <= LOGGER_FATAL) {                           \
+      logger_impl(__FILE__, __LINE__, LOGGER_FATAL, format, ##__VA_ARGS__);    \
     }                                                                          \
   } while (0)
 
@@ -1097,20 +1132,55 @@ logger_state_t global_logger_state = (logger_state_t){.level = LOGGER_TRACE};
 
 extern void logger_init(void);
 
-// Add this before the ; __attribute__((format(printf, format, __VA_ARGS__)))
-extern void logger_impl(char* file, int line_number, int level, char* format,
-                        ...);
+__attribute__((format(printf, 4, 5))) extern void
+    logger_impl(char* file, int line_number, int level, char* format, ...);
 
+// This should never ever log. That may not be true yet. It it meant
+// so that you can turn off some logging statements during development
+// but it is considered bad form to check these in.
 #define log_off(format, ...)                                                   \
   do {                                                                         \
   } while (0);
 
-// HERE =       __attribute__((format(printf, format, __VA_ARGS__)))
-
+// Log at the trace level using printf style formatting
 #define log_trace(format, ...)                                                 \
   do {                                                                         \
-    if (global_logger_state.level >= LOGGER_TRACE) {                           \
+    if (global_logger_state.level <= LOGGER_TRACE) {                           \
       logger_impl(__FILE__, __LINE__, LOGGER_TRACE, format, ##__VA_ARGS__);    \
+    }                                                                          \
+  } while (0)
+
+// Log at the debug level using printf style formatting
+#define log_debug(format, ...)                                                 \
+  do {                                                                         \
+    if (global_logger_state.level <= LOGGER_DEBUG) {                           \
+      logger_impl(__FILE__, __LINE__, LOGGER_DEBUG, format, ##__VA_ARGS__);    \
+    }                                                                          \
+  } while (0)
+
+// Log at the info level using printf style formatting
+#define log_info(format, ...)                                                  \
+  do {                                                                         \
+    if (global_logger_state.level <= LOGGER_INFO) {                            \
+      logger_impl(__FILE__, __LINE__, LOGGER_INFO, format, ##__VA_ARGS__);     \
+    }                                                                          \
+  } while (0)
+
+// Log at the warn level using printf style formatting
+#define log_warn(format, ...)                                                  \
+  do {                                                                         \
+    if (global_logger_state.level <= LOGGER_WARN) {                            \
+      logger_impl(__FILE__, __LINE__, LOGGER_WARN, format, ##__VA_ARGS__);     \
+    }                                                                          \
+  } while (0)
+
+// Log at the fatal level using printf style formatting. Typically
+// this is only done before invoking fatal_error though I don't have a
+// convenient way to enforce this.
+#define log_fatal(format, ...)                                                 \
+  do {                                                                         \
+    if (global_logger_state.level <= LOGGER_FATAL) {                           \
+      logger_impl(__FILE__, __LINE__, LOGGER_FATAL, format, ##__VA_ARGS__);    \
     }                                                                          \
   } while (0)
 
@@ -1125,8 +1195,26 @@ void logger_init() {
   global_logger_state.initialized = true;
 }
 
-void logger_impl(char* file, int line_number, int level, char* format, ...) {
+char* logger_level_to_string(int level) {
+  switch (level) {
+  case LOGGER_OFF: 
+    return "LOGGER_OFF";
+  case LOGGER_TRACE: 
+    return "TRACE";
+  case LOGGER_DEBUG: return "DEBUG";
+  case LOGGER_INFO: return "INFO";
+  case LOGGER_WARN: return "WARN";
+  case LOGGER_FATAL: return "FATAL";
+  default:
+    return "LEVEL_UNKNOWN";
+  }
+}
+
+__attribute__((format(printf, 4, 5))) void
+    logger_impl(char* file, int line_number, int level, char* format, ...) {
   if (level >= global_logger_state.level) {
+    fprintf(stderr, "%s ", logger_level_to_string(level));
+ 
     va_list args;
     va_start(args, format);
     fprintf(stderr, "%s:%d ", file, line_number);

@@ -170,28 +170,33 @@ extern char* string_left_pad(const char* a, int count, char ch);
 #define LOGGER_FATAL 5
 
 struct logger_state_S {
+  boolean_t initialized;
   int level;
 };
 
 typedef struct logger_state_S logger_state_t;
 
-logger_state_t global_logger_state = (logger_state_t) { .level = LOGGER_WARN };
+// FIXME : should be LOGGER_WARN
+logger_state_t global_logger_state = (logger_state_t){.level = LOGGER_TRACE};
 
 extern void logger_init(void);
 
-extern void logger_impl(char* file, int line_number, int level, char* format, ...);
+// Add this before the ; __attribute__((format(printf, format, __VA_ARGS__)))
+extern void logger_impl(char* file, int line_number, int level, char* format,
+                        ...);
 
-#define log_off(format, ...) \
-  do { \
+#define log_off(format, ...)                                                   \
+  do {                                                                         \
   } while (0);
 
-#define log_trace(format, ...) \
-  do { \
-    if (global_logger_state.level >= LOGGER_TRACE) { \
-      __attribute__((format(printf, format, __VA_ARGS__)))              \
-        logger_impl(__FILE__, __LINE__, LOGGER_TRACE, format, __VA_ARGS__); \
-    } \
-  } while (0);
+// HERE =       __attribute__((format(printf, format, __VA_ARGS__)))
+
+#define log_trace(format, ...)                                                 \
+  do {                                                                         \
+    if (global_logger_state.level >= LOGGER_TRACE) {                           \
+      logger_impl(__FILE__, __LINE__, LOGGER_TRACE, format, ##__VA_ARGS__);    \
+    }                                                                          \
+  } while (0)
 
 #endif /* _LOGGER_H_ */
 // SSCF generated file from: buffer.c
@@ -1081,28 +1086,33 @@ void buffer_write_file(buffer_t* bytes, char* file_name) {
 #define LOGGER_FATAL 5
 
 struct logger_state_S {
+  boolean_t initialized;
   int level;
 };
 
 typedef struct logger_state_S logger_state_t;
 
-logger_state_t global_logger_state = (logger_state_t) { .level = LOGGER_WARN };
+// FIXME : should be LOGGER_WARN
+logger_state_t global_logger_state = (logger_state_t){.level = LOGGER_TRACE};
 
 extern void logger_init(void);
 
-extern void logger_impl(char* file, int line_number, int level, char* format, ...);
+// Add this before the ; __attribute__((format(printf, format, __VA_ARGS__)))
+extern void logger_impl(char* file, int line_number, int level, char* format,
+                        ...);
 
-#define log_off(format, ...) \
-  do { \
+#define log_off(format, ...)                                                   \
+  do {                                                                         \
   } while (0);
 
-#define log_trace(format, ...) \
-  do { \
-    if (global_logger_state.level >= LOGGER_TRACE) { \
-      __attribute__((format(printf, format, __VA_ARGS__)))              \
-        logger_impl(__FILE__, __LINE__, LOGGER_TRACE, format, __VA_ARGS__); \
-    } \
-  } while (0);
+// HERE =       __attribute__((format(printf, format, __VA_ARGS__)))
+
+#define log_trace(format, ...)                                                 \
+  do {                                                                         \
+    if (global_logger_state.level >= LOGGER_TRACE) {                           \
+      logger_impl(__FILE__, __LINE__, LOGGER_TRACE, format, ##__VA_ARGS__);    \
+    }                                                                          \
+  } while (0)
 
 #endif /* _LOGGER_H_ */
 
@@ -1112,6 +1122,7 @@ void logger_init() {
     uint64_t level = string_parse_uint64(level_string);
     global_logger_state.level = level;
   }
+  global_logger_state.initialized = true;
 }
 
 void logger_impl(char* file, int line_number, int level, char* format, ...) {

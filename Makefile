@@ -73,7 +73,8 @@ TESTS= \
 	./io-test.sh \
 	./value-array-test.sh \
 	./random-test.sh \
-	./string-tree-test.sh
+	./string-tree-test.sh \
+	./logger-test.sh
 
 test:
 	(cd tests && ../run-tests.sh ${TESTS})

@@ -12,7 +12,7 @@ AT_LEAST_ONE_COMPILER=0
 
 # tcc doesn't understand "no return" and gives spurious warnings
 
-for CC in gcc clang tcc ; do
+for CC in clang gcc tcc ; do
     echo
     if which ${CC} >/dev/null ; then
         AT_LEAST_ONE_COMPILER=1

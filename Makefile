@@ -6,6 +6,7 @@ SRC_C = allocate.c \
 	command-line-parser.c \
 	fatal-error.c \
 	io.c \
+	logger.c \
 	random.c \
 	string-alist.c \
 	string-hashtable.c \
@@ -24,6 +25,7 @@ ORDERED_H = \
 	trace.h \
 	allocate.h \
 	string-util.h \
+	logger.h \
 	buffer.h \
 	value-array.h \
 	string-alist.h \

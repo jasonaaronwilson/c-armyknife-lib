@@ -70,19 +70,19 @@ int main(int argc, char** argv) {
   }
 
 
-  if (string_parse_uint64("0") != 0) {
+  if (string_parse_uint64("0").u64 != 0) {
     ARMYKNIFE_TEST_FAIL("string_parse_uint64");
   }
-  if (string_parse_uint64("1") != 1) {
+  if (string_parse_uint64("1").u64 != 1) {
     ARMYKNIFE_TEST_FAIL("string_parse_uint64");
   }
-  if (string_parse_uint64("0xf") != 15) {
+  if (string_parse_uint64("0xf").u64 != 15) {
     ARMYKNIFE_TEST_FAIL("string_parse_uint64");
   }
-  if (string_parse_uint64("0b0") != 0) {
+  if (string_parse_uint64("0b0").u64 != 0) {
     ARMYKNIFE_TEST_FAIL("string_parse_uint64");
   }
-  if (string_parse_uint64("0b1010") != 10) {
+  if (string_parse_uint64("0b1010").u64 != 10) {
     ARMYKNIFE_TEST_FAIL("string_parse_uint64");
   }
 

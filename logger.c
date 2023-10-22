@@ -185,8 +185,10 @@ void logger_init(void) {
 
   char* level_string = getenv("ARMYKNIFE_LIB_LOG_LEVEL");
   if (level_string != NULL) {
-    uint64_t level = string_parse_uint64(level_string);
-    global_logger_state.level = level;
+    value_result_t parsed = string_parse_uint64(level_string);
+    if (parsed.found) {
+      global_logger_state.level = parsed.u64;
+    }
   }
 
   char* output_file_name = getenv("ARMYKNIFE_LIB_LOG_FILE");

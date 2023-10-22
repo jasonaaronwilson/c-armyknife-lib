@@ -149,7 +149,7 @@ extern uint64_t string_to_uint64(const char* str);
 extern char* uint64_to_string(uint64_t number);
 extern uint64_t string_hash(const char* str);
 extern char* string_substring(const char* str, int start, int end);
-extern uint64_t string_parse_uint64(const char* string);
+extern value_result_t string_parse_uint64(const char* string);
 extern char* string_duplicate(const char* src);
 extern char* string_append(const char* a, const char* b);
 extern char* string_left_pad(const char* a, int count, char ch);
@@ -1270,8 +1270,10 @@ void logger_init(void) {
 
   char* level_string = getenv("ARMYKNIFE_LIB_LOG_LEVEL");
   if (level_string != NULL) {
-    uint64_t level = string_parse_uint64(level_string);
-    global_logger_state.level = level;
+    value_result_t parsed = string_parse_uint64(level_string);
+    if (parsed.found) {
+      global_logger_state.level = parsed.u64;
+    }
   }
 
   char* output_file_name = getenv("ARMYKNIFE_LIB_LOG_FILE");
@@ -1812,7 +1814,7 @@ extern uint64_t string_to_uint64(const char* str);
 extern char* uint64_to_string(uint64_t number);
 extern uint64_t string_hash(const char* str);
 extern char* string_substring(const char* str, int start, int end);
-extern uint64_t string_parse_uint64(const char* string);
+extern value_result_t string_parse_uint64(const char* string);
 extern char* string_duplicate(const char* src);
 extern char* string_append(const char* a, const char* b);
 extern char* string_left_pad(const char* a, int count, char ch);
@@ -1885,7 +1887,8 @@ char* string_substring(const char* str, int start, int end) {
   return result;
 }
 
-uint64_t string_parse_uint64_dec(const char* string) {
+value_result_t string_parse_uint64_dec(const char* string) {
+  boolean_t at_least_one_number = false;
   uint64_t integer = 0;
   uint64_t digit;
 
@@ -1893,12 +1896,14 @@ uint64_t string_parse_uint64_dec(const char* string) {
     digit = *string - '0';
     integer = integer * 10 + digit;
     string++;
+    at_least_one_number = true;
   }
 
-  return integer;
+  return (value_result_t) {.u64 = integer, .found = at_least_one_number };
 }
 
-uint64_t string_parse_uint64_hex(const char* string) {
+value_result_t string_parse_uint64_hex(const char* string) {
+  boolean_t at_least_one_number = false;
   uint64_t integer = 0;
   uint64_t digit;
 
@@ -1914,12 +1919,14 @@ uint64_t string_parse_uint64_hex(const char* string) {
     }
     integer = integer * 16 + digit;
     i++;
+    at_least_one_number = true;
   }
 
-  return integer;
+  return (value_result_t) {.u64 = integer, .found = at_least_one_number };
 }
 
-uint64_t string_parse_uint64_bin(const char* string) {
+value_result_t string_parse_uint64_bin(const char* string) {
+  boolean_t at_least_one_number = false;
   uint64_t integer = 0;
   uint64_t digit;
 
@@ -1932,12 +1939,13 @@ uint64_t string_parse_uint64_bin(const char* string) {
     digit = string[i] - '0';
     integer = integer * 2 + digit;
     i++;
+    at_least_one_number = true;
   }
 
-  return integer;
+  return (value_result_t) {.u64 = integer, .found = at_least_one_number };
 }
 
-uint64_t string_parse_uint64(const char* string) {
+value_result_t string_parse_uint64(const char* string) {
   if (string_starts_with(string, "0x")) {
     return string_parse_uint64_hex(string);
   } else if (string_starts_with(string, "0b")) {

@@ -1,20 +1,14 @@
 #line 2 "logger.c"
 
 /**
- * A logger provides a controlled way to insert "print statements"
- * into code in order to gain insight into what a program is doing
- * (and is no harder to use than "printf" so kind of a no-brainer).
+ * A "logger" is a type of code instrumentation and provides the
+ * ability to put explicit "print statements" into your code without
+ * necessarily having a large impact on the performance of that code
+ * as long as the logger is turned off for that "level" of detail.
  *
  * If you've temporarily inserted print statements into your program,
- * you've probably already learned that logging is actually quite
- * expensive in terms of run-time performance. (For this
- * implementation, getting a timestamp is probably one kernel call and
- * doing the actual output, since logging is less useful when
- * buffered, requires at least another kernel call. Finally,
- * formatting strings for human readability is realitively expensive
- * itself. For example, printing a large number may require dozens or
- * hundreds of cycles while adding two numbers may take less than a
- * single cycle on a modern pipelined processor).
+ * you've probably already learned that logging is very useful and
+ * also somewhat expensive in terms of run-time performance. [^1]
  *
  * Since logging is expensive, it is useful to be able to turn it on
  * and off (even without recompiling) which is done based on the
@@ -23,8 +17,8 @@
  * the C compiler's optimizations, so it is **not** recommended to be
  * left in critical loops. Obviously if the code is compiled into the
  * binary, even if the code to skip the logging doesn't considerably
- * increase run-time, it may still have an impact which we hope to
- * minimize in the future with additional options.
+ * increase run-time performance, it may still have an impact for
+ * exanmple on the output binary size.
  *
  * The default log level is "WARN" though it is possible to override
  * this with #define ARMYKNIFE_LIB_DEFAULT_LOG_LEVEL <level> when
@@ -56,6 +50,14 @@
  * important to keep this in mind if you are developing an internet
  * application that the user isn't running on their own machine which
  * isn't an intial focus of this library.
+ *
+ * [^1]: For this implementatic, getting a timestamp is probably one
+ * kernel call and doing the actual output, since logging is less
+ * useful when buffered, requires at least another kernel
+ * call. Finally, formatting strings for human readability is
+ * realitively expensive itself. For example, printing a large number
+ * may require dozens or hundreds of cycles while adding two numbers
+ * may take less than a single cycle on a modern pipelined processor).
  */
 
 #ifndef _LOGGER_H_
@@ -79,8 +81,7 @@ struct logger_state_S {
 
 typedef struct logger_state_S logger_state_t;
 
-// FIXME : should be LOGGER_WARN
-logger_state_t global_logger_state = (logger_state_t){.level = LOGGER_TRACE};
+logger_state_t global_logger_state = (logger_state_t){.level = LOGGER_WARN};
 
 extern void logger_init(void);
 
@@ -171,7 +172,7 @@ __attribute__((format(printf, 4, 5))) extern void
 #endif /* _LOGGER_H_ */
 
 /**
- * This routine modifies the logging level based on the environment
+ * This function modifies the logging level based on the environment
  * variable ARMYKNIFE_LIB_LOG_LEVEL (which currently must be a
  * number).
  *
@@ -180,14 +181,36 @@ __attribute__((format(printf, 4, 5))) extern void
  * logging statements will be sent to stderr which is probably not
  * convenient.
  */
-void logger_init() {
+void logger_init(void) {
+
   char* level_string = getenv("ARMYKNIFE_LIB_LOG_LEVEL");
   if (level_string != NULL) {
     uint64_t level = string_parse_uint64(level_string);
     global_logger_state.level = level;
   }
-  global_logger_state.output = stderr;
-  global_logger_state.initialized = true;
+
+  char* output_file_name = getenv("ARMYKNIFE_LIB_LOG_FILE");
+
+  // It's pretty standard to include the "pid" in the filename at
+  // least when writing to /tmp/. We aren't quite doing that yet...
+  //
+  // pid_t pid = getpid(); -- pid is a number of some sort...
+
+  if (output_file_name != NULL) {
+    global_logger_state.output = fopen(output_file_name, "w");
+    if (!global_logger_state.output) {
+      fatal_error(ERROR_OPEN_LOG_FILE);
+    }
+    // Set the stream to unbuffered
+    // if (setvbuf(log_file, NULL, _IONBF, 0) != 0) {
+    // perror("Failed to set stream to unbuffered");
+    // exit(EXIT_FAILURE);
+    // }
+    global_logger_state.logger_output_filename = output_file_name;
+  } else {
+    global_logger_state.output = stderr;
+    global_logger_state.initialized = true;
+  }
 }
 
 // Convert the level to a human readable string (which will also
@@ -217,13 +240,22 @@ char* logger_level_to_string(int level) {
  */
 __attribute__((format(printf, 4, 5))) void
     logger_impl(char* file, int line_number, int level, char* format, ...) {
+
+  FILE* output = global_logger_state.output;
+
+  // Ensure that logging to somewhere will happen though a later call
+  // to logger_init() may send the output to somewhere else.
+  if (output == NULL) {
+    output = stderr;
+  }
+
   if (level >= global_logger_state.level) {
-    fprintf(stderr, "%s ", logger_level_to_string(level));
+    fprintf(output, "%s ", logger_level_to_string(level));
     va_list args;
     va_start(args, format);
-    fprintf(stderr, "%s:%d ", file, line_number);
-    vfprintf(stderr, format, args);
-    fprintf(stderr, "\n");
+    fprintf(output, "%s:%d ", file, line_number);
+    vfprintf(output, format, args);
+    fprintf(output, "\n");
     va_end(args);
   }
 }

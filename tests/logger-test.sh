@@ -18,6 +18,12 @@ export ARMYKNIFE_LIB_LOG_FILE=${LOGGER_FILE}
 
 RESULT=$?
 cat ${LOGGER_FILE}
+
+export ARMYKNIFE_LIB_LOG_LEVEL=5
+export ARMYKNIFE_LIB_LOG_FILE=/tmp/armyknife-logger-test.$$.FATAL
+
+./build-and-run.sh logger-test.c logger-test
+RESULT=$?
 exit ${RESULT}
 
 

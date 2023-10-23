@@ -110,7 +110,9 @@ value_result_t string_parse_uint64_dec(const char* string) {
     at_least_one_number = true;
   }
 
-  return (value_result_t){.u64 = integer, .found = at_least_one_number};
+  return (value_result_t){
+      .u64 = integer,
+      .nf_error = at_least_one_number ? NF_OK : NF_ERROR_NOT_PARSED_AS_NUMBER};
 }
 
 value_result_t string_parse_uint64_hex(const char* string) {
@@ -133,7 +135,9 @@ value_result_t string_parse_uint64_hex(const char* string) {
     at_least_one_number = true;
   }
 
-  return (value_result_t){.u64 = integer, .found = at_least_one_number};
+  return (value_result_t){
+      .u64 = integer,
+      .nf_error = at_least_one_number ? NF_OK : NF_ERROR_NOT_PARSED_AS_NUMBER};
 }
 
 value_result_t string_parse_uint64_bin(const char* string) {
@@ -153,7 +157,9 @@ value_result_t string_parse_uint64_bin(const char* string) {
     at_least_one_number = true;
   }
 
-  return (value_result_t){.u64 = integer, .found = at_least_one_number};
+  return (value_result_t){
+      .u64 = integer,
+      .nf_error = at_least_one_number ? NF_OK : NF_ERROR_NOT_PARSED_AS_NUMBER};
 }
 
 value_result_t string_parse_uint64(const char* string) {

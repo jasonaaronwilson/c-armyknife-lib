@@ -60,7 +60,7 @@ __attribute__((warn_unused_result)) extern string_tree_t*
  */
 value_result_t string_tree_find(string_tree_t* t, char* key) {
   if (t == NULL) {
-    return (value_result_t){.found = 0};
+    return (value_result_t){.nf_error = NF_ERROR_NOT_FOUND};
   }
   int cmp_result = strcmp(key, t->key);
   if (cmp_result < 0) {
@@ -68,7 +68,9 @@ value_result_t string_tree_find(string_tree_t* t, char* key) {
   } else if (cmp_result > 0) {
     return string_tree_find(t->right, key);
   } else {
-    return (value_result_t){.val = t->value, .found = true};
+    return (value_result_t){
+        .val = t->value,
+    };
   }
 }
 

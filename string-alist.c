@@ -64,9 +64,9 @@ string_alist_t* alist_delete(string_alist_t* list, char* key) {
 value_result_t alist_find(string_alist_t* list, char* key) {
   while (list) {
     if (strcmp(key, list->key) == 0) {
-      return (value_result_t){.val = list->value, .found = true};
+      return (value_result_t){.val = list->value};
     }
     list = list->next;
   }
-  return (value_result_t){};
+  return (value_result_t){.nf_error = NF_ERROR_NOT_FOUND};
 }

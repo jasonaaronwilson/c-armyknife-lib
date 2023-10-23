@@ -13,23 +13,23 @@ void test_tree() {
   value_result_t value;
 
   value = string_tree_find(tree, "a");
-  if (value.found) {
+  if (is_ok(value)) {
     ARMYKNIFE_TEST_FAIL("find in empty list should return NULL");
   }
 
   tree = string_tree_insert(tree, "a", str_to_value("A"));
   value = string_tree_find(tree, "a");
-  if (!value.found || strcmp("A", value.str) != 0) {
+  if (is_not_ok(value) || strcmp("A", value.str) != 0) {
     ARMYKNIFE_TEST_FAIL("should have found 'A'");
   }
 
   tree = string_tree_insert(tree, "b", str_to_value("B"));
   value = string_tree_find(tree, "a");
-  if (!value.found || strcmp("A", value.str) != 0) {
+  if (is_not_ok(value) || strcmp("A", value.str) != 0) {
     ARMYKNIFE_TEST_FAIL("should have found 'A'");
   }
   value = string_tree_find(tree, "b");
-  if (!value.found || strcmp("B", value.str) != 0) {
+  if (is_not_ok(value) || strcmp("B", value.str) != 0) {
     ARMYKNIFE_TEST_FAIL("should have found 'B'");
   }
 
@@ -40,16 +40,16 @@ void test_tree() {
   // Finally delete a node.
   tree = string_tree_delete(tree, "b");
   value = string_tree_find(tree, "b");
-  if (value.found) {
+  if (is_ok(value)) {
     ARMYKNIFE_TEST_FAIL("should not have found a value for 'b'");
   }
 
   value = string_tree_find(tree, "a");
-  if (!value.found || strcmp("A", value.str) != 0) {
+  if (is_not_ok(value) || strcmp("A", value.str) != 0) {
     ARMYKNIFE_TEST_FAIL("should have found 'A'");
   }
   value = string_tree_find(tree, "c");
-  if (!value.found || strcmp("C", value.str) != 0) {
+  if (is_not_ok(value) || strcmp("C", value.str) != 0) {
     ARMYKNIFE_TEST_FAIL("should have found 'C'");
   }
 
@@ -89,7 +89,7 @@ void check_sequence(char* file, int line, string_tree_t* tree,
     value_result_t lookup_result = string_tree_find(tree, key_string);
     value_result_t lookup_result_reference = string_ht_find(ht, key_string);
 
-    if (lookup_result.found != lookup_result_reference.found) {
+    if (lookup_result.nf_error != lookup_result_reference.nf_error) {
       fprintf(stdout,
               "CHECK SEQUENCE %s:%d: tree and hashtable reference are not in "
               "agreement!",
@@ -147,16 +147,16 @@ void test_random_insertion_and_deletion() {
     value_result_t lookup_result = string_tree_find(tree, key);
     value_result_t lookup_result_reference = string_ht_find(ht, key);
 
-    if (lookup_result.found != lookup_result_reference.found) {
+    if (lookup_result.nf_error != lookup_result_reference.nf_error) {
       ARMYKNIFE_TEST_FAIL("tree and hashtable reference are not in agreement!");
     }
 
     if ((next & 3) == 0) {
-      if (lookup_result.found) {
+      if (is_ok(lookup_result)) {
         ARMYKNIFE_TEST_FAIL("deleted item should not be found!");
       }
     } else {
-      if (!lookup_result.found) {
+      if (is_not_ok(lookup_result)) {
         ARMYKNIFE_TEST_FAIL("non deleted item should be found");
       }
     }

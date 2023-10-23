@@ -171,6 +171,24 @@ __attribute__((format(printf, 4, 5))) extern void
 
 #endif /* _LOGGER_H_ */
 
+value_result_t parse_log_level_enum(char* str) {
+  if (strcmp("FATAL", str) == 0 || strcmp("fatal", str) == 0) {
+    return (value_result_t){.u64 = LOGGER_FATAL};
+  } else if (strcmp("WARN", str) == 0 || strcmp("warn", str) == 0) {
+    return (value_result_t){.u64 = LOGGER_WARN};
+  } else if (strcmp("INFO", str) == 0 || strcmp("info", str) == 0) {
+    return (value_result_t){.u64 = LOGGER_INFO};
+  } else if (strcmp("DEBUG", str) == 0 || strcmp("debug", str) == 0) {
+    return (value_result_t){.u64 = LOGGER_DEBUG};
+  } else if (strcmp("TRACE", str) == 0 || strcmp("trace", str) == 0) {
+    return (value_result_t){.u64 = LOGGER_TRACE};
+  } else if (strcmp("OFF", str) == 0 || strcmp("off", str) == 0) {
+    return (value_result_t){.u64 = LOGGER_OFF};
+  } else {
+    return (value_result_t){.nf_error = NF_ERROR_NOT_PARSED_AS_EXPECTED_ENUM};
+  }
+}
+
 /**
  * This function modifies the logging level based on the environment
  * variable ARMYKNIFE_LIB_LOG_LEVEL (which currently must be a
@@ -186,8 +204,13 @@ void logger_init(void) {
   char* level_string = getenv("ARMYKNIFE_LIB_LOG_LEVEL");
   if (level_string != NULL) {
     value_result_t parsed = string_parse_uint64(level_string);
-    if (parsed.found) {
+    if (is_ok(parsed)) {
       global_logger_state.level = parsed.u64;
+    } else {
+      value_result_t parsed = parse_log_level_enum(level_string);
+      if (is_ok(parsed)) {
+        global_logger_state.level = parsed.u64;
+      }
     }
   }
 

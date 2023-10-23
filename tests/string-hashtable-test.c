@@ -12,23 +12,23 @@ void test_string_ht() {
   value_result_t value;
 
   value = string_ht_find(ht, "a");
-  if (value.found) {
+  if (is_ok(value)) {
     ARMYKNIFE_TEST_FAIL("find in empty ht should return NULL");
   }
 
   ht = string_ht_insert(ht, "a", str_to_value("A"));
   value = string_ht_find(ht, "a");
-  if (!value.found || strcmp("A", value.str) != 0) {
+  if (is_not_ok(value) || strcmp("A", value.str) != 0) {
     ARMYKNIFE_TEST_FAIL("should have found 'A'");
   }
 
   ht = string_ht_insert(ht, "b", str_to_value("B"));
   value = string_ht_find(ht, "a");
-  if (!value.found || strcmp("A", value.str) != 0) {
+  if (is_not_ok(value) || strcmp("A", value.str) != 0) {
     ARMYKNIFE_TEST_FAIL("should have found 'A'");
   }
   value = string_ht_find(ht, "b");
-  if (!value.found || strcmp("B", value.str) != 0) {
+  if (is_not_ok(value) || strcmp("B", value.str) != 0) {
     ARMYKNIFE_TEST_FAIL("should have found 'B'");
   }
 
@@ -39,15 +39,15 @@ void test_string_ht() {
   // Finally delete a node.
   ht = string_ht_delete(ht, "b");
   value = string_ht_find(ht, "b");
-  if (value.found) {
+  if (is_ok(value)) {
     ARMYKNIFE_TEST_FAIL("should not have found a value for 'b'");
   }
   value = string_ht_find(ht, "a");
-  if (!value.found || strcmp("A", value.str) != 0) {
+  if (is_not_ok(value) || strcmp("A", value.str) != 0) {
     ARMYKNIFE_TEST_FAIL("should have found 'A'");
   }
   value = string_ht_find(ht, "c");
-  if (!value.found || strcmp("C", value.str) != 0) {
+  if (is_not_ok(value) || strcmp("C", value.str) != 0) {
     ARMYKNIFE_TEST_FAIL("should have found 'C'");
   }
 
@@ -82,11 +82,11 @@ void test_ht_random() {
   for (int i = 0; i < iterations; i++) {
     uint64_t next = random_next(&state);
     if ((next & 3) == 0) {
-      if (string_ht_find(ht, uint64_to_string(next)).found != false) {
+      if (is_ok(string_ht_find(ht, uint64_to_string(next)))) {
         ARMYKNIFE_TEST_FAIL("found an element we deleted");
       }
     } else {
-      if (string_ht_find(ht, uint64_to_string(next)).found == false) {
+      if (is_not_ok(string_ht_find(ht, uint64_to_string(next)))) {
         ARMYKNIFE_TEST_FAIL("element should be found");
       }
     }

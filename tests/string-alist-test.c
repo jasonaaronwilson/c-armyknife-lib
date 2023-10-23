@@ -13,23 +13,23 @@ void test_alist() {
   value_result_t value;
 
   value = alist_find(list, "a");
-  if (value.found) {
+  if (is_ok(value)) {
     ARMYKNIFE_TEST_FAIL("find in empty list should return NULL");
   }
 
   list = alist_insert(list, "a", str_to_value("A"));
   value = alist_find(list, "a");
-  if (!value.found || strcmp("A", value.str) != 0) {
+  if (is_not_ok(value) || strcmp("A", value.str) != 0) {
     ARMYKNIFE_TEST_FAIL("should have found 'A'");
   }
 
   list = alist_insert(list, "b", str_to_value("B"));
   value = alist_find(list, "a");
-  if (!value.found || strcmp("A", value.str) != 0) {
+  if (is_not_ok(value) || strcmp("A", value.str) != 0) {
     ARMYKNIFE_TEST_FAIL("should have found 'A'");
   }
   value = alist_find(list, "b");
-  if (!value.found || strcmp("B", value.str) != 0) {
+  if (is_not_ok(value) || strcmp("B", value.str) != 0) {
     ARMYKNIFE_TEST_FAIL("should have found 'B'");
   }
 
@@ -40,15 +40,15 @@ void test_alist() {
   // Finally delete a node.
   list = alist_delete(list, "b");
   value = alist_find(list, "b");
-  if (value.found) {
+  if (is_ok(value)) {
     ARMYKNIFE_TEST_FAIL("should not have found a value for 'b'");
   }
   value = alist_find(list, "a");
-  if (!value.found || strcmp("A", value.str) != 0) {
+  if (is_not_ok(value) || strcmp("A", value.str) != 0) {
     ARMYKNIFE_TEST_FAIL("should have found 'A'");
   }
   value = alist_find(list, "c");
-  if (!value.found || strcmp("C", value.str) != 0) {
+  if (is_not_ok(value) || strcmp("C", value.str) != 0) {
     ARMYKNIFE_TEST_FAIL("should have found 'C'");
   }
 
@@ -83,11 +83,11 @@ void test_alist_random() {
   for (int i = 0; i < iterations; i++) {
     uint64_t next = random_next(&state);
     if ((next & 3) == 0) {
-      if (alist_find(list, uint64_to_string(next)).found != false) {
+      if (is_ok(alist_find(list, uint64_to_string(next)))) {
         ARMYKNIFE_TEST_FAIL("found an element we deleted");
       }
     } else {
-      if (alist_find(list, uint64_to_string(next)).found == false) {
+      if (!is_ok(alist_find(list, uint64_to_string(next)))) {
         ARMYKNIFE_TEST_FAIL("element should be found");
       }
     }

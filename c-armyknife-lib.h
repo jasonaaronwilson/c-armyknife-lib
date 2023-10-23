@@ -542,6 +542,22 @@ __attribute__((warn_unused_result)) extern string_tree_t*
 #ifndef _COMMAND_LINE_PARSER_H_
 #define _COMMAND_LINE_PARSER_H_
 
+typedef enum {
+  command_line_argument_type_string,
+  command_line_argument_type_boolean,
+  command_line_argument_type_unsigned,
+  command_line_argument_type_signed,
+  command_line_argument_type_double,
+} command_line_argument_type_t;
+
+struct command_line_argument_descriptor_S {
+  char* long_name;
+  command_line_argument_type_t arg_type;
+  char* help_string;
+};
+
+typedef struct command_line_argument_descriptor_S command_line_argument_descriptor_t;
+
 struct command_line_parse_result_S {
   char* program;
   char* command;
@@ -551,8 +567,11 @@ struct command_line_parse_result_S {
 
 typedef struct command_line_parse_result_S command_line_parse_result_t;
 
+extern command_line_argument_descriptor_t* make_command_line_argument_descriptor(char* long_name, command_line_argument_type_t arg_type, char* help_string);
+
 extern command_line_parse_result_t parse_command_line(int argc, char** argv,
-                                                      boolean_t has_command);
+                                                      boolean_t has_command,
+                                                      value_array_t* arguments);
 
 #endif /* _COMMAND_LINE_PARSER_H_ */
 // SSCF generated file from: io.c
@@ -916,6 +935,22 @@ __attribute__((warn_unused_result)) extern buffer_t*
 #ifndef _COMMAND_LINE_PARSER_H_
 #define _COMMAND_LINE_PARSER_H_
 
+typedef enum {
+  command_line_argument_type_string,
+  command_line_argument_type_boolean,
+  command_line_argument_type_unsigned,
+  command_line_argument_type_signed,
+  command_line_argument_type_double,
+} command_line_argument_type_t;
+
+struct command_line_argument_descriptor_S {
+  char* long_name;
+  command_line_argument_type_t arg_type;
+  char* help_string;
+};
+
+typedef struct command_line_argument_descriptor_S command_line_argument_descriptor_t;
+
 struct command_line_parse_result_S {
   char* program;
   char* command;
@@ -925,10 +960,25 @@ struct command_line_parse_result_S {
 
 typedef struct command_line_parse_result_S command_line_parse_result_t;
 
+extern command_line_argument_descriptor_t* make_command_line_argument_descriptor(char* long_name, command_line_argument_type_t arg_type, char* help_string);
+
 extern command_line_parse_result_t parse_command_line(int argc, char** argv,
-                                                      boolean_t has_command);
+                                                      boolean_t has_command,
+                                                      value_array_t* arguments);
 
 #endif /* _COMMAND_LINE_PARSER_H_ */
+
+/**
+ * Allocate a command_line_argument_descriptor_t and fill in it's most
+ * common fields.
+ */
+command_line_argument_descriptor_t* make_command_line_argument_descriptor(char* long_name, command_line_argument_type_t arg_type, char* help_string) {
+  command_line_argument_descriptor_t* result = malloc_struct(command_line_argument_descriptor_t);
+  result->long_name = long_name;
+  result->arg_type = arg_type;
+  result->help_string = help_string;
+  return result;
+}
 
 /**
  * Given a command line such as:
@@ -941,7 +991,8 @@ extern command_line_parse_result_t parse_command_line(int argc, char** argv,
  * The array: "file1.c" "file2.c"
  */
 command_line_parse_result_t parse_command_line(int argc, char** argv,
-                                               boolean_t has_command) {
+                                               boolean_t has_command,
+                                               value_array_t* argument_descriptors) {
   value_array_t* files = make_value_array(argc);
   string_hashtable_t* flags = make_string_hashtable(32);
 
@@ -964,6 +1015,21 @@ command_line_parse_result_t parse_command_line(int argc, char** argv,
           value = string_substring(arg, equal_sign_index + 1, strlen(arg));
         } else {
           key = string_substring(arg, 2, strlen(arg));
+        }
+
+        if (argument_descriptors != NULL) {
+          boolean_t found = false;
+          for (int j = 0; j < argument_descriptors->length; j++) {
+            command_line_argument_descriptor_t* cl_arg = value_array_get(argument_descriptors, j).ptr;
+            if (string_equal(cl_arg->long_name, key)) {
+              found = true;
+              break;
+            }
+          }
+          if (!found) {
+            log_fatal("Unrecognized flag: %s\n", arg);
+            fatal_error(ERROR_BAD_COMMAND_LINE);
+          }
         }
 
         flags = string_ht_insert(flags, key, str_to_value(value));

@@ -542,21 +542,29 @@ __attribute__((warn_unused_result)) extern string_tree_t*
 #ifndef _COMMAND_LINE_PARSER_H_
 #define _COMMAND_LINE_PARSER_H_
 
-typedef enum {
-  command_line_argument_type_string,
-  command_line_argument_type_boolean,
-  command_line_argument_type_unsigned,
-  command_line_argument_type_signed,
-  command_line_argument_type_double,
-} command_line_argument_type_t;
-
-struct command_line_argument_descriptor_S {
-  char* long_name;
-  command_line_argument_type_t arg_type;
+struct command_line_command_descriptor_S {
+  char* name;
   char* help_string;
 };
 
-typedef struct command_line_argument_descriptor_S command_line_argument_descriptor_t;
+typedef struct command_line_command_descriptor_S command_line_command_descriptor_t;
+
+typedef enum {
+  command_line_flag_type_string,
+  command_line_flag_type_boolean,
+  command_line_flag_type_unsigned,
+  command_line_flag_type_signed,
+  command_line_flag_type_double,
+} command_line_flag_type_t;
+
+struct command_line_flag_descriptor_S {
+  char* long_name;
+  command_line_flag_type_t arg_type;
+  char* help_string;
+};
+
+typedef struct command_line_flag_descriptor_S
+    command_line_flag_descriptor_t;
 
 struct command_line_parse_result_S {
   char* program;
@@ -567,11 +575,17 @@ struct command_line_parse_result_S {
 
 typedef struct command_line_parse_result_S command_line_parse_result_t;
 
-extern command_line_argument_descriptor_t* make_command_line_argument_descriptor(char* long_name, command_line_argument_type_t arg_type, char* help_string);
+extern command_line_command_descriptor_t* make_command_line_command_descriptor(
+                                                                               char* name, char* help_string);
+
+extern command_line_flag_descriptor_t*
+    make_command_line_flag_descriptor(char* long_name,
+                                      command_line_flag_type_t arg_type,
+                                      char* help_string);
 
 extern command_line_parse_result_t parse_command_line(int argc, char** argv,
-                                                      boolean_t has_command,
-                                                      value_array_t* arguments);
+                                                      value_array_t* command_descriptors,
+                                                      value_array_t* flag_descriptors);
 
 #endif /* _COMMAND_LINE_PARSER_H_ */
 // SSCF generated file from: io.c
@@ -935,21 +949,29 @@ __attribute__((warn_unused_result)) extern buffer_t*
 #ifndef _COMMAND_LINE_PARSER_H_
 #define _COMMAND_LINE_PARSER_H_
 
-typedef enum {
-  command_line_argument_type_string,
-  command_line_argument_type_boolean,
-  command_line_argument_type_unsigned,
-  command_line_argument_type_signed,
-  command_line_argument_type_double,
-} command_line_argument_type_t;
-
-struct command_line_argument_descriptor_S {
-  char* long_name;
-  command_line_argument_type_t arg_type;
+struct command_line_command_descriptor_S {
+  char* name;
   char* help_string;
 };
 
-typedef struct command_line_argument_descriptor_S command_line_argument_descriptor_t;
+typedef struct command_line_command_descriptor_S command_line_command_descriptor_t;
+
+typedef enum {
+  command_line_flag_type_string,
+  command_line_flag_type_boolean,
+  command_line_flag_type_unsigned,
+  command_line_flag_type_signed,
+  command_line_flag_type_double,
+} command_line_flag_type_t;
+
+struct command_line_flag_descriptor_S {
+  char* long_name;
+  command_line_flag_type_t arg_type;
+  char* help_string;
+};
+
+typedef struct command_line_flag_descriptor_S
+    command_line_flag_descriptor_t;
 
 struct command_line_parse_result_S {
   char* program;
@@ -960,20 +982,41 @@ struct command_line_parse_result_S {
 
 typedef struct command_line_parse_result_S command_line_parse_result_t;
 
-extern command_line_argument_descriptor_t* make_command_line_argument_descriptor(char* long_name, command_line_argument_type_t arg_type, char* help_string);
+extern command_line_command_descriptor_t* make_command_line_command_descriptor(
+                                                                               char* name, char* help_string);
+
+extern command_line_flag_descriptor_t*
+    make_command_line_flag_descriptor(char* long_name,
+                                      command_line_flag_type_t arg_type,
+                                      char* help_string);
 
 extern command_line_parse_result_t parse_command_line(int argc, char** argv,
-                                                      boolean_t has_command,
-                                                      value_array_t* arguments);
+                                                      value_array_t* command_descriptors,
+                                                      value_array_t* flag_descriptors);
 
 #endif /* _COMMAND_LINE_PARSER_H_ */
 
 /**
- * Allocate a command_line_argument_descriptor_t and fill in it's most
+ * Allocate a command_line_command_descriptor_t and fill in it's most
  * common fields.
  */
-command_line_argument_descriptor_t* make_command_line_argument_descriptor(char* long_name, command_line_argument_type_t arg_type, char* help_string) {
-  command_line_argument_descriptor_t* result = malloc_struct(command_line_argument_descriptor_t);
+command_line_command_descriptor_t* make_command_line_command_descriptor(
+    char* name, char* help_string) {
+  command_line_command_descriptor_t* result
+      = malloc_struct(command_line_command_descriptor_t);
+  result->name = name;
+  result->help_string = help_string;
+  return result;
+}
+
+/**
+ * Allocate a command_line_flag_descriptor_t and fill in it's most
+ * common fields.
+ */
+command_line_flag_descriptor_t* make_command_line_flag_descriptor(
+    char* long_name, command_line_flag_type_t arg_type, char* help_string) {
+  command_line_flag_descriptor_t* result
+      = malloc_struct(command_line_flag_descriptor_t);
   result->long_name = long_name;
   result->arg_type = arg_type;
   result->help_string = help_string;
@@ -990,14 +1033,15 @@ command_line_argument_descriptor_t* make_command_line_argument_descriptor(char* 
  * The map: "count" -> "10", "type" -> "bar", "no-arg" -> ""
  * The array: "file1.c" "file2.c"
  */
-command_line_parse_result_t parse_command_line(int argc, char** argv,
-                                               boolean_t has_command,
-                                               value_array_t* argument_descriptors) {
+command_line_parse_result_t
+    parse_command_line(int argc, char** argv, 
+                       value_array_t* command_descriptors,
+                       value_array_t* flag_descriptors) {
   value_array_t* files = make_value_array(argc);
   string_hashtable_t* flags = make_string_hashtable(32);
 
   boolean_t parse_flags = true;
-  for (int i = (has_command ? 2 : 1); i < argc; i++) {
+  for (int i = (command_descriptors != NULL ? 2 : 1); i < argc; i++) {
     char* arg = argv[i];
 
     if (parse_flags) {
@@ -1017,11 +1061,12 @@ command_line_parse_result_t parse_command_line(int argc, char** argv,
           key = string_substring(arg, 2, strlen(arg));
         }
 
-        if (argument_descriptors != NULL) {
+        if (flag_descriptors != NULL) {
           boolean_t found = false;
-          for (int j = 0; j < argument_descriptors->length; j++) {
-            command_line_argument_descriptor_t* cl_arg = value_array_get(argument_descriptors, j).ptr;
-            if (string_equal(cl_arg->long_name, key)) {
+          for (int j = 0; j < flag_descriptors->length; j++) {
+            command_line_flag_descriptor_t* cl_flag
+                = value_array_get(flag_descriptors, j).ptr;
+            if (string_equal(cl_flag->long_name, key)) {
               found = true;
               break;
             }
@@ -1040,11 +1085,31 @@ command_line_parse_result_t parse_command_line(int argc, char** argv,
 
     value_array_add(files, str_to_value(arg));
   }
+  
+  char* command = NULL;
+  if (command_descriptors != NULL) {
+    if (argc < 2) {
+      fatal_error(ERROR_BAD_COMMAND_LINE);
+    }
 
-  char* command = has_command && argc >= 2 ? argv[1] : NULL;
-  if (command && string_starts_with(command, "-")) {
-    fprintf(stdout, "Flags should not appear before a command.");
-    fatal_error(ERROR_BAD_COMMAND_LINE);
+    command = argv[1];
+
+    if (command && string_starts_with(command, "-")) {
+      fprintf(stdout, "Flags should not appear before a command.");
+      fatal_error(ERROR_BAD_COMMAND_LINE);
+    }
+
+    boolean_t found_command = false;
+    for (int i = 0; i < command_descriptors->length; i++) {
+      command_line_command_descriptor_t* command_descriptor = value_array_get(command_descriptors, i).ptr;
+      if (string_equal(command, command_descriptor->name)) {
+        found_command = true;
+        break;
+      }
+    }
+    if (!found_command) {
+      fatal_error(ERROR_BAD_COMMAND_LINE);
+    }
   }
 
   return (command_line_parse_result_t){

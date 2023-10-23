@@ -7,18 +7,26 @@
 #define C_ARMYKNIFE_LIB_IMPL
 #include "../c-armyknife-lib.h"
 
-value_array_t* get_command_line_description() {
+value_array_t* get_command_line_command_descriptors() {
+  value_array_t* result = make_value_array(1);
+  value_array_add(result, ptr_to_value(make_command_line_command_descriptor(
+                              "a-command", "")));
+  return result;
+}
+
+value_array_t* get_command_line_flag_descriptors() {
   value_array_t* result = make_value_array(2);
-  value_array_add(result, ptr_to_value(make_command_line_argument_descriptor(
-                              "foo", command_line_argument_type_string, "")));
-  value_array_add(result, ptr_to_value(make_command_line_argument_descriptor(
-                              "bar", command_line_argument_type_string, "")));
+  value_array_add(result, ptr_to_value(make_command_line_flag_descriptor(
+                              "foo", command_line_flag_type_string, "")));
+  value_array_add(result, ptr_to_value(make_command_line_flag_descriptor(
+                              "bar", command_line_flag_type_string, "")));
   return result;
 }
 
 int main(int argc, char** argv) {
   command_line_parse_result_t args_and_files
-      = parse_command_line(argc, argv, true, get_command_line_description());
+      = parse_command_line(argc, argv, get_command_line_command_descriptors(),
+                           get_command_line_flag_descriptors());
 
   fprintf(stdout, "command is %s\n", args_and_files.command);
 

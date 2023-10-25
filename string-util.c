@@ -29,6 +29,8 @@ extern value_result_t string_parse_uint64(const char* string);
 extern char* string_duplicate(const char* src);
 extern char* string_append(const char* a, const char* b);
 extern char* string_left_pad(const char* a, int count, char ch);
+__attribute__((format(printf, 1, 2))) extern char* string_printf(char* format,
+                                                                 ...);
 
 #endif /* _STRING_UTIL_H_ */
 
@@ -228,6 +230,44 @@ char* string_left_pad(const char* str, int n, char ch) {
   }
   result[n] = '\0';
   return result;
+}
+
+// Allows tests to make the temporary buffer small to more easily test
+// the case where vsnprintf is called twice because the first time it
+// was called we didn't have a large enough buffer.
+#ifndef STRING_PRINTF_INITIAL_BUFFER_SIZE
+#define STRING_PRINTF_INITIAL_BUFFER_SIZE 1024
+#endif /* STRING_PRINTF_INITIAL_BUFFER_SIZE */
+
+/**
+ * Perform printf to a buffer and return the result as a dynamically
+ * allocated string.
+ */
+__attribute__((format(printf, 1, 2))) char* string_printf(char* format, ...) {
+  char buffer[STRING_PRINTF_INITIAL_BUFFER_SIZE];
+  int n_bytes = 0;
+  do {
+    va_list args;
+    va_start(args, format);
+    n_bytes = vsnprintf(buffer, sizeof(buffer), format, args);
+    va_end(args);
+  } while (0);
+
+  if (n_bytes < sizeof(buffer)) {
+    char* result = (char*) malloc_bytes(n_bytes + 1);
+    strcat(result, buffer);
+    return result;
+  } else {
+    char* result = (char*) malloc_bytes(n_bytes + 1);
+    va_list args;
+    va_start(args, format);
+    int n_bytes_second = vsnprintf(result, n_bytes + 1, format, args);
+    va_end(args);
+    if (n_bytes_second != n_bytes) {
+      fatal_error(ERROR_INTERNAL_ASSERTION_FAILURE);
+    }
+    return result;
+  }
 }
 
 /* ================================================================ */

@@ -31,7 +31,8 @@ typedef enum {
   ERROR_REFERENCE_NOT_EXPECTED_TYPE,
   ERROR_UNIMPLEMENTED,
   ERROR_OPEN_LOG_FILE,
-  ERROR_TEST
+  ERROR_TEST,
+  ERROR_INTERNAL_ASSERTION_FAILURE,
 } error_code_t;
 
 extern _Noreturn void fatal_error_impl(char* file, int line, int error_code);
@@ -244,6 +245,8 @@ extern value_result_t string_parse_uint64(const char* string);
 extern char* string_duplicate(const char* src);
 extern char* string_append(const char* a, const char* b);
 extern char* string_left_pad(const char* a, int count, char ch);
+__attribute__((format(printf, 1, 2)))
+extern char* string_printf(char* format, ...);
 
 #endif /* _STRING_UTIL_H_ */
 // SSCF generated file from: logger.c
@@ -573,7 +576,8 @@ struct command_line_parser_configuation_S {
   value_array_t* flag_descriptors;
 };
 
-typedef struct command_line_parser_configuation_S command_line_parser_configuation_t;
+typedef struct command_line_parser_configuation_S
+    command_line_parser_configuation_t;
 
 struct command_line_parse_result_S {
   char* program;
@@ -591,7 +595,8 @@ extern command_line_flag_descriptor_t* make_command_line_flag_descriptor(
     char* long_name, command_line_flag_type_t arg_type, char* help_string);
 
 extern command_line_parse_result_t
-    parse_command_line(int argc, char** argv, command_line_parser_configuation_t* config);
+    parse_command_line(int argc, char** argv,
+                       command_line_parser_configuation_t* config);
 
 #endif /* _COMMAND_LINE_PARSER_H_ */
 // SSCF generated file from: io.c
@@ -986,7 +991,8 @@ struct command_line_parser_configuation_S {
   value_array_t* flag_descriptors;
 };
 
-typedef struct command_line_parser_configuation_S command_line_parser_configuation_t;
+typedef struct command_line_parser_configuation_S
+    command_line_parser_configuation_t;
 
 struct command_line_parse_result_S {
   char* program;
@@ -1004,7 +1010,8 @@ extern command_line_flag_descriptor_t* make_command_line_flag_descriptor(
     char* long_name, command_line_flag_type_t arg_type, char* help_string);
 
 extern command_line_parse_result_t
-    parse_command_line(int argc, char** argv, command_line_parser_configuation_t* config);
+    parse_command_line(int argc, char** argv,
+                       command_line_parser_configuation_t* config);
 
 #endif /* _COMMAND_LINE_PARSER_H_ */
 
@@ -1035,13 +1042,14 @@ command_line_flag_descriptor_t* make_command_line_flag_descriptor(
   return result;
 }
 
-_Noreturn
-void show_usage(command_line_parser_configuation_t* config, char* message) {
+_Noreturn void show_usage(command_line_parser_configuation_t* config,
+                          char* message) {
   if (message) {
     fprintf(stdout, "%s\n\n", message);
   }
   if (config->command_descriptors) {
-    fprintf(stdout, "Usage: %s <command> <flags*> <files*>\n", config->program_name);
+    fprintf(stdout, "Usage: %s <command> <flags*> <files*>\n",
+            config->program_name);
   } else {
     fprintf(stdout, "Usage: %s <flags*> <files*>\n", config->program_name);
   }
@@ -1053,14 +1061,17 @@ void show_usage(command_line_parser_configuation_t* config, char* message) {
     for (int i = 0; i < config->command_descriptors->length; i++) {
       command_line_command_descriptor_t* command_descriptor
           = value_array_get(config->command_descriptors, i).ptr;
-      fprintf(stdout, "    %s [[%s]]\n", command_descriptor->name, command_descriptor->help_string);
+      fprintf(stdout, "    %s [[%s]]\n", command_descriptor->name,
+              command_descriptor->help_string);
     }
   }
   if (config->flag_descriptors) {
     fprintf(stdout, "\nFlags:\n");
     for (int i = 0; i < config->flag_descriptors->length; i++) {
-      command_line_flag_descriptor_t* flag = value_array_get(config->flag_descriptors, i).ptr;
-      fprintf(stdout, "    --%s=<flag-value> (%s)\n", flag->long_name, flag->help_string);
+      command_line_flag_descriptor_t* flag
+          = value_array_get(config->flag_descriptors, i).ptr;
+      fprintf(stdout, "    --%s=<flag-value> (%s)\n", flag->long_name,
+              flag->help_string);
     }
   }
   fatal_error(ERROR_BAD_COMMAND_LINE);
@@ -1077,7 +1088,8 @@ void show_usage(command_line_parser_configuation_t* config, char* message) {
  * The array: "file1.c" "file2.c"
  */
 command_line_parse_result_t
-    parse_command_line(int argc, char** argv, command_line_parser_configuation_t* config) {
+    parse_command_line(int argc, char** argv,
+                       command_line_parser_configuation_t* config) {
 
   value_array_t* command_descriptors = config->command_descriptors;
   value_array_t* flag_descriptors = config->flag_descriptors;
@@ -1202,7 +1214,8 @@ typedef enum {
   ERROR_REFERENCE_NOT_EXPECTED_TYPE,
   ERROR_UNIMPLEMENTED,
   ERROR_OPEN_LOG_FILE,
-  ERROR_TEST
+  ERROR_TEST,
+  ERROR_INTERNAL_ASSERTION_FAILURE,
 } error_code_t;
 
 extern _Noreturn void fatal_error_impl(char* file, int line, int error_code);
@@ -2112,6 +2125,8 @@ extern value_result_t string_parse_uint64(const char* string);
 extern char* string_duplicate(const char* src);
 extern char* string_append(const char* a, const char* b);
 extern char* string_left_pad(const char* a, int count, char ch);
+__attribute__((format(printf, 1, 2)))
+extern char* string_printf(char* format, ...);
 
 #endif /* _STRING_UTIL_H_ */
 
@@ -2311,6 +2326,45 @@ char* string_left_pad(const char* str, int n, char ch) {
   }
   result[n] = '\0';
   return result;
+}
+
+// Allows tests to make the temporary buffer small to more easily test
+// the case where vsnprintf is called twice because the first time it
+// was called we didn't have a large enough buffer.
+#ifndef STRING_PRINTF_INITIAL_BUFFER_SIZE
+#define STRING_PRINTF_INITIAL_BUFFER_SIZE 1024
+#endif /* STRING_PRINTF_INITIAL_BUFFER_SIZE */
+
+/**
+ * Perform printf to a buffer and return the result as a dynamically
+ * allocated string.
+ */
+__attribute__((format(printf, 1, 2)))
+char* string_printf(char* format, ...) {
+  char buffer[STRING_PRINTF_INITIAL_BUFFER_SIZE];
+  int n_bytes = 0;
+  do {
+    va_list args;
+    va_start(args, format);
+    n_bytes = vsnprintf(buffer, sizeof(buffer), format, args);
+    va_end(args);
+  } while (0);
+
+  if (n_bytes < sizeof(buffer)) {
+    char* result = (char*) malloc_bytes(n_bytes + 1);
+    strcat(result, buffer);
+    return result;
+  } else {
+    char* result = (char*) malloc_bytes(n_bytes + 1);
+    va_list args;
+    va_start(args, format);
+    int n_bytes_second = vsnprintf(result, n_bytes + 1, format, args);
+    va_end(args);
+    if (n_bytes_second != n_bytes) {
+      fatal_error(ERROR_INTERNAL_ASSERTION_FAILURE);
+    }
+    return result;
+  }
 }
 
 /* ================================================================ */

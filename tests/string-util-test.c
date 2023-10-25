@@ -5,6 +5,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+// Tell the library to use a smaller initial buffer size so that it is
+// easier to test with small inputs.
+#define STRING_PRINTF_INITIAL_BUFFER_SIZE 8
+
 #define C_ARMYKNIFE_LIB_IMPL
 #include "../c-armyknife-lib.h"
 
@@ -104,6 +108,14 @@ int main(int argc, char** argv) {
 
   if (!string_equal("abcdefg", string_left_pad("abcdefg", 6, ' '))) {
     ARMYKNIFE_TEST_FAIL("string_left_pad");
+  }
+
+  if (!string_equal("Hello!", string_printf("%s!", "Hello"))) {
+    ARMYKNIFE_TEST_FAIL("string_printf");
+  }
+
+  if (!string_equal("Hello World!", string_printf("%s!", "Hello World"))) {
+    ARMYKNIFE_TEST_FAIL("string_printf");
   }
 
   exit(0);

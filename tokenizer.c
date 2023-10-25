@@ -20,11 +20,14 @@ extern value_array_t* tokenize(const char* str, const char* delimiters);
 void add_duplicate(value_array_t* token_array, const char* data);
 
 /**
+ * @function tokenize
+ *
  * Tokenize a string.
  *
- * Delimiters terminate the current token and are thrown away.
+ * Delimiters terminate the current token and are thrown away. The
+ * delimiters string is treated as a sequence of delimiter characters,
+ * it does not mean a delimiter can be multiple characters.
  */
-
 value_array_t* tokenize(const char* str, const char* delimiters) {
   value_array_t* result = make_value_array(1);
   char token_data[1024];
@@ -49,9 +52,7 @@ value_array_t* tokenize(const char* str, const char* delimiters) {
   return result;
 }
 
-/**
- * Add a *copy* of the string named data to the token list.
- */
+// Add a *copy* of the string named data to the token list.
 void add_duplicate(value_array_t* token_array, const char* data) {
   value_array_add(token_array, str_to_value(string_duplicate(data)));
 }

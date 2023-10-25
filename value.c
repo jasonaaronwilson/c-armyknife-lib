@@ -114,10 +114,22 @@ typedef struct {
 #define ptr_to_value(x) ((value_t){.ptr = x})
 #define dbl_to_value(x) ((value_t){.dbl = x})
 
+/**
+ * @function is_ok
+ *
+ * Return true if the given value_result_t contains a legal value
+ * instead of an error condition.
+ */
 static inline boolean_t is_ok(value_result_t value) {
   return value.nf_error == NF_OK;
 }
 
+/**
+ * @function is_not_ok
+ *
+ * Return true if the given value_result_t contains an error, such as
+ * NF_ERROR_NOT_FOUND.
+ */
 static inline boolean_t is_not_ok(value_result_t value) {
   return value.nf_error != NF_OK;
 }

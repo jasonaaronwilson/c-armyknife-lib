@@ -41,10 +41,20 @@ __attribute__((format(printf, 1, 2))) extern char* string_printf(char* format,
 
 uint64_t fasthash64(const void* buf, size_t len, uint64_t seed);
 
+/**
+ * @function string_is_null_or_empty
+ *
+ * Return true if the given string is NULL or strlen is zero.
+ */
 int string_is_null_or_empty(const char* str) {
   return (str == NULL) || (strlen(str) == 0);
 }
 
+/**
+ * @function string_equal
+ *
+ * Return true if two strings are equal.
+ */
 int string_equal(const char* str1, const char* str2) {
   if (string_is_null_or_empty(str1)) {
     return string_is_null_or_empty(str2);
@@ -52,10 +62,20 @@ int string_equal(const char* str1, const char* str2) {
   return strcmp(str1, str2) == 0;
 }
 
+/**
+ * @function string_starts_with
+ *
+ * Return true if str1 starts with all of str2.
+ */
 int string_starts_with(const char* str1, const char* str2) {
   return strncmp(str1, str2, strlen(str2)) == 0;
 }
 
+/**
+ * @function string_ends_with
+ *
+ * Return true if str1 ends with all of str2.
+ */
 int string_ends_with(const char* str1, const char* str2) {
   size_t len1 = strlen(str1);
   size_t len2 = strlen(str2);
@@ -67,10 +87,18 @@ int string_ends_with(const char* str1, const char* str2) {
   return strcmp(str1 + (len1 - len2), str2) == 0;
 }
 
+/**
+ * @function string_contains_char
+ *
+ * Return true if str contains that given character ch.
+ */
 boolean_t string_contains_char(const char* str, char ch) {
   return string_index_of_char(str, ch) >= 0;
 }
 
+/**
+ * @function string_index_of_char
+ */
 int string_index_of_char(const char* str, char ch) {
   if (string_is_null_or_empty(str)) {
     return -1;
@@ -84,11 +112,21 @@ int string_index_of_char(const char* str, char ch) {
   return -1;
 }
 
-
+/**
+ * @function string_hash
+ *
+ * Return a fast but generally high-quality 64bit hash of an input
+ * string.
+ */
 uint64_t string_hash(const char* str) {
   return fasthash64(str, strlen(str), 0);
 }
 
+/**
+ * @function string_substring
+ *
+ * Return a substring of the given string as a newly allocated string.
+ */
 char* string_substring(const char* str, int start, int end) {
   // TODO(jawilson): check length of str...
   int result_size = end - start + 1;
@@ -164,6 +202,22 @@ value_result_t string_parse_uint64_bin(const char* string) {
       .nf_error = at_least_one_number ? NF_OK : NF_ERROR_NOT_PARSED_AS_NUMBER};
 }
 
+/**
+ * @function string_parse_uint64
+ *
+ * Parse a string as a uint64_t.
+ *
+ * If the string begins with "0x", the the number should be a well
+ * formed hexidecimal number (in all lower-case).
+ *
+ * If the string begins with "0b", the the number should be a well
+ * formed binary number.
+ *
+ * Ortherwise the number should be a well-formed decimal number.
+ *
+ * While currently overflow is not detected, that is likely to be
+ * detected in future versions of the library.
+ */
 value_result_t string_parse_uint64(const char* string) {
   if (string_starts_with(string, "0x")) {
     return string_parse_uint64_hex(string);
@@ -175,6 +229,8 @@ value_result_t string_parse_uint64(const char* string) {
 }
 
 /**
+ * @function string_duplicate
+ *
  * Just like strdup except NULL is a valid source argument and we use
  * malloc_bytes which checks the return result from malloc.
  */
@@ -190,6 +246,8 @@ char* string_duplicate(const char* src) {
 }
 
 /**
+ * @function string_append
+ *
  * Return a freshly allocated string that is the concatentation of the
  * two input strings (neither of which should be NULL);
  */
@@ -205,6 +263,8 @@ char* string_append(const char* a, const char* b) {
 }
 
 /**
+ * @function uint64_to_string
+ *
  * Convert a uint64_t number to a string.
  */
 char* uint64_to_string(uint64_t number) {
@@ -214,6 +274,8 @@ char* uint64_to_string(uint64_t number) {
 }
 
 /**
+ * @function string_left_pad
+ *
  * Prefix a string with left padding (if necessary) to make it at
  * least N bytes long.
  */
@@ -241,8 +303,11 @@ char* string_left_pad(const char* str, int n, char ch) {
 #endif /* STRING_PRINTF_INITIAL_BUFFER_SIZE */
 
 /**
+ * @function string_printf
+ *
  * Perform printf to a buffer and return the result as a dynamically
- * allocated string.
+ * allocated string. The string is automatically allocated to the
+ * appropriate size.
  */
 __attribute__((format(printf, 1, 2))) char* string_printf(char* format, ...) {
   char buffer[STRING_PRINTF_INITIAL_BUFFER_SIZE];

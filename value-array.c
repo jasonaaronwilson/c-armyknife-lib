@@ -1,7 +1,7 @@
 #line 2 "value-array.c"
 
 /**
- * @file ptr-array.c
+ * @file value-array.c
  *
  * This file contains a growable array of values/pointers.
  */
@@ -29,6 +29,8 @@ extern value_t value_array_delete_at(value_array_t* array, uint32_t position);
 #endif /* _VALUE_ARRAY_H_ */
 
 /**
+ * @function make_value_array
+ *
  * Make a value array with the given initial capacity (which must be >
  * 0). When the array runs out of capacity because of calls to add,
  * push, etc., then the backing array is automatically doubled in size
@@ -71,6 +73,8 @@ void value_array_ensure_capacity(value_array_t* array,
 }
 
 /**
+ * @function value_array_get
+ *
  * Get the value stored at index `index`. If the index is outside of
  * the range of valid elements, then a fatal_error is signaled.
  */
@@ -86,6 +90,8 @@ value_t value_array_get(value_array_t* array, uint32_t index) {
 }
 
 /**
+ * @function value_array_add
+ *
  * Add an element to the end of an array. If more space is required
  * then the backing array is automatically resized. This resizing
  * means that a fatal_error() may occur if malloc() can not satisfy the
@@ -97,6 +103,8 @@ void value_array_add(value_array_t* array, value_t element) {
 }
 
 /**
+ * @function value_array_push
+ *
  * This is a synonym for value_array_add which serves to make it more
  * obvious that the array is actually being used like a stack.
  */
@@ -105,6 +113,8 @@ void value_array_push(value_array_t* array, value_t element) {
 }
 
 /**
+ * @function value_array_pop
+ *
  * Returns the last element of the array (typically added via push).
  *
  * If the array is currently empty, then
@@ -121,6 +131,8 @@ value_t value_array_pop(value_array_t* array) {
 }
 
 /**
+ * @function value_array_insert_at
+ *
  * Insert an element into some existing position in the array (or at
  * the end if position == the current array length).
  *
@@ -160,6 +172,8 @@ void value_array_insert_at(value_array_t* array, uint32_t position,
 }
 
 /**
+ * @function value_array_delete_at
+ *
  * Deletes the element at the given position (and return it so that it
  * can potentially be freed by the caller).
  *

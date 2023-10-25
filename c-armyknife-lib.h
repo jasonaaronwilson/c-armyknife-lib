@@ -189,10 +189,22 @@ typedef struct {
 #define ptr_to_value(x) ((value_t){.ptr = x})
 #define dbl_to_value(x) ((value_t){.dbl = x})
 
+/**
+ * @function is_ok
+ *
+ * Return true if the given value_result_t contains a legal value
+ * instead of an error condition.
+ */
 static inline boolean_t is_ok(value_result_t value) {
   return value.nf_error == NF_OK;
 }
 
+/**
+ * @function is_not_ok
+ *
+ * Return true if the given value_result_t contains an error, such as
+ * NF_ERROR_NOT_FOUND.
+ */
 static inline boolean_t is_not_ok(value_result_t value) {
   return value.nf_error != NF_OK;
 }
@@ -325,7 +337,8 @@ typedef struct logger_state_S logger_state_t;
 #define LOGGER_DEFAULT_LEVEL LOGGER_WARN
 #endif /* LOGGER_DEFAULT_LEVEL */
 
-logger_state_t global_logger_state = (logger_state_t){.level = LOGGER_DEFAULT_LEVEL};
+logger_state_t global_logger_state
+    = (logger_state_t){.level = LOGGER_DEFAULT_LEVEL};
 
 extern void logger_init(void);
 
@@ -416,7 +429,7 @@ __attribute__((format(printf, 4, 5))) extern void
 #endif /* _LOGGER_H_ */
 // SSCF generated file from: buffer.c
 
-#line 10 "buffer.c"
+#line 13 "buffer.c"
 #ifndef _BUFFER_H_
 #define _BUFFER_H_
 
@@ -588,12 +601,12 @@ __attribute__((warn_unused_result)) extern string_tree_t*
  * value_var is created in a new block scope with type value_t and you
  * will probably want to use something like ".ptr" or ".u64" on the
  * value to obtain the actual value.
- * 
+ *
  * statements should be a normal C block, aka, something like:
  * ```
  * {
  *   statement1();
- *   statement2(); 
+ *   statement2();
  * }
  * ```
  */
@@ -973,7 +986,7 @@ __attribute__((warn_unused_result)) extern buffer_t*
 /**
  * @function make_buffer
  *
- * Make an empty byte array with the given initial capacity. 
+ * Make an empty byte array with the given initial capacity.
  */
 buffer_t* make_buffer(uint32_t initial_capacity) {
 
@@ -1013,7 +1026,7 @@ uint8_t buffer_get(buffer_t* buffer, uint64_t position) {
 
 /**
  * @function buffer_c_substring
- * 
+ *
  * Extract a newly allocated string that contain the bytes from start
  * to end (appending a zero byte to make sure it's a legal C string).
  */
@@ -1632,7 +1645,8 @@ typedef struct logger_state_S logger_state_t;
 #define LOGGER_DEFAULT_LEVEL LOGGER_WARN
 #endif /* LOGGER_DEFAULT_LEVEL */
 
-logger_state_t global_logger_state = (logger_state_t){.level = LOGGER_DEFAULT_LEVEL};
+logger_state_t global_logger_state
+    = (logger_state_t){.level = LOGGER_DEFAULT_LEVEL};
 
 extern void logger_init(void);
 
@@ -2124,12 +2138,12 @@ __attribute__((warn_unused_result)) extern string_tree_t*
  * value_var is created in a new block scope with type value_t and you
  * will probably want to use something like ".ptr" or ".u64" on the
  * value to obtain the actual value.
- * 
+ *
  * statements should be a normal C block, aka, something like:
  * ```
  * {
  *   statement1();
- *   statement2(); 
+ *   statement2();
  * }
  * ```
  */
@@ -2381,10 +2395,20 @@ __attribute__((format(printf, 1, 2))) extern char* string_printf(char* format,
 
 uint64_t fasthash64(const void* buf, size_t len, uint64_t seed);
 
+/**
+ * @function string_is_null_or_empty
+ *
+ * Return true if the given string is NULL or strlen is zero.
+ */
 int string_is_null_or_empty(const char* str) {
   return (str == NULL) || (strlen(str) == 0);
 }
 
+/**
+ * @function string_equal
+ *
+ * Return true if two strings are equal.
+ */
 int string_equal(const char* str1, const char* str2) {
   if (string_is_null_or_empty(str1)) {
     return string_is_null_or_empty(str2);
@@ -2392,10 +2416,20 @@ int string_equal(const char* str1, const char* str2) {
   return strcmp(str1, str2) == 0;
 }
 
+/**
+ * @function string_starts_with
+ *
+ * Return true if str1 starts with all of str2.
+ */
 int string_starts_with(const char* str1, const char* str2) {
   return strncmp(str1, str2, strlen(str2)) == 0;
 }
 
+/**
+ * @function string_ends_with
+ *
+ * Return true if str1 ends with all of str2.
+ */
 int string_ends_with(const char* str1, const char* str2) {
   size_t len1 = strlen(str1);
   size_t len2 = strlen(str2);
@@ -2407,10 +2441,18 @@ int string_ends_with(const char* str1, const char* str2) {
   return strcmp(str1 + (len1 - len2), str2) == 0;
 }
 
+/**
+ * @function string_contains_char
+ *
+ * Return true if str contains that given character ch.
+ */
 boolean_t string_contains_char(const char* str, char ch) {
   return string_index_of_char(str, ch) >= 0;
 }
 
+/**
+ * @function string_index_of_char
+ */
 int string_index_of_char(const char* str, char ch) {
   if (string_is_null_or_empty(str)) {
     return -1;
@@ -2424,11 +2466,21 @@ int string_index_of_char(const char* str, char ch) {
   return -1;
 }
 
-
+/**
+ * @function string_hash
+ *
+ * Return a fast but generally high-quality 64bit hash of an input
+ * string.
+ */
 uint64_t string_hash(const char* str) {
   return fasthash64(str, strlen(str), 0);
 }
 
+/**
+ * @function string_substring
+ *
+ * Return a substring of the given string as a newly allocated string.
+ */
 char* string_substring(const char* str, int start, int end) {
   // TODO(jawilson): check length of str...
   int result_size = end - start + 1;
@@ -2504,6 +2556,22 @@ value_result_t string_parse_uint64_bin(const char* string) {
       .nf_error = at_least_one_number ? NF_OK : NF_ERROR_NOT_PARSED_AS_NUMBER};
 }
 
+/**
+ * @function string_parse_uint64
+ *
+ * Parse a string as a uint64_t.
+ *
+ * If the string begins with "0x", the the number should be a well
+ * formed hexidecimal number (in all lower-case).
+ *
+ * If the string begins with "0b", the the number should be a well
+ * formed binary number.
+ *
+ * Ortherwise the number should be a well-formed decimal number.
+ *
+ * While currently overflow is not detected, that is likely to be
+ * detected in future versions of the library.
+ */
 value_result_t string_parse_uint64(const char* string) {
   if (string_starts_with(string, "0x")) {
     return string_parse_uint64_hex(string);
@@ -2515,6 +2583,8 @@ value_result_t string_parse_uint64(const char* string) {
 }
 
 /**
+ * @function string_duplicate
+ *
  * Just like strdup except NULL is a valid source argument and we use
  * malloc_bytes which checks the return result from malloc.
  */
@@ -2530,6 +2600,8 @@ char* string_duplicate(const char* src) {
 }
 
 /**
+ * @function string_append
+ *
  * Return a freshly allocated string that is the concatentation of the
  * two input strings (neither of which should be NULL);
  */
@@ -2545,6 +2617,8 @@ char* string_append(const char* a, const char* b) {
 }
 
 /**
+ * @function uint64_to_string
+ *
  * Convert a uint64_t number to a string.
  */
 char* uint64_to_string(uint64_t number) {
@@ -2554,6 +2628,8 @@ char* uint64_to_string(uint64_t number) {
 }
 
 /**
+ * @function string_left_pad
+ *
  * Prefix a string with left padding (if necessary) to make it at
  * least N bytes long.
  */
@@ -2581,8 +2657,11 @@ char* string_left_pad(const char* str, int n, char ch) {
 #endif /* STRING_PRINTF_INITIAL_BUFFER_SIZE */
 
 /**
+ * @function string_printf
+ *
  * Perform printf to a buffer and return the result as a dynamically
- * allocated string.
+ * allocated string. The string is automatically allocated to the
+ * appropriate size.
  */
 __attribute__((format(printf, 1, 2))) char* string_printf(char* format, ...) {
   char buffer[STRING_PRINTF_INITIAL_BUFFER_SIZE];
@@ -2737,11 +2816,14 @@ extern value_array_t* tokenize(const char* str, const char* delimiters);
 void add_duplicate(value_array_t* token_array, const char* data);
 
 /**
+ * @function tokenize
+ *
  * Tokenize a string.
  *
- * Delimiters terminate the current token and are thrown away.
+ * Delimiters terminate the current token and are thrown away. The
+ * delimiters string is treated as a sequence of delimiter characters,
+ * it does not mean a delimiter can be multiple characters.
  */
-
 value_array_t* tokenize(const char* str, const char* delimiters) {
   value_array_t* result = make_value_array(1);
   char token_data[1024];
@@ -2766,9 +2848,7 @@ value_array_t* tokenize(const char* str, const char* delimiters) {
   return result;
 }
 
-/**
- * Add a *copy* of the string named data to the token list.
- */
+// Add a *copy* of the string named data to the token list.
 void add_duplicate(value_array_t* token_array, const char* data) {
   value_array_add(token_array, str_to_value(string_duplicate(data)));
 }
@@ -2905,10 +2985,22 @@ typedef struct {
 #define ptr_to_value(x) ((value_t){.ptr = x})
 #define dbl_to_value(x) ((value_t){.dbl = x})
 
+/**
+ * @function is_ok
+ *
+ * Return true if the given value_result_t contains a legal value
+ * instead of an error condition.
+ */
 static inline boolean_t is_ok(value_result_t value) {
   return value.nf_error == NF_OK;
 }
 
+/**
+ * @function is_not_ok
+ *
+ * Return true if the given value_result_t contains an error, such as
+ * NF_ERROR_NOT_FOUND.
+ */
 static inline boolean_t is_not_ok(value_result_t value) {
   return value.nf_error != NF_OK;
 }
@@ -2917,7 +3009,7 @@ static inline boolean_t is_not_ok(value_result_t value) {
 #line 2 "value-array.c"
 
 /**
- * @file ptr-array.c
+ * @file value-array.c
  *
  * This file contains a growable array of values/pointers.
  */
@@ -2945,6 +3037,8 @@ extern value_t value_array_delete_at(value_array_t* array, uint32_t position);
 #endif /* _VALUE_ARRAY_H_ */
 
 /**
+ * @function make_value_array
+ *
  * Make a value array with the given initial capacity (which must be >
  * 0). When the array runs out of capacity because of calls to add,
  * push, etc., then the backing array is automatically doubled in size
@@ -2987,6 +3081,8 @@ void value_array_ensure_capacity(value_array_t* array,
 }
 
 /**
+ * @function value_array_get
+ *
  * Get the value stored at index `index`. If the index is outside of
  * the range of valid elements, then a fatal_error is signaled.
  */
@@ -3002,6 +3098,8 @@ value_t value_array_get(value_array_t* array, uint32_t index) {
 }
 
 /**
+ * @function value_array_add
+ *
  * Add an element to the end of an array. If more space is required
  * then the backing array is automatically resized. This resizing
  * means that a fatal_error() may occur if malloc() can not satisfy the
@@ -3013,6 +3111,8 @@ void value_array_add(value_array_t* array, value_t element) {
 }
 
 /**
+ * @function value_array_push
+ *
  * This is a synonym for value_array_add which serves to make it more
  * obvious that the array is actually being used like a stack.
  */
@@ -3021,6 +3121,8 @@ void value_array_push(value_array_t* array, value_t element) {
 }
 
 /**
+ * @function value_array_pop
+ *
  * Returns the last element of the array (typically added via push).
  *
  * If the array is currently empty, then
@@ -3037,6 +3139,8 @@ value_t value_array_pop(value_array_t* array) {
 }
 
 /**
+ * @function value_array_insert_at
+ *
  * Insert an element into some existing position in the array (or at
  * the end if position == the current array length).
  *
@@ -3076,6 +3180,8 @@ void value_array_insert_at(value_array_t* array, uint32_t position,
 }
 
 /**
+ * @function value_array_delete_at
+ *
  * Deletes the element at the given position (and return it so that it
  * can potentially be freed by the caller).
  *

@@ -81,7 +81,12 @@ struct logger_state_S {
 
 typedef struct logger_state_S logger_state_t;
 
-logger_state_t global_logger_state = (logger_state_t){.level = LOGGER_WARN};
+#ifndef LOGGER_DEFAULT_LEVEL
+#define LOGGER_DEFAULT_LEVEL LOGGER_WARN
+#endif /* LOGGER_DEFAULT_LEVEL */
+
+logger_state_t global_logger_state
+    = (logger_state_t){.level = LOGGER_DEFAULT_LEVEL};
 
 extern void logger_init(void);
 

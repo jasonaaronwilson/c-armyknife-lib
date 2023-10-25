@@ -16,6 +16,9 @@
 #ifndef _FATAL_ERROR_H_
 #define _FATAL_ERROR_H_
 
+/**
+ * @constants error_code_t
+ */
 typedef enum {
   ERROR_UKNOWN,
   ERROR_ACCESS_OUT_OF_BOUNDS,
@@ -38,6 +41,11 @@ typedef enum {
 extern _Noreturn void fatal_error_impl(char* file, int line, int error_code);
 extern const char* fatal_error_code_to_string(int error_code);
 
+/**
+ * @macro fatal_error
+ *
+ * Terminates the program with a fatal error.
+ */
 #define fatal_error(code) fatal_error_impl(__FILE__, __LINE__, code)
 
 #endif /* _FATAL_ERROR_H_ */
@@ -49,6 +57,15 @@ extern const char* fatal_error_code_to_string(int error_code);
 
 #include <stdbool.h>
 
+/**
+ * @type boolean_t
+ *
+ * This is a simple typedef for "bool" (or _Bool from C99) which is
+ * available from "stdbool.h" as bool and true and false constants are
+ * also defined. We use it for more consistency in primitive types
+ * (where only char* is commonly used in this library despite not
+ * following the typically naming convention).
+ */
 typedef bool boolean_t;
 
 // #define true ((boolean_t) 1)
@@ -202,7 +219,7 @@ static inline boolean_t is_not_ok(value_result_t value) {
 #endif /* _TRACE_H_ */
 // SSCF generated file from: allocate.c
 
-#line 13 "allocate.c"
+#line 14 "allocate.c"
 #ifndef _ALLOCATE_H_
 #define _ALLOCATE_H_
 
@@ -213,14 +230,45 @@ extern uint8_t* checked_malloc_copy_of(char* file, int line, uint8_t* source,
                                        uint64_t amount);
 extern void checked_free(char* file, int line, void* pointer);
 
+/**
+ * @macro malloc_bytes
+ *
+ * This is essentially the same as malloc but the memory is always
+ * zeroed before return it to the user. We use a macro here to call
+ * checked_malloc so that the file and line number can be passed.
+ */
 #define malloc_bytes(amount) (checked_malloc(__FILE__, __LINE__, amount))
+
+/**
+ * @macro free_bytes
+ *
+ * This is essentially the same as free.
+ */
 #define free_bytes(ptr) (checked_free(__FILE__, __LINE__, ptr))
 
+/**
+ * @macro malloc_struct
+ *
+ * This provides a convenient way to allocate a zero-filled space big
+ * enough to hold the given structure with sizeof automatically used
+ * and the result automatically casted to a pointer to the given type.
+ */
 #define malloc_struct(struct_name)                                             \
   ((struct_name*) (checked_malloc(__FILE__, __LINE__, sizeof(struct_name))))
 
+/**
+ * @macro malloc_copy_of
+ *
+ * This provides a convenient way to allocate a copy of a given
+ * "source". Generally you would only use it with a pointer to a
+ * structure though in theory it could be used on other things.
+ *
+ * See also: string_duplicate which automatically calls strlen, etc.
+ */
 #define malloc_copy_of(source, number_of_bytes)                                \
   (checked_malloc_copy_of(__FILE__, __LINE__, source, number_of_bytes))
+
+// TODO(jawilson): malloc_copy_of_struct
 
 #endif /* _ALLOCATE_H_ */
 // SSCF generated file from: string-util.c
@@ -245,8 +293,8 @@ extern value_result_t string_parse_uint64(const char* string);
 extern char* string_duplicate(const char* src);
 extern char* string_append(const char* a, const char* b);
 extern char* string_left_pad(const char* a, int count, char ch);
-__attribute__((format(printf, 1, 2)))
-extern char* string_printf(char* format, ...);
+__attribute__((format(printf, 1, 2))) extern char* string_printf(char* format,
+                                                                 ...);
 
 #endif /* _STRING_UTIL_H_ */
 // SSCF generated file from: logger.c
@@ -273,7 +321,11 @@ struct logger_state_S {
 
 typedef struct logger_state_S logger_state_t;
 
-logger_state_t global_logger_state = (logger_state_t){.level = LOGGER_WARN};
+#ifndef LOGGER_DEFAULT_LEVEL
+#define LOGGER_DEFAULT_LEVEL LOGGER_WARN
+#endif /* LOGGER_DEFAULT_LEVEL */
+
+logger_state_t global_logger_state = (logger_state_t){.level = LOGGER_DEFAULT_LEVEL};
 
 extern void logger_init(void);
 
@@ -448,6 +500,12 @@ __attribute__((warn_unused_result)) extern string_alist_t*
 __attribute__((warn_unused_result)) extern string_alist_t*
     alist_delete(string_alist_t* list, char* key);
 
+/**
+ * @macro string_alist_foreach
+ *
+ * Allows iteration over the keys and values in a string association
+ * list.
+ */
 #define string_alist_foreach(alist, key_var, value_var, statements)            \
   do {                                                                         \
     string_alist_t* head = alist;                                              \
@@ -498,7 +556,7 @@ extern value_result_t string_ht_find(string_hashtable_t* ht, char* key);
 #endif /* _STRING_HASHTABLE_H_ */
 // SSCF generated file from: string-tree.c
 
-#line 17 "string-tree.c"
+#line 19 "string-tree.c"
 #ifndef _STRING_TREE_H_
 #define _STRING_TREE_H_
 
@@ -520,6 +578,25 @@ __attribute__((warn_unused_result)) extern string_tree_t*
 __attribute__((warn_unused_result)) extern string_tree_t*
     string_tree_delete(string_tree_t* t, char* key);
 
+/**
+ * @macro string_tree_foreach
+ *
+ * Perform an inorder traversal of a string-tree.
+ *
+ * key_var is created in a new block scope with type char*.
+ *
+ * value_var is created in a new block scope with type value_t and you
+ * will probably want to use something like ".ptr" or ".u64" on the
+ * value to obtain the actual value.
+ * 
+ * statements should be a normal C block, aka, something like:
+ * ```
+ * {
+ *   statement1();
+ *   statement2(); 
+ * }
+ * ```
+ */
 #define string_tree_foreach(tree, key_var, value_var, statements)              \
   do {                                                                         \
     int stack_n_elements = 0;                                                  \
@@ -553,6 +630,9 @@ struct command_line_command_descriptor_S {
 typedef struct command_line_command_descriptor_S
     command_line_command_descriptor_t;
 
+/**
+ * @constants command_line_flag_type_t
+ */
 typedef enum {
   command_line_flag_type_string,
   command_line_flag_type_boolean,
@@ -658,7 +738,8 @@ extern uint64_t random_next(random_state_t* state);
  * @file allocate.c
  *
  * This file contains wrappers around malloc to make it more
- * convenient and possibly safer.
+ * convenient and possibly safer (for example, allocated memory is
+ * always zero'd).
  */
 
 // ======================================================================
@@ -675,14 +756,45 @@ extern uint8_t* checked_malloc_copy_of(char* file, int line, uint8_t* source,
                                        uint64_t amount);
 extern void checked_free(char* file, int line, void* pointer);
 
+/**
+ * @macro malloc_bytes
+ *
+ * This is essentially the same as malloc but the memory is always
+ * zeroed before return it to the user. We use a macro here to call
+ * checked_malloc so that the file and line number can be passed.
+ */
 #define malloc_bytes(amount) (checked_malloc(__FILE__, __LINE__, amount))
+
+/**
+ * @macro free_bytes
+ *
+ * This is essentially the same as free.
+ */
 #define free_bytes(ptr) (checked_free(__FILE__, __LINE__, ptr))
 
+/**
+ * @macro malloc_struct
+ *
+ * This provides a convenient way to allocate a zero-filled space big
+ * enough to hold the given structure with sizeof automatically used
+ * and the result automatically casted to a pointer to the given type.
+ */
 #define malloc_struct(struct_name)                                             \
   ((struct_name*) (checked_malloc(__FILE__, __LINE__, sizeof(struct_name))))
 
+/**
+ * @macro malloc_copy_of
+ *
+ * This provides a convenient way to allocate a copy of a given
+ * "source". Generally you would only use it with a pointer to a
+ * structure though in theory it could be used on other things.
+ *
+ * See also: string_duplicate which automatically calls strlen, etc.
+ */
 #define malloc_copy_of(source, number_of_bytes)                                \
   (checked_malloc_copy_of(__FILE__, __LINE__, source, number_of_bytes))
+
+// TODO(jawilson): malloc_copy_of_struct
 
 #endif /* _ALLOCATE_H_ */
 
@@ -699,7 +811,7 @@ uint64_t number_of_bytes_allocated = 0;
 uint64_t number_of_malloc_calls = 0;
 uint64_t number_of_free_calls = 0;
 
-static inline boolean_t should_log() {
+static inline boolean_t should_log_memory_allocation() {
   if (is_initialized) {
     return should_log_value;
   }
@@ -712,6 +824,8 @@ static inline boolean_t should_log() {
 }
 
 /**
+ * @function checked_malloc
+ *
  * Allocate amount bytes or cause a fatal error. The memory is also
  * zeroed.
  *
@@ -720,7 +834,7 @@ static inline boolean_t should_log() {
  * checked_malloc.
  */
 uint8_t* checked_malloc(char* file, int line, uint64_t amount) {
-  if (should_log()) {
+  if (should_log_memory_allocation()) {
     fprintf(stderr, "ALLOCATE %s:%d -- %lu\n", file, line, amount);
   }
 
@@ -737,6 +851,8 @@ uint8_t* checked_malloc(char* file, int line, uint64_t amount) {
 }
 
 /**
+ * @function checked_malloc_copy_of
+ *
  * Allocate amount bytes and initialize it with a copy of that many
  * bytes from source.
  */
@@ -748,6 +864,8 @@ uint8_t* checked_malloc_copy_of(char* file, int line, uint8_t* source,
 }
 
 /**
+ * @function checked_free
+ *
  * Allocate amount bytes or cause a fatal error. The memory is also
  * zeroed.
  *
@@ -756,7 +874,7 @@ uint8_t* checked_malloc_copy_of(char* file, int line, uint8_t* source,
  * checked_malloc.
  */
 void checked_free(char* file, int line, void* pointer) {
-  if (should_log()) {
+  if (should_log_memory_allocation()) {
     fprintf(stderr, "DEALLOCATE %s:%d -- %lu\n", file, line,
             (uint64_t) pointer);
   }
@@ -783,6 +901,15 @@ void checked_free(char* file, int line, void* pointer) {
 
 #include <stdbool.h>
 
+/**
+ * @type boolean_t
+ *
+ * This is a simple typedef for "bool" (or _Bool from C99) which is
+ * available from "stdbool.h" as bool and true and false constants are
+ * also defined. We use it for more consistency in primitive types
+ * (where only char* is commonly used in this library despite not
+ * following the typically naming convention).
+ */
 typedef bool boolean_t;
 
 // #define true ((boolean_t) 1)
@@ -792,6 +919,9 @@ typedef bool boolean_t;
 #line 2 "buffer.c"
 /**
  * @file buffer.c
+ *
+ * A growable array of bytes. These are useful for many purposes such
+ * as building large strings.
  */
 
 // ======================================================================
@@ -841,7 +971,9 @@ __attribute__((warn_unused_result)) extern buffer_t*
 #include <stdlib.h>
 
 /**
- * Make an empty byte array with the given initial capacity.
+ * @function make_buffer
+ *
+ * Make an empty byte array with the given initial capacity. 
  */
 buffer_t* make_buffer(uint32_t initial_capacity) {
 
@@ -856,11 +988,15 @@ buffer_t* make_buffer(uint32_t initial_capacity) {
 }
 
 /**
+ * @function buffer_length
+ *
  * Return the number of bytes that have been added to this byte array.
  */
 uint64_t buffer_length(buffer_t* array) { return array->length; }
 
 /**
+ * @function buffer_get
+ *
  * Get a single byte from a byte array.
  */
 uint8_t buffer_get(buffer_t* buffer, uint64_t position) {
@@ -876,6 +1012,8 @@ uint8_t buffer_get(buffer_t* buffer, uint64_t position) {
 }
 
 /**
+ * @function buffer_c_substring
+ * 
  * Extract a newly allocated string that contain the bytes from start
  * to end (appending a zero byte to make sure it's a legal C string).
  */
@@ -892,14 +1030,18 @@ char* buffer_c_substring(buffer_t* buffer, uint64_t start, uint64_t end) {
 }
 
 /**
+ * @function buffer_to_c_string
+ *
  * Extract a newly allocated string that contain all of the bytes in the byte
- * buffer as a NU * terminated C string.
+ * buffer as a NUL (zero byte) terminated C string.
  */
 char* buffer_to_c_string(buffer_t* buffer) {
   return buffer_c_substring(buffer, 0, buffer->length);
 }
 
 /**
+ * @function buffer_append_byte
+ *
  * Append a single byte to the byte array.
  */
 __attribute__((warn_unused_result)) buffer_t*
@@ -914,6 +1056,8 @@ __attribute__((warn_unused_result)) buffer_t*
 }
 
 /**
+ * @function buffer_append_bytes
+ *
  * Append multiple bytes to the byte array.
  */
 __attribute__((warn_unused_result)) buffer_t*
@@ -926,6 +1070,8 @@ __attribute__((warn_unused_result)) buffer_t*
 }
 
 /**
+ * @function buffer_append_string
+ *
  * Append all of the bytes from a C string (except the ending NUL
  * char).
  */
@@ -934,6 +1080,11 @@ __attribute__((warn_unused_result)) buffer_t*
   return buffer_append_bytes(buffer, (uint8_t*) str, strlen(str));
 }
 
+/**
+ * @function buffer_increase_capacity
+ *
+ * As an optimization, the capacity of a buffer can be increased.
+ */
 __attribute__((warn_unused_result)) extern buffer_t*
     buffer_increase_capacity(buffer_t* buffer, uint64_t capacity) {
   if (buffer->capacity < capacity) {
@@ -968,6 +1119,9 @@ struct command_line_command_descriptor_S {
 typedef struct command_line_command_descriptor_S
     command_line_command_descriptor_t;
 
+/**
+ * @constants command_line_flag_type_t
+ */
 typedef enum {
   command_line_flag_type_string,
   command_line_flag_type_boolean,
@@ -1016,6 +1170,8 @@ extern command_line_parse_result_t
 #endif /* _COMMAND_LINE_PARSER_H_ */
 
 /**
+ * @function make_command_line_command_descriptor
+ *
  * Allocate a command_line_command_descriptor_t and fill in it's most
  * common fields.
  */
@@ -1029,6 +1185,8 @@ command_line_command_descriptor_t*
 }
 
 /**
+ * @function make_command_line_flag_descriptor
+ *
  * Allocate a command_line_flag_descriptor_t and fill in it's most
  * common fields.
  */
@@ -1078,11 +1236,14 @@ _Noreturn void show_usage(command_line_parser_configuation_t* config,
 }
 
 /**
+ * @function parse_command_line
+ *
  * Given a command line such as:
  *
  * --count=10 --type=bar --no-arg file1.c file2.c
  *
- * Returns a map containing 3 keys and an array containing to values.
+ * Returns a map containing 3 keys and an array containing two values
+ * (file1.c and file2.c)
  *
  * The map: "count" -> "10", "type" -> "bar", "no-arg" -> ""
  * The array: "file1.c" "file2.c"
@@ -1199,6 +1360,9 @@ command_line_parse_result_t
 #ifndef _FATAL_ERROR_H_
 #define _FATAL_ERROR_H_
 
+/**
+ * @constants error_code_t
+ */
 typedef enum {
   ERROR_UKNOWN,
   ERROR_ACCESS_OUT_OF_BOUNDS,
@@ -1221,6 +1385,11 @@ typedef enum {
 extern _Noreturn void fatal_error_impl(char* file, int line, int error_code);
 extern const char* fatal_error_code_to_string(int error_code);
 
+/**
+ * @macro fatal_error
+ *
+ * Terminates the program with a fatal error.
+ */
 #define fatal_error(code) fatal_error_impl(__FILE__, __LINE__, code)
 
 #endif /* _FATAL_ERROR_H_ */
@@ -1330,6 +1499,12 @@ extern void buffer_write_file(buffer_t* bytes, char* file_name);
 // This is optional...
 #include <sys/stat.h>
 
+/**
+ * @function buffer_append_file_contents
+ *
+ * Completely reads a file and appends the contents to the passed in
+ * buffer. This is often much more convenient than streaming a file.
+ */
 __attribute__((warn_unused_result)) buffer_t*
     buffer_append_file_contents(buffer_t* bytes, char* file_name) {
 
@@ -1360,6 +1535,11 @@ __attribute__((warn_unused_result)) buffer_t*
   return bytes;
 }
 
+/**
+ * @function buffer_write_file
+ *
+ * Writes the contents of the buffer to the given file.
+ */
 void buffer_write_file(buffer_t* bytes, char* file_name) {
   FILE* file = fopen(file_name, "w");
   fwrite(&bytes->elements, 1, bytes->length, file);
@@ -1448,7 +1628,11 @@ struct logger_state_S {
 
 typedef struct logger_state_S logger_state_t;
 
-logger_state_t global_logger_state = (logger_state_t){.level = LOGGER_WARN};
+#ifndef LOGGER_DEFAULT_LEVEL
+#define LOGGER_DEFAULT_LEVEL LOGGER_WARN
+#endif /* LOGGER_DEFAULT_LEVEL */
+
+logger_state_t global_logger_state = (logger_state_t){.level = LOGGER_DEFAULT_LEVEL};
 
 extern void logger_init(void);
 
@@ -1680,6 +1864,8 @@ extern uint64_t random_next(random_state_t* state);
 #endif /* _RANDOM_H_ */
 
 /**
+ * @function random_state_for_test
+ *
  * Return a consistent initial random state for tests.
  */
 random_state_t random_state_for_test(void) {
@@ -1690,6 +1876,12 @@ static inline uint64_t rotl(uint64_t x, int k) {
   return (x << k) | (x >> (64 - k));
 }
 
+/**
+ * @function random_next
+ *
+ * Return a random uint64_t from the current state (and update the
+ * state).
+ */
 uint64_t random_next(random_state_t* state) {
   uint64_t s0 = state->a;
   uint64_t s1 = state->b;
@@ -1727,6 +1919,12 @@ __attribute__((warn_unused_result)) extern string_alist_t*
 __attribute__((warn_unused_result)) extern string_alist_t*
     alist_delete(string_alist_t* list, char* key);
 
+/**
+ * @macro string_alist_foreach
+ *
+ * Allows iteration over the keys and values in a string association
+ * list.
+ */
 #define string_alist_foreach(alist, key_var, value_var, statements)            \
   do {                                                                         \
     string_alist_t* head = alist;                                              \
@@ -1740,6 +1938,11 @@ __attribute__((warn_unused_result)) extern string_alist_t*
 
 #endif /* _STRING_ALIST_H_ */
 
+/**
+ * @function alist_insert
+ *
+ * Insert a new key and value into an assocation list.
+ */
 string_alist_t* alist_insert(string_alist_t* list, char* key, value_t value) {
   string_alist_t* result = (malloc_struct(string_alist_t));
   result->next = alist_delete(list, key);
@@ -1748,6 +1951,13 @@ string_alist_t* alist_insert(string_alist_t* list, char* key, value_t value) {
   return result;
 }
 
+/**
+ * @function alist_delete
+ *
+ * Delete the key and associated value from the given association
+ * list. Neither the key nor the value associated are themselves
+ * freed.
+ */
 string_alist_t* alist_delete(string_alist_t* list, char* key) {
   // This appears to be logically correct but could easily blow out
   // the stack with a long list.
@@ -1763,6 +1973,13 @@ string_alist_t* alist_delete(string_alist_t* list, char* key) {
   return list;
 }
 
+/**
+ * @function alist_find
+ *
+ * Find the value associate with the given key. Use is_ok() or
+ * is_not_ok() to see if the value is valid (i.e., if the key was
+ * actually found).
+ */
 value_result_t alist_find(string_alist_t* list, char* key) {
   while (list) {
     if (strcmp(key, list->key) == 0) {
@@ -1861,6 +2078,8 @@ value_result_t string_ht_find(string_hashtable_t* ht, char* key) {
 #line 2 "string-tree.c"
 
 /**
+ * @file string-tree.c
+ *
  * This is a balanced binary tree to associate a string and a value.
  *
  * Generally a string_alist is prefered for small "maps", and
@@ -1895,6 +2114,25 @@ __attribute__((warn_unused_result)) extern string_tree_t*
 __attribute__((warn_unused_result)) extern string_tree_t*
     string_tree_delete(string_tree_t* t, char* key);
 
+/**
+ * @macro string_tree_foreach
+ *
+ * Perform an inorder traversal of a string-tree.
+ *
+ * key_var is created in a new block scope with type char*.
+ *
+ * value_var is created in a new block scope with type value_t and you
+ * will probably want to use something like ".ptr" or ".u64" on the
+ * value to obtain the actual value.
+ * 
+ * statements should be a normal C block, aka, something like:
+ * ```
+ * {
+ *   statement1();
+ *   statement2(); 
+ * }
+ * ```
+ */
 #define string_tree_foreach(tree, key_var, value_var, statements)              \
   do {                                                                         \
     int stack_n_elements = 0;                                                  \
@@ -1916,6 +2154,8 @@ __attribute__((warn_unused_result)) extern string_tree_t*
 #endif /* _STRING_TREE_H_ */
 
 /**
+ * @function string_tree_find
+ *
  * Find the value associate with the key in the tree.
  */
 value_result_t string_tree_find(string_tree_t* t, char* key) {
@@ -1978,6 +2218,8 @@ string_tree_t* make_string_tree_leaf(char* key, value_t value) {
 }
 
 /**
+ * @function string_tree_insert
+ *
  * Insert an association of key and a value.
  */
 string_tree_t* string_tree_insert(string_tree_t* t, char* key, value_t value) {
@@ -2042,6 +2284,8 @@ static inline boolean_t string_tree_is_leaf(string_tree_t* t) {
 }
 
 /**
+ * @function string_tree_delete
+ *
  * Delete the association of key (if it exists in the tree).
  */
 string_tree_t* string_tree_delete(string_tree_t* t, char* key) {
@@ -2125,8 +2369,8 @@ extern value_result_t string_parse_uint64(const char* string);
 extern char* string_duplicate(const char* src);
 extern char* string_append(const char* a, const char* b);
 extern char* string_left_pad(const char* a, int count, char ch);
-__attribute__((format(printf, 1, 2)))
-extern char* string_printf(char* format, ...);
+__attribute__((format(printf, 1, 2))) extern char* string_printf(char* format,
+                                                                 ...);
 
 #endif /* _STRING_UTIL_H_ */
 
@@ -2310,7 +2554,8 @@ char* uint64_to_string(uint64_t number) {
 }
 
 /**
- * Prefix a string with left padding to make it at least N bytes long.
+ * Prefix a string with left padding (if necessary) to make it at
+ * least N bytes long.
  */
 char* string_left_pad(const char* str, int n, char ch) {
   int str_length = strlen(str);
@@ -2339,8 +2584,7 @@ char* string_left_pad(const char* str, int n, char ch) {
  * Perform printf to a buffer and return the result as a dynamically
  * allocated string.
  */
-__attribute__((format(printf, 1, 2)))
-char* string_printf(char* format, ...) {
+__attribute__((format(printf, 1, 2))) char* string_printf(char* format, ...) {
   char buffer[STRING_PRINTF_INITIAL_BUFFER_SIZE];
   int n_bytes = 0;
   do {

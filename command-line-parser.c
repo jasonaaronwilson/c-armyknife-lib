@@ -20,6 +20,9 @@ struct command_line_command_descriptor_S {
 typedef struct command_line_command_descriptor_S
     command_line_command_descriptor_t;
 
+/**
+ * @constants command_line_flag_type_t
+ */
 typedef enum {
   command_line_flag_type_string,
   command_line_flag_type_boolean,
@@ -68,6 +71,8 @@ extern command_line_parse_result_t
 #endif /* _COMMAND_LINE_PARSER_H_ */
 
 /**
+ * @function make_command_line_command_descriptor
+ *
  * Allocate a command_line_command_descriptor_t and fill in it's most
  * common fields.
  */
@@ -81,6 +86,8 @@ command_line_command_descriptor_t*
 }
 
 /**
+ * @function make_command_line_flag_descriptor
+ *
  * Allocate a command_line_flag_descriptor_t and fill in it's most
  * common fields.
  */
@@ -130,11 +137,14 @@ _Noreturn void show_usage(command_line_parser_configuation_t* config,
 }
 
 /**
+ * @function parse_command_line
+ *
  * Given a command line such as:
  *
  * --count=10 --type=bar --no-arg file1.c file2.c
  *
- * Returns a map containing 3 keys and an array containing to values.
+ * Returns a map containing 3 keys and an array containing two values
+ * (file1.c and file2.c)
  *
  * The map: "count" -> "10", "type" -> "bar", "no-arg" -> ""
  * The array: "file1.c" "file2.c"

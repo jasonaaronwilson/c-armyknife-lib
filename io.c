@@ -28,6 +28,12 @@ extern void buffer_write_file(buffer_t* bytes, char* file_name);
 // This is optional...
 #include <sys/stat.h>
 
+/**
+ * @function buffer_append_file_contents
+ *
+ * Completely reads a file and appends the contents to the passed in
+ * buffer. This is often much more convenient than streaming a file.
+ */
 __attribute__((warn_unused_result)) buffer_t*
     buffer_append_file_contents(buffer_t* bytes, char* file_name) {
 
@@ -58,6 +64,11 @@ __attribute__((warn_unused_result)) buffer_t*
   return bytes;
 }
 
+/**
+ * @function buffer_write_file
+ *
+ * Writes the contents of the buffer to the given file.
+ */
 void buffer_write_file(buffer_t* bytes, char* file_name) {
   FILE* file = fopen(file_name, "w");
   fwrite(&bytes->elements, 1, bytes->length, file);

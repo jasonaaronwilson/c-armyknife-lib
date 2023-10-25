@@ -25,6 +25,12 @@ __attribute__((warn_unused_result)) extern string_alist_t*
 __attribute__((warn_unused_result)) extern string_alist_t*
     alist_delete(string_alist_t* list, char* key);
 
+/**
+ * @macro string_alist_foreach
+ *
+ * Allows iteration over the keys and values in a string association
+ * list.
+ */
 #define string_alist_foreach(alist, key_var, value_var, statements)            \
   do {                                                                         \
     string_alist_t* head = alist;                                              \
@@ -38,6 +44,11 @@ __attribute__((warn_unused_result)) extern string_alist_t*
 
 #endif /* _STRING_ALIST_H_ */
 
+/**
+ * @function alist_insert
+ *
+ * Insert a new key and value into an assocation list.
+ */
 string_alist_t* alist_insert(string_alist_t* list, char* key, value_t value) {
   string_alist_t* result = (malloc_struct(string_alist_t));
   result->next = alist_delete(list, key);
@@ -46,6 +57,13 @@ string_alist_t* alist_insert(string_alist_t* list, char* key, value_t value) {
   return result;
 }
 
+/**
+ * @function alist_delete
+ *
+ * Delete the key and associated value from the given association
+ * list. Neither the key nor the value associated are themselves
+ * freed.
+ */
 string_alist_t* alist_delete(string_alist_t* list, char* key) {
   // This appears to be logically correct but could easily blow out
   // the stack with a long list.
@@ -61,6 +79,13 @@ string_alist_t* alist_delete(string_alist_t* list, char* key) {
   return list;
 }
 
+/**
+ * @function alist_find
+ *
+ * Find the value associate with the given key. Use is_ok() or
+ * is_not_ok() to see if the value is valid (i.e., if the key was
+ * actually found).
+ */
 value_result_t alist_find(string_alist_t* list, char* key) {
   while (list) {
     if (strcmp(key, list->key) == 0) {

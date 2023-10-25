@@ -1,6 +1,9 @@
 #line 2 "buffer.c"
 /**
  * @file buffer.c
+ *
+ * A growable array of bytes. These are useful for many purposes such
+ * as building large strings.
  */
 
 // ======================================================================
@@ -50,6 +53,8 @@ __attribute__((warn_unused_result)) extern buffer_t*
 #include <stdlib.h>
 
 /**
+ * @function make_buffer
+ *
  * Make an empty byte array with the given initial capacity.
  */
 buffer_t* make_buffer(uint32_t initial_capacity) {
@@ -65,11 +70,15 @@ buffer_t* make_buffer(uint32_t initial_capacity) {
 }
 
 /**
+ * @function buffer_length
+ *
  * Return the number of bytes that have been added to this byte array.
  */
 uint64_t buffer_length(buffer_t* array) { return array->length; }
 
 /**
+ * @function buffer_get
+ *
  * Get a single byte from a byte array.
  */
 uint8_t buffer_get(buffer_t* buffer, uint64_t position) {
@@ -85,6 +94,8 @@ uint8_t buffer_get(buffer_t* buffer, uint64_t position) {
 }
 
 /**
+ * @function buffer_c_substring
+ *
  * Extract a newly allocated string that contain the bytes from start
  * to end (appending a zero byte to make sure it's a legal C string).
  */
@@ -101,14 +112,18 @@ char* buffer_c_substring(buffer_t* buffer, uint64_t start, uint64_t end) {
 }
 
 /**
+ * @function buffer_to_c_string
+ *
  * Extract a newly allocated string that contain all of the bytes in the byte
- * buffer as a NU * terminated C string.
+ * buffer as a NUL (zero byte) terminated C string.
  */
 char* buffer_to_c_string(buffer_t* buffer) {
   return buffer_c_substring(buffer, 0, buffer->length);
 }
 
 /**
+ * @function buffer_append_byte
+ *
  * Append a single byte to the byte array.
  */
 __attribute__((warn_unused_result)) buffer_t*
@@ -123,6 +138,8 @@ __attribute__((warn_unused_result)) buffer_t*
 }
 
 /**
+ * @function buffer_append_bytes
+ *
  * Append multiple bytes to the byte array.
  */
 __attribute__((warn_unused_result)) buffer_t*
@@ -135,6 +152,8 @@ __attribute__((warn_unused_result)) buffer_t*
 }
 
 /**
+ * @function buffer_append_string
+ *
  * Append all of the bytes from a C string (except the ending NUL
  * char).
  */
@@ -143,6 +162,11 @@ __attribute__((warn_unused_result)) buffer_t*
   return buffer_append_bytes(buffer, (uint8_t*) str, strlen(str));
 }
 
+/**
+ * @function buffer_increase_capacity
+ *
+ * As an optimization, the capacity of a buffer can be increased.
+ */
 __attribute__((warn_unused_result)) extern buffer_t*
     buffer_increase_capacity(buffer_t* buffer, uint64_t capacity) {
   if (buffer->capacity < capacity) {

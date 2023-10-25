@@ -214,7 +214,8 @@ char* uint64_to_string(uint64_t number) {
 }
 
 /**
- * Prefix a string with left padding to make it at least N bytes long.
+ * Prefix a string with left padding (if necessary) to make it at
+ * least N bytes long.
  */
 char* string_left_pad(const char* str, int n, char ch) {
   int str_length = strlen(str);

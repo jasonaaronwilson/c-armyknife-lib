@@ -1,5 +1,5 @@
 ///
-/// Make an array of uint64 and add 16 elements to it.
+/// Test out some of the features of command line parsing.
 ///
 
 #include <stdlib.h>

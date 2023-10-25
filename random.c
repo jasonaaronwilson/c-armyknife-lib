@@ -27,6 +27,8 @@ extern uint64_t random_next(random_state_t* state);
 #endif /* _RANDOM_H_ */
 
 /**
+ * @function random_state_for_test
+ *
  * Return a consistent initial random state for tests.
  */
 random_state_t random_state_for_test(void) {
@@ -37,6 +39,12 @@ static inline uint64_t rotl(uint64_t x, int k) {
   return (x << k) | (x >> (64 - k));
 }
 
+/**
+ * @function random_next
+ *
+ * Return a random uint64_t from the current state (and update the
+ * state).
+ */
 uint64_t random_next(random_state_t* state) {
   uint64_t s0 = state->a;
   uint64_t s1 = state->b;

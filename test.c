@@ -46,7 +46,7 @@
 __attribute__((format(printf, 3, 4))) void
     test_fail_and_exit(char* file_name, int line_number, char* format, ...) {
   va_list args;
-  fprintf(stdout, "%s:%d ", file_name, line_number);
+  fprintf(stdout, "%s:%d: ", file_name, line_number);
   va_start(args, format);
   vfprintf(stdout, format, args);
   fprintf(stdout, "\n");

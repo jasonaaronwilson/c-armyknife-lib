@@ -768,7 +768,7 @@ extern uint64_t random_next(random_state_t* state);
  */
 #define test_fail(format, ...)                                                 \
   do {                                                                         \
-      test_fail_and_exit(__FILE__, __LINE__, format, ##__VA_ARGS__);           \
+    test_fail_and_exit(__FILE__, __LINE__, format, ##__VA_ARGS__);             \
   } while (0)
 
 #endif /* _TEST_H_ */
@@ -2852,7 +2852,7 @@ uint64_t fasthash64(const void* buf, size_t len, uint64_t seed) {
  */
 #define test_fail(format, ...)                                                 \
   do {                                                                         \
-      test_fail_and_exit(__FILE__, __LINE__, format, ##__VA_ARGS__);           \
+    test_fail_and_exit(__FILE__, __LINE__, format, ##__VA_ARGS__);             \
   } while (0)
 
 #endif /* _TEST_H_ */
@@ -2863,17 +2863,16 @@ uint64_t fasthash64(const void* buf, size_t len, uint64_t seed) {
  * Set a break-point here to debug a test but normally you will use
  * the macro `test-fail` since it is much more convenient.
  */
-__attribute__((format(printf, 3, 4)))
-void test_fail_and_exit(char* file_name, int line_number, char* format, ...) {
+__attribute__((format(printf, 3, 4))) void
+    test_fail_and_exit(char* file_name, int line_number, char* format, ...) {
   va_list args;
-  fprintf(stdout, "%s:%d ", file_name, line_number);
+  fprintf(stdout, "%s:%d: ", file_name, line_number);
   va_start(args, format);
   vfprintf(stdout, format, args);
   fprintf(stdout, "\n");
   va_end(args);
   exit(1);
 }
-
 #line 2 "tokenizer.c"
 /**
  * @file tokenizer.c

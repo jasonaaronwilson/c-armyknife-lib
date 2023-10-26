@@ -35,8 +35,8 @@ void test_append_byte() {
     ARMYKNIFE_TEST_FAIL("char at position 2 should be 'c'");
   }
 
-  free(contents);
-  free(buffer);
+  free_bytes(contents);
+  free_bytes(buffer);
 }
 
 void test_append_string() {
@@ -51,8 +51,8 @@ void test_append_string() {
     ARMYKNIFE_TEST_FAIL(
         "stringified version of byte array does not match what we added");
   }
-  free(contents);
-  free(buffer);
+  free_bytes(contents);
+  free_bytes(buffer);
 }
 
 int main(int argc, char** argv) {

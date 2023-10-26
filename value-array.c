@@ -66,7 +66,7 @@ void value_array_ensure_capacity(value_array_t* array,
       new_elements[i] = array->elements[i];
     }
     array->capacity = new_capacity;
-    free(array->elements);
+    free_bytes(array->elements);
     array->elements = new_elements;
     return;
   }

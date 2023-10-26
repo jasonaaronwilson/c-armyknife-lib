@@ -88,6 +88,14 @@ static inline boolean_t should_log_memory_allocation() {
   return should_log_value;
 }
 
+#ifndef ARMYKNIFE_MEMORY_ALLOCATION_END_PADDING
+#define ARMYKNIFE_MEMORY_ALLOCATION_END_PADDING 0
+#endif
+
+#ifndef ARMYKNIFE_MEMORY_ALLOCATION_MAXIMUM_AMOUNT
+#define ARMYKNIFE_MEMORY_ALLOCATION_MAXIMUM_AMOUNT (1L << 48)
+#endif
+
 /**
  * @function checked_malloc
  *
@@ -99,14 +107,28 @@ static inline boolean_t should_log_memory_allocation() {
  * checked_malloc.
  */
 uint8_t* checked_malloc(char* file, int line, uint64_t amount) {
-  if (should_log_memory_allocation()) {
-    fprintf(stderr, "ALLOCATE %s:%d -- %lu\n", file, line, amount);
+
+  if (amount == 0 || amount > ARMYKNIFE_MEMORY_ALLOCATION_MAXIMUM_AMOUNT) {
+    fatal_error(ERROR_BAD_ALLOCATION_SIZE);
   }
 
-  uint8_t* result = malloc(amount);
+  if (should_log_memory_allocation()) {
+    fprintf(stderr,
+            "ALLOCATE %s:%d -- n_bytes=%lu already_allocated=%lu n_calls=%lu\n",
+            file, line, amount, number_of_bytes_allocated,
+            number_of_malloc_calls);
+  }
+
+  uint8_t* result = malloc(amount + ARMYKNIFE_MEMORY_ALLOCATION_END_PADDING);
   if (result == NULL) {
     fatal_error_impl(file, line, ERROR_MEMORY_ALLOCATION);
   }
+
+  if (should_log_memory_allocation()) {
+    fprintf(stderr, "ALLOCATE %s:%d -- %lu -- ptr=%lu\n", file, line, amount,
+            (unsigned long) result);
+  }
+
   memset(result, 0, amount);
 
   number_of_bytes_allocated += amount;

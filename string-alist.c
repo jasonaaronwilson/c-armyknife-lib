@@ -72,7 +72,7 @@ string_alist_t* alist_delete(string_alist_t* list, char* key) {
   }
   if (strcmp(key, list->key) == 0) {
     string_alist_t* result = list->next;
-    free(list);
+    free_bytes(list);
     return result;
   }
   list->next = alist_delete(list->next, key);

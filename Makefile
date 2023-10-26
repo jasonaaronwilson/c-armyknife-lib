@@ -15,6 +15,7 @@ SRC_C = allocate.c \
 	test.c \
 	tokenizer.c \
 	trace.c \
+	uint64.c \
 	value.c \
 	value-array.c
 
@@ -24,6 +25,7 @@ ORDERED_H = \
 	value.h \
 	trace.h \
 	allocate.h \
+	uint64.h \
 	string-util.h \
 	logger.h \
 	buffer.h \
@@ -64,6 +66,7 @@ tags:
 
 TESTS= \
 	./compile-test.sh \
+	./uint64-test.sh \
 	./string-util-test.sh \
 	./buffer-test.sh \
 	./string-alist-test.sh \

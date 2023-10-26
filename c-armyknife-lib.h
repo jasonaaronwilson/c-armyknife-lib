@@ -36,6 +36,7 @@ typedef enum {
   ERROR_OPEN_LOG_FILE,
   ERROR_TEST,
   ERROR_INTERNAL_ASSERTION_FAILURE,
+  ERROR_BAD_ALLOCATION_SIZE,
 } error_code_t;
 
 extern _Noreturn void fatal_error_impl(char* file, int line, int error_code);
@@ -283,6 +284,17 @@ extern void checked_free(char* file, int line, void* pointer);
 // TODO(jawilson): malloc_copy_of_struct
 
 #endif /* _ALLOCATE_H_ */
+// SSCF generated file from: uint64.c
+
+#line 9 "uint64.c"
+#ifndef _UINT64_H_
+#define _UINT64_H_
+
+#include <stdint.h>
+
+extern int uint64_highest_bit_set(uint64_t n);
+
+#endif /* _UINT64_H_ */
 // SSCF generated file from: string-util.c
 
 #line 13 "string-util.c"
@@ -836,6 +848,14 @@ static inline boolean_t should_log_memory_allocation() {
   return should_log_value;
 }
 
+#ifndef ARMYKNIFE_MEMORY_ALLOCATION_END_PADDING
+#define ARMYKNIFE_MEMORY_ALLOCATION_END_PADDING 0
+#endif
+
+#ifndef ARMYKNIFE_MEMORY_ALLOCATION_MAXIMUM_AMOUNT
+#define ARMYKNIFE_MEMORY_ALLOCATION_MAXIMUM_AMOUNT (1L << 48)
+#endif
+
 /**
  * @function checked_malloc
  *
@@ -847,14 +867,25 @@ static inline boolean_t should_log_memory_allocation() {
  * checked_malloc.
  */
 uint8_t* checked_malloc(char* file, int line, uint64_t amount) {
-  if (should_log_memory_allocation()) {
-    fprintf(stderr, "ALLOCATE %s:%d -- %lu\n", file, line, amount);
+
+  if (amount == 0 || amount > ARMYKNIFE_MEMORY_ALLOCATION_MAXIMUM_AMOUNT) {
+    fatal_error(ERROR_BAD_ALLOCATION_SIZE);
   }
 
-  uint8_t* result = malloc(amount);
+  if (should_log_memory_allocation()) {
+    fprintf(stderr, "ALLOCATE %s:%d -- n_bytes=%lu already_allocated=%lu n_calls=%lu\n", file, line, amount, 
+            number_of_bytes_allocated, number_of_malloc_calls);
+  }
+
+  uint8_t* result = malloc(amount + ARMYKNIFE_MEMORY_ALLOCATION_END_PADDING);
   if (result == NULL) {
     fatal_error_impl(file, line, ERROR_MEMORY_ALLOCATION);
   }
+
+  if (should_log_memory_allocation()) {
+    fprintf(stderr, "ALLOCATE %s:%d -- %lu -- ptr=%lu\n", file, line, amount, (unsigned long) result);
+  }
+
   memset(result, 0, amount);
 
   number_of_bytes_allocated += amount;
@@ -1393,6 +1424,7 @@ typedef enum {
   ERROR_OPEN_LOG_FILE,
   ERROR_TEST,
   ERROR_INTERNAL_ASSERTION_FAILURE,
+  ERROR_BAD_ALLOCATION_SIZE,
 } error_code_t;
 
 extern _Noreturn void fatal_error_impl(char* file, int line, int error_code);
@@ -1980,7 +2012,7 @@ string_alist_t* alist_delete(string_alist_t* list, char* key) {
   }
   if (strcmp(key, list->key) == 0) {
     string_alist_t* result = list->next;
-    free(list);
+    free_bytes(list);
     return result;
   }
   list->next = alist_delete(list->next, key);
@@ -2869,6 +2901,44 @@ void add_duplicate(value_array_t* token_array, const char* data) {
   } while (0)
 
 #endif /* _TRACE_H_ */
+#line 2 "uint64.c"
+/**
+ * @file uint64.c
+ *
+ * Implement a couple of useful operations on uint64_t (which can
+ * often be used for smaller types.
+ */
+
+#ifndef _UINT64_H_
+#define _UINT64_H_
+
+#include <stdint.h>
+
+extern int uint64_highest_bit_set(uint64_t n);
+
+#endif /* _UINT64_H_ */
+
+/**
+ * @function uint64_highest_bit_set
+ *
+ */
+int uint64_highest_bit_set(uint64_t n) {
+  if (n >= 1ULL << 32) {
+    return uint64_highest_bit_set(n >> 32) + 32;
+  } else if (n >= 1ULL << 16) {
+    return uint64_highest_bit_set(n >> 16) + 16;
+  } else if (n >= 1ULL << 8) {
+    return uint64_highest_bit_set(n >> 8) + 8;
+  } else if (n >= 1ULL << 4) {
+    return uint64_highest_bit_set(n >> 4) + 4;
+  } else if (n >= 1ULL << 2) {
+    return uint64_highest_bit_set(n >> 2) + 2;
+  } else if (n >= 1ULL << 1) {
+    return uint64_highest_bit_set(n >> 1) + 1;
+  } else {
+    return 0;
+  }
+}
 #line 2 "value.c"
 
 #ifndef _VALUE_H_
@@ -3074,7 +3144,7 @@ void value_array_ensure_capacity(value_array_t* array,
       new_elements[i] = array->elements[i];
     }
     array->capacity = new_capacity;
-    free(array->elements);
+    free_bytes(array->elements);
     array->elements = new_elements;
     return;
   }

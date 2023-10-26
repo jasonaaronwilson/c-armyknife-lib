@@ -39,6 +39,7 @@ typedef enum {
   ERROR_OPEN_LOG_FILE,
   ERROR_TEST,
   ERROR_INTERNAL_ASSERTION_FAILURE,
+  ERROR_BAD_ALLOCATION_SIZE,
 } error_code_t;
 
 extern _Noreturn void fatal_error_impl(char* file, int line, int error_code);

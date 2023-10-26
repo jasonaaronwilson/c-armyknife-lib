@@ -17,7 +17,7 @@ void test_write_then_read(char* file_name) {
 
   if (!string_equal(buffer_to_c_string(hello_buf),
                     buffer_to_c_string(world_buf))) {
-    ARMYKNIFE_TEST_FAIL("should read back what we wrote!");
+    test_fail("should read back what we wrote!");
   }
 }
 

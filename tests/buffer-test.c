@@ -11,7 +11,7 @@ void test_append_byte() {
   buffer_t* buffer = make_buffer(1);
 
   if (buffer_length(buffer) != strlen("")) {
-    ARMYKNIFE_TEST_FAIL("length should be 0");
+    test_fail("length should be 0");
   }
 
   buffer = buffer_append_byte(buffer, 'a');
@@ -24,15 +24,14 @@ void test_append_byte() {
   char* contents = buffer_c_substring(buffer, 0, strlen("abcdefg"));
   if (!string_equal("abcdefg", contents)) {
     fprintf(stderr, "contents='%s'\n", contents);
-    ARMYKNIFE_TEST_FAIL(
-        "stringified version of byte array does not match what we added");
+    test_fail("stringified version of byte array does not match what we added");
   }
   if (buffer_length(buffer) != strlen("abcdefg")) {
-    ARMYKNIFE_TEST_FAIL("length should be 7");
+    test_fail("length should be 7");
   }
 
   if (buffer_get(buffer, 2) != 'c') {
-    ARMYKNIFE_TEST_FAIL("char at position 2 should be 'c'");
+    test_fail("char at position 2 should be 'c'");
   }
 
   free_bytes(contents);
@@ -48,8 +47,7 @@ void test_append_string() {
   char* contents = buffer_to_c_string(buffer);
   if (!string_equal("Hello World!", contents)) {
     fprintf(stderr, "contents='%s'\n", contents);
-    ARMYKNIFE_TEST_FAIL(
-        "stringified version of byte array does not match what we added");
+    test_fail("stringified version of byte array does not match what we added");
   }
   free_bytes(contents);
   free_bytes(buffer);

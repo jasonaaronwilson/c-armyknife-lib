@@ -7,38 +7,38 @@
 
 void test_uint64_highest_bit_set() {
   if (0 != uint64_highest_bit_set(1ULL << 0)) {
-    ARMYKNIFE_TEST_FAIL("0");
+    test_fail("0");
   }
   if (1 != uint64_highest_bit_set(1ULL << 1)) {
-    ARMYKNIFE_TEST_FAIL("1");
+    test_fail("1");
   }
 
   if (8 != uint64_highest_bit_set(1ULL << 8)) {
-    ARMYKNIFE_TEST_FAIL("8");
+    test_fail("8");
   }
 
   if (16 != uint64_highest_bit_set(1ULL << 16)) {
-    ARMYKNIFE_TEST_FAIL("16");
+    test_fail("16");
   }
 
   if (32 != uint64_highest_bit_set(1ULL << 32)) {
-    ARMYKNIFE_TEST_FAIL("16");
+    test_fail("16");
   }
 
   if (47 != uint64_highest_bit_set(1ULL << 47)) {
-    ARMYKNIFE_TEST_FAIL("48");
+    test_fail("48");
   }
   if (48 != uint64_highest_bit_set(1ULL << 48)) {
-    ARMYKNIFE_TEST_FAIL("48");
+    test_fail("48");
   }
 
   if (63 != uint64_highest_bit_set(1ULL << 63)) {
-    ARMYKNIFE_TEST_FAIL("63");
+    test_fail("63");
   }
 
   for (int i = 0; i < 64; i++) {
     if (i != uint64_highest_bit_set(((uint64_t) 1) << i)) {
-      ARMYKNIFE_TEST_FAIL("loop");
+      test_fail("loop %d", i);
     }
   }
 }

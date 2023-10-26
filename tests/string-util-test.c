@@ -15,107 +15,107 @@
 int main(int argc, char** argv) {
 
   if (!(string_is_null_or_empty(NULL))) {
-    ARMYKNIFE_TEST_FAIL("string_is_null_or_empty");
+    test_fail("string_is_null_or_empty");
   }
   if (!(string_is_null_or_empty(""))) {
-    ARMYKNIFE_TEST_FAIL("string_is_null_or_empty");
+    test_fail("string_is_null_or_empty");
   }
   if (string_is_null_or_empty("not empty")) {
-    ARMYKNIFE_TEST_FAIL("string_is_null_or_empty");
+    test_fail("string_is_null_or_empty");
   }
 
 
   if (!(string_equal("abc", "abc"))) {
-    ARMYKNIFE_TEST_FAIL("string_equal");
+    test_fail("string_equal");
   }
   if (string_equal("abc", "ABC")) {
-    ARMYKNIFE_TEST_FAIL("string_equal");
+    test_fail("string_equal");
   }
 
 
   if (!(string_starts_with("The quick brown fox", "The quick"))) {
-    ARMYKNIFE_TEST_FAIL("string_starts_with");
+    test_fail("string_starts_with");
   }
   if (string_starts_with("The quick brown fox", "THE QUICK")) {
-    ARMYKNIFE_TEST_FAIL("string_starts_with");
+    test_fail("string_starts_with");
   }
 
 
   if (!(string_ends_with("The quick brown fox", "brown fox"))) {
-    ARMYKNIFE_TEST_FAIL("string_ends_with");
+    test_fail("string_ends_with");
   }
   if (string_ends_with("The quick brown fox", "red dog")) {
-    ARMYKNIFE_TEST_FAIL("string_ends_with");
+    test_fail("string_ends_with");
   }
 
   if (!(string_contains_char("The quick brown fox", 'q'))) {
-    ARMYKNIFE_TEST_FAIL("string_contains_char");
+    test_fail("string_contains_char");
   }
   if (string_contains_char("The quick brown fox", 'Z')) {
-    ARMYKNIFE_TEST_FAIL("string_contains_char");
+    test_fail("string_contains_char");
   }
 
   if (string_index_of_char("The quick brown fox", 'q') != 4) {
-    ARMYKNIFE_TEST_FAIL("string_index_of_char");
+    test_fail("string_index_of_char");
   }
   if (string_index_of_char("The quick brown fox", 'Z') >= 0) {
-    ARMYKNIFE_TEST_FAIL("string_index_of_char");
+    test_fail("string_index_of_char");
   }
 
   if (string_hash("The quick brown fox")
       == string_hash("The QUICK brown fox")) {
-    ARMYKNIFE_TEST_FAIL("string_hash");
+    test_fail("string_hash");
   }
 
 
   // Memory leak. So what, this is a test...
   if (!(string_equal(string_substring("The quick brown fox", 4, 9), "quick"))) {
-    ARMYKNIFE_TEST_FAIL("string_substring");
+    test_fail("string_substring");
   }
 
 
   if (string_parse_uint64("0").u64 != 0) {
-    ARMYKNIFE_TEST_FAIL("string_parse_uint64");
+    test_fail("string_parse_uint64");
   }
   if (string_parse_uint64("1").u64 != 1) {
-    ARMYKNIFE_TEST_FAIL("string_parse_uint64");
+    test_fail("string_parse_uint64");
   }
   if (string_parse_uint64("0xf").u64 != 15) {
-    ARMYKNIFE_TEST_FAIL("string_parse_uint64");
+    test_fail("string_parse_uint64");
   }
   if (string_parse_uint64("0b0").u64 != 0) {
-    ARMYKNIFE_TEST_FAIL("string_parse_uint64");
+    test_fail("string_parse_uint64");
   }
   if (string_parse_uint64("0b1010").u64 != 10) {
-    ARMYKNIFE_TEST_FAIL("string_parse_uint64");
+    test_fail("string_parse_uint64");
   }
 
   if (!string_duplicate("The quick brown fox")) {
-    ARMYKNIFE_TEST_FAIL("string_duplicate");
+    test_fail("string_duplicate");
   }
 
   if (!string_equal("      ", string_left_pad("", 6, ' '))) {
-    ARMYKNIFE_TEST_FAIL("string_left_pad");
+    test_fail("string_left_pad");
   }
 
   if (!string_equal("   abc", string_left_pad("abc", 6, ' '))) {
-    ARMYKNIFE_TEST_FAIL("string_left_pad");
+    test_fail("string_left_pad");
   }
 
   if (!string_equal("abcxyz", string_left_pad("abcxyz", 6, ' '))) {
-    ARMYKNIFE_TEST_FAIL("string_left_pad");
+    test_fail("string_left_pad");
   }
 
   if (!string_equal("abcdefg", string_left_pad("abcdefg", 6, ' '))) {
-    ARMYKNIFE_TEST_FAIL("string_left_pad");
+    test_fail("string_left_pad");
   }
 
   if (!string_equal("Hello!", string_printf("%s!", "Hello"))) {
-    ARMYKNIFE_TEST_FAIL("string_printf");
+    test_fail("string_printf");
   }
 
   if (!string_equal("Hello World!", string_printf("%s!", "Hello World"))) {
-    ARMYKNIFE_TEST_FAIL("string_printf");
+    test_fail("string_printf");
   }
 
   exit(0);

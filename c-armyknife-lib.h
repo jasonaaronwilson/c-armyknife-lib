@@ -749,11 +749,26 @@ extern uint64_t random_next(random_state_t* state);
 #ifndef _TEST_H_
 #define _TEST_H_
 
-#define ARMYKNIFE_TEST_FAIL(msg)                                               \
+/**
+ * @macro test_fail
+ *
+ * Immediately fail a test after printing a message (supplied the same
+ * way as printf, log_fatal, etc.)
+ *
+ * This is a macro instead of a function because it automatically
+ * passes the current file and line number to test_fail_and_exit which
+ * enables uniform and convenient error messagages according to GNU
+ * guidelines (so they will look like gcc compiler errors if your IDE
+ * understands those).
+ *
+ * It is *advised* (at least for now) to not pass complicated
+ * expressions to test_fail if those are likely to fail. Instead run
+ * the test in a debugger and set a break-point on
+ * `test_fail_and_exit`.
+ */
+#define test_fail(format, ...)                                                 \
   do {                                                                         \
-    fprintf(stderr, "%s:%d: -- FAIL (fn=%s, msg='%s')\n", __FILE__, __LINE__,  \
-            __func__, msg);                                                    \
-    armyknife_test_fail_exit();                                                \
+      test_fail_and_exit(__FILE__, __LINE__, format, ##__VA_ARGS__);           \
   } while (0)
 
 #endif /* _TEST_H_ */
@@ -873,8 +888,10 @@ uint8_t* checked_malloc(char* file, int line, uint64_t amount) {
   }
 
   if (should_log_memory_allocation()) {
-    fprintf(stderr, "ALLOCATE %s:%d -- n_bytes=%lu already_allocated=%lu n_calls=%lu\n", file, line, amount, 
-            number_of_bytes_allocated, number_of_malloc_calls);
+    fprintf(stderr,
+            "ALLOCATE %s:%d -- n_bytes=%lu already_allocated=%lu n_calls=%lu\n",
+            file, line, amount, number_of_bytes_allocated,
+            number_of_malloc_calls);
   }
 
   uint8_t* result = malloc(amount + ARMYKNIFE_MEMORY_ALLOCATION_END_PADDING);
@@ -883,7 +900,8 @@ uint8_t* checked_malloc(char* file, int line, uint64_t amount) {
   }
 
   if (should_log_memory_allocation()) {
-    fprintf(stderr, "ALLOCATE %s:%d -- %lu -- ptr=%lu\n", file, line, amount, (unsigned long) result);
+    fprintf(stderr, "ALLOCATE %s:%d -- %lu -- ptr=%lu\n", file, line, amount,
+            (unsigned long) result);
   }
 
   memset(result, 0, amount);
@@ -2815,17 +2833,47 @@ uint64_t fasthash64(const void* buf, size_t len, uint64_t seed) {
 #ifndef _TEST_H_
 #define _TEST_H_
 
-#define ARMYKNIFE_TEST_FAIL(msg)                                               \
+/**
+ * @macro test_fail
+ *
+ * Immediately fail a test after printing a message (supplied the same
+ * way as printf, log_fatal, etc.)
+ *
+ * This is a macro instead of a function because it automatically
+ * passes the current file and line number to test_fail_and_exit which
+ * enables uniform and convenient error messagages according to GNU
+ * guidelines (so they will look like gcc compiler errors if your IDE
+ * understands those).
+ *
+ * It is *advised* (at least for now) to not pass complicated
+ * expressions to test_fail if those are likely to fail. Instead run
+ * the test in a debugger and set a break-point on
+ * `test_fail_and_exit`.
+ */
+#define test_fail(format, ...)                                                 \
   do {                                                                         \
-    fprintf(stderr, "%s:%d: -- FAIL (fn=%s, msg='%s')\n", __FILE__, __LINE__,  \
-            __func__, msg);                                                    \
-    armyknife_test_fail_exit();                                                \
+      test_fail_and_exit(__FILE__, __LINE__, format, ##__VA_ARGS__);           \
   } while (0)
 
 #endif /* _TEST_H_ */
 
-// Provide a convenient place to set a breakpoint
-void armyknife_test_fail_exit() { exit(1); }
+/**
+ * @function test_fail_and_exit
+ *
+ * Set a break-point here to debug a test but normally you will use
+ * the macro `test-fail` since it is much more convenient.
+ */
+__attribute__((format(printf, 3, 4)))
+void test_fail_and_exit(char* file_name, int line_number, char* format, ...) {
+  va_list args;
+  fprintf(stdout, "%s:%d ", file_name, line_number);
+  va_start(args, format);
+  vfprintf(stdout, format, args);
+  fprintf(stdout, "\n");
+  va_end(args);
+  exit(1);
+}
+
 #line 2 "tokenizer.c"
 /**
  * @file tokenizer.c

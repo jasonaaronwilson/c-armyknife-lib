@@ -15,18 +15,18 @@ int main(int argc, char** argv) {
 
   tokens = tokenize("The quick brown fox", " ");
   if (tokens->length != 4) {
-    ARMYKNIFE_TEST_FAIL("tokenize");
+    test_fail("tokenize");
   }
 
   tokens = tokenize("The#quick#brown fox", " #");
   if (tokens->length != 4) {
-    ARMYKNIFE_TEST_FAIL("tokenize");
+    test_fail("tokenize");
   }
 
   tokens = tokenize("The#quick#brown fox", " #");
   if (tokens->length != 4
       || !string_equal("quick", value_array_get(tokens, 1).str)) {
-    ARMYKNIFE_TEST_FAIL("tokenize");
+    test_fail("tokenize");
   }
 
   exit(0);

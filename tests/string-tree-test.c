@@ -14,23 +14,23 @@ void test_tree() {
 
   value = string_tree_find(tree, "a");
   if (is_ok(value)) {
-    ARMYKNIFE_TEST_FAIL("find in empty list should return NULL");
+    test_fail("find in empty list should return NULL");
   }
 
   tree = string_tree_insert(tree, "a", str_to_value("A"));
   value = string_tree_find(tree, "a");
   if (is_not_ok(value) || strcmp("A", value.str) != 0) {
-    ARMYKNIFE_TEST_FAIL("should have found 'A'");
+    test_fail("should have found 'A'");
   }
 
   tree = string_tree_insert(tree, "b", str_to_value("B"));
   value = string_tree_find(tree, "a");
   if (is_not_ok(value) || strcmp("A", value.str) != 0) {
-    ARMYKNIFE_TEST_FAIL("should have found 'A'");
+    test_fail("should have found 'A'");
   }
   value = string_tree_find(tree, "b");
   if (is_not_ok(value) || strcmp("B", value.str) != 0) {
-    ARMYKNIFE_TEST_FAIL("should have found 'B'");
+    test_fail("should have found 'B'");
   }
 
   // Add a few more elements
@@ -41,16 +41,16 @@ void test_tree() {
   tree = string_tree_delete(tree, "b");
   value = string_tree_find(tree, "b");
   if (is_ok(value)) {
-    ARMYKNIFE_TEST_FAIL("should not have found a value for 'b'");
+    test_fail("should not have found a value for 'b'");
   }
 
   value = string_tree_find(tree, "a");
   if (is_not_ok(value) || strcmp("A", value.str) != 0) {
-    ARMYKNIFE_TEST_FAIL("should have found 'A'");
+    test_fail("should have found 'A'");
   }
   value = string_tree_find(tree, "c");
   if (is_not_ok(value) || strcmp("C", value.str) != 0) {
-    ARMYKNIFE_TEST_FAIL("should have found 'C'");
+    test_fail("should have found 'C'");
   }
 
   tree = string_tree_insert(tree, "e", str_to_value("E"));
@@ -71,7 +71,7 @@ void check_values(string_tree_t* t) {
   if (t) {
     char* value_to_key_string = uint64_to_string((t->value).u64);
     if (strcmp(t->key, value_to_key_string) != 0) {
-      ARMYKNIFE_TEST_FAIL("the value and key are not matching");
+      test_fail("the value and key are not matching");
     }
     check_values(t->left);
     check_values(t->right);
@@ -94,7 +94,7 @@ void check_sequence(char* file, int line, string_tree_t* tree,
               "CHECK SEQUENCE %s:%d: tree and hashtable reference are not in "
               "agreement!",
               file, line);
-      ARMYKNIFE_TEST_FAIL("check sequence failure");
+      test_fail("check sequence failure");
     }
   }
 }
@@ -148,16 +148,16 @@ void test_random_insertion_and_deletion() {
     value_result_t lookup_result_reference = string_ht_find(ht, key);
 
     if (lookup_result.nf_error != lookup_result_reference.nf_error) {
-      ARMYKNIFE_TEST_FAIL("tree and hashtable reference are not in agreement!");
+      test_fail("tree and hashtable reference are not in agreement!");
     }
 
     if ((next & 3) == 0) {
       if (is_ok(lookup_result)) {
-        ARMYKNIFE_TEST_FAIL("deleted item should not be found!");
+        test_fail("deleted item should not be found!");
       }
     } else {
       if (is_not_ok(lookup_result)) {
-        ARMYKNIFE_TEST_FAIL("non deleted item should be found");
+        test_fail("non deleted item should be found");
       }
     }
   }

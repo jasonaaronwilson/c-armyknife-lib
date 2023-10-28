@@ -1,6 +1,8 @@
 #line 2 "random.c"
 
 /**
+ * @file random.c
+ *
  * An implementation of "xorshiro128**", a pseudo-random number
  * generator.
  *
@@ -22,7 +24,9 @@ struct random_state_S {
 typedef struct random_state_S random_state_t;
 
 extern random_state_t random_state_for_test(void);
-extern uint64_t random_next(random_state_t* state);
+extern uint64_t random_next_uint64(random_state_t* state);
+extern uint64_t random_next_uint64_below(random_state_t* state,
+                                         uint64_t maximum);
 
 #endif /* _RANDOM_H_ */
 
@@ -54,4 +58,31 @@ uint64_t random_next(random_state_t* state) {
   state->b = rotl(s1, 37);                   // c
 
   return result;
+}
+
+/**
+ * @function random_next_uint64_below
+ *
+ * Return a random `uint64` that is below some maximum. As much as the
+ * underlying random number generartor allows, this should be uniform.
+ */
+uint64_t random_next_uint64_below(random_state_t* state, uint64_t maximum) {
+  if (maximum == 0) {
+    fatal_error(ERROR_ILLEGAL_ARGUMENT);
+  }
+#if 0
+  // This is simpler and works well in practice (it seems).
+  return random_next(state) % maximum;
+#else
+  // This version in theory should be a bit more fair than modulous
+  // but I can't really detect a difference.
+  int mask = (1ULL << (uint64_highest_bit_set(maximum) + 1)) - 1;
+  while (1) {
+    uint64_t n = random_next(state);
+    n &= mask;
+    if (n < maximum) {
+      return n;
+    }
+  }
+#endif /* 0 */
 }

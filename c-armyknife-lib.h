@@ -38,6 +38,8 @@ typedef enum {
   ERROR_INTERNAL_ASSERTION_FAILURE,
   ERROR_BAD_ALLOCATION_SIZE,
   ERROR_ILLEGAL_ARGUMENT,
+  ERROR_MEMORY_START_PADDING_ERROR,
+  ERROR_MEMORY_END_PADDING_ERROR,
 } error_code_t;
 
 extern _Noreturn void fatal_error_impl(char* file, int line, int error_code);
@@ -233,7 +235,7 @@ static inline boolean_t is_not_ok(value_result_t value) {
 #endif /* _TRACE_H_ */
 // SSCF generated file from: allocate.c
 
-#line 14 "allocate.c"
+#line 27 "allocate.c"
 #ifndef _ALLOCATE_H_
 #define _ALLOCATE_H_
 
@@ -742,7 +744,8 @@ typedef struct random_state_S random_state_t;
 
 extern random_state_t random_state_for_test(void);
 extern uint64_t random_next_uint64(random_state_t* state);
-extern uint64_t random_next_uint64_below(random_state_t* state, uint64_t maximum);
+extern uint64_t random_next_uint64_below(random_state_t* state,
+                                         uint64_t maximum);
 
 #endif /* _RANDOM_H_ */
 // SSCF generated file from: test.c
@@ -781,12 +784,25 @@ extern uint64_t random_next_uint64_below(random_state_t* state, uint64_t maximum
  *
  * This file contains wrappers around malloc to make it more
  * convenient and possibly safer (for example, allocated memory is
- * always zero'd).
+ * always zero'd and macros like malloc_struct are more readable and
+ * it bit more readable as well).
+ *
+ * For missing calls to free, we are fully compatbile with valgrind
+ * (since we just call malloc/free). (Valgrind also has a memcheck
+ * mode though it actually masked a bug instead of finding it.)
+ *
+ * We also have our own memcheck mode. The basic idea is to maintain a
+ * LRU style lossy hashtable and to repeatedly scan this set of
+ * allocations for overwrites. While this will not detect all
+ * instances of an overwrite, when it does, it will be pretty
+ * convenient to use in conjuction with a debugger to set a
+ * watch-point precisely when is needed.
+ *
+ * There should be no run-time penalty when our additional debugging
+ * options are turned off, though I still like how valgrind doesn't
+ * even require recompilation. If our different technique pays off,
+ * perhaps it could be put into valgrind.
  */
-
-// ======================================================================
-// This is block is extraced to allocate.h
-// ======================================================================
 
 #ifndef _ALLOCATE_H_
 #define _ALLOCATE_H_
@@ -865,13 +881,131 @@ static inline boolean_t should_log_memory_allocation() {
   return should_log_value;
 }
 
-#ifndef ARMYKNIFE_MEMORY_ALLOCATION_END_PADDING
-#define ARMYKNIFE_MEMORY_ALLOCATION_END_PADDING 0
+/**
+ * @debug_compiliation_option ARMYKNIFE_MEMORY_ALLOCATION_START_PADDING
+ *
+ * The amount of padding to place in front of each allocation. We have
+ * several ways to then check that no one overwrites this padding.
+ *
+ * This should be a multiple of 8 or else the expected alignment
+ * (which malloc doesn't make that explicit...) will be broken.
+ */
+#ifndef ARMYKNIFE_MEMORY_ALLOCATION_START_PADDING
+#define ARMYKNIFE_MEMORY_ALLOCATION_START_PADDING 8
 #endif
 
+/**
+ * @debug_compiliation_option ARMYKNIFE_MEMORY_ALLOCATION_START_PADDING
+ *
+ * The amount of padding to place in front of each allocation. We have
+ * several ways to then check that no one overwrites this padding.
+ *
+ * This should be a multiple of 8 or else the expected alignment
+ * (which malloc doesn't make that explicit...) will be broken.
+ */
+#ifndef ARMYKNIFE_MEMORY_ALLOCATION_END_PADDING
+#define ARMYKNIFE_MEMORY_ALLOCATION_END_PADDING 8
+#endif
+
+/**
+ * @debug_compiliation_option ARMYKNIFE_MEMORY_ALLOCATION_HASHTABLE_SIZE
+ *
+ * This determine how big the lossy hashtable is. On every allocation
+ * or deallocation the lossy hashtable is examined to see if the
+ * padding bytes have been perturbed which makes it possible to find
+ * some memory overwrite errors earlier than waiting for the free call
+ * (and even if the memory isn't freed.
+ *
+ * It makes no sense to set this unless either
+ * ARMYKNIFE_MEMORY_ALLOCATION_START_PADDING or
+ * ARMYKNIFE_MEMORY_ALLOCATION_END_PADDING is non-zero.
+ */
+#ifndef ARMYKNIFE_MEMORY_ALLOCATION_HASHTABLE_SIZE
+#define ARMYKNIFE_MEMORY_ALLOCATION_HASHTABLE_SIZE 0
+#endif
+
+/**
+ * @debug_compiliation_option ARMYKNIFE_MEMORY_ALLOCATION_MAXIMUM_AMOUNT
+ *
+ * This is just a fail-safe to catch extremely dumb allocation amounts
+ * (at least as of 2023). If you know you will have a fixed size
+ * amount of memory, you could set this lower and potentially get a
+ * slightly nicer error message.
+ */
 #ifndef ARMYKNIFE_MEMORY_ALLOCATION_MAXIMUM_AMOUNT
 #define ARMYKNIFE_MEMORY_ALLOCATION_MAXIMUM_AMOUNT (1L << 48)
 #endif
+
+#define START_PADDING_BYTE (170 & 0xff)
+#define END_PADDING_BYTE ((~START_PADDING_BYTE) & 0xff)
+
+struct memory_hashtable_bucket_S {
+  // malloc will never allocated at address 0 so if this field is
+  // zero, then this spot in the hashtable is occupied.
+  uint64_t malloc_address;
+  uint64_t malloc_size;
+  char* allocation_filename;
+  uint64_t allocation_line_number;
+};
+
+typedef struct memory_hashtable_bucket_S memory_hashtable_bucket_t;
+
+memory_hashtable_bucket_t memory_ht[ARMYKNIFE_MEMORY_ALLOCATION_HASHTABLE_SIZE];
+
+void check_start_padding(uint8_t* address) {
+  for (int i = 0; i < ARMYKNIFE_MEMORY_ALLOCATION_START_PADDING; i++) {
+    if (address[i] != START_PADDING_BYTE) {
+      fatal_error(ERROR_MEMORY_START_PADDING_ERROR);
+    }
+  }
+}
+
+void check_end_padding(uint8_t* address) {
+  for (int i = 0; i < ARMYKNIFE_MEMORY_ALLOCATION_END_PADDING; i++) {
+    if (address[i] != END_PADDING_BYTE) {
+      fatal_error(ERROR_MEMORY_END_PADDING_ERROR);
+    }
+  }
+}
+
+void check_memory_hashtable_padding() {
+  for (int i = 0; i < ARMYKNIFE_MEMORY_ALLOCATION_HASHTABLE_SIZE; i++) {
+    if (memory_ht[i].malloc_address != 0) {
+      uint64_t malloc_start_address = memory_ht[i].malloc_address;
+      uint64_t malloc_size = memory_ht[i].malloc_size;
+      check_start_padding((uint8_t*) malloc_start_address);
+      check_end_padding((uint8_t*) (malloc_start_address
+                                    + ARMYKNIFE_MEMORY_ALLOCATION_START_PADDING
+                                    + malloc_size));
+    }
+  }
+}
+
+void track_padding(char* file, int line, uint8_t* address, uint64_t amount) {
+  for (int i = 0; i < ARMYKNIFE_MEMORY_ALLOCATION_START_PADDING; i++) {
+    address[i] = START_PADDING_BYTE;
+  }
+  uint8_t* end_padding_address
+      = address + amount + ARMYKNIFE_MEMORY_ALLOCATION_START_PADDING;
+  for (int i = 0; i < ARMYKNIFE_MEMORY_ALLOCATION_END_PADDING; i++) {
+    end_padding_address[i] = END_PADDING_BYTE;
+  }
+
+  // Now finally put it into the hashtable
+}
+
+void untrack_padding(uint8_t* malloc_address) {
+  check_start_padding(malloc_address);
+  // Unfortunately, since we don't know the size of the allocation, we
+  // can't actually check the end padding! When there is enough start
+  // padding (say at least 64bits), then we could potentially store
+  // say 48bits worth of an allocation amount in it.
+  //
+  // On the other hand, we do check the end padding if it is still
+  // tracked in the lossy memory hashtable.
+
+  // Now finally zero-out the memory hashtable.
+}
 
 /**
  * @function checked_malloc
@@ -896,7 +1030,12 @@ uint8_t* checked_malloc(char* file, int line, uint64_t amount) {
             number_of_malloc_calls);
   }
 
-  uint8_t* result = malloc(amount + ARMYKNIFE_MEMORY_ALLOCATION_END_PADDING);
+  check_memory_hashtable_padding();
+
+  uint64_t amount_with_padding = ARMYKNIFE_MEMORY_ALLOCATION_START_PADDING
+                                 + amount
+                                 + ARMYKNIFE_MEMORY_ALLOCATION_END_PADDING;
+  uint8_t* result = malloc(amount_with_padding);
   if (result == NULL) {
     fatal_error_impl(file, line, ERROR_MEMORY_ALLOCATION);
   }
@@ -906,12 +1045,13 @@ uint8_t* checked_malloc(char* file, int line, uint64_t amount) {
             (unsigned long) result);
   }
 
-  memset(result, 0, amount);
+  memset(result, 0, amount_with_padding);
+  track_padding(file, line, result, amount);
 
   number_of_bytes_allocated += amount;
   number_of_malloc_calls++;
 
-  return result;
+  return result + ARMYKNIFE_MEMORY_ALLOCATION_START_PADDING;
 }
 
 /**
@@ -945,8 +1085,19 @@ void checked_free(char* file, int line, void* pointer) {
   if (pointer == NULL) {
     fatal_error_impl(file, line, ERROR_MEMORY_FREE_NULL);
   }
+
+  // Check all of the padding we know about
+  check_memory_hashtable_padding();
+
+  uint8_t* malloc_pointer
+      = ((uint8_t*) pointer) - ARMYKNIFE_MEMORY_ALLOCATION_START_PADDING;
+
+  // Check this entries padding (in case it got lossed from the global
+  // hashtable), and also remove it from the hashtable if it was
+  // found.
+  untrack_padding(malloc_pointer);
   number_of_free_calls++;
-  free(pointer);
+  free(malloc_pointer);
 }
 #line 2 "boolean.c"
 /**
@@ -1446,6 +1597,8 @@ typedef enum {
   ERROR_INTERNAL_ASSERTION_FAILURE,
   ERROR_BAD_ALLOCATION_SIZE,
   ERROR_ILLEGAL_ARGUMENT,
+  ERROR_MEMORY_START_PADDING_ERROR,
+  ERROR_MEMORY_END_PADDING_ERROR,
 } error_code_t;
 
 extern _Noreturn void fatal_error_impl(char* file, int line, int error_code);
@@ -1929,7 +2082,8 @@ typedef struct random_state_S random_state_t;
 
 extern random_state_t random_state_for_test(void);
 extern uint64_t random_next_uint64(random_state_t* state);
-extern uint64_t random_next_uint64_below(random_state_t* state, uint64_t maximum);
+extern uint64_t random_next_uint64_below(random_state_t* state,
+                                         uint64_t maximum);
 
 #endif /* _RANDOM_H_ */
 

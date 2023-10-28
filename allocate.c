@@ -145,7 +145,7 @@ static inline boolean_t should_log_memory_allocation() {
  * ARMYKNIFE_MEMORY_ALLOCATION_END_PADDING is non-zero.
  */
 #ifndef ARMYKNIFE_MEMORY_ALLOCATION_HASHTABLE_SIZE
-#define ARMYKNIFE_MEMORY_ALLOCATION_HASHTABLE_SIZE 0
+#define ARMYKNIFE_MEMORY_ALLOCATION_HASHTABLE_SIZE 16
 #endif
 
 /**
@@ -205,7 +205,21 @@ void check_memory_hashtable_padding() {
   }
 }
 
+// I got this from a blog post by Daniel Lemire (who was actually
+// pushing a different scheme...) A terrible hash function will sink
+// our scheme but anything that isn't terrible just gets us closer to
+// some ideal.
+uint64_t mumurhash64_mix(uint64_t h) {
+  h *= h >> 33;
+  h *= 0xff51afd7ed558ccdL;
+  h *= h >> 33;
+  h *= 0xc4ceb9fe1a85ec53L;
+  h *= h >> 33;
+  return h;
+}
+
 void track_padding(char* file, int line, uint8_t* address, uint64_t amount) {
+  // First set the padding to predicatable values
   for (int i = 0; i < ARMYKNIFE_MEMORY_ALLOCATION_START_PADDING; i++) {
     address[i] = START_PADDING_BYTE;
   }
@@ -215,7 +229,19 @@ void track_padding(char* file, int line, uint8_t* address, uint64_t amount) {
     end_padding_address[i] = END_PADDING_BYTE;
   }
 
-  // Now finally put it into the hashtable
+  if (ARMYKNIFE_MEMORY_ALLOCATION_HASHTABLE_SIZE > 0) {
+    // Now replace whatever entry we might already have there. This is
+    // why we have more LRU semantics. We could use another signal to
+    // probalistically delay updating the hashtable when the bucket is
+    // already occupied but I think LRU might work well most of the
+    // time. (Mostly a hunch I will admit.).
+    int bucket = mumurhash64_mix((uint64_t) address)
+                 % ARMYKNIFE_MEMORY_ALLOCATION_HASHTABLE_SIZE;
+    memory_ht[bucket].malloc_address = (uint64_t) address;
+    memory_ht[bucket].malloc_size = amount;
+    memory_ht[bucket].allocation_filename = file;
+    memory_ht[bucket].allocation_line_number = line;
+  }
 }
 
 void untrack_padding(uint8_t* malloc_address) {
@@ -228,7 +254,15 @@ void untrack_padding(uint8_t* malloc_address) {
   // On the other hand, we do check the end padding if it is still
   // tracked in the lossy memory hashtable.
 
-  // Now finally zero-out the memory hashtable.
+  if (ARMYKNIFE_MEMORY_ALLOCATION_HASHTABLE_SIZE > 0) {
+    // Now finally zero-out the memory hashtable.
+    int bucket = mumurhash64_mix((uint64_t) malloc_address)
+                 % ARMYKNIFE_MEMORY_ALLOCATION_HASHTABLE_SIZE;
+    memory_ht[bucket].malloc_address = 0;
+    memory_ht[bucket].malloc_size = 0;
+    memory_ht[bucket].allocation_filename = 0;
+    memory_ht[bucket].allocation_line_number = 0;
+  }
 }
 
 /**

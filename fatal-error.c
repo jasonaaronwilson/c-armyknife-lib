@@ -121,6 +121,13 @@ const char* fatal_error_code_to_string(int error_code) {
     return "ERROR_UNIMPLEMENTED";
   case ERROR_ILLEGAL_NULL_ARGUMENT:
     return "ERROR_ILLEGAL_NULL_ARGUMENT";
+  case ERROR_ILLEGAL_ARGUMENT:
+    return "ERROR_ILLEGAL_ARGUMENT";
+  case ERROR_MEMORY_START_PADDING_ERROR:
+    return "ERROR_MEMORY_START_PADDING_ERROR";
+  case ERROR_MEMORY_END_PADDING_ERROR:
+    return "ERROR_MEMORY_END_PADDING_ERROR";
+
   default:
     return "error";
   }

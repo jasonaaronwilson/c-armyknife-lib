@@ -235,7 +235,7 @@ static inline boolean_t is_not_ok(value_result_t value) {
 #endif /* _TRACE_H_ */
 // SSCF generated file from: allocate.c
 
-#line 27 "allocate.c"
+#line 28 "allocate.c"
 #ifndef _ALLOCATE_H_
 #define _ALLOCATE_H_
 
@@ -784,8 +784,8 @@ extern uint64_t random_next_uint64_below(random_state_t* state,
  *
  * This file contains wrappers around malloc to make it more
  * convenient and possibly safer (for example, allocated memory is
- * always zero'd and macros like malloc_struct are more readable and
- * it bit more readable as well).
+ * always zero'd and macros like malloc_struct are more readable
+ * besides the clearing behavior).
  *
  * For missing calls to free, we are fully compatbile with valgrind
  * (since we just call malloc/free). (Valgrind also has a memcheck
@@ -795,13 +795,14 @@ extern uint64_t random_next_uint64_below(random_state_t* state,
  * LRU style lossy hashtable and to repeatedly scan this set of
  * allocations for overwrites. While this will not detect all
  * instances of an overwrite, when it does, it will be pretty
- * convenient to use in conjuction with a debugger to set a
- * watch-point precisely when is needed.
+ * convenient to use in conjuction with a debugger to track the bug
+ * down.
  *
  * There should be no run-time penalty when our additional debugging
- * options are turned off, though I still like how valgrind doesn't
- * even require recompilation. If our different technique pays off,
- * perhaps it could be put into valgrind.
+ * options are turned off (though I still like how valgrind doesn't
+ * even require recompilation so maybe if our different techniques pay
+ * off, perhaps it could be moved into valgrind so please send
+ * feedback if you try these out!)
  */
 
 #ifndef _ALLOCATE_H_
@@ -885,7 +886,8 @@ static inline boolean_t should_log_memory_allocation() {
  * @debug_compiliation_option ARMYKNIFE_MEMORY_ALLOCATION_START_PADDING
  *
  * The amount of padding to place in front of each allocation. We have
- * several ways to then check that no one overwrites this padding.
+ * several ways to then check that no one overwrites this padding
+ * though we won't catch every case.
  *
  * This should be a multiple of 8 or else the expected alignment
  * (which malloc doesn't make that explicit...) will be broken.
@@ -895,13 +897,15 @@ static inline boolean_t should_log_memory_allocation() {
 #endif
 
 /**
- * @debug_compiliation_option ARMYKNIFE_MEMORY_ALLOCATION_START_PADDING
+ * @debug_compiliation_option ARMYKNIFE_MEMORY_ALLOCATION_END_PADDING
  *
- * The amount of padding to place in front of each allocation. We have
- * several ways to then check that no one overwrites this padding.
+ * The amount of padding to place at the back of each allocation. We
+ * have several ways to then check that no one overwrites this padding
+ * though we won't catch every case.
  *
- * This should be a multiple of 8 or else the expected alignment
- * (which malloc doesn't make that explicit...) will be broken.
+ * Unlike start padding, this does not effect alignment and so values
+ * as small as 1 make perfect sense though I still recommend 4 or 8
+ * bytes especially on 64bit big-endian architectures.
  */
 #ifndef ARMYKNIFE_MEMORY_ALLOCATION_END_PADDING
 #define ARMYKNIFE_MEMORY_ALLOCATION_END_PADDING 8
@@ -921,7 +925,7 @@ static inline boolean_t should_log_memory_allocation() {
  * ARMYKNIFE_MEMORY_ALLOCATION_END_PADDING is non-zero.
  */
 #ifndef ARMYKNIFE_MEMORY_ALLOCATION_HASHTABLE_SIZE
-#define ARMYKNIFE_MEMORY_ALLOCATION_HASHTABLE_SIZE 0
+#define ARMYKNIFE_MEMORY_ALLOCATION_HASHTABLE_SIZE 16
 #endif
 
 /**
@@ -981,7 +985,21 @@ void check_memory_hashtable_padding() {
   }
 }
 
+// I got this from a blog post by Daniel Lemire (who was actually
+// pushing a different scheme...) A terrible hash function will sink
+// our scheme but anything about a pretty low quality metric is
+// probably OK.
+uint64_t mumurhash64_mix(uint64_t h) {
+  h *= h >> 33;
+  h *= 0xff51afd7ed558ccdL;
+  h *= h >> 33;
+  h *= 0xc4ceb9fe1a85ec53L;
+  h *= h >> 33;
+  return h;
+}
+
 void track_padding(char* file, int line, uint8_t* address, uint64_t amount) {
+  // First set the padding to predicatable values
   for (int i = 0; i < ARMYKNIFE_MEMORY_ALLOCATION_START_PADDING; i++) {
     address[i] = START_PADDING_BYTE;
   }
@@ -991,7 +1009,18 @@ void track_padding(char* file, int line, uint8_t* address, uint64_t amount) {
     end_padding_address[i] = END_PADDING_BYTE;
   }
 
-  // Now finally put it into the hashtable
+  if (ARMYKNIFE_MEMORY_ALLOCATION_HASHTABLE_SIZE > 0) {
+    // Now replace whatever entry we might already have there. This is
+    // why we have more LRU semantics. We could use another signal to
+    // probalistically delay updating the hashtable when the bucket is
+    // already occupied but I think LRU might work well most of the
+    // time. (Mostly a hunch I will admit.).
+    int bucket = mumurhash64_mix((uint64_t) address) % ARMYKNIFE_MEMORY_ALLOCATION_HASHTABLE_SIZE;
+    memory_ht[bucket].malloc_address = (uint64_t) address;
+    memory_ht[bucket].malloc_size = amount;
+    memory_ht[bucket].allocation_filename = file;
+    memory_ht[bucket].allocation_line_number = line;
+  }
 }
 
 void untrack_padding(uint8_t* malloc_address) {
@@ -1004,7 +1033,14 @@ void untrack_padding(uint8_t* malloc_address) {
   // On the other hand, we do check the end padding if it is still
   // tracked in the lossy memory hashtable.
 
-  // Now finally zero-out the memory hashtable.
+  if (ARMYKNIFE_MEMORY_ALLOCATION_HASHTABLE_SIZE > 0) {
+    // Now finally zero-out the memory hashtable.
+    int bucket = mumurhash64_mix((uint64_t) malloc_address) % ARMYKNIFE_MEMORY_ALLOCATION_HASHTABLE_SIZE;
+    memory_ht[bucket].malloc_address = 0;
+    memory_ht[bucket].malloc_size = 0;
+    memory_ht[bucket].allocation_filename = 0;
+    memory_ht[bucket].allocation_line_number = 0;
+  }
 }
 
 /**
@@ -1677,6 +1713,13 @@ const char* fatal_error_code_to_string(int error_code) {
     return "ERROR_UNIMPLEMENTED";
   case ERROR_ILLEGAL_NULL_ARGUMENT:
     return "ERROR_ILLEGAL_NULL_ARGUMENT";
+  case ERROR_ILLEGAL_ARGUMENT:
+    return "ERROR_ILLEGAL_ARGUMENT";
+  case ERROR_MEMORY_START_PADDING_ERROR:
+    return "ERROR_MEMORY_START_PADDING_ERROR";
+  case ERROR_MEMORY_END_PADDING_ERROR:
+    return "ERROR_MEMORY_END_PADDING_ERROR";
+
   default:
     return "error";
   }

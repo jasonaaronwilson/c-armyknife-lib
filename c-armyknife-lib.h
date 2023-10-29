@@ -235,7 +235,7 @@ static inline boolean_t is_not_ok(value_result_t value) {
 #endif /* _TRACE_H_ */
 // SSCF generated file from: allocate.c
 
-#line 28 "allocate.c"
+#line 29 "allocate.c"
 #ifndef _ALLOCATE_H_
 #define _ALLOCATE_H_
 
@@ -245,6 +245,8 @@ extern uint8_t* checked_malloc(char* file, int line, uint64_t amount);
 extern uint8_t* checked_malloc_copy_of(char* file, int line, uint8_t* source,
                                        uint64_t amount);
 extern void checked_free(char* file, int line, void* pointer);
+
+extern void check_memory_hashtable_padding();
 
 /**
  * @macro malloc_bytes
@@ -779,12 +781,13 @@ extern uint64_t random_next_uint64_below(random_state_t* state,
 #endif /* _TEST_H_ */
 #ifdef C_ARMYKNIFE_LIB_IMPL
 #line 2 "allocate.c"
+
 /**
  * @file allocate.c
  *
- * This file contains wrappers around malloc to make it more
- * convenient and possibly safer (for example, allocated memory is
- * always zero'd and macros like malloc_struct are more readable
+ * This file contains wrappers around malloc and free to make them
+ * more convenient and possibly safer (for example, allocated memory
+ * is always zero'd and macros like malloc_struct are more readable
  * besides the clearing behavior).
  *
  * For missing calls to free, we are fully compatbile with valgrind
@@ -800,9 +803,9 @@ extern uint64_t random_next_uint64_below(random_state_t* state,
  *
  * There should be no run-time penalty when our additional debugging
  * options are turned off (though I still like how valgrind doesn't
- * even require recompilation so maybe if our different techniques pay
- * off, perhaps it could be moved into valgrind so please send
- * feedback if you try these out!)
+ * even require recompilation so maybe if our different techniques
+ * pays off, perhaps we can port it into valgrind so please send
+ * feedback if you find armyknife-lib's memcheck mode helpful or not.
  */
 
 #ifndef _ALLOCATE_H_
@@ -814,6 +817,8 @@ extern uint8_t* checked_malloc(char* file, int line, uint64_t amount);
 extern uint8_t* checked_malloc_copy_of(char* file, int line, uint8_t* source,
                                        uint64_t amount);
 extern void checked_free(char* file, int line, void* pointer);
+
+extern void check_memory_hashtable_padding();
 
 /**
  * @macro malloc_bytes
@@ -964,9 +969,11 @@ void check_start_padding(uint8_t* address) {
   }
 }
 
-void check_end_padding(uint8_t* address) {
+void check_end_padding(uint8_t* address, char* filename, uint64_t line) {
   for (int i = 0; i < ARMYKNIFE_MEMORY_ALLOCATION_END_PADDING; i++) {
     if (address[i] != END_PADDING_BYTE) {
+      fprintf(stderr, "FATAL: someone clobbered past an allocation %lu. (allocated here: %s:%lu)\n",
+              ((uint64_t) address), filename, line);
       fatal_error(ERROR_MEMORY_END_PADDING_ERROR);
     }
   }
@@ -980,15 +987,17 @@ void check_memory_hashtable_padding() {
       check_start_padding((uint8_t*) malloc_start_address);
       check_end_padding((uint8_t*) (malloc_start_address
                                     + ARMYKNIFE_MEMORY_ALLOCATION_START_PADDING
-                                    + malloc_size));
+                                    + malloc_size),
+                        memory_ht[i].allocation_filename,
+                        memory_ht[i].allocation_line_number);
     }
   }
 }
 
 // I got this from a blog post by Daniel Lemire (who was actually
 // pushing a different scheme...) A terrible hash function will sink
-// our scheme but anything about a pretty low quality metric is
-// probably OK.
+// our scheme but anything that isn't terrible just gets us closer to
+// some ideal.
 uint64_t mumurhash64_mix(uint64_t h) {
   h *= h >> 33;
   h *= 0xff51afd7ed558ccdL;
@@ -1015,7 +1024,8 @@ void track_padding(char* file, int line, uint8_t* address, uint64_t amount) {
     // probalistically delay updating the hashtable when the bucket is
     // already occupied but I think LRU might work well most of the
     // time. (Mostly a hunch I will admit.).
-    int bucket = mumurhash64_mix((uint64_t) address) % ARMYKNIFE_MEMORY_ALLOCATION_HASHTABLE_SIZE;
+    int bucket = mumurhash64_mix((uint64_t) address)
+                 % ARMYKNIFE_MEMORY_ALLOCATION_HASHTABLE_SIZE;
     memory_ht[bucket].malloc_address = (uint64_t) address;
     memory_ht[bucket].malloc_size = amount;
     memory_ht[bucket].allocation_filename = file;
@@ -1035,7 +1045,8 @@ void untrack_padding(uint8_t* malloc_address) {
 
   if (ARMYKNIFE_MEMORY_ALLOCATION_HASHTABLE_SIZE > 0) {
     // Now finally zero-out the memory hashtable.
-    int bucket = mumurhash64_mix((uint64_t) malloc_address) % ARMYKNIFE_MEMORY_ALLOCATION_HASHTABLE_SIZE;
+    int bucket = mumurhash64_mix((uint64_t) malloc_address)
+                 % ARMYKNIFE_MEMORY_ALLOCATION_HASHTABLE_SIZE;
     memory_ht[bucket].malloc_address = 0;
     memory_ht[bucket].malloc_size = 0;
     memory_ht[bucket].allocation_filename = 0;
@@ -2762,13 +2773,16 @@ uint64_t string_hash(const char* str) {
  * Return a substring of the given string as a newly allocated string.
  */
 char* string_substring(const char* str, int start, int end) {
-  // TODO(jawilson): check length of str...
+  uint64_t len = strlen(str);
+  if (start >= len || start >= end || end < start) {
+    fatal_error(ERROR_ILLEGAL_ARGUMENT);
+  }
   int result_size = end - start + 1;
   char* result = (char*) (malloc_bytes(result_size));
   for (int i = start; (i < end); i++) {
     result[i - start] = str[i];
   }
-  result[result_size] = '\0';
+  result[result_size-1] = '\0';
   return result;
 }
 

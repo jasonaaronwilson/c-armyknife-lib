@@ -67,12 +67,12 @@ int main(int argc, char** argv) {
     test_fail("string_hash");
   }
 
-
   // Memory leak. So what, this is a test...
   if (!(string_equal(string_substring("The quick brown fox", 4, 9), "quick"))) {
     test_fail("string_substring");
   }
 
+  check_memory_hashtable_padding();
 
   if (string_parse_uint64("0").u64 != 0) {
     test_fail("string_parse_uint64");

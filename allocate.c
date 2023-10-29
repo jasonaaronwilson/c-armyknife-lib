@@ -1,10 +1,11 @@
 #line 2 "allocate.c"
+
 /**
  * @file allocate.c
  *
- * This file contains wrappers around malloc to make it more
- * convenient and possibly safer (for example, allocated memory is
- * always zero'd and macros like malloc_struct are more readable
+ * This file contains wrappers around malloc and free to make them
+ * more convenient and possibly safer (for example, allocated memory
+ * is always zero'd and macros like malloc_struct are more readable
  * besides the clearing behavior).
  *
  * For missing calls to free, we are fully compatbile with valgrind
@@ -20,9 +21,9 @@
  *
  * There should be no run-time penalty when our additional debugging
  * options are turned off (though I still like how valgrind doesn't
- * even require recompilation so maybe if our different techniques pay
- * off, perhaps it could be moved into valgrind so please send
- * feedback if you try these out!)
+ * even require recompilation so maybe if our different techniques
+ * pays off, perhaps we can port it into valgrind so please send
+ * feedback if you find armyknife-lib's memcheck mode helpful or not.
  */
 
 #ifndef _ALLOCATE_H_
@@ -34,6 +35,8 @@ extern uint8_t* checked_malloc(char* file, int line, uint64_t amount);
 extern uint8_t* checked_malloc_copy_of(char* file, int line, uint8_t* source,
                                        uint64_t amount);
 extern void checked_free(char* file, int line, void* pointer);
+
+extern void check_memory_hashtable_padding();
 
 /**
  * @macro malloc_bytes
@@ -184,9 +187,13 @@ void check_start_padding(uint8_t* address) {
   }
 }
 
-void check_end_padding(uint8_t* address) {
+void check_end_padding(uint8_t* address, char* filename, uint64_t line) {
   for (int i = 0; i < ARMYKNIFE_MEMORY_ALLOCATION_END_PADDING; i++) {
     if (address[i] != END_PADDING_BYTE) {
+      fprintf(stderr,
+              "FATAL: someone clobbered past an allocation %lu. (allocated "
+              "here: %s:%lu)\n",
+              ((uint64_t) address), filename, line);
       fatal_error(ERROR_MEMORY_END_PADDING_ERROR);
     }
   }
@@ -200,7 +207,9 @@ void check_memory_hashtable_padding() {
       check_start_padding((uint8_t*) malloc_start_address);
       check_end_padding((uint8_t*) (malloc_start_address
                                     + ARMYKNIFE_MEMORY_ALLOCATION_START_PADDING
-                                    + malloc_size));
+                                    + malloc_size),
+                        memory_ht[i].allocation_filename,
+                        memory_ht[i].allocation_line_number);
     }
   }
 }

@@ -128,13 +128,16 @@ uint64_t string_hash(const char* str) {
  * Return a substring of the given string as a newly allocated string.
  */
 char* string_substring(const char* str, int start, int end) {
-  // TODO(jawilson): check length of str...
+  uint64_t len = strlen(str);
+  if (start >= len || start >= end || end < start) {
+    fatal_error(ERROR_ILLEGAL_ARGUMENT);
+  }
   int result_size = end - start + 1;
   char* result = (char*) (malloc_bytes(result_size));
   for (int i = start; (i < end); i++) {
     result[i - start] = str[i];
   }
-  result[result_size] = '\0';
+  result[result_size - 1] = '\0';
   return result;
 }
 

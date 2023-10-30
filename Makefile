@@ -82,6 +82,10 @@ TESTS= \
 test:
 	(cd tests && ../run-tests.sh ${TESTS})
 
+doc:
+	(cd ../c-javadoc-extractor && make)
+	../c-javadoc-extractor/c-javadoc-extractor *.c
+
 docs:
 	doxygen
 

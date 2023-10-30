@@ -972,7 +972,9 @@ void check_start_padding(uint8_t* address) {
 void check_end_padding(uint8_t* address, char* filename, uint64_t line) {
   for (int i = 0; i < ARMYKNIFE_MEMORY_ALLOCATION_END_PADDING; i++) {
     if (address[i] != END_PADDING_BYTE) {
-      fprintf(stderr, "FATAL: someone clobbered past an allocation %lu. (allocated here: %s:%lu)\n",
+      fprintf(stderr,
+              "FATAL: someone clobbered past an allocation %lu. (allocated "
+              "here: %s:%lu)\n",
               ((uint64_t) address), filename, line);
       fatal_error(ERROR_MEMORY_END_PADDING_ERROR);
     }
@@ -2782,7 +2784,7 @@ char* string_substring(const char* str, int start, int end) {
   for (int i = start; (i < end); i++) {
     result[i - start] = str[i];
   }
-  result[result_size-1] = '\0';
+  result[result_size - 1] = '\0';
   return result;
 }
 

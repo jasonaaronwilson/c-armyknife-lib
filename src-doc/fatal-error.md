@@ -1,6 +1,6 @@
 ## @constants error_code_t
  
-# @file: fatal-error.c
+# @file fatal-error.c
 
 The intent is that everything but a normal program exit will end up
 here. (Currently, we don't catch any signals so this is definitely

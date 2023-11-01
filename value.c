@@ -6,6 +6,8 @@
 #include <stdint.h>
 
 /**
+ * @file value.c
+ *
  * A major part of the armyknife library is giving basic "collection"
  * capabilities to C which is why we have values but it also turns out
  * the library seems more consistent if a few non collection based

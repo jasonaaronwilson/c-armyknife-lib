@@ -1,14 +1,6 @@
-## @function is_not_ok
+# @file value.c
 
-Return true if the given value_result_t contains an error, such as
-NF_ERROR_NOT_FOUND.
- 
-## @function is_ok
-
-Return true if the given value_result_t contains a legal value
-instead of an error condition.
- 
-## A major part of the armyknife library is giving basic "collection"
+A major part of the armyknife library is giving basic "collection"
 capabilities to C which is why we have values but it also turns out
 the library seems more consistent if a few non collection based
 routines also use a similar interface to communicate "failures"
@@ -74,6 +66,16 @@ the pointer case if your are willing to take that step.
 Sometimes other techniques like unit testing work quite well at
 finding these errors as well as higher level bugs so we recommend
 that and even provide a very simple framework to do that.
+ 
+## @function is_not_ok
+
+Return true if the given value_result_t contains an error, such as
+NF_ERROR_NOT_FOUND.
+ 
+## @function is_ok
+
+Return true if the given value_result_t contains a legal value
+instead of an error condition.
  
 ## Non fatal errors.
 

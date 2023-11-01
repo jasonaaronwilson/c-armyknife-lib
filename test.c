@@ -26,7 +26,7 @@
  * understands those).
  *
  * It is *advised* (at least for now) to not pass complicated
- * expressions to test_fail if those are likely to fail. Instead run
+ * expressions to `test_fail` if those are likely to fail. Instead run
  * the test in a debugger and set a break-point on
  * `test_fail_and_exit`.
  */

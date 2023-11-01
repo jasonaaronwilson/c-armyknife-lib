@@ -3,6 +3,12 @@
  * @file string-hashtable.c
  *
  * A hash map of string to a value_t.
+ *
+ * It's high unlikely we are close to JVM level of performance in part
+ * because we may be using a slower (but higher quality) hashing
+ * function and this generally does not pay off. We also use chaining
+ * instead of open addressing since this allowed the most code reuse
+ * and a simpler implementation.
  */
 
 #ifndef _STRING_HASHTABLE_H_
@@ -27,6 +33,12 @@ __attribute__((warn_unused_result)) extern string_hashtable_t*
 
 extern value_result_t string_ht_find(string_hashtable_t* ht, char* key);
 
+/**
+ * @macro string_ht_foreach
+ *
+ * Allows traversing all elements of a hashtable in an unspecified
+ * order.
+ */
 #define string_ht_foreach(ht, key_var, value_var, statements)                  \
   do {                                                                         \
     for (int ht_index = 0; ht_index < ht->n_buckets; ht_index++) {             \
@@ -40,7 +52,11 @@ extern value_result_t string_ht_find(string_hashtable_t* ht, char* key);
 #endif /* _STRING_HASHTABLE_H_ */
 
 /**
- * Create a hashtable with the given initial capacity.
+ * @function make_string_hashtable
+ *
+ * Create a hashtable with the given number of buckets. This
+ * implementation currently never grows a hashtable so you may want to
+ * start with a healthy initial capacity.
  */
 string_hashtable_t* make_string_hashtable(uint64_t n_buckets) {
   if (n_buckets == 0) {
@@ -53,6 +69,8 @@ string_hashtable_t* make_string_hashtable(uint64_t n_buckets) {
 }
 
 /**
+ * @function string_ht_insert
+ *
  * Insert an association into the hashtable.
  */
 string_hashtable_t* string_ht_insert(string_hashtable_t* ht, char* key,
@@ -65,6 +83,8 @@ string_hashtable_t* string_ht_insert(string_hashtable_t* ht, char* key,
 }
 
 /**
+ * @function string_ht_delete
+ *
  * Delete an association from the hashtable.
  */
 string_hashtable_t* string_ht_delete(string_hashtable_t* ht, char* key) {
@@ -76,6 +96,8 @@ string_hashtable_t* string_ht_delete(string_hashtable_t* ht, char* key) {
 }
 
 /**
+ * @function string_ht_find
+ *
  * Find an association in the hashtable.
  */
 value_result_t string_ht_find(string_hashtable_t* ht, char* key) {

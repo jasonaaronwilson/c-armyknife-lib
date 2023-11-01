@@ -84,10 +84,7 @@ test:
 
 doc:
 	(cd ../c-javadoc-extractor && make)
-	../c-javadoc-extractor/c-javadoc-extractor *.c
-
-docs:
-	doxygen
+	../c-javadoc-extractor/c-javadoc-extractor --output-dir=src-doc *.c
 
 cfd:	clean format diff
 

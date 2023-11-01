@@ -1,6 +1,8 @@
 #line 2 "logger.c"
 
 /**
+ * @file logger.c
+ *
  * A "logger" is a type of code instrumentation and provides the
  * ability to put explicit "print statements" into your code without
  * necessarily having a large impact on the performance of that code
@@ -94,6 +96,8 @@ __attribute__((format(printf, 4, 5))) extern void
     logger_impl(char* file, int line_number, int level, char* format, ...);
 
 /**
+ * @macro log_none
+ *
  * This will never ever log and should have essentially zero impact on
  * compilation (including detecting errors). In other words it should
  * behave like an empty statment ";".
@@ -102,11 +106,13 @@ __attribute__((format(printf, 4, 5))) extern void
  * and therefore it can't be depended on to keep working as you
  * refactor code and decide later that you want to turn it on.
  */
-#define log_nope(format, ...)                                                  \
+#define log_none(format, ...)                                                  \
   do {                                                                         \
   } while (0);
 
 /**
+ * @macro log_off
+ *
  * This will never log however the compiler *should* still check to
  * make sure the code is legal and compiles. Any sufficiently smart
  * compiler with some level of optimization turned on should not
@@ -122,6 +128,8 @@ __attribute__((format(printf, 4, 5))) extern void
   } while (0)
 
 /**
+ * @macro log_trace
+ *
  * Log at the TRACE level using printf style formatting.
  */
 #define log_trace(format, ...)                                                 \
@@ -132,6 +140,8 @@ __attribute__((format(printf, 4, 5))) extern void
   } while (0)
 
 /**
+ * @macro log_debug
+ *
  * Log at the DEBUG level using printf style formatting.
  */
 #define log_debug(format, ...)                                                 \
@@ -142,6 +152,8 @@ __attribute__((format(printf, 4, 5))) extern void
   } while (0)
 
 /**
+ * @macro log_info
+ *
  * Log at the INFO level using printf style formatting.
  */
 #define log_info(format, ...)                                                  \
@@ -152,6 +164,8 @@ __attribute__((format(printf, 4, 5))) extern void
   } while (0)
 
 /**
+ * @macro log_warn
+ *
  * Log at the WARN level using printf style formatting.
  */
 #define log_warn(format, ...)                                                  \
@@ -162,6 +176,8 @@ __attribute__((format(printf, 4, 5))) extern void
   } while (0)
 
 /**
+ * @macro log_fatal
+ *
  * Log at the FATAL level using printf style formatting.
  *
  * Typically this is only done before invoking fatal_error though I
@@ -195,6 +211,8 @@ value_result_t parse_log_level_enum(char* str) {
 }
 
 /**
+ * @function logger_init
+ *
  * This function modifies the logging level based on the environment
  * variable ARMYKNIFE_LIB_LOG_LEVEL (which currently must be a
  * number).
@@ -265,8 +283,11 @@ char* logger_level_to_string(int level) {
 }
 
 /**
+ * @function logger_impl
+ *
  * This is the non macro version entry point into the logger. Normally
- * it wouldn't be called directly since it is inconvenient.
+ * it wouldn't be called directly since it is less convenient than the
+ * macro versions.
  */
 __attribute__((format(printf, 4, 5))) void
     logger_impl(char* file, int line_number, int level, char* format, ...) {

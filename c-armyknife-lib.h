@@ -550,7 +550,7 @@ __attribute__((warn_unused_result)) extern string_alist_t*
 #endif /* _STRING_ALIST_H_ */
 // SSCF generated file from: string-hashtable.c
 
-#line 8 "string-hashtable.c"
+#line 14 "string-hashtable.c"
 #ifndef _STRING_HASHTABLE_H_
 #define _STRING_HASHTABLE_H_
 
@@ -2296,11 +2296,17 @@ value_result_t alist_find(string_alist_t* list, char* key) {
   }
   return (value_result_t){.nf_error = NF_ERROR_NOT_FOUND};
 }
-#line 2 "string-hashtable.c"
+  #line 2 "string-hashtable.c"
 /**
  * @file string-hashtable.c
  *
  * A hash map of string to a value_t.
+ * 
+ * It's high unlikely we are close to JVM level of performance in part
+ * because we may be using a slower (but higher quality) hashing
+ * function and this generally does not pay off. We also use chaining
+ * instead of open addressing since this allowed the most code reuse
+ * and a simpler implementation.
  */
 
 #ifndef _STRING_HASHTABLE_H_

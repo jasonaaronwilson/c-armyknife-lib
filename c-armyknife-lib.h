@@ -85,6 +85,8 @@ typedef bool boolean_t;
 #include <stdint.h>
 
 /**
+ * @file value.c
+ *
  * A major part of the armyknife library is giving basic "collection"
  * capabilities to C which is why we have values but it also turns out
  * the library seems more consistent if a few non collection based
@@ -214,25 +216,6 @@ static inline boolean_t is_not_ok(value_result_t value) {
 }
 
 #endif /* _VALUE_H_ */
-// SSCF generated file from: trace.c
-
-#line 2 "trace.c"
-#ifndef _TRACE_H_
-#define _TRACE_H_
-
-#include <stdio.h>
-
-#define TRACE()                                                                \
-  do {                                                                         \
-    fprintf(stderr, "TRACE file=%s line=%d\n", __FILE__, __LINE__);            \
-  } while (0)
-
-#define WARN(msg)                                                              \
-  do {                                                                         \
-    fprintf(stderr, "WARN file=%s line=%d '%s'\n", __FILE__, __LINE__, msg);   \
-  } while (0)
-
-#endif /* _TRACE_H_ */
 // SSCF generated file from: allocate.c
 
 #line 29 "allocate.c"
@@ -328,11 +311,12 @@ __attribute__((format(printf, 1, 2))) extern char* string_printf(char* format,
 #endif /* _STRING_UTIL_H_ */
 // SSCF generated file from: logger.c
 
-#line 63 "logger.c"
+#line 65 "logger.c"
 #ifndef _LOGGER_H_
 #define _LOGGER_H_
 
 #include <stdarg.h>
+#include <stdio.h>
 
 #define LOGGER_OFF 0
 #define LOGGER_TRACE 1
@@ -363,6 +347,8 @@ __attribute__((format(printf, 4, 5))) extern void
     logger_impl(char* file, int line_number, int level, char* format, ...);
 
 /**
+ * @macro log_none
+ *
  * This will never ever log and should have essentially zero impact on
  * compilation (including detecting errors). In other words it should
  * behave like an empty statment ";".
@@ -371,11 +357,13 @@ __attribute__((format(printf, 4, 5))) extern void
  * and therefore it can't be depended on to keep working as you
  * refactor code and decide later that you want to turn it on.
  */
-#define log_nope(format, ...)                                                  \
+#define log_none(format, ...)                                                  \
   do {                                                                         \
   } while (0);
 
 /**
+ * @macro log_off
+ *
  * This will never log however the compiler *should* still check to
  * make sure the code is legal and compiles. Any sufficiently smart
  * compiler with some level of optimization turned on should not
@@ -391,6 +379,8 @@ __attribute__((format(printf, 4, 5))) extern void
   } while (0)
 
 /**
+ * @macro log_trace
+ *
  * Log at the TRACE level using printf style formatting.
  */
 #define log_trace(format, ...)                                                 \
@@ -401,6 +391,8 @@ __attribute__((format(printf, 4, 5))) extern void
   } while (0)
 
 /**
+ * @macro log_debug
+ *
  * Log at the DEBUG level using printf style formatting.
  */
 #define log_debug(format, ...)                                                 \
@@ -411,6 +403,8 @@ __attribute__((format(printf, 4, 5))) extern void
   } while (0)
 
 /**
+ * @macro log_info
+ *
  * Log at the INFO level using printf style formatting.
  */
 #define log_info(format, ...)                                                  \
@@ -421,6 +415,8 @@ __attribute__((format(printf, 4, 5))) extern void
   } while (0)
 
 /**
+ * @macro log_warn
+ *
  * Log at the WARN level using printf style formatting.
  */
 #define log_warn(format, ...)                                                  \
@@ -431,6 +427,8 @@ __attribute__((format(printf, 4, 5))) extern void
   } while (0)
 
 /**
+ * @macro log_fatal
+ *
  * Log at the FATAL level using printf style formatting.
  *
  * Typically this is only done before invoking fatal_error though I
@@ -573,6 +571,12 @@ __attribute__((warn_unused_result)) extern string_hashtable_t*
 
 extern value_result_t string_ht_find(string_hashtable_t* ht, char* key);
 
+/**
+ * @macro string_ht_foreach
+ *
+ * Allows traversing all elements of a hashtable in an unspecified
+ * order.
+ */
 #define string_ht_foreach(ht, key_var, value_var, statements)                  \
   do {                                                                         \
     for (int ht_index = 0; ht_index < ht->n_buckets; ht_index++) {             \
@@ -769,7 +773,7 @@ extern uint64_t random_next_uint64_below(random_state_t* state,
  * understands those).
  *
  * It is *advised* (at least for now) to not pass complicated
- * expressions to test_fail if those are likely to fail. Instead run
+ * expressions to `test_fail` if those are likely to fail. Instead run
  * the test in a debugger and set a break-point on
  * `test_fail_and_exit`.
  */
@@ -1605,7 +1609,7 @@ command_line_parse_result_t
 }
 #line 2 "fatal-error.c"
 /**
- * @file: fatal-error.c
+ * @file fatal-error.c
  *
  * The intent is that everything but a normal program exit will end up
  * here. (Currently, we don't catch any signals so this is definitely
@@ -1823,6 +1827,8 @@ void buffer_write_file(buffer_t* bytes, char* file_name) {
 #line 2 "logger.c"
 
 /**
+ * @file logger.c
+ *
  * A "logger" is a type of code instrumentation and provides the
  * ability to put explicit "print statements" into your code without
  * necessarily having a large impact on the performance of that code
@@ -1886,6 +1892,7 @@ void buffer_write_file(buffer_t* bytes, char* file_name) {
 #define _LOGGER_H_
 
 #include <stdarg.h>
+#include <stdio.h>
 
 #define LOGGER_OFF 0
 #define LOGGER_TRACE 1
@@ -1916,6 +1923,8 @@ __attribute__((format(printf, 4, 5))) extern void
     logger_impl(char* file, int line_number, int level, char* format, ...);
 
 /**
+ * @macro log_none
+ *
  * This will never ever log and should have essentially zero impact on
  * compilation (including detecting errors). In other words it should
  * behave like an empty statment ";".
@@ -1924,11 +1933,13 @@ __attribute__((format(printf, 4, 5))) extern void
  * and therefore it can't be depended on to keep working as you
  * refactor code and decide later that you want to turn it on.
  */
-#define log_nope(format, ...)                                                  \
+#define log_none(format, ...)                                                  \
   do {                                                                         \
   } while (0);
 
 /**
+ * @macro log_off
+ *
  * This will never log however the compiler *should* still check to
  * make sure the code is legal and compiles. Any sufficiently smart
  * compiler with some level of optimization turned on should not
@@ -1944,6 +1955,8 @@ __attribute__((format(printf, 4, 5))) extern void
   } while (0)
 
 /**
+ * @macro log_trace
+ *
  * Log at the TRACE level using printf style formatting.
  */
 #define log_trace(format, ...)                                                 \
@@ -1954,6 +1967,8 @@ __attribute__((format(printf, 4, 5))) extern void
   } while (0)
 
 /**
+ * @macro log_debug
+ *
  * Log at the DEBUG level using printf style formatting.
  */
 #define log_debug(format, ...)                                                 \
@@ -1964,6 +1979,8 @@ __attribute__((format(printf, 4, 5))) extern void
   } while (0)
 
 /**
+ * @macro log_info
+ *
  * Log at the INFO level using printf style formatting.
  */
 #define log_info(format, ...)                                                  \
@@ -1974,6 +1991,8 @@ __attribute__((format(printf, 4, 5))) extern void
   } while (0)
 
 /**
+ * @macro log_warn
+ *
  * Log at the WARN level using printf style formatting.
  */
 #define log_warn(format, ...)                                                  \
@@ -1984,6 +2003,8 @@ __attribute__((format(printf, 4, 5))) extern void
   } while (0)
 
 /**
+ * @macro log_fatal
+ *
  * Log at the FATAL level using printf style formatting.
  *
  * Typically this is only done before invoking fatal_error though I
@@ -2017,6 +2038,8 @@ value_result_t parse_log_level_enum(char* str) {
 }
 
 /**
+ * @function logger_init
+ *
  * This function modifies the logging level based on the environment
  * variable ARMYKNIFE_LIB_LOG_LEVEL (which currently must be a
  * number).
@@ -2087,8 +2110,11 @@ char* logger_level_to_string(int level) {
 }
 
 /**
+ * @function logger_impl
+ *
  * This is the non macro version entry point into the logger. Normally
- * it wouldn't be called directly since it is inconvenient.
+ * it wouldn't be called directly since it is less convenient than the
+ * macro versions.
  */
 __attribute__((format(printf, 4, 5))) void
     logger_impl(char* file, int line_number, int level, char* format, ...) {
@@ -2296,12 +2322,12 @@ value_result_t alist_find(string_alist_t* list, char* key) {
   }
   return (value_result_t){.nf_error = NF_ERROR_NOT_FOUND};
 }
-  #line 2 "string-hashtable.c"
+#line 2 "string-hashtable.c"
 /**
  * @file string-hashtable.c
  *
  * A hash map of string to a value_t.
- * 
+ *
  * It's high unlikely we are close to JVM level of performance in part
  * because we may be using a slower (but higher quality) hashing
  * function and this generally does not pay off. We also use chaining
@@ -2331,6 +2357,12 @@ __attribute__((warn_unused_result)) extern string_hashtable_t*
 
 extern value_result_t string_ht_find(string_hashtable_t* ht, char* key);
 
+/**
+ * @macro string_ht_foreach
+ *
+ * Allows traversing all elements of a hashtable in an unspecified
+ * order.
+ */
 #define string_ht_foreach(ht, key_var, value_var, statements)                  \
   do {                                                                         \
     for (int ht_index = 0; ht_index < ht->n_buckets; ht_index++) {             \
@@ -2344,7 +2376,11 @@ extern value_result_t string_ht_find(string_hashtable_t* ht, char* key);
 #endif /* _STRING_HASHTABLE_H_ */
 
 /**
- * Create a hashtable with the given initial capacity.
+ * @function make_string_hashtable
+ *
+ * Create a hashtable with the given number of buckets. This
+ * implementation currently never grows a hashtable so you may want to
+ * start with a healthy initial capacity.
  */
 string_hashtable_t* make_string_hashtable(uint64_t n_buckets) {
   if (n_buckets == 0) {
@@ -2357,6 +2393,8 @@ string_hashtable_t* make_string_hashtable(uint64_t n_buckets) {
 }
 
 /**
+ * @function string_ht_insert
+ *
  * Insert an association into the hashtable.
  */
 string_hashtable_t* string_ht_insert(string_hashtable_t* ht, char* key,
@@ -2369,6 +2407,8 @@ string_hashtable_t* string_ht_insert(string_hashtable_t* ht, char* key,
 }
 
 /**
+ * @function string_ht_delete
+ *
  * Delete an association from the hashtable.
  */
 string_hashtable_t* string_ht_delete(string_hashtable_t* ht, char* key) {
@@ -2380,6 +2420,8 @@ string_hashtable_t* string_ht_delete(string_hashtable_t* ht, char* key) {
 }
 
 /**
+ * @function string_ht_find
+ *
  * Find an association in the hashtable.
  */
 value_result_t string_ht_find(string_hashtable_t* ht, char* key) {
@@ -3098,7 +3140,7 @@ uint64_t fasthash64(const void* buf, size_t len, uint64_t seed) {
  * understands those).
  *
  * It is *advised* (at least for now) to not pass complicated
- * expressions to test_fail if those are likely to fail. Instead run
+ * expressions to `test_fail` if those are likely to fail. Instead run
  * the test in a debugger and set a break-point on
  * `test_fail_and_exit`.
  */
@@ -3183,23 +3225,6 @@ value_array_t* tokenize(const char* str, const char* delimiters) {
 void add_duplicate(value_array_t* token_array, const char* data) {
   value_array_add(token_array, str_to_value(string_duplicate(data)));
 }
-#line 2 "trace.c"
-#ifndef _TRACE_H_
-#define _TRACE_H_
-
-#include <stdio.h>
-
-#define TRACE()                                                                \
-  do {                                                                         \
-    fprintf(stderr, "TRACE file=%s line=%d\n", __FILE__, __LINE__);            \
-  } while (0)
-
-#define WARN(msg)                                                              \
-  do {                                                                         \
-    fprintf(stderr, "WARN file=%s line=%d '%s'\n", __FILE__, __LINE__, msg);   \
-  } while (0)
-
-#endif /* _TRACE_H_ */
 #line 2 "uint64.c"
 /**
  * @file uint64.c
@@ -3246,6 +3271,8 @@ int uint64_highest_bit_set(uint64_t n) {
 #include <stdint.h>
 
 /**
+ * @file value.c
+ *
  * A major part of the armyknife library is giving basic "collection"
  * capabilities to C which is why we have values but it also turns out
  * the library seems more consistent if a few non collection based

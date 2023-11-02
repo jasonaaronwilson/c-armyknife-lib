@@ -14,7 +14,6 @@ SRC_C = allocate.c \
 	string-util.c \
 	test.c \
 	tokenizer.c \
-	trace.c \
 	uint64.c \
 	value.c \
 	value-array.c
@@ -23,7 +22,6 @@ ORDERED_H = \
 	fatal-error.h \
 	boolean.h \
 	value.h \
-	trace.h \
 	allocate.h \
 	uint64.h \
 	string-util.h \

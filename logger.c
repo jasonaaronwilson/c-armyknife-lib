@@ -66,6 +66,7 @@
 #define _LOGGER_H_
 
 #include <stdarg.h>
+#include <stdio.h>
 
 #define LOGGER_OFF 0
 #define LOGGER_TRACE 1

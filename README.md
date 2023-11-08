@@ -30,7 +30,7 @@ A small C library with a focus on command line utilities.
 
 ## Links
 
-
+* [Library Documentation](src-doc/index.md)
 
 ## Limitations
 
@@ -72,9 +72,9 @@ tcc version 0.9.27 (x86_64 Linux)
 
 ## Status
 
-This library is under active development as of 2023-11-07. The TODO
-file in this directory has a small road-map to help get to version
-1.0.
+This library is under active development as of 2023-11-07. The
+[TODO](TODO) file in this directory has a small road-map to help get
+to version 1.0 so you can see a bit about what I'm thinking.
 
 `make test` coverage will increase over time (especially once I figure
 out how to actually measure coverage...).
@@ -83,4 +83,5 @@ I'm experimenting on the development side by having no header files
 though as a user you don't have to care about this: the result of
 "make" is a "single header file library" which is one of the few sane
 ways to distribute C software right now unless your library is a
-standard part of commo linux distributions.
+standard part of common linux distributions.
+

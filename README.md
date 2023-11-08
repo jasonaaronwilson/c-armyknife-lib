@@ -73,7 +73,7 @@ tcc version 0.9.27 (x86_64 Linux)
 ## Status
 
 This library is under active development as of 2023-11-07. The
-[TODO](TODO) file in this directory has a small road-map to help get
+[TODO](TODO.md) file in this directory has a small road-map to help get
 to version 1.0 so you can see a bit about what I'm thinking.
 
 `make test` coverage will increase over time (especially once I figure

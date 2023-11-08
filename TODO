@@ -6,6 +6,7 @@
 2. Samples sub-directory (histrogram, unique, and sort)
 3. Move source code into a src directory?
 4. Figure out what to do about c-single-source-file
+5. Command line parsing is too ugly and unextensbile right now
 
 ## Version 0.1
 
@@ -16,6 +17,7 @@
 3. hashtables should grow dynamically
 4. time benchmarks
 5. space benchmarks plus being able to turn off code
+5. extensible errors?
 
 ## Future Versions
 

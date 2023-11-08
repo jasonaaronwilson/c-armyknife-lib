@@ -2,8 +2,9 @@
 /**
  * @file boolean.c
  *
- * Provides a simple typdef and true/false which sometimes makes code
- * more readable.
+ * Make sure that at least true/false from <stdbool.h> are available
+ * and and a new typedef named boolean_t because bool seems ugly. (Use
+ * what you prefer!)
  */
 
 // ======================================================================

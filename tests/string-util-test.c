@@ -118,5 +118,14 @@ int main(int argc, char** argv) {
     test_fail("string_printf");
   }
 
+  if (!string_equal("42 OMG", string_printf("%d %s", 42, "OMG"))) {
+    test_fail("string_printf");
+  }
+
+  if (!string_equal("42 A longer string 24",
+                    string_printf("%d %s %d", 42, "A longer string", 24))) {
+    test_fail("string_printf");
+  }
+
   exit(0);
 }

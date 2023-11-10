@@ -46,6 +46,10 @@ __attribute__((warn_unused_result)) extern buffer_t*
 __attribute__((warn_unused_result)) extern buffer_t*
     buffer_append_string(buffer_t* buffer, const char* str);
 
+__attribute__((warn_unused_result))
+__attribute__((format(printf, 2, 3))) extern buffer_t*
+    buffer_printf(buffer_t* buffer, char* format, ...);
+
 #endif /* _BUFFER_H_ */
 
 // ======================================================================
@@ -96,18 +100,24 @@ uint8_t buffer_get(buffer_t* buffer, uint64_t position) {
 /**
  * @function buffer_c_substring
  *
- * Extract a newly allocated string that contain the bytes from start
+ * Extract a newly allocated string that contains the bytes from start
  * to end (appending a zero byte to make sure it's a legal C string).
  */
 char* buffer_c_substring(buffer_t* buffer, uint64_t start, uint64_t end) {
-  // Add one extra byte for a NUL string terminator byte
-  char* result = (char*) (malloc_bytes((end - start) + 1));
-  for (int i = start; i < end; i++) {
-    result[i - start] = buffer->elements[i];
+  if (buffer == NULL) {
+    fatal_error(ERROR_ILLEGAL_NULL_ARGUMENT);
   }
-  // This should not be necessary. malloc_bytes is supposed to zero
-  // initialize bytes. yet this seems to have fixed a bug!
-  result[end - start] = '\0';
+
+  if (start > end) {
+    fatal_error(ERROR_ILLEGAL_RANGE);
+  }
+
+  uint64_t copy_length = (end - start);
+  char* result = (char*) (malloc_bytes(copy_length + 1));
+  if (copy_length > 0) {
+    memcpy(result, &buffer->elements[start], copy_length);
+  }
+  result[copy_length] = '\0';
   return result;
 }
 
@@ -178,4 +188,46 @@ __attribute__((warn_unused_result)) extern buffer_t*
     return result;
   }
   return buffer;
+}
+
+#ifndef BUFFER_PRINTF_INITIAL_BUFFER_SIZE
+#define BUFFER_PRINTF_INITIAL_BUFFER_SIZE 1024
+#endif
+
+/**
+ * @function buffer_printf
+ *
+ * Format like printf but append the result to the passed in buffer
+ * (returning a new buffer in case the buffer exceeded it's capacity).
+ */
+__attribute__((warn_unused_result)) __attribute__((format(printf, 2, 3)))
+buffer_t*
+    buffer_printf(buffer_t* buffer, char* format, ...) {
+  char cbuffer[BUFFER_PRINTF_INITIAL_BUFFER_SIZE];
+  int n_bytes = 0;
+  do {
+    va_list args;
+    va_start(args, format);
+    n_bytes = vsnprintf(cbuffer, sizeof(buffer), format, args);
+    va_end(args);
+  } while (0);
+
+  if (n_bytes < sizeof(cbuffer)) {
+    return buffer_append_string(buffer, cbuffer);
+  } else {
+    // Be lazy for now and just copy the code from string_printf for
+    // this case but we should be able to do ensure capacity and just
+    // put the bytes directly at the end of the buffer...
+    char* result = (char*) malloc_bytes(n_bytes + 1);
+    va_list args;
+    va_start(args, format);
+    int n_bytes_second = vsnprintf(result, n_bytes + 1, format, args);
+    va_end(args);
+    if (n_bytes_second != n_bytes) {
+      fatal_error(ERROR_INTERNAL_ASSERTION_FAILURE);
+    }
+    buffer = buffer_append_string(buffer, result);
+    free_bytes(result);
+    return buffer;
+  }
 }

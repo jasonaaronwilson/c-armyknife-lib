@@ -497,8 +497,8 @@ __attribute__((warn_unused_result)) extern buffer_t*
     buffer_append_string(buffer_t* buffer, const char* str);
 
 __attribute__((warn_unused_result))
-__attribute__((format(printf, 2, 3)))
- extern buffer_t* buffer_printf(buffer_t* buffer, char* format, ...);
+__attribute__((format(printf, 2, 3))) extern buffer_t*
+    buffer_printf(buffer_t* buffer, char* format, ...);
 
 #endif /* _BUFFER_H_ */
 // SSCF generated file from: value-array.c
@@ -1253,8 +1253,8 @@ __attribute__((warn_unused_result)) extern buffer_t*
     buffer_append_string(buffer_t* buffer, const char* str);
 
 __attribute__((warn_unused_result))
-__attribute__((format(printf, 2, 3)))
- extern buffer_t* buffer_printf(buffer_t* buffer, char* format, ...);
+__attribute__((format(printf, 2, 3))) extern buffer_t*
+    buffer_printf(buffer_t* buffer, char* format, ...);
 
 #endif /* _BUFFER_H_ */
 
@@ -1397,7 +1397,7 @@ __attribute__((warn_unused_result)) extern buffer_t*
 }
 
 #ifndef BUFFER_PRINTF_INITIAL_BUFFER_SIZE
-  #define BUFFER_PRINTF_INITIAL_BUFFER_SIZE 1024
+#define BUFFER_PRINTF_INITIAL_BUFFER_SIZE 1024
 #endif
 
 /**
@@ -1406,9 +1406,9 @@ __attribute__((warn_unused_result)) extern buffer_t*
  * Format like printf but append the result to the passed in buffer
  * (returning a new buffer in case the buffer exceeded it's capacity).
  */
-__attribute__((warn_unused_result))
-__attribute__((format(printf, 2, 3)))
-buffer_t* buffer_printf(buffer_t* buffer, char* format, ...) {
+__attribute__((warn_unused_result)) __attribute__((format(printf, 2, 3)))
+buffer_t*
+    buffer_printf(buffer_t* buffer, char* format, ...) {
   char cbuffer[BUFFER_PRINTF_INITIAL_BUFFER_SIZE];
   int n_bytes = 0;
   do {

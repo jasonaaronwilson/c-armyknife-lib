@@ -100,11 +100,23 @@ void test_buffer_large_printf(void) {
   free_bytes(buffer);
 }
 
+void test_buffer_medium_printf(void) {
+  buffer_t* buffer = make_buffer(1);
+  buffer = buffer_printf(buffer, "%d %s %d", 42, "--", 24);
+  char* contents = buffer_to_c_string(buffer);
+  if (!string_equal("42 -- 24", contents)) {
+    test_fail("buffer_printf contents was %s", contents);
+  }
+  free_bytes(contents);
+  free_bytes(buffer);
+}
+
 int main(int argc, char** argv) {
   test_buffer_c_substring();
   test_append_byte();
   test_append_string();
   test_buffer_small_printf();
   test_buffer_large_printf();
+  test_buffer_medium_printf();
   exit(0);
 }

@@ -318,11 +318,12 @@ __attribute__((format(printf, 1, 2))) char* string_printf(char* format, ...) {
   do {
     va_list args;
     va_start(args, format);
-    n_bytes = vsnprintf(buffer, sizeof(buffer), format, args);
+    n_bytes
+        = vsnprintf(buffer, STRING_PRINTF_INITIAL_BUFFER_SIZE, format, args);
     va_end(args);
   } while (0);
 
-  if (n_bytes < sizeof(buffer)) {
+  if (n_bytes < STRING_PRINTF_INITIAL_BUFFER_SIZE) {
     char* result = (char*) malloc_bytes(n_bytes + 1);
     strcat(result, buffer);
     return result;

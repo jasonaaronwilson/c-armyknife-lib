@@ -111,6 +111,17 @@ void test_buffer_medium_printf(void) {
   free_bytes(buffer);
 }
 
+void test_buffer_string_printf(void) {
+  buffer_t* buffer = make_buffer(1);
+  buffer = buffer_printf(buffer, "* [%s](%s)\n", "foobar.c", "foobar.c");
+  char* contents = buffer_to_c_string(buffer);
+  if (!string_equal("* [foobar.c](foobar.c)\n", contents)) {
+    test_fail("buffer_printf contents was %s", contents);
+  }
+  free_bytes(contents);
+  free_bytes(buffer);
+}
+
 int main(int argc, char** argv) {
   test_buffer_c_substring();
   test_append_byte();
@@ -118,5 +129,6 @@ int main(int argc, char** argv) {
   test_buffer_small_printf();
   test_buffer_large_printf();
   test_buffer_medium_printf();
+  test_buffer_string_printf();
   exit(0);
 }

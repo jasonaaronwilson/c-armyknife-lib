@@ -38,10 +38,10 @@ This should be a multiple of 8 or else the expected alignment
  
 # @file allocate.c
 
-This file contains wrappers around malloc and free to make them
-more convenient and possibly safer (for example, allocated memory
-is always zero'd and macros like malloc_struct are more readable
-besides the clearing behavior).
+Hook into malloc and free to make them more convenient and possibly
+safer. For example, allocated memory is always zero'd and macros
+like malloc_struct are more readable. We also have a novel LRU
+memory-bounds checker that found a bug that valgrind didn't.
 
 For missing calls to free, we are fully compatbile with valgrind
 (since we just call malloc/free). (Valgrind also has a memcheck

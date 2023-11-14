@@ -6,11 +6,42 @@
 #include <stdlib.h>
 
 // Tell the library to use a smaller initial buffer size so that it is
-// easier to test with small inputs.
-#define STRING_PRINTF_INITIAL_BUFFER_SIZE 8
+// easier to test with small inputs but it turns out that 8 is a bad
+// size because sizeof(array_name) doesn't work anywhere near expected
+// and may be returning the sizeof a pointer which just happens to be
+// 8 masking not finding bugs.
+
+#define STRING_PRINTF_INITIAL_BUFFER_SIZE 16
 
 #define C_ARMYKNIFE_LIB_IMPL
 #include "../c-armyknife-lib.h"
+
+void test_string_printf(void) {
+  if (!string_equal("Hello!", string_printf("%s!", "Hello"))) {
+    test_fail("string_printf");
+  }
+
+  if (!string_equal("Hello World!", string_printf("%s!", "Hello World"))) {
+    test_fail("string_printf");
+  }
+
+  if (!string_equal("42 OMG", string_printf("%d %s", 42, "OMG"))) {
+    test_fail("string_printf");
+  }
+
+  if (!string_equal("42 - OMG", string_printf("%d - %s", 42, "OMG"))) {
+    test_fail("string_printf");
+  }
+
+  if (!string_equal("42 -- OMG", string_printf("%d -- %s", 42, "OMG"))) {
+    test_fail("string_printf");
+  }
+
+  if (!string_equal("42 A longer string 24",
+                    string_printf("%d %s %d", 42, "A longer string", 24))) {
+    test_fail("string_printf");
+  }
+}
 
 int main(int argc, char** argv) {
 
@@ -110,22 +141,7 @@ int main(int argc, char** argv) {
     test_fail("string_left_pad");
   }
 
-  if (!string_equal("Hello!", string_printf("%s!", "Hello"))) {
-    test_fail("string_printf");
-  }
-
-  if (!string_equal("Hello World!", string_printf("%s!", "Hello World"))) {
-    test_fail("string_printf");
-  }
-
-  if (!string_equal("42 OMG", string_printf("%d %s", 42, "OMG"))) {
-    test_fail("string_printf");
-  }
-
-  if (!string_equal("42 A longer string 24",
-                    string_printf("%d %s %d", 42, "A longer string", 24))) {
-    test_fail("string_printf");
-  }
+  test_string_printf();
 
   exit(0);
 }

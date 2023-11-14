@@ -208,11 +208,12 @@ buffer_t*
   do {
     va_list args;
     va_start(args, format);
-    n_bytes = vsnprintf(cbuffer, sizeof(buffer), format, args);
+    n_bytes
+        = vsnprintf(cbuffer, BUFFER_PRINTF_INITIAL_BUFFER_SIZE, format, args);
     va_end(args);
   } while (0);
 
-  if (n_bytes < sizeof(cbuffer)) {
+  if (n_bytes < BUFFER_PRINTF_INITIAL_BUFFER_SIZE) {
     return buffer_append_string(buffer, cbuffer);
   } else {
     // Be lazy for now and just copy the code from string_printf for

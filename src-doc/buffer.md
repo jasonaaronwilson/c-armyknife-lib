@@ -18,7 +18,7 @@ char).
  
 ## @function buffer_c_substring
 
-Extract a newly allocated string that contain the bytes from start
+Extract a newly allocated string that contains the bytes from start
 to end (appending a zero byte to make sure it's a legal C string).
  
 ## @function buffer_get
@@ -32,6 +32,11 @@ As an optimization, the capacity of a buffer can be increased.
 ## @function buffer_length
 
 Return the number of bytes that have been added to this byte array.
+ 
+## @function buffer_printf
+
+Format like printf but append the result to the passed in buffer
+(returning a new buffer in case the buffer exceeded it's capacity).
  
 ## @function buffer_to_c_string
 

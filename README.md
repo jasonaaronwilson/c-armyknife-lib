@@ -30,7 +30,7 @@ A small C library with a focus on command line utilities.
 
 ## Links
 
-* [Library Documentation](src-doc/index.md)
+* [Source Code Documentation](src-doc/README.md)
 
 ## Limitations
 

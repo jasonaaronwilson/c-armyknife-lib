@@ -1,5 +1,8 @@
 all: c-armyknife-lib
 
+install: c-armyknife-lib
+	sudo install -m 755 c-armyknife-lib.h /usr/local/include/
+
 SRC_C = allocate.c \
 	boolean.c \
 	buffer.c \
@@ -38,7 +41,7 @@ ORDERED_H = \
 	test.h
 
 generate-header-files: ${SRC_C}
-	../c-single-source-file/generate-header-file ${SRC_C}
+	/usr/local/bin/generate-header-file ${SRC_C}
 	chmod -w ${ORDERED_H}
 
 c-armyknife-lib: ${SRC_C} generate-header-files

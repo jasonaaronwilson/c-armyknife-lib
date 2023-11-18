@@ -78,11 +78,11 @@ TESTS= \
 	./logger-test.sh
 
 test:
-	(cd tests && ../run-tests.sh ${TESTS})
+	(cd tests && mkdir -p build && ../run-tests.sh ${TESTS})
 
 doc:
 	(cd ../c-javadoc-extractor && make)
-	../c-javadoc-extractor/c-javadoc-extractor --output-dir=src-doc *.c
+	../c-javadoc-extractor/javadoc-extractor-gcc --output-dir=src-doc *.c
 
 cfd:	clean format diff
 

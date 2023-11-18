@@ -26,7 +26,6 @@
 
 // SSCF generated file from: fatal-error.c
 
-#line 19 "fatal-error.c"
 #ifndef _FATAL_ERROR_H_
 #define _FATAL_ERROR_H_
 
@@ -70,7 +69,6 @@ extern const char* fatal_error_code_to_string(int error_code);
 #endif /* _FATAL_ERROR_H_ */
 // SSCF generated file from: boolean.c
 
-#line 14 "boolean.c"
 #ifndef _BOOLEAN_H_
 #define _BOOLEAN_H_
 
@@ -93,7 +91,6 @@ typedef bool boolean_t;
 #endif /* _BOOLEAN_H_ */
 // SSCF generated file from: value.c
 
-#line 3 "value.c"
 #ifndef _VALUE_H_
 #define _VALUE_H_
 
@@ -233,7 +230,6 @@ static inline boolean_t is_not_ok(value_result_t value) {
 #endif /* _VALUE_H_ */
 // SSCF generated file from: allocate.c
 
-#line 29 "allocate.c"
 #ifndef _ALLOCATE_H_
 #define _ALLOCATE_H_
 
@@ -289,7 +285,6 @@ extern void check_memory_hashtable_padding();
 #endif /* _ALLOCATE_H_ */
 // SSCF generated file from: uint64.c
 
-#line 9 "uint64.c"
 #ifndef _UINT64_H_
 #define _UINT64_H_
 
@@ -300,7 +295,6 @@ extern int uint64_highest_bit_set(uint64_t n);
 #endif /* _UINT64_H_ */
 // SSCF generated file from: string-util.c
 
-#line 13 "string-util.c"
 #ifndef _STRING_UTIL_H_
 #define _STRING_UTIL_H_
 
@@ -326,7 +320,6 @@ __attribute__((format(printf, 1, 2))) extern char* string_printf(char* format,
 #endif /* _STRING_UTIL_H_ */
 // SSCF generated file from: logger.c
 
-#line 65 "logger.c"
 #ifndef _LOGGER_H_
 #define _LOGGER_H_
 
@@ -459,7 +452,6 @@ __attribute__((format(printf, 4, 5))) extern void
 #endif /* _LOGGER_H_ */
 // SSCF generated file from: buffer.c
 
-#line 13 "buffer.c"
 #ifndef _BUFFER_H_
 #define _BUFFER_H_
 
@@ -503,7 +495,6 @@ __attribute__((format(printf, 2, 3))) extern buffer_t*
 #endif /* _BUFFER_H_ */
 // SSCF generated file from: value-array.c
 
-#line 9 "value-array.c"
 #ifndef _VALUE_ARRAY_H_
 #define _VALUE_ARRAY_H_
 
@@ -527,7 +518,6 @@ extern value_t value_array_delete_at(value_array_t* array, uint32_t position);
 #endif /* _VALUE_ARRAY_H_ */
 // SSCF generated file from: string-alist.c
 
-#line 9 "string-alist.c"
 #ifndef _STRING_ALIST_H_
 #define _STRING_ALIST_H_
 
@@ -567,7 +557,6 @@ __attribute__((warn_unused_result)) extern string_alist_t*
 #endif /* _STRING_ALIST_H_ */
 // SSCF generated file from: string-hashtable.c
 
-#line 14 "string-hashtable.c"
 #ifndef _STRING_HASHTABLE_H_
 #define _STRING_HASHTABLE_H_
 
@@ -609,7 +598,6 @@ extern value_result_t string_ht_find(string_hashtable_t* ht, char* key);
 #endif /* _STRING_HASHTABLE_H_ */
 // SSCF generated file from: string-tree.c
 
-#line 19 "string-tree.c"
 #ifndef _STRING_TREE_H_
 #define _STRING_TREE_H_
 
@@ -671,7 +659,6 @@ __attribute__((warn_unused_result)) extern string_tree_t*
 #endif /* _STRING_TREE_H_ */
 // SSCF generated file from: command-line-parser.c
 
-#line 12 "command-line-parser.c"
 #ifndef _COMMAND_LINE_PARSER_H_
 #define _COMMAND_LINE_PARSER_H_
 
@@ -734,7 +721,6 @@ extern command_line_parse_result_t
 #endif /* _COMMAND_LINE_PARSER_H_ */
 // SSCF generated file from: io.c
 
-#line 13 "io.c"
 #ifndef _IO_H_
 #define _IO_H_
 
@@ -747,7 +733,6 @@ extern void buffer_write_file(buffer_t* bytes, char* file_name);
 #endif /* _IO_H_ */
 // SSCF generated file from: tokenizer.c
 
-#line 9 "tokenizer.c"
 #ifndef _TOKENIZER_H_
 #define _TOKENIZER_H_
 
@@ -756,7 +741,6 @@ extern value_array_t* tokenize(const char* str, const char* delimiters);
 #endif /* _TOKENIZER_H_ */
 // SSCF generated file from: random.c
 
-#line 16 "random.c"
 #ifndef _RANDOM_H_
 #define _RANDOM_H_
 
@@ -775,7 +759,6 @@ extern uint64_t random_next_uint64_below(random_state_t* state,
 #endif /* _RANDOM_H_ */
 // SSCF generated file from: test.c
 
-#line 13 "test.c"
 #ifndef _TEST_H_
 #define _TEST_H_
 
@@ -1414,7 +1397,8 @@ buffer_t*
   do {
     va_list args;
     va_start(args, format);
-    n_bytes = vsnprintf(cbuffer, BUFFER_PRINTF_INITIAL_BUFFER_SIZE, format, args);
+    n_bytes
+        = vsnprintf(cbuffer, BUFFER_PRINTF_INITIAL_BUFFER_SIZE, format, args);
     va_end(args);
   } while (0);
 
@@ -3086,7 +3070,8 @@ __attribute__((format(printf, 1, 2))) char* string_printf(char* format, ...) {
   do {
     va_list args;
     va_start(args, format);
-    n_bytes = vsnprintf(buffer, STRING_PRINTF_INITIAL_BUFFER_SIZE, format, args);
+    n_bytes
+        = vsnprintf(buffer, STRING_PRINTF_INITIAL_BUFFER_SIZE, format, args);
     va_end(args);
   } while (0);
 

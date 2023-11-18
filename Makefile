@@ -84,8 +84,7 @@ test:
 	(cd tests && mkdir -p build && ../run-tests.sh ${TESTS})
 
 doc:
-	(cd ../c-javadoc-extractor && make)
-	../c-javadoc-extractor/javadoc-extractor-gcc --output-dir=src-doc *.c
+	c-markdown-extractor --output-dir=src-doc *.c
 
 cfd:	clean format diff
 

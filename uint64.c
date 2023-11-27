@@ -3,7 +3,7 @@
  * @file uint64.c
  *
  * Implement a couple of useful operations on uint64_t (which can
- * often be used for smaller types.
+ * often be used for smaller types).
  */
 
 #ifndef _UINT64_H_

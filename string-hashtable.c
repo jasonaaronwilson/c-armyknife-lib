@@ -85,7 +85,8 @@ string_hashtable_t* string_ht_insert(string_hashtable_t* ht, char* key,
 /**
  * @function string_ht_delete
  *
- * Delete an association from the hashtable.
+ * Delete an association from the hashtable. It is not an error to
+ * delete a key that doesn't exist in the hashtable.
  */
 string_hashtable_t* string_ht_delete(string_hashtable_t* ht, char* key) {
   uint64_t hashcode = string_hash(key);

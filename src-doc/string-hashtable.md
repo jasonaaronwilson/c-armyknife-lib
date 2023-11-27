@@ -16,7 +16,8 @@ start with a healthy initial capacity.
  
 ## @function string_ht_delete
 
-Delete an association from the hashtable.
+Delete an association from the hashtable. It is not an error to
+delete a key that doesn't exist in the hashtable.
  
 ## @function string_ht_find
 

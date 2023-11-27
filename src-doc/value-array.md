@@ -1,17 +1,21 @@
 # @file value-array.c
 
-This file contains a growable array of values/pointers.
+This file contains a growable array of "values".
+
+Certain algorithms require that growth occurs based on the current
+capacity of an array, not a fixed amount. For now we simply double
+the current capacity when more space in the backing array is
+required though we may scale this back to something more like 1.5X
+for "large" arrays to save space.
  
 ## @function make_value_array
 
 Make a value array with the given initial capacity (which must be >
 0). When the array runs out of capacity because of calls to add,
-push, etc., then the backing array is automatically doubled in size
-(this may change to a different fraction for "large arrays"
-(greater than say 250 elements) in the future to save space).
+push, etc., then the backing array is automatically increased.
 
-If the initial_capacity is zero or if malloc() can't allocate
-everything, then a fatal_error() occurs.
+If either the initial_capacity is zero or if `malloc()` can't
+allocate then a fata _error occurs.
  
 ## @function value_array_add
 
@@ -51,13 +55,26 @@ fatal_error(ERROR_MEMORY_ALLOCATION) is called.
  
 ## @function value_array_pop
 
-Returns the last element of the array (typically added via push).
+Returns the last element of the array (typically added via push)
+and modifies the length of the array so that the value isn't
+accessible any longer. (We also "zero out" the element in case you
+are using a conservative garbage collector.)
 
 If the array is currently empty, then
-fatal_error(ERROR_ACCESS_OUT_OF_BOUNDS) is called.
+`fatal_error(ERROR_ACCESS_OUT_OF_BOUNDS)` is called.
  
 ## @function value_array_push
 
 This is a synonym for value_array_add which serves to make it more
 obvious that the array is actually being used like a stack.
+ 
+## @function value_array_replace
+
+Replace the value at a given `index`. If the index is outside of
+the range of valid elements, then a `fatal_error` is signaled.
+ 
+## @typedef value_array_t
+
+A growable array of 64bit "values" (so integers, doubles, and
+pointers).
  

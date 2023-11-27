@@ -138,10 +138,10 @@ static inline boolean_t should_log_memory_allocation() {
  * @debug_compiliation_option ARMYKNIFE_MEMORY_ALLOCATION_HASHTABLE_SIZE
  *
  * This determine how big the lossy hashtable is. On every allocation
- * or deallocation the lossy hashtable is examined to see if the
- * padding bytes have been perturbed which makes it possible to find
- * some memory overwrite errors earlier than waiting for the free call
- * (and even if the memory isn't freed.
+ * or deallocation the *entire* lossy hashtable is scanned to see if
+ * the padding bytes have been perturbed which makes it possible to
+ * find some memory overwrite errors earlier than waiting for the free
+ * call (or potentially even if the memory isn't ever freed).
  *
  * It makes no sense to set this unless either
  * ARMYKNIFE_MEMORY_ALLOCATION_START_PADDING or
@@ -227,6 +227,9 @@ uint64_t mumurhash64_mix(uint64_t h) {
   return h;
 }
 
+// Start tracking padding for a given allocated address. This includes
+// setting the padding to particular values and of course putting the
+// address into the tracking table.
 void track_padding(char* file, int line, uint8_t* address, uint64_t amount) {
   // First set the padding to predicatable values
   for (int i = 0; i < ARMYKNIFE_MEMORY_ALLOCATION_START_PADDING; i++) {
@@ -277,8 +280,8 @@ void untrack_padding(uint8_t* malloc_address) {
 /**
  * @function checked_malloc
  *
- * Allocate amount bytes or cause a fatal error. The memory is also
- * zeroed.
+ * Allocate the given amount bytes or cause a fatal error. The memory
+ * is also zeroed.
  *
  * If possible, use the macros malloc_bytes or malloc_struct instead
  * for an easier to use interface. Those macros simply call

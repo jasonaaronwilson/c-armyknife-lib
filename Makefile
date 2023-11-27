@@ -51,7 +51,7 @@ c-armyknife-lib: ${SRC_C} generate-header-files
 	echo '#endif /* C_ARMYKNIFE_LIB_IMPL */' >>c-armyknife-lib.h
 
 format:
-	clang-format -i ${SRC_C} ${SRC_H} tests/*.c
+	clang-format -i ${SRC_C} ${SRC_H} tests/*.c examples/*.c
 
 clean:
 	rm -rf *~ docs/*~ tests/*~ examples/*~ TAGS doxygen-docs *.o ${ORDERED_H} tests/build/* examples/build/*

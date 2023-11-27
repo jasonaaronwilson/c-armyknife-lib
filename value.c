@@ -110,6 +110,7 @@ typedef struct {
   non_fatal_error_code_t nf_error;
 } value_result_t;
 
+#define boolean_to_value(x) ((value_t){.u64 = x})
 #define u64_to_value(x) ((value_t){.u64 = x})
 #define i64_to_value(x) ((value_t){.i64 = x})
 #define str_to_value(x) ((value_t){.str = x})

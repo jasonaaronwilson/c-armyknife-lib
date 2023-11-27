@@ -204,6 +204,7 @@ typedef struct {
   non_fatal_error_code_t nf_error;
 } value_result_t;
 
+#define boolean_to_value(x) ((value_t){.u64 = x})
 #define u64_to_value(x) ((value_t){.u64 = x})
 #define i64_to_value(x) ((value_t){.i64 = x})
 #define str_to_value(x) ((value_t){.str = x})
@@ -779,6 +780,9 @@ extern void buffer_write_file(buffer_t* bytes, char* file_name);
 #define _TOKENIZER_H_
 
 extern value_array_t* string_tokenize(const char* str, const char* delimiters);
+extern value_array_t* buffer_tokenize(buffer_t* buffer, const char* delimiters);
+extern value_array_t* tokenize_memory_range(uint8_t* start, uint64_t length,
+                                            const char* delimiters);
 
 // TODO(jawilson):
 
@@ -3297,6 +3301,9 @@ __attribute__((format(printf, 3, 4))) void
 #define _TOKENIZER_H_
 
 extern value_array_t* string_tokenize(const char* str, const char* delimiters);
+extern value_array_t* buffer_tokenize(buffer_t* buffer, const char* delimiters);
+extern value_array_t* tokenize_memory_range(uint8_t* start, uint64_t length,
+                                            const char* delimiters);
 
 // TODO(jawilson):
 
@@ -3318,12 +3325,36 @@ void add_duplicate(value_array_t* token_array, const char* data);
  * it does not mean a delimiter can be multiple characters.
  */
 value_array_t* string_tokenize(const char* str, const char* delimiters) {
+  return tokenize_memory_range((uint8_t*) str, strlen(str), delimiters);
+}
+
+/**
+ * @function buffer_tokenize
+ *
+ * Tokenize the current contents of a buffer. The input buffer should
+ * contain a valid UTF-8 encoded string. NUL bytes inside the buffer
+ * are automatically treated as an additional delimiter.
+ */
+value_array_t* buffer_tokenize(buffer_t* buffer, const char* delimiters) {
+  return tokenize_memory_range(&(buffer->elements[0]), buffer->length,
+                               delimiters);
+}
+
+/**
+ * @function tokenize_memory_range
+ *
+ * Tokenize a memory range. That range should contain a valid UTF-8
+ * encoded string. NUL bytes are automatically treated as an
+ * additional delimiter.
+ */
+value_array_t* tokenize_memory_range(uint8_t* str, uint64_t length,
+                                     const char* delimiters) {
   value_array_t* result = make_value_array(1);
   char token_data[1024];
   int cpos = 0;
-  for (int i = 0; (i < strlen(str)); i++) {
-    char ch = str[i];
-    if (string_contains_char(delimiters, ch)) {
+  for (int i = 0; (i < length); i++) {
+    uint8_t ch = str[i];
+    if (ch == 0 || string_contains_char(delimiters, ch)) {
       token_data[cpos++] = '\0';
       if (strlen(token_data) > 0) {
         add_duplicate(result, token_data);
@@ -3495,6 +3526,7 @@ typedef struct {
   non_fatal_error_code_t nf_error;
 } value_result_t;
 
+#define boolean_to_value(x) ((value_t){.u64 = x})
 #define u64_to_value(x) ((value_t){.u64 = x})
 #define i64_to_value(x) ((value_t){.i64 = x})
 #define str_to_value(x) ((value_t){.str = x})

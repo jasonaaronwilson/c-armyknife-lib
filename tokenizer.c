@@ -23,9 +23,9 @@ extern value_array_t* tokenize_memory_range(uint8_t* start, uint64_t length,
 void add_duplicate(value_array_t* token_array, const char* data);
 
 /**
- * @function tokenize
+ * @function string_tokenize
  *
- * Tokenize a string.
+ * Tokenize a string into an array_t* of strings.
  *
  * Delimiters terminate the current token and are thrown away. The
  * delimiters string is treated as a sequence of delimiter characters,

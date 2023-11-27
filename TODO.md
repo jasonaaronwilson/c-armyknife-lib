@@ -3,7 +3,6 @@
 ## Version 0.0
 
 1. Add version/build number to the generated header file
-2. Samples sub-directory (histrogram, unique, and sort)
 3. Move source code into a src directory?
 4. Figure out what to do about c-single-source-file
 5. Command line parsing is too ugly and unextensbile right now

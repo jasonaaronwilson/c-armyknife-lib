@@ -19,7 +19,7 @@ bits). While this doesn't allow storing *anything* as a key or
 value, it does allow storing a *pointer to anything* as a key or
 value. This is actually very similar to how Java collections work
 except we can store primitive values like integers and doubles
-without boxing.
+without "boxing".
 
 When "searching" a collection for a key, we want to be able to
 return "not found" (and potentially other "non-fatal" error
@@ -30,9 +30,9 @@ because `tcc` treats anonymous unions a little differently than
 `gcc` and `clang` so we work around that by repeating the fields of
 a value to make value_result_t a bit more convenient to work with).
 
-value_result_t is sometimes used by non collection based functions,
-such as parsing an integer, so that other non-fatal errors can be
-communicated back to the caller.
+Sometimes value_result_t is also used by non collection based
+functions, such as parsing an integer, so that other non-fatal
+errors can be communicated back to the caller.
 
 The contract with returning a non-fatal errors is that the state of
 the system is in a good state to continue processing (or they get
@@ -41,36 +41,38 @@ that when a non-fatal error is returned that no global state
 modification has ocurred.
 
 value_t's are typically only passed into functions while
-optional_value_result_t's are then typically returned from
-functions.
+optional_value_result_t's are typically returned from functions.
 
 When a value_result_t is returned you must always check for an
 error code before using the value component of the result. `is_ok`
-and `is_not_ok` make this slightly easier.
+and `is_not_ok` make this slightly easier and easier to read.
 
 value_t's and value_result_t's carry no type information that can
 be queried at runtime and by their nature C compilers are going to
 do a very incomplete job of statically type checking these. For
 example you can easily put a double into a collection and
-successfully get back a very suspicious pointer and the compiler
-will not warn you about this. So collections aren't as safe as in
-other languages at either compile or run-time. (Java's collections
-(when generic types are *not* used), are not "safe" at compile time
-but are still dynamically safe.)
+successfully get back this value and use it as a very suspicious
+pointer and the compiler will not warn you about this. So
+collections aren't as safe as in other languages at either compile
+or run-time. (Java's collections (when generic types are *not*
+used), are not "safe" at compile time but are still dynamically
+safe.)
 
-On the positive side, this also means you haven't paid a price to
-prevent these errors at runtime and so in theory your code can run
+On the positive side, the lack of dynamic typing means you haven't
+paid a price to maintain these and in theory your code can run
 faster.
 
-If C had a richer type-system, namely generic types,, I think we
-could catch all all potential type errors at compile time and even
-allow storing "values" larger than 64bits "inline".
+If C had a richer type-system, namely generic types, we could catch
+all all potential type errors at compile time and potentially even
+allow storing "values" larger than 64bits "inline" with a little
+more magic.
 
 The most common things to use as keys are strings, integers, and
-pointers (while common values are strings, integers, pointers and
-booleans). We make these convient but not quite type safe though
-you can make things a little safer by using typedef and inline
-functions.
+pointers (while common association values are strings, integers,
+pointers and booleans).
+
+Our primary goal is to make collections convenient. Using typedef
+and inline functions you can also make these safer at compile time.
  
 ## @function is_not_ok
 

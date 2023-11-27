@@ -26,6 +26,7 @@
 
 // SSCF generated file from: fatal-error.c
 
+#line 19 "fatal-error.c"
 #ifndef _FATAL_ERROR_H_
 #define _FATAL_ERROR_H_
 
@@ -69,6 +70,7 @@ extern const char* fatal_error_code_to_string(int error_code);
 #endif /* _FATAL_ERROR_H_ */
 // SSCF generated file from: boolean.c
 
+#line 14 "boolean.c"
 #ifndef _BOOLEAN_H_
 #define _BOOLEAN_H_
 
@@ -91,6 +93,7 @@ typedef bool boolean_t;
 #endif /* _BOOLEAN_H_ */
 // SSCF generated file from: value.c
 
+#line 3 "value.c"
 #ifndef _VALUE_H_
 #define _VALUE_H_
 
@@ -230,6 +233,7 @@ static inline boolean_t is_not_ok(value_result_t value) {
 #endif /* _VALUE_H_ */
 // SSCF generated file from: allocate.c
 
+#line 29 "allocate.c"
 #ifndef _ALLOCATE_H_
 #define _ALLOCATE_H_
 
@@ -285,6 +289,7 @@ extern void check_memory_hashtable_padding();
 #endif /* _ALLOCATE_H_ */
 // SSCF generated file from: uint64.c
 
+#line 9 "uint64.c"
 #ifndef _UINT64_H_
 #define _UINT64_H_
 
@@ -295,6 +300,7 @@ extern int uint64_highest_bit_set(uint64_t n);
 #endif /* _UINT64_H_ */
 // SSCF generated file from: string-util.c
 
+#line 13 "string-util.c"
 #ifndef _STRING_UTIL_H_
 #define _STRING_UTIL_H_
 
@@ -320,6 +326,7 @@ __attribute__((format(printf, 1, 2))) extern char* string_printf(char* format,
 #endif /* _STRING_UTIL_H_ */
 // SSCF generated file from: logger.c
 
+#line 65 "logger.c"
 #ifndef _LOGGER_H_
 #define _LOGGER_H_
 
@@ -452,6 +459,7 @@ __attribute__((format(printf, 4, 5))) extern void
 #endif /* _LOGGER_H_ */
 // SSCF generated file from: buffer.c
 
+#line 2 "buffer.c"
 #ifndef _BUFFER_H_
 #define _BUFFER_H_
 
@@ -460,16 +468,17 @@ __attribute__((format(printf, 4, 5))) extern void
  *
  * A growable array of bytes.
  *
- * Buffers are basically purpose built for constructing UTF-8 strings
- * (for example by using buffer_printf) though they can hold any
- * binary data including interior NUL bytes.
+ * Buffers are useful for constructing UTF-8 strings (for example by
+ * using buffer_printf) though they can hold any binary data including
+ * interior NUL bytes. Buffers automatically grow as data is appended
+ * (or inserted into) them reducing large classes of errors.
  */
 
 #include <stdint.h>
 #include <string.h>
 
 // struct buffer_range_S {
-//  
+//
 // };
 
 struct buffer_S {
@@ -483,13 +492,12 @@ struct buffer_S {
  *
  * Buffers are non-thread-safe memory regions that generally "grow"
  * over time. Whenever a buffer grows beyound it's capacity, it is
- * moved to accomodates its new capacity (even if there might be
- * pointers inside of it, so don't do that unless you have decided the
- * buffer will never grow again).
+ * moved to accomodates its new capacity (even if there may be other
+ * pointers to it's insides, so don't do that unless you have decided
+ * the buffer will never grow again).
  *
  * While buffers may seem scary, used properly from a single thread,
  * they are actually quite predictable.
- *
  */
 typedef struct buffer_S buffer_t;
 
@@ -522,6 +530,7 @@ __attribute__((format(printf, 2, 3))) extern buffer_t*
 #endif /* _BUFFER_H_ */
 // SSCF generated file from: value-array.c
 
+#line 9 "value-array.c"
 #ifndef _VALUE_ARRAY_H_
 #define _VALUE_ARRAY_H_
 
@@ -545,6 +554,7 @@ extern value_t value_array_delete_at(value_array_t* array, uint32_t position);
 #endif /* _VALUE_ARRAY_H_ */
 // SSCF generated file from: string-alist.c
 
+#line 9 "string-alist.c"
 #ifndef _STRING_ALIST_H_
 #define _STRING_ALIST_H_
 
@@ -584,6 +594,7 @@ __attribute__((warn_unused_result)) extern string_alist_t*
 #endif /* _STRING_ALIST_H_ */
 // SSCF generated file from: string-hashtable.c
 
+#line 14 "string-hashtable.c"
 #ifndef _STRING_HASHTABLE_H_
 #define _STRING_HASHTABLE_H_
 
@@ -625,6 +636,7 @@ extern value_result_t string_ht_find(string_hashtable_t* ht, char* key);
 #endif /* _STRING_HASHTABLE_H_ */
 // SSCF generated file from: string-tree.c
 
+#line 19 "string-tree.c"
 #ifndef _STRING_TREE_H_
 #define _STRING_TREE_H_
 
@@ -686,6 +698,7 @@ __attribute__((warn_unused_result)) extern string_tree_t*
 #endif /* _STRING_TREE_H_ */
 // SSCF generated file from: command-line-parser.c
 
+#line 12 "command-line-parser.c"
 #ifndef _COMMAND_LINE_PARSER_H_
 #define _COMMAND_LINE_PARSER_H_
 
@@ -748,6 +761,7 @@ extern command_line_parse_result_t
 #endif /* _COMMAND_LINE_PARSER_H_ */
 // SSCF generated file from: io.c
 
+#line 13 "io.c"
 #ifndef _IO_H_
 #define _IO_H_
 
@@ -760,16 +774,18 @@ extern void buffer_write_file(buffer_t* bytes, char* file_name);
 #endif /* _IO_H_ */
 // SSCF generated file from: tokenizer.c
 
+#line 7 "tokenizer.c"
 #ifndef _TOKENIZER_H_
 #define _TOKENIZER_H_
 
 extern value_array_t* string_tokenize(const char* str, const char* delimiters);
 
-// TODO(jawilson): 
+// TODO(jawilson):
 
 #endif /* _TOKENIZER_H_ */
 // SSCF generated file from: random.c
 
+#line 16 "random.c"
 #ifndef _RANDOM_H_
 #define _RANDOM_H_
 
@@ -788,6 +804,7 @@ extern uint64_t random_next_uint64_below(random_state_t* state,
 #endif /* _RANDOM_H_ */
 // SSCF generated file from: test.c
 
+#line 13 "test.c"
 #ifndef _TEST_H_
 #define _TEST_H_
 
@@ -1225,16 +1242,17 @@ typedef bool boolean_t;
  *
  * A growable array of bytes.
  *
- * Buffers are basically purpose built for constructing UTF-8 strings
- * (for example by using buffer_printf) though they can hold any
- * binary data including interior NUL bytes.
+ * Buffers are useful for constructing UTF-8 strings (for example by
+ * using buffer_printf) though they can hold any binary data including
+ * interior NUL bytes. Buffers automatically grow as data is appended
+ * (or inserted into) them reducing large classes of errors.
  */
 
 #include <stdint.h>
 #include <string.h>
 
 // struct buffer_range_S {
-//  
+//
 // };
 
 struct buffer_S {
@@ -1248,13 +1266,12 @@ struct buffer_S {
  *
  * Buffers are non-thread-safe memory regions that generally "grow"
  * over time. Whenever a buffer grows beyound it's capacity, it is
- * moved to accomodates its new capacity (even if there might be
- * pointers inside of it, so don't do that unless you have decided the
- * buffer will never grow again).
+ * moved to accomodates its new capacity (even if there may be other
+ * pointers to it's insides, so don't do that unless you have decided
+ * the buffer will never grow again).
  *
  * While buffers may seem scary, used properly from a single thread,
  * they are actually quite predictable.
- *
  */
 typedef struct buffer_S buffer_t;
 
@@ -3281,7 +3298,7 @@ __attribute__((format(printf, 3, 4))) void
 
 extern value_array_t* string_tokenize(const char* str, const char* delimiters);
 
-// TODO(jawilson): 
+// TODO(jawilson):
 
 #endif /* _TOKENIZER_H_ */
 
@@ -3300,7 +3317,7 @@ void add_duplicate(value_array_t* token_array, const char* data);
  * delimiters string is treated as a sequence of delimiter characters,
  * it does not mean a delimiter can be multiple characters.
  */
-value_array_t* tokenize(const char* str, const char* delimiters) {
+value_array_t* string_tokenize(const char* str, const char* delimiters) {
   value_array_t* result = make_value_array(1);
   char token_data[1024];
   int cpos = 0;

@@ -21,7 +21,6 @@ extern int string_starts_with(const char* str1, const char* str2);
 extern int string_ends_with(const char* str1, const char* str2);
 extern boolean_t string_contains_char(const char* str, char ch);
 extern int string_index_of_char(const char* a, char ch);
-extern uint64_t string_to_uint64(const char* str);
 extern char* uint64_to_string(uint64_t number);
 extern uint64_t string_hash(const char* str);
 extern char* string_substring(const char* str, int start, int end);

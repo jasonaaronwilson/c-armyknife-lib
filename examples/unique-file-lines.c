@@ -51,7 +51,9 @@ string_hashtable_t* initial_seen_hashtable() {
 
 value_array_t* get_command_line_flag_descriptors() {
   value_array_t* result = make_value_array(1);
-  // TODO(jawilson): make sure this also works when null!
+  value_array_add(result, ptr_to_value(make_command_line_flag_descriptor(
+                              "use-tree", command_line_flag_type_boolean,
+                              "When true, use a tree instead of a hashtable")));
   return result;
 }
 
@@ -77,7 +79,13 @@ int main(int argc, char** argv) {
     fatal_error(ERROR_BAD_COMMAND_LINE);
   }
 
+  boolean_t use_tree = is_ok(string_ht_find(args_and_files.flags, "use-tree"));
+  if (use_tree) {
+    fprintf(stderr, "Using a tree instead of a hash-table");
+  }
+
   string_hashtable_t* seen = initial_seen_hashtable();
+  string_tree_t* seen_tree = NULL;
 
   for (int i = 0; i < args_and_files.files->length; i++) {
     char* file_name = value_array_get(args_and_files.files, i).str;
@@ -86,10 +94,19 @@ int main(int argc, char** argv) {
     value_array_t* lines = buffer_tokenize(buffer, "\n");
     for (int j = 0; j < lines->length; j++) {
       char* line = value_array_get(lines, j).str;
-      value_result_t find_result = string_ht_find(seen, line);
-      if (!is_ok(find_result)) {
-        seen = string_ht_insert(seen, line, boolean_to_value(true));
-        fprintf(stdout, "%s\n", line);
+      if (use_tree) {
+        value_result_t find_result = string_tree_find(seen_tree, line);
+        if (!is_ok(find_result)) {
+          seen_tree
+              = string_tree_insert(seen_tree, line, boolean_to_value(true));
+          fprintf(stdout, "%s\n", line);
+        }
+      } else {
+        value_result_t find_result = string_ht_find(seen, line);
+        if (!is_ok(find_result)) {
+          seen = string_ht_insert(seen, line, boolean_to_value(true));
+          fprintf(stdout, "%s\n", line);
+        }
       }
     }
   }

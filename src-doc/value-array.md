@@ -8,6 +8,11 @@ the current capacity when more space in the backing array is
 required though we may scale this back to something more like 1.5X
 for "large" arrays to save space.
  
+## @typedef value_array_t
+
+A growable array of 64bit "values" (so integers, doubles, and
+pointers).
+ 
 ## @function make_value_array
 
 Make a value array with the given initial capacity (which must be >
@@ -72,9 +77,4 @@ obvious that the array is actually being used like a stack.
 
 Replace the value at a given `index`. If the index is outside of
 the range of valid elements, then a `fatal_error` is signaled.
- 
-## @typedef value_array_t
-
-A growable array of 64bit "values" (so integers, doubles, and
-pointers).
  

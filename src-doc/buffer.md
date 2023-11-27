@@ -7,6 +7,17 @@ using buffer_printf) though they can hold any binary data including
 interior NUL bytes. Buffers automatically grow as data is appended
 (or inserted into) them reducing large classes of errors.
  
+## @struct buffer_t
+
+Buffers are non-thread-safe memory regions that generally "grow"
+over time. Whenever a buffer grows beyound it's capacity, it is
+moved to accomodates its new capacity (even if there may be other
+pointers to it's insides, so don't do that unless you have decided
+the buffer will never grow again).
+
+While buffers may seem scary, used properly from a single thread,
+they are actually quite predictable.
+ 
 ## @function buffer_append_byte
 
 Append a single byte to the byte array.
@@ -50,15 +61,4 @@ buffer as a NUL (zero byte) terminated C string.
 ## @function make_buffer
 
 Make an empty byte array with the given initial capacity.
- 
-## @struct buffer_t
-
-Buffers are non-thread-safe memory regions that generally "grow"
-over time. Whenever a buffer grows beyound it's capacity, it is
-moved to accomodates its new capacity (even if there may be other
-pointers to it's insides, so don't do that unless you have decided
-the buffer will never grow again).
-
-While buffers may seem scary, used properly from a single thread,
-they are actually quite predictable.
  

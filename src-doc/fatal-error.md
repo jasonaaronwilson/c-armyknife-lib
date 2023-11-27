@@ -1,5 +1,3 @@
-## @constants error_code_t
- 
 # @file fatal-error.c
 
 The intent is that everything but a normal program exit will end up
@@ -10,6 +8,8 @@ In this case C's macros are paying off as the file and line number
 are easy to obtain.
 
 TODO(jawilson): command line flag to be quieter...
+ 
+## @constants error_code_t
  
 ## @macro fatal_error
 

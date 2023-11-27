@@ -8,6 +8,11 @@ function and this generally does not pay off. We also use chaining
 instead of open addressing since this allowed the most code reuse
 and a simpler implementation.
  
+## @macro string_ht_foreach
+
+Allows traversing all elements of a hashtable in an unspecified
+order.
+ 
 ## @function make_string_hashtable
 
 Create a hashtable with the given number of buckets. This
@@ -26,9 +31,4 @@ Find an association in the hashtable.
 ## @function string_ht_insert
 
 Insert an association into the hashtable.
- 
-## @macro string_ht_foreach
-
-Allows traversing all elements of a hashtable in an unspecified
-order.
  

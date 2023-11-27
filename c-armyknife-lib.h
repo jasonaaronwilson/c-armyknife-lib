@@ -687,6 +687,10 @@ __attribute__((warn_unused_result)) extern string_tree_t*
  *   statement2();
  * }
  * ```
+ *
+ * Unforunately it is not possible to use "break" or "continue" with
+ * this style of loop (and worse, there will be no compilation error
+ * or warning if you accidentally do that...)
  */
 #define string_tree_foreach(tree, key_var, value_var, statements)              \
   do {                                                                         \
@@ -981,10 +985,10 @@ static inline boolean_t should_log_memory_allocation() {
  * @debug_compiliation_option ARMYKNIFE_MEMORY_ALLOCATION_HASHTABLE_SIZE
  *
  * This determine how big the lossy hashtable is. On every allocation
- * or deallocation the lossy hashtable is examined to see if the
- * padding bytes have been perturbed which makes it possible to find
- * some memory overwrite errors earlier than waiting for the free call
- * (and even if the memory isn't freed.
+ * or deallocation the *entire* lossy hashtable is scanned to see if
+ * the padding bytes have been perturbed which makes it possible to
+ * find some memory overwrite errors earlier than waiting for the free
+ * call (or potentially even if the memory isn't ever freed).
  *
  * It makes no sense to set this unless either
  * ARMYKNIFE_MEMORY_ALLOCATION_START_PADDING or
@@ -1070,6 +1074,9 @@ uint64_t mumurhash64_mix(uint64_t h) {
   return h;
 }
 
+// Start tracking padding for a given allocated address. This includes
+// setting the padding to particular values and of course putting the
+// address into the tracking table.
 void track_padding(char* file, int line, uint8_t* address, uint64_t amount) {
   // First set the padding to predicatable values
   for (int i = 0; i < ARMYKNIFE_MEMORY_ALLOCATION_START_PADDING; i++) {
@@ -1120,8 +1127,8 @@ void untrack_padding(uint8_t* malloc_address) {
 /**
  * @function checked_malloc
  *
- * Allocate amount bytes or cause a fatal error. The memory is also
- * zeroed.
+ * Allocate the given amount bytes or cause a fatal error. The memory
+ * is also zeroed.
  *
  * If possible, use the macros malloc_bytes or malloc_struct instead
  * for an easier to use interface. Those macros simply call
@@ -1974,7 +1981,7 @@ void buffer_write_file(buffer_t* bytes, char* file_name) {
  * left in critical loops. Obviously if the code is compiled into the
  * binary, even if the code to skip the logging doesn't considerably
  * increase run-time performance, it may still have an impact for
- * exanmple on the output binary size.
+ * example on the output binary size.
  *
  * The default log level is "WARN" though it is possible to override
  * this with #define ARMYKNIFE_LIB_DEFAULT_LOG_LEVEL <level> when
@@ -1983,7 +1990,7 @@ void buffer_write_file(buffer_t* bytes, char* file_name) {
  * source code, one reason you may want a debug vs production builds).
  *
  * Additionally, when the first log statement is encountered, we
- * examine the envrionment variable named ARMYKNIFE_LIB_LOG_LEVEL if
+ * examine the environment variable named ARMYKNIFE_LIB_LOG_LEVEL if
  * you want to adjust the level after compilation. Future versions
  * will certainly provide more control such as turn on logging only
  * for specific files as well as giving the C compiler enough
@@ -2005,13 +2012,13 @@ void buffer_write_file(buffer_t* bytes, char* file_name) {
  * recommendation is to never intentionally log PII. It's especially
  * important to keep this in mind if you are developing an internet
  * application that the user isn't running on their own machine which
- * isn't an intial focus of this library.
+ * isn't an initial focus of this library.
  *
- * [^1]: For this implementatic, getting a timestamp is probably one
+ * [^1]: For this implementation, getting a timestamp is probably one
  * kernel call and doing the actual output, since logging is less
  * useful when buffered, requires at least another kernel
  * call. Finally, formatting strings for human readability is
- * realitively expensive itself. For example, printing a large number
+ * relatively expensive itself. For example, printing a large number
  * may require dozens or hundreds of cycles while adding two numbers
  * may take less than a single cycle on a modern pipelined processor).
  */
@@ -2330,8 +2337,9 @@ uint64_t random_next(random_state_t* state) {
 /**
  * @function random_next_uint64_below
  *
- * Return a random `uint64` that is below some maximum. As much as the
- * underlying random number generartor allows, this should be uniform.
+ * Return a random `uint64_t` that is below some maximum. As much as
+ * the underlying random number generartor allows, this should be
+ * uniform.
  */
 uint64_t random_next_uint64_below(random_state_t* state, uint64_t maximum) {
   if (maximum == 0) {
@@ -2357,8 +2365,7 @@ uint64_t random_next_uint64_below(random_state_t* state, uint64_t maximum) {
 /**
  * @file string-alist.c
  *
- * A simple map between a string with a pointer to some other
- * data-structure.
+ * An association list (a type of map) from a string to a value_t.
  */
 
 #ifndef _STRING_ALIST_H_
@@ -2537,7 +2544,8 @@ string_hashtable_t* string_ht_insert(string_hashtable_t* ht, char* key,
 /**
  * @function string_ht_delete
  *
- * Delete an association from the hashtable.
+ * Delete an association from the hashtable. It is not an error to
+ * delete a key that doesn't exist in the hashtable.
  */
 string_hashtable_t* string_ht_delete(string_hashtable_t* ht, char* key) {
   uint64_t hashcode = string_hash(key);
@@ -2616,6 +2624,10 @@ __attribute__((warn_unused_result)) extern string_tree_t*
  *   statement2();
  * }
  * ```
+ *
+ * Unforunately it is not possible to use "break" or "continue" with
+ * this style of loop (and worse, there will be no compilation error
+ * or warning if you accidentally do that...)
  */
 #define string_tree_foreach(tree, key_var, value_var, statements)              \
   do {                                                                         \
@@ -2923,6 +2935,9 @@ boolean_t string_contains_char(const char* str, char ch) {
 
 /**
  * @function string_index_of_char
+ *
+ * Return the index of the given character in a string or a value less
+ * than zero if the character isn't inside of the string.
  */
 int string_index_of_char(const char* str, char ch) {
   if (string_is_null_or_empty(str)) {
@@ -3325,7 +3340,7 @@ void add_duplicate(value_array_t* token_array, const char* data);
 /**
  * @function string_tokenize
  *
- * Tokenize a string into a an array of (non-empty) strings.
+ * Tokenize a string into a a value_array_t of (non-empty) strings.
  *
  * Delimiters terminate the current token and are thrown away. The
  * delimiters string is treated as a sequence of delimiter characters,
@@ -3338,7 +3353,7 @@ value_array_t* string_tokenize(const char* str, const char* delimiters) {
 /**
  * @function buffer_tokenize
  *
- * Tokenize the current contents of a buffer into an array of
+ * Tokenize the current contents of a buffer into a value_array_t of
  * (non-empty) strings. The input buffer should contain a valid UTF-8
  * encoded string.
  *
@@ -3353,7 +3368,7 @@ value_array_t* buffer_tokenize(buffer_t* buffer, const char* delimiters) {
 /**
  * @function tokenize_memory_range
  *
- * Tokenize a memory range into an array of (non-empty) strings. The
+ * Tokenize a memory range into a value_array_t of (non-empty) strings. The
  * range should contain a valid UTF-8 encoded string.
  *
  * NUL bytes are automatically treated as an additional delimiter.
@@ -3392,7 +3407,7 @@ void add_duplicate(value_array_t* token_array, const char* data) {
  * @file uint64.c
  *
  * Implement a couple of useful operations on uint64_t (which can
- * often be used for smaller types.
+ * often be used for smaller types).
  */
 
 #ifndef _UINT64_H_

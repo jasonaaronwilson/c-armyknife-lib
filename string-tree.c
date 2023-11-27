@@ -56,6 +56,10 @@ __attribute__((warn_unused_result)) extern string_tree_t*
  *   statement2();
  * }
  * ```
+ *
+ * Unforunately it is not possible to use "break" or "continue" with
+ * this style of loop (and worse, there will be no compilation error
+ * or warning if you accidentally do that...)
  */
 #define string_tree_foreach(tree, key_var, value_var, statements)              \
   do {                                                                         \

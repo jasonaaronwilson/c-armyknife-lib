@@ -1,9 +1,3 @@
-## @enum non_fatal_error_code_t
-
-These are user recoverable errors and when a non-recoverable error
-is returned, the state of the system should be left in a
-recoverable state.
- 
 # @file value.c
 
 A major part of the armyknife library is giving basic "collection"
@@ -74,6 +68,16 @@ pointers and booleans).
 Our primary goal is to make collections convenient. Using typedef
 and inline functions you can also make these safer at compile time.
  
+## @typedef value_result_t
+
+A pair of a value_t and a non-fatal error code. When the error code
+is set, the value_t should never be looked at (most likely will be
+"zero" or a "nullptr" but you shouldn't trust that).
+ 
+## @typedef value_t
+
+An un-typed union of integers, doubles, and pointers.
+ 
 ## @function is_not_ok
 
 Return true if the given value_result_t contains an error, such as
@@ -84,13 +88,9 @@ NF_ERROR_NOT_FOUND.
 Return true if the given value_result_t contains a legal value
 instead of an error condition.
  
-## @typedef value_result_t
+## @enum non_fatal_error_code_t
 
-A pair of a value_t and a non-fatal error code. When the error code
-is set, the value_t should never be looked at (most likely will be
-"zero" or a "nullptr" but you shouldn't trust that).
- 
-## @typedef value_t
-
-An un-typed union of integers, doubles, and pointers.
+These are user recoverable errors and when a non-recoverable error
+is returned, the state of the system should be left in a
+recoverable state.
  

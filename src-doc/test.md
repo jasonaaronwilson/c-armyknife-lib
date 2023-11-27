@@ -3,11 +3,6 @@
 A set of macros and inline functions to help write tests for the
 armyknife library (or your own tests).
  
-## @function test_fail_and_exit
-
-Set a break-point here to debug a test but normally you will use
-the macro `test_fail` since it is much more convenient.
- 
 ## @macro test_fail
 
 Immediately fail a test after printing a message (supplied the same
@@ -23,4 +18,9 @@ It is *advised* (at least for now) to not pass complicated
 expressions to `test_fail` if those are likely to fail. Instead run
 the test in a debugger and set a break-point on
 `test_fail_and_exit`.
+ 
+## @function test_fail_and_exit
+
+Set a break-point here to debug a test but normally you will use
+the macro `test_fail` since it is much more convenient.
  

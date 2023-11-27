@@ -1,5 +1,3 @@
-## @constants command_line_flag_type_t
- 
 # @file command-line-parser.c
 
 A simple command line parser for GNU long style flags and file
@@ -7,6 +5,8 @@ arguments.
 
 Takes a command line and returns an array of "file" arguments and a
 string_hashtable of command line flags.
+ 
+## @constants command_line_flag_type_t
  
 ## @function make_command_line_command_descriptor
 

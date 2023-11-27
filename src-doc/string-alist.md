@@ -2,6 +2,11 @@
 
 An association list (a type of map) from a string to a value_t.
  
+## @macro string_alist_foreach
+
+Allows iteration over the keys and values in a string association
+list.
+ 
 ## @function alist_delete
 
 Delete the key and associated value from the given association
@@ -17,9 +22,4 @@ actually found).
 ## @function alist_insert
 
 Insert a new key and value into an assocation list.
- 
-## @macro string_alist_foreach
-
-Allows iteration over the keys and values in a string association
-list.
  

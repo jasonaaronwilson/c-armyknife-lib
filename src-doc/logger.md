@@ -58,23 +58,6 @@ relatively expensive itself. For example, printing a large number
 may require dozens or hundreds of cycles while adding two numbers
 may take less than a single cycle on a modern pipelined processor).
  
-## @function logger_impl
-
-This is the non macro version entry point into the logger. Normally
-it wouldn't be called directly since it is less convenient than the
-macro versions.
- 
-## @function logger_init
-
-This function modifies the logging level based on the environment
-variable ARMYKNIFE_LIB_LOG_LEVEL (which currently must be a
-number).
-
-While not required to actually use logging, the logging level will
-be set to LOGGER_WARN unless you change it in a debugger, and those
-logging statements will be sent to stderr which is probably not
-convenient.
- 
 ## @macro log_debug
 
 Log at the DEBUG level using printf style formatting.
@@ -116,4 +99,21 @@ Log at the TRACE level using printf style formatting.
 ## @macro log_warn
 
 Log at the WARN level using printf style formatting.
+ 
+## @function logger_impl
+
+This is the non macro version entry point into the logger. Normally
+it wouldn't be called directly since it is less convenient than the
+macro versions.
+ 
+## @function logger_init
+
+This function modifies the logging level based on the environment
+variable ARMYKNIFE_LIB_LOG_LEVEL (which currently must be a
+number).
+
+While not required to actually use logging, the logging level will
+be set to LOGGER_WARN unless you change it in a debugger, and those
+logging statements will be sent to stderr which is probably not
+convenient.
  

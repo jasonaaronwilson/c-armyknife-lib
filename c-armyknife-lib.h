@@ -112,7 +112,7 @@ typedef bool boolean_t;
  * value, it does allow storing a *pointer to anything* as a key or
  * value. This is actually very similar to how Java collections work
  * except we can store primitive values like integers and doubles
- * without boxing.
+ * without "boxing".
  *
  * When "searching" a collection for a key, we want to be able to
  * return "not found" (and potentially other "non-fatal" error
@@ -123,9 +123,9 @@ typedef bool boolean_t;
  * `gcc` and `clang` so we work around that by repeating the fields of
  * a value to make value_result_t a bit more convenient to work with).
  *
- * value_result_t is sometimes used by non collection based functions,
- * such as parsing an integer, so that other non-fatal errors can be
- * communicated back to the caller.
+ * Sometimes value_result_t is also used by non collection based
+ * functions, such as parsing an integer, so that other non-fatal
+ * errors can be communicated back to the caller.
  *
  * The contract with returning a non-fatal errors is that the state of
  * the system is in a good state to continue processing (or they get
@@ -134,36 +134,38 @@ typedef bool boolean_t;
  * modification has ocurred.
  *
  * value_t's are typically only passed into functions while
- * optional_value_result_t's are then typically returned from
- * functions.
+ * optional_value_result_t's are typically returned from functions.
  *
  * When a value_result_t is returned you must always check for an
  * error code before using the value component of the result. `is_ok`
- * and `is_not_ok` make this slightly easier.
+ * and `is_not_ok` make this slightly easier and easier to read.
  *
  * value_t's and value_result_t's carry no type information that can
  * be queried at runtime and by their nature C compilers are going to
  * do a very incomplete job of statically type checking these. For
  * example you can easily put a double into a collection and
- * successfully get back a very suspicious pointer and the compiler
- * will not warn you about this. So collections aren't as safe as in
- * other languages at either compile or run-time. (Java's collections
- * (when generic types are *not* used), are not "safe" at compile time
- * but are still dynamically safe.)
+ * successfully get back this value and use it as a very suspicious
+ * pointer and the compiler will not warn you about this. So
+ * collections aren't as safe as in other languages at either compile
+ * or run-time. (Java's collections (when generic types are *not*
+ * used), are not "safe" at compile time but are still dynamically
+ * safe.)
  *
- * On the positive side, this also means you haven't paid a price to
- * prevent these errors at runtime and so in theory your code can run
+ * On the positive side, the lack of dynamic typing means you haven't
+ * paid a price to maintain these and in theory your code can run
  * faster.
  *
- * If C had a richer type-system, namely generic types,, I think we
- * could catch all all potential type errors at compile time and even
- * allow storing "values" larger than 64bits "inline".
+ * If C had a richer type-system, namely generic types, we could catch
+ * all all potential type errors at compile time and potentially even
+ * allow storing "values" larger than 64bits "inline" with a little
+ * more magic.
  *
  * The most common things to use as keys are strings, integers, and
- * pointers (while common values are strings, integers, pointers and
- * booleans). We make these convient but not quite type safe though
- * you can make things a little safer by using typedef and inline
- * functions.
+ * pointers (while common association values are strings, integers,
+ * pointers and booleans).
+ *
+ * Our primary goal is to make collections convenient. Using typedef
+ * and inline functions you can also make these safer at compile time.
  */
 
 /**
@@ -544,10 +546,17 @@ struct value_array_S {
   value_t* elements;
 };
 
+/**
+ * @typedef value_array_t
+ *
+ * A growable array of 64bit "values" (so integers, doubles, and
+ * pointers).
+ */
 typedef struct value_array_S value_array_t;
 
 extern value_array_t* make_value_array(uint32_t initial_capacity);
 extern value_t value_array_get(value_array_t* array, uint32_t index);
+extern void value_array_replace(value_array_t* array, uint32_t index, value_t element);
 extern void value_array_add(value_array_t* array, value_t element);
 extern void value_array_push(value_array_t* array, value_t element);
 extern value_t value_array_pop(value_array_t* array);
@@ -2553,7 +2562,7 @@ value_result_t string_ht_find(string_hashtable_t* ht, char* key) {
 /**
  * @file string-tree.c
  *
- * This is a balanced binary tree to associate a string and a value.
+ * This is a balanced binary tree to associate a string to a value.
  *
  * Generally a string_alist is prefered for small "maps", and
  * string_hashtable is prefered for large maps, but string_tree is the
@@ -2562,8 +2571,9 @@ value_result_t string_ht_find(string_hashtable_t* ht, char* key) {
  *
  * Currently we are using "AA" trees (see
  * https://en.wikipedia.org/wiki/AA_tree) since it has simpler code
- * than many other balanced trees like RB trees and the Wikipedia
- * article and paper spell out most of the non-trivial details.
+ * than many other balanced trees (like red-block trees) and the
+ * Wikipedia article and paper spell out *most* of the non-trivial
+ * details.
  */
 
 #ifndef _STRING_TREE_H_
@@ -2693,7 +2703,8 @@ string_tree_t* make_string_tree_leaf(char* key, value_t value) {
 /**
  * @function string_tree_insert
  *
- * Insert an association of key and a value.
+ * Insert an association of key and a value (or update the current
+ * value stored in the tree).
  */
 string_tree_t* string_tree_insert(string_tree_t* t, char* key, value_t value) {
   if (t == NULL) {
@@ -2759,7 +2770,8 @@ static inline boolean_t string_tree_is_leaf(string_tree_t* t) {
 /**
  * @function string_tree_delete
  *
- * Delete the association of key (if it exists in the tree).
+ * Delete the association of key (if it exists in the tree). It is not
+ * an error to delete a key that isn't present in the table.
  */
 string_tree_t* string_tree_delete(string_tree_t* t, char* key) {
 
@@ -3435,7 +3447,7 @@ int uint64_highest_bit_set(uint64_t n) {
  * value, it does allow storing a *pointer to anything* as a key or
  * value. This is actually very similar to how Java collections work
  * except we can store primitive values like integers and doubles
- * without boxing.
+ * without "boxing".
  *
  * When "searching" a collection for a key, we want to be able to
  * return "not found" (and potentially other "non-fatal" error
@@ -3446,9 +3458,9 @@ int uint64_highest_bit_set(uint64_t n) {
  * `gcc` and `clang` so we work around that by repeating the fields of
  * a value to make value_result_t a bit more convenient to work with).
  *
- * value_result_t is sometimes used by non collection based functions,
- * such as parsing an integer, so that other non-fatal errors can be
- * communicated back to the caller.
+ * Sometimes value_result_t is also used by non collection based
+ * functions, such as parsing an integer, so that other non-fatal
+ * errors can be communicated back to the caller.
  *
  * The contract with returning a non-fatal errors is that the state of
  * the system is in a good state to continue processing (or they get
@@ -3457,36 +3469,38 @@ int uint64_highest_bit_set(uint64_t n) {
  * modification has ocurred.
  *
  * value_t's are typically only passed into functions while
- * optional_value_result_t's are then typically returned from
- * functions.
+ * optional_value_result_t's are typically returned from functions.
  *
  * When a value_result_t is returned you must always check for an
  * error code before using the value component of the result. `is_ok`
- * and `is_not_ok` make this slightly easier.
+ * and `is_not_ok` make this slightly easier and easier to read.
  *
  * value_t's and value_result_t's carry no type information that can
  * be queried at runtime and by their nature C compilers are going to
  * do a very incomplete job of statically type checking these. For
  * example you can easily put a double into a collection and
- * successfully get back a very suspicious pointer and the compiler
- * will not warn you about this. So collections aren't as safe as in
- * other languages at either compile or run-time. (Java's collections
- * (when generic types are *not* used), are not "safe" at compile time
- * but are still dynamically safe.)
+ * successfully get back this value and use it as a very suspicious
+ * pointer and the compiler will not warn you about this. So
+ * collections aren't as safe as in other languages at either compile
+ * or run-time. (Java's collections (when generic types are *not*
+ * used), are not "safe" at compile time but are still dynamically
+ * safe.)
  *
- * On the positive side, this also means you haven't paid a price to
- * prevent these errors at runtime and so in theory your code can run
+ * On the positive side, the lack of dynamic typing means you haven't
+ * paid a price to maintain these and in theory your code can run
  * faster.
  *
- * If C had a richer type-system, namely generic types,, I think we
- * could catch all all potential type errors at compile time and even
- * allow storing "values" larger than 64bits "inline".
+ * If C had a richer type-system, namely generic types, we could catch
+ * all all potential type errors at compile time and potentially even
+ * allow storing "values" larger than 64bits "inline" with a little
+ * more magic.
  *
  * The most common things to use as keys are strings, integers, and
- * pointers (while common values are strings, integers, pointers and
- * booleans). We make these convient but not quite type safe though
- * you can make things a little safer by using typedef and inline
- * functions.
+ * pointers (while common association values are strings, integers,
+ * pointers and booleans).
+ *
+ * Our primary goal is to make collections convenient. Using typedef
+ * and inline functions you can also make these safer at compile time.
  */
 
 /**
@@ -3570,7 +3584,13 @@ static inline boolean_t is_not_ok(value_result_t value) {
 /**
  * @file value-array.c
  *
- * This file contains a growable array of values/pointers.
+ * This file contains a growable array of "values".
+ *
+ * Certain algorithms require that growth occurs based on the current
+ * capacity of an array, not a fixed amount. For now we simply double
+ * the current capacity when more space in the backing array is
+ * required though we may scale this back to something more like 1.5X
+ * for "large" arrays to save space.
  */
 
 #ifndef _VALUE_ARRAY_H_
@@ -3582,10 +3602,17 @@ struct value_array_S {
   value_t* elements;
 };
 
+/**
+ * @typedef value_array_t
+ *
+ * A growable array of 64bit "values" (so integers, doubles, and
+ * pointers).
+ */
 typedef struct value_array_S value_array_t;
 
 extern value_array_t* make_value_array(uint32_t initial_capacity);
 extern value_t value_array_get(value_array_t* array, uint32_t index);
+extern void value_array_replace(value_array_t* array, uint32_t index, value_t element);
 extern void value_array_add(value_array_t* array, value_t element);
 extern void value_array_push(value_array_t* array, value_t element);
 extern value_t value_array_pop(value_array_t* array);
@@ -3600,12 +3627,10 @@ extern value_t value_array_delete_at(value_array_t* array, uint32_t position);
  *
  * Make a value array with the given initial capacity (which must be >
  * 0). When the array runs out of capacity because of calls to add,
- * push, etc., then the backing array is automatically doubled in size
- * (this may change to a different fraction for "large arrays"
- * (greater than say 250 elements) in the future to save space).
+ * push, etc., then the backing array is automatically increased.
  *
- * If the initial_capacity is zero or if malloc() can't allocate
- * everything, then a fatal_error() occurs.
+ * If either the initial_capacity is zero or if `malloc()` can't
+ * allocate then a fata _error occurs.
  */
 value_array_t* make_value_array(uint32_t initial_capacity) {
   if (initial_capacity == 0) {
@@ -3657,6 +3682,20 @@ value_t value_array_get(value_array_t* array, uint32_t index) {
 }
 
 /**
+ * @function value_array_replace
+ *
+ * Replace the value at a given `index`. If the index is outside of
+ * the range of valid elements, then a `fatal_error` is signaled.
+ */
+void value_array_replace(value_array_t* array, uint32_t index, value_t element) {
+  if (index < array->length) {
+    array->elements[index] = element;
+    return;
+  }
+  fatal_error(ERROR_ACCESS_OUT_OF_BOUNDS);
+}
+
+/**
  * @function value_array_add
  *
  * Add an element to the end of an array. If more space is required
@@ -3685,7 +3724,7 @@ void value_array_push(value_array_t* array, value_t element) {
  * Returns the last element of the array (typically added via push).
  *
  * If the array is currently empty, then
- * fatal_error(ERROR_ACCESS_OUT_OF_BOUNDS) is called.
+ * `fatal_error(ERROR_ACCESS_OUT_OF_BOUNDS)` is called.
  */
 value_t value_array_pop(value_array_t* array) {
   if (array->length == 0) {

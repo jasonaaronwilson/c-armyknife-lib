@@ -3,7 +3,7 @@
 /**
  * @file string-tree.c
  *
- * This is a balanced binary tree to associate a string and a value.
+ * This is a balanced binary tree to associate a string to a value.
  *
  * Generally a string_alist is prefered for small "maps", and
  * string_hashtable is prefered for large maps, but string_tree is the
@@ -12,8 +12,9 @@
  *
  * Currently we are using "AA" trees (see
  * https://en.wikipedia.org/wiki/AA_tree) since it has simpler code
- * than many other balanced trees like RB trees and the Wikipedia
- * article and paper spell out most of the non-trivial details.
+ * than many other balanced trees (like red-block trees) and the
+ * Wikipedia article and paper spell out *most* of the non-trivial
+ * details.
  */
 
 #ifndef _STRING_TREE_H_
@@ -143,7 +144,8 @@ string_tree_t* make_string_tree_leaf(char* key, value_t value) {
 /**
  * @function string_tree_insert
  *
- * Insert an association of key and a value.
+ * Insert an association of key and a value (or update the current
+ * value stored in the tree).
  */
 string_tree_t* string_tree_insert(string_tree_t* t, char* key, value_t value) {
   if (t == NULL) {
@@ -209,7 +211,8 @@ static inline boolean_t string_tree_is_leaf(string_tree_t* t) {
 /**
  * @function string_tree_delete
  *
- * Delete the association of key (if it exists in the tree).
+ * Delete the association of key (if it exists in the tree). It is not
+ * an error to delete a key that isn't present in the table.
  */
 string_tree_t* string_tree_delete(string_tree_t* t, char* key) {
 

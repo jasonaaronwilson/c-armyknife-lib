@@ -21,6 +21,25 @@ void test() {
   }
 }
 
+void test_replace() {
+  value_array_t* array = make_value_array(1);
+  value_array_add(array, str_to_value("a"));
+  value_array_add(array, str_to_value("b"));
+  value_array_add(array, str_to_value("c"));
+  value_array_add(array, str_to_value("d"));
+  value_array_add(array, str_to_value("e"));
+  value_array_add(array, str_to_value("f"));
+
+  if (!string_equal("c", value_array_get(array, 2).str)) {
+    test_fail("expected 'c'");
+  }
+
+  value_array_replace(array, 2, str_to_value("C"));
+  if (!string_equal("C", value_array_get(array, 2).str)) {
+    test_fail("expected 'C'");
+  }
+}
+
 void test_push_pop() {
   value_array_t* array = make_value_array(1);
   value_array_push(array, str_to_value("a"));

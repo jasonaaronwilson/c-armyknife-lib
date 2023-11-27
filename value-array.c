@@ -3,7 +3,13 @@
 /**
  * @file value-array.c
  *
- * This file contains a growable array of values/pointers.
+ * This file contains a growable array of "values".
+ *
+ * Certain algorithms require that growth occurs based on the current
+ * capacity of an array, not a fixed amount. For now we simply double
+ * the current capacity when more space in the backing array is
+ * required though we may scale this back to something more like 1.5X
+ * for "large" arrays to save space.
  */
 
 #ifndef _VALUE_ARRAY_H_
@@ -15,10 +21,18 @@ struct value_array_S {
   value_t* elements;
 };
 
+/**
+ * @typedef value_array_t
+ *
+ * A growable array of 64bit "values" (so integers, doubles, and
+ * pointers).
+ */
 typedef struct value_array_S value_array_t;
 
 extern value_array_t* make_value_array(uint32_t initial_capacity);
 extern value_t value_array_get(value_array_t* array, uint32_t index);
+extern void value_array_replace(value_array_t* array, uint32_t index,
+                                value_t element);
 extern void value_array_add(value_array_t* array, value_t element);
 extern void value_array_push(value_array_t* array, value_t element);
 extern value_t value_array_pop(value_array_t* array);
@@ -33,12 +47,10 @@ extern value_t value_array_delete_at(value_array_t* array, uint32_t position);
  *
  * Make a value array with the given initial capacity (which must be >
  * 0). When the array runs out of capacity because of calls to add,
- * push, etc., then the backing array is automatically doubled in size
- * (this may change to a different fraction for "large arrays"
- * (greater than say 250 elements) in the future to save space).
+ * push, etc., then the backing array is automatically increased.
  *
- * If the initial_capacity is zero or if malloc() can't allocate
- * everything, then a fatal_error() occurs.
+ * If either the initial_capacity is zero or if `malloc()` can't
+ * allocate then a fata _error occurs.
  */
 value_array_t* make_value_array(uint32_t initial_capacity) {
   if (initial_capacity == 0) {
@@ -90,6 +102,21 @@ value_t value_array_get(value_array_t* array, uint32_t index) {
 }
 
 /**
+ * @function value_array_replace
+ *
+ * Replace the value at a given `index`. If the index is outside of
+ * the range of valid elements, then a `fatal_error` is signaled.
+ */
+void value_array_replace(value_array_t* array, uint32_t index,
+                         value_t element) {
+  if (index < array->length) {
+    array->elements[index] = element;
+    return;
+  }
+  fatal_error(ERROR_ACCESS_OUT_OF_BOUNDS);
+}
+
+/**
  * @function value_array_add
  *
  * Add an element to the end of an array. If more space is required
@@ -118,7 +145,7 @@ void value_array_push(value_array_t* array, value_t element) {
  * Returns the last element of the array (typically added via push).
  *
  * If the array is currently empty, then
- * fatal_error(ERROR_ACCESS_OUT_OF_BOUNDS) is called.
+ * `fatal_error(ERROR_ACCESS_OUT_OF_BOUNDS)` is called.
  */
 value_t value_array_pop(value_array_t* array) {
   if (array->length == 0) {

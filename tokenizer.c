@@ -25,7 +25,7 @@ void add_duplicate(value_array_t* token_array, const char* data);
 /**
  * @function string_tokenize
  *
- * Tokenize a string into an array_t* of strings.
+ * Tokenize a string into a an array of (non-empty) strings.
  *
  * Delimiters terminate the current token and are thrown away. The
  * delimiters string is treated as a sequence of delimiter characters,
@@ -38,9 +38,12 @@ value_array_t* string_tokenize(const char* str, const char* delimiters) {
 /**
  * @function buffer_tokenize
  *
- * Tokenize the current contents of a buffer. The input buffer should
- * contain a valid UTF-8 encoded string. NUL bytes inside the buffer
- * are automatically treated as an additional delimiter.
+ * Tokenize the current contents of a buffer into an array of
+ * (non-empty) strings. The input buffer should contain a valid UTF-8
+ * encoded string.
+ *
+ * NUL bytes inside the buffer are automatically treated as an
+ * additional delimiter.
  */
 value_array_t* buffer_tokenize(buffer_t* buffer, const char* delimiters) {
   return tokenize_memory_range(&(buffer->elements[0]), buffer->length,
@@ -50,9 +53,10 @@ value_array_t* buffer_tokenize(buffer_t* buffer, const char* delimiters) {
 /**
  * @function tokenize_memory_range
  *
- * Tokenize a memory range. That range should contain a valid UTF-8
- * encoded string. NUL bytes are automatically treated as an
- * additional delimiter.
+ * Tokenize a memory range into an array of (non-empty) strings. The
+ * range should contain a valid UTF-8 encoded string.
+ *
+ * NUL bytes are automatically treated as an additional delimiter.
  */
 value_array_t* tokenize_memory_range(uint8_t* str, uint64_t length,
                                      const char* delimiters) {

@@ -6,7 +6,7 @@ armyknife library (or your own tests).
 ## @function test_fail_and_exit
 
 Set a break-point here to debug a test but normally you will use
-the macro `test-fail` since it is much more convenient.
+the macro `test_fail` since it is much more convenient.
  
 ## @macro test_fail
 

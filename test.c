@@ -41,7 +41,7 @@
  * @function test_fail_and_exit
  *
  * Set a break-point here to debug a test but normally you will use
- * the macro `test-fail` since it is much more convenient.
+ * the macro `test_fail` since it is much more convenient.
  */
 __attribute__((format(printf, 3, 4))) void
     test_fail_and_exit(char* file_name, int line_number, char* format, ...) {

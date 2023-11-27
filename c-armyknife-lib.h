@@ -556,7 +556,8 @@ typedef struct value_array_S value_array_t;
 
 extern value_array_t* make_value_array(uint32_t initial_capacity);
 extern value_t value_array_get(value_array_t* array, uint32_t index);
-extern void value_array_replace(value_array_t* array, uint32_t index, value_t element);
+extern void value_array_replace(value_array_t* array, uint32_t index,
+                                value_t element);
 extern void value_array_add(value_array_t* array, value_t element);
 extern void value_array_push(value_array_t* array, value_t element);
 extern value_t value_array_pop(value_array_t* array);
@@ -3612,7 +3613,8 @@ typedef struct value_array_S value_array_t;
 
 extern value_array_t* make_value_array(uint32_t initial_capacity);
 extern value_t value_array_get(value_array_t* array, uint32_t index);
-extern void value_array_replace(value_array_t* array, uint32_t index, value_t element);
+extern void value_array_replace(value_array_t* array, uint32_t index,
+                                value_t element);
 extern void value_array_add(value_array_t* array, value_t element);
 extern void value_array_push(value_array_t* array, value_t element);
 extern value_t value_array_pop(value_array_t* array);
@@ -3687,7 +3689,8 @@ value_t value_array_get(value_array_t* array, uint32_t index) {
  * Replace the value at a given `index`. If the index is outside of
  * the range of valid elements, then a `fatal_error` is signaled.
  */
-void value_array_replace(value_array_t* array, uint32_t index, value_t element) {
+void value_array_replace(value_array_t* array, uint32_t index,
+                         value_t element) {
   if (index < array->length) {
     array->elements[index] = element;
     return;
@@ -3721,7 +3724,10 @@ void value_array_push(value_array_t* array, value_t element) {
 /**
  * @function value_array_pop
  *
- * Returns the last element of the array (typically added via push).
+ * Returns the last element of the array (typically added via push)
+ * and modifies the length of the array so that the value isn't
+ * accessible any longer. (We also "zero out" the element in case you
+ * are using a conservative garbage collector.)
  *
  * If the array is currently empty, then
  * `fatal_error(ERROR_ACCESS_OUT_OF_BOUNDS)` is called.
@@ -3732,6 +3738,7 @@ value_t value_array_pop(value_array_t* array) {
   }
   uint32_t last_index = array->length - 1;
   value_t result = value_array_get(array, last_index);
+  array->elements[last_index] = u64_to_value(0);
   array->length--;
   return result;
 }

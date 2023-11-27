@@ -142,7 +142,10 @@ void value_array_push(value_array_t* array, value_t element) {
 /**
  * @function value_array_pop
  *
- * Returns the last element of the array (typically added via push).
+ * Returns the last element of the array (typically added via push)
+ * and modifies the length of the array so that the value isn't
+ * accessible any longer. (We also "zero out" the element in case you
+ * are using a conservative garbage collector.)
  *
  * If the array is currently empty, then
  * `fatal_error(ERROR_ACCESS_OUT_OF_BOUNDS)` is called.
@@ -153,6 +156,7 @@ value_t value_array_pop(value_array_t* array) {
   }
   uint32_t last_index = array->length - 1;
   value_t result = value_array_get(array, last_index);
+  array->elements[last_index] = u64_to_value(0);
   array->length--;
   return result;
 }

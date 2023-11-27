@@ -17,7 +17,7 @@ the C compiler's optimizations, so it is **not** recommended to be
 left in critical loops. Obviously if the code is compiled into the
 binary, even if the code to skip the logging doesn't considerably
 increase run-time performance, it may still have an impact for
-exanmple on the output binary size.
+example on the output binary size.
 
 The default log level is "WARN" though it is possible to override
 this with #define ARMYKNIFE_LIB_DEFAULT_LOG_LEVEL <level> when
@@ -26,7 +26,7 @@ which allows C preprocessor definitions to be injected into your
 source code, one reason you may want a debug vs production builds).
 
 Additionally, when the first log statement is encountered, we
-examine the envrionment variable named ARMYKNIFE_LIB_LOG_LEVEL if
+examine the environment variable named ARMYKNIFE_LIB_LOG_LEVEL if
 you want to adjust the level after compilation. Future versions
 will certainly provide more control such as turn on logging only
 for specific files as well as giving the C compiler enough
@@ -48,13 +48,13 @@ depending on how the logs are processed and retained. Our
 recommendation is to never intentionally log PII. It's especially
 important to keep this in mind if you are developing an internet
 application that the user isn't running on their own machine which
-isn't an intial focus of this library.
+isn't an initial focus of this library.
 
-[^1]: For this implementatic, getting a timestamp is probably one
+[^1]: For this implementation, getting a timestamp is probably one
 kernel call and doing the actual output, since logging is less
 useful when buffered, requires at least another kernel
 call. Finally, formatting strings for human readability is
-realitively expensive itself. For example, printing a large number
+relatively expensive itself. For example, printing a large number
 may require dozens or hundreds of cycles while adding two numbers
 may take less than a single cycle on a modern pipelined processor).
  

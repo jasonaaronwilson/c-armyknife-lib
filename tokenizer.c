@@ -2,14 +2,14 @@
 /**
  * @file tokenizer.c
  *
- * This contains a routine to split a string into a series of tokens
- * seperated via delimiters.
  */
 
 #ifndef _TOKENIZER_H_
 #define _TOKENIZER_H_
 
-extern value_array_t* tokenize(const char* str, const char* delimiters);
+extern value_array_t* string_tokenize(const char* str, const char* delimiters);
+
+// TODO(jawilson):
 
 #endif /* _TOKENIZER_H_ */
 

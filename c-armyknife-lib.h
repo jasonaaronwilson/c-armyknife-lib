@@ -455,8 +455,22 @@ __attribute__((format(printf, 4, 5))) extern void
 #ifndef _BUFFER_H_
 #define _BUFFER_H_
 
+/**
+ * @file buffer.c
+ *
+ * A growable array of bytes.
+ *
+ * Buffers are basically purpose built for constructing UTF-8 strings
+ * (for example by using buffer_printf) though they can hold any
+ * binary data including interior NUL bytes.
+ */
+
 #include <stdint.h>
 #include <string.h>
+
+// struct buffer_range_S {
+//  
+// };
 
 struct buffer_S {
   uint32_t length;
@@ -464,6 +478,19 @@ struct buffer_S {
   uint8_t elements[0];
 };
 
+/**
+ * @struct buffer_t
+ *
+ * Buffers are non-thread-safe memory regions that generally "grow"
+ * over time. Whenever a buffer grows beyound it's capacity, it is
+ * moved to accomodates its new capacity (even if there might be
+ * pointers inside of it, so don't do that unless you have decided the
+ * buffer will never grow again).
+ *
+ * While buffers may seem scary, used properly from a single thread,
+ * they are actually quite predictable.
+ *
+ */
 typedef struct buffer_S buffer_t;
 
 extern buffer_t* make_buffer(uint32_t initial_capacity);
@@ -736,7 +763,9 @@ extern void buffer_write_file(buffer_t* bytes, char* file_name);
 #ifndef _TOKENIZER_H_
 #define _TOKENIZER_H_
 
-extern value_array_t* tokenize(const char* str, const char* delimiters);
+extern value_array_t* string_tokenize(const char* str, const char* delimiters);
+
+// TODO(jawilson): 
 
 #endif /* _TOKENIZER_H_ */
 // SSCF generated file from: random.c
@@ -1188,22 +1217,25 @@ typedef bool boolean_t;
 
 #endif /* _BOOLEAN_H_ */
 #line 2 "buffer.c"
-/**
- * @file buffer.c
- *
- * A growable array of bytes. These are useful for many purposes such
- * as building large strings.
- */
-
-// ======================================================================
-// This is block is extraced to byte-array.h
-// ======================================================================
-
 #ifndef _BUFFER_H_
 #define _BUFFER_H_
 
+/**
+ * @file buffer.c
+ *
+ * A growable array of bytes.
+ *
+ * Buffers are basically purpose built for constructing UTF-8 strings
+ * (for example by using buffer_printf) though they can hold any
+ * binary data including interior NUL bytes.
+ */
+
 #include <stdint.h>
 #include <string.h>
+
+// struct buffer_range_S {
+//  
+// };
 
 struct buffer_S {
   uint32_t length;
@@ -1211,6 +1243,19 @@ struct buffer_S {
   uint8_t elements[0];
 };
 
+/**
+ * @struct buffer_t
+ *
+ * Buffers are non-thread-safe memory regions that generally "grow"
+ * over time. Whenever a buffer grows beyound it's capacity, it is
+ * moved to accomodates its new capacity (even if there might be
+ * pointers inside of it, so don't do that unless you have decided the
+ * buffer will never grow again).
+ *
+ * While buffers may seem scary, used properly from a single thread,
+ * they are actually quite predictable.
+ *
+ */
 typedef struct buffer_S buffer_t;
 
 extern buffer_t* make_buffer(uint32_t initial_capacity);
@@ -3229,14 +3274,14 @@ __attribute__((format(printf, 3, 4))) void
 /**
  * @file tokenizer.c
  *
- * This contains a routine to split a string into a series of tokens
- * seperated via delimiters.
  */
 
 #ifndef _TOKENIZER_H_
 #define _TOKENIZER_H_
 
-extern value_array_t* tokenize(const char* str, const char* delimiters);
+extern value_array_t* string_tokenize(const char* str, const char* delimiters);
+
+// TODO(jawilson): 
 
 #endif /* _TOKENIZER_H_ */
 

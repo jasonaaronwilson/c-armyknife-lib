@@ -54,7 +54,7 @@ format:
 	clang-format -i ${SRC_C} ${SRC_H} tests/*.c
 
 clean:
-	rm -rf *~ docs/*~ tests/*~ examples/*~ TAGS doxygen-docs *.o ${ORDERED_H} tests/build/*
+	rm -rf *~ docs/*~ tests/*~ examples/*~ TAGS doxygen-docs *.o ${ORDERED_H} tests/build/* examples/build/*
 
 diff: clean
 	git difftool HEAD

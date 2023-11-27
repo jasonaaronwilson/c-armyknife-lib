@@ -35,10 +35,51 @@
  * incorrectly classify some non duplicate lines as duplicates.
  */
 
-string_hashtable_t* initial_hashtable() {
+#include <stdlib.h>
+
+#define C_ARMYKNIFE_LIB_IMPL
+#include "../c-armyknife-lib.h"
+
+string_hashtable_t* initial_seen_hashtable() {
   // Currently hashtables don't grow so at least make sure we reduce
-  // "scanning" by 1000% or more with a large initial hashtable that
-  // doesn't even seem that large TBH.
-  string_hashtable_t seen = make_string_hashtable(64 * 1024);
+  // "scanning" by 1000% or more with a "large" initial hashtable
+  // (that doesn't even seem that large TBH).
+  string_hashtable_t* seen = make_string_hashtable(128 * 1024);
   return seen;
+}
+
+value_array_t* get_command_line_flag_descriptors() {
+  value_array_t* result = make_value_array(1);
+  // TODO(jawilson): make sure this also works when null!
+  return result;
+}
+
+command_line_parser_configuation_t* get_command_line_parser_config() {
+  command_line_parser_configuation_t* config
+      = malloc_struct(command_line_parser_configuation_t);
+  config->program_name = "unique-file-lines";
+  config->program_description = "Similar to 'cat' but duplicate 'lines' are elided.";
+  config->command_descriptors = NULL;
+  config->flag_descriptors = get_command_line_flag_descriptors();
+  return config;
+}
+
+int main(int argc, char** argv) {
+  command_line_parse_result_t args_and_files
+      = parse_command_line(argc, argv, get_command_line_parser_config());
+
+  // I'm not sure how this could even happen but cheap fast fail code,
+  // especially that which may be cargo culted, doesn't upset me
+  // unless inside an "inner" loop.
+  if (args_and_files.command != NULL) {
+    fatal_error(ERROR_BAD_COMMAND_LINE);
+  }
+
+  for (int i = 0; i < args_and_files.files->length; i++) {
+    char* file_name = value_array_get(args_and_files.files, i).str;
+    buffer_t* buffer = make_buffer(1);
+    buffer = buffer_append_file_contents(buffer, file_name);
+  }
+
+  exit(0);
 }

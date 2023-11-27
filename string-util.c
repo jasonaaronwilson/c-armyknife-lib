@@ -97,6 +97,9 @@ boolean_t string_contains_char(const char* str, char ch) {
 
 /**
  * @function string_index_of_char
+ *
+ * Return the index of the given character in a string or a value less
+ * than zero if the character isn't inside of the string.
  */
 int string_index_of_char(const char* str, char ch) {
   if (string_is_null_or_empty(str)) {

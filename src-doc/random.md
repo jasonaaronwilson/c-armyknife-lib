@@ -16,8 +16,9 @@ state).
  
 ## @function random_next_uint64_below
 
-Return a random `uint64` that is below some maximum. As much as the
-underlying random number generartor allows, this should be uniform.
+Return a random `uint64_t` that is below some maximum. As much as
+the underlying random number generartor allows, this should be
+uniform.
  
 ## @function random_state_for_test
 

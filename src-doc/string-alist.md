@@ -1,7 +1,6 @@
 # @file string-alist.c
 
-A simple map between a string with a pointer to some other
-data-structure.
+An association list (a type of map) from a string to a value_t.
  
 ## @function alist_delete
 

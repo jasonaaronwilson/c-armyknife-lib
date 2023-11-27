@@ -63,8 +63,9 @@ uint64_t random_next(random_state_t* state) {
 /**
  * @function random_next_uint64_below
  *
- * Return a random `uint64` that is below some maximum. As much as the
- * underlying random number generartor allows, this should be uniform.
+ * Return a random `uint64_t` that is below some maximum. As much as
+ * the underlying random number generartor allows, this should be
+ * uniform.
  */
 uint64_t random_next_uint64_below(random_state_t* state, uint64_t maximum) {
   if (maximum == 0) {

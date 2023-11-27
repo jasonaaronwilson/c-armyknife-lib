@@ -31,6 +31,9 @@ Return a fast but generally high-quality 64bit hash of an input
 string.
  
 ## @function string_index_of_char
+
+Return the index of the given character in a string or a value less
+than zero if the character isn't inside of the string.
  
 ## @function string_is_null_or_empty
 

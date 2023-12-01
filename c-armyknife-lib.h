@@ -24,16 +24,45 @@
  * correctly.
  */
 
+// SSCF generated file from: boolean.c
+
+#ifndef _BOOLEAN_H_
+#define _BOOLEAN_H_
+
+#include <stdbool.h>
+
+/**
+ * @type boolean_t
+ *
+ * This is a simple typedef for "bool" (or _Bool from C99) which is
+ * available from "stdbool.h" as bool and true and false constants are
+ * also defined. We use it for more consistency in primitive types
+ * (where only char* is commonly used in this library despite not
+ * following the typically naming convention).
+ */
+typedef bool boolean_t;
+
+// #define true ((boolean_t) 1)
+// #define false ((boolean_t) 0)
+
+#endif /* _BOOLEAN_H_ */
 // SSCF generated file from: fatal-error.c
 
 #ifndef _FATAL_ERROR_H_
 #define _FATAL_ERROR_H_
+
+struct fatal_error_config_S {
+  boolean_t catch_sigsegv;
+};
+
+typedef struct fatal_error_config_S fatal_error_config_t;
 
 /**
  * @constants error_code_t
  */
 typedef enum {
   ERROR_UKNOWN,
+  ERROR_SIGSEGV,
   ERROR_ACCESS_OUT_OF_BOUNDS,
   ERROR_BAD_COMMAND_LINE,
   ERROR_DYNAMICALLY_SIZED_TYPE_ILLEGAL_IN_CONTAINER,
@@ -58,6 +87,7 @@ typedef enum {
 
 extern _Noreturn void fatal_error_impl(char* file, int line, int error_code);
 extern const char* fatal_error_code_to_string(int error_code);
+extern void configure_fatal_errors(fatal_error_config_t config);
 
 /**
  * @macro fatal_error
@@ -67,28 +97,6 @@ extern const char* fatal_error_code_to_string(int error_code);
 #define fatal_error(code) fatal_error_impl(__FILE__, __LINE__, code)
 
 #endif /* _FATAL_ERROR_H_ */
-// SSCF generated file from: boolean.c
-
-#ifndef _BOOLEAN_H_
-#define _BOOLEAN_H_
-
-#include <stdbool.h>
-
-/**
- * @type boolean_t
- *
- * This is a simple typedef for "bool" (or _Bool from C99) which is
- * available from "stdbool.h" as bool and true and false constants are
- * also defined. We use it for more consistency in primitive types
- * (where only char* is commonly used in this library despite not
- * following the typically naming convention).
- */
-typedef bool boolean_t;
-
-// #define true ((boolean_t) 1)
-// #define false ((boolean_t) 0)
-
-#endif /* _BOOLEAN_H_ */
 // SSCF generated file from: value.c
 
 #ifndef _VALUE_H_
@@ -1746,13 +1754,17 @@ command_line_parse_result_t
  * @file fatal-error.c
  *
  * The intent is that everything but a normal program exit will end up
- * here. (Currently, we don't catch any signals so this is definitely
- * not true.)
+ * here. (To catch SIGSIGV errors you may call
+ * configure_fatal_errors() first with catch_sigsegv set.)
+ *
+ * Note that you can use fatal_error's to your advantage by setting
+ * the environment variable ARMYKNIFE_FATAL_ERROR_SLEEP_SECONDS to
+ * some value to give yourself enough time to attach a debugger.
  *
  * In this case C's macros are paying off as the file and line number
  * are easy to obtain.
  *
- * TODO(jawilson): command line flag to be quieter...
+ * TODO(jawilson): environment variable to be quieter...
  */
 
 // ======================================================================
@@ -1762,11 +1774,18 @@ command_line_parse_result_t
 #ifndef _FATAL_ERROR_H_
 #define _FATAL_ERROR_H_
 
+struct fatal_error_config_S {
+  boolean_t catch_sigsegv;
+};
+
+typedef struct fatal_error_config_S fatal_error_config_t;
+
 /**
  * @constants error_code_t
  */
 typedef enum {
   ERROR_UKNOWN,
+  ERROR_SIGSEGV,
   ERROR_ACCESS_OUT_OF_BOUNDS,
   ERROR_BAD_COMMAND_LINE,
   ERROR_DYNAMICALLY_SIZED_TYPE_ILLEGAL_IN_CONTAINER,
@@ -1791,6 +1810,7 @@ typedef enum {
 
 extern _Noreturn void fatal_error_impl(char* file, int line, int error_code);
 extern const char* fatal_error_code_to_string(int error_code);
+extern void configure_fatal_errors(fatal_error_config_t config);
 
 /**
  * @macro fatal_error
@@ -1804,18 +1824,54 @@ extern const char* fatal_error_code_to_string(int error_code);
 // ======================================================================
 
 #include <execinfo.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
+
+fatal_error_config_t fatal_error_config = { 0 };
+
+void segmentation_fault_handler(int signal_number) {
+  fatal_error(ERROR_SIGSEGV);
+}
+
+void configure_fatal_errors(fatal_error_config_t config) {
+  fatal_error_config = config;
+  if (config.catch_sigsegv) {
+    signal(SIGSEGV, segmentation_fault_handler);
+  }
+}
 
 void print_fatal_error_banner();
 void print_backtrace();
 void print_error_code_name(int error_code);
+
+char* get_program_path() {
+  char buf[4096];
+  int n = readlink("/proc/self/exe", buf, sizeof(buf));
+  if (n > 0) {
+    return string_duplicate(buf);
+  } else {
+    return "<program-path-unknown>";
+  }
+}
 
 void _Noreturn fatal_error_impl(char* file, int line, int error_code) {
   print_fatal_error_banner();
   print_backtrace();
   fprintf(stderr, "%s:%d: FATAL ERROR %d", file, line, error_code);
   print_error_code_name(error_code);
+  char* sleep_str = getenv("ARMYKNIFE_FATAL_ERROR_SLEEP_SECONDS");
+  if (sleep_str != NULL) {
+    value_result_t sleep_time = string_parse_uint64(sleep_str);
+    if (is_ok(sleep_time)) {
+      fprintf(stderr,
+              "Sleeping for %lu seconds so you can attach a debugger.\n",
+              sleep_time.u64);
+      fprintf(stderr, "  gdb %s %d\n", get_program_path(), getpid());
+      sleep(sleep_time.u64);
+    }
+  }
   fprintf(stderr, "Necessaria Morte Mori...\n");
   exit(-(error_code + 100));
 }

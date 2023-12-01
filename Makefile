@@ -22,8 +22,8 @@ SRC_C = allocate.c \
 	value-array.c
 
 ORDERED_H = \
-	fatal-error.h \
 	boolean.h \
+	fatal-error.h \
 	value.h \
 	allocate.h \
 	uint64.h \

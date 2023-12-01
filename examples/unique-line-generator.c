@@ -45,6 +45,9 @@ command_line_parser_configuation_t* get_command_line_parser_config() {
 }
 
 int main(int argc, char** argv) {
+  configure_fatal_errors((fatal_error_config_t){
+      .catch_sigsegv = true,
+  });
   command_line_parse_result_t args_and_files
       = parse_command_line(argc, argv, get_command_line_parser_config());
 

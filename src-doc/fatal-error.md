@@ -1,7 +1,7 @@
 # @file fatal-error.c
 
 The intent is that everything but a normal program exit will end up
-here. (To catch SIGSIGV errors you need to call
+here. (To catch SIGSIGV errors you may call
 configure_fatal_errors() first with catch_sigsegv set.)
 
 Note that you can use fatal_error's to your advantage by setting

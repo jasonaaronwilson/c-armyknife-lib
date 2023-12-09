@@ -144,20 +144,25 @@ char* string_substring(const char* str, int start, int end) {
 }
 
 value_result_t string_parse_uint64_dec(const char* string) {
-  boolean_t at_least_one_number = false;
+  uint64_t len = strlen(string);
   uint64_t integer = 0;
-  uint64_t digit;
 
-  while (*string != '\0') {
-    digit = *string - '0';
-    integer = integer * 10 + digit;
-    string++;
-    at_least_one_number = true;
+  if (len == 0) {
+    return (value_result_t){.u64 = 0,
+                            .nf_error = NF_ERROR_NOT_PARSED_AS_NUMBER};
   }
 
-  return (value_result_t){
-      .u64 = integer,
-      .nf_error = at_least_one_number ? NF_OK : NF_ERROR_NOT_PARSED_AS_NUMBER};
+  for (int i = 0; i < len; i++) {
+    char ch = string[i];
+    if (ch < '0' || ch > '9') {
+      return (value_result_t){.u64 = 0,
+                              .nf_error = NF_ERROR_NOT_PARSED_AS_NUMBER};
+    }
+    uint64_t digit = *string - '0';
+    integer = integer * 10 + digit;
+  }
+
+  return (value_result_t){.u64 = integer, .nf_error = NF_OK};
 }
 
 value_result_t string_parse_uint64_hex(const char* string) {

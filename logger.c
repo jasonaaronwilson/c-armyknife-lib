@@ -231,7 +231,6 @@ value_result_t parse_log_level_enum(char* str) {
  * convenient.
  */
 void logger_init(void) {
-
   char* level_string = getenv("ARMYKNIFE_LIB_LOG_LEVEL");
   if (level_string != NULL) {
     value_result_t parsed = string_parse_uint64(level_string);
@@ -241,9 +240,13 @@ void logger_init(void) {
       value_result_t parsed = parse_log_level_enum(level_string);
       if (is_ok(parsed)) {
         global_logger_state.level = parsed.u64;
+      } else {
+        log_warn("%s could not be converted to a log level.", level_string);
       }
     }
   }
+
+  fprintf(stderr, "Level is set to %d", global_logger_state.level);
 
   char* output_file_name = getenv("ARMYKNIFE_LIB_LOG_FILE");
 

@@ -121,6 +121,11 @@ int main(int argc, char** argv) {
     test_fail("string_parse_uint64");
   }
 
+  if (is_ok(string_parse_uint64("INFO"))) {
+    test_fail(
+        "a non numeric string should not be able to be parsed as a number");
+  }
+
   if (!string_duplicate("The quick brown fox")) {
     test_fail("string_duplicate");
   }

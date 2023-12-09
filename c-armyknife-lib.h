@@ -365,7 +365,7 @@ struct logger_state_S {
 
 typedef struct logger_state_S logger_state_t;
 
-#ifndef LOGGER_DEFAULT_LEVEL
+ #ifndef LOGGER_DEFAULT_LEVEL
 #define LOGGER_DEFAULT_LEVEL LOGGER_WARN
 #endif /* LOGGER_DEFAULT_LEVEL */
 
@@ -446,7 +446,7 @@ __attribute__((format(printf, 4, 5))) extern void
   } while (0)
 
 /**
- * Determine if loggin at the INFO level is enabled.
+ * Determine if logging at the INFO level is enabled.
  */
 static inline boolean_t should_log_info() {
   return global_logger_state.level <= LOGGER_INFO;
@@ -2066,12 +2066,7 @@ buffer_t* buffer_read_until(buffer_t* buffer, FILE* input, char end_of_line) {
  * the end of the file input has been reached. A a byte is read, then
  * the byte is "pushed back" into the input stream so that if
  * file_peek_char, fgetc, or a host of other functions attempt to read
- * the input then 
- *
-
-Note that this
- * operation will block just like fgetc if the end of file is reached
- * and
+ * the input then
  */
 int file_peek_byte(FILE* input) {
   if (feof(input)) {
@@ -2169,7 +2164,7 @@ struct logger_state_S {
 
 typedef struct logger_state_S logger_state_t;
 
-#ifndef LOGGER_DEFAULT_LEVEL
+ #ifndef LOGGER_DEFAULT_LEVEL
 #define LOGGER_DEFAULT_LEVEL LOGGER_WARN
 #endif /* LOGGER_DEFAULT_LEVEL */
 
@@ -2250,7 +2245,7 @@ __attribute__((format(printf, 4, 5))) extern void
   } while (0)
 
 /**
- * Determine if loggin at the INFO level is enabled.
+ * Determine if logging at the INFO level is enabled.
  */
 static inline boolean_t should_log_info() {
   return global_logger_state.level <= LOGGER_INFO;
@@ -2316,7 +2311,6 @@ value_result_t parse_log_level_enum(char* str) {
  * convenient.
  */
 void logger_init(void) {
-
   char* level_string = getenv("ARMYKNIFE_LIB_LOG_LEVEL");
   if (level_string != NULL) {
     value_result_t parsed = string_parse_uint64(level_string);
@@ -2326,9 +2320,13 @@ void logger_init(void) {
       value_result_t parsed = parse_log_level_enum(level_string);
       if (is_ok(parsed)) {
         global_logger_state.level = parsed.u64;
+      } else {
+        log_warn("%s could not be converted to a log level.", level_string);
       }
     }
   }
+
+  fprintf(stderr, "Level is set to %d", global_logger_state.level);
 
   char* output_file_name = getenv("ARMYKNIFE_LIB_LOG_FILE");
 
@@ -3113,20 +3111,27 @@ char* string_substring(const char* str, int start, int end) {
 }
 
 value_result_t string_parse_uint64_dec(const char* string) {
-  boolean_t at_least_one_number = false;
+  uint64_t len = strlen(string);
   uint64_t integer = 0;
-  uint64_t digit;
 
-  while (*string != '\0') {
-    digit = *string - '0';
-    integer = integer * 10 + digit;
-    string++;
-    at_least_one_number = true;
+  if (len == 0) {
+    return (value_result_t){
+      .u64 = 0,
+      .nf_error = NF_ERROR_NOT_PARSED_AS_NUMBER};
   }
 
-  return (value_result_t){
-      .u64 = integer,
-      .nf_error = at_least_one_number ? NF_OK : NF_ERROR_NOT_PARSED_AS_NUMBER};
+  for (int i = 0; i < len; i++) {
+    char ch = string[i];
+    if (ch < '0' || ch > '9') {
+      return (value_result_t){
+        .u64 = 0,
+        .nf_error = NF_ERROR_NOT_PARSED_AS_NUMBER};
+    }
+    uint64_t digit = *string - '0';
+    integer = integer * 10 + digit;
+  }
+
+  return (value_result_t){.u64 = integer, .nf_error = NF_OK};
 }
 
 value_result_t string_parse_uint64_hex(const char* string) {

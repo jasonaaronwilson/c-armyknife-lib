@@ -165,6 +165,13 @@ __attribute__((format(printf, 4, 5))) extern void
   } while (0)
 
 /**
+ * Determine if logging at the INFO level is enabled.
+ */
+static inline boolean_t should_log_info() {
+  return global_logger_state.level <= LOGGER_INFO;
+}
+
+/**
  * @macro log_warn
  *
  * Log at the WARN level using printf style formatting.

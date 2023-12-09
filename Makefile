@@ -2,6 +2,7 @@ all: c-armyknife-lib
 
 install: c-armyknife-lib
 	sudo install -m 755 c-armyknife-lib.h /usr/local/include/
+	sudo install -m 755 c-armyknife-lib-no-lines.h /usr/local/include/
 
 SRC_C = allocate.c \
 	boolean.c \
@@ -49,6 +50,7 @@ c-armyknife-lib: ${SRC_C} generate-header-files
 	echo '#ifdef C_ARMYKNIFE_LIB_IMPL' >>c-armyknife-lib.h
 	cat ${SRC_C} >>c-armyknife-lib.h
 	echo '#endif /* C_ARMYKNIFE_LIB_IMPL */' >>c-armyknife-lib.h
+	cat c-armyknife-lib.h | grep -v "#line" >c-armyknife-lib-no-lines.h
 
 format:
 	clang-format -i ${SRC_C} ${SRC_H} tests/*.c examples/*.c

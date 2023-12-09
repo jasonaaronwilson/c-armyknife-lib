@@ -864,7 +864,6 @@ extern uint64_t random_next_uint64_below(random_state_t* state,
 
 #endif /* _TEST_H_ */
 #ifdef C_ARMYKNIFE_LIB_IMPL
-#line 2 "allocate.c"
 
 /**
  * @file allocate.c
@@ -1235,7 +1234,6 @@ void checked_free(char* file, int line, void* pointer) {
   number_of_free_calls++;
   free(malloc_pointer);
 }
-#line 2 "boolean.c"
 /**
  * @file boolean.c
  *
@@ -1268,7 +1266,6 @@ typedef bool boolean_t;
 // #define false ((boolean_t) 0)
 
 #endif /* _BOOLEAN_H_ */
-#line 2 "buffer.c"
 #ifndef _BUFFER_H_
 #define _BUFFER_H_
 
@@ -1518,7 +1515,6 @@ buffer_t*
     return buffer;
   }
 }
-#line 2 "command-line-parser.c"
 /**
  * @file command-line-parser.c
  *
@@ -1760,7 +1756,6 @@ command_line_parse_result_t
       .files = files,
   };
 }
-#line 2 "fatal-error.c"
 /**
  * @file fatal-error.c
  *
@@ -1950,7 +1945,6 @@ void print_error_code_name(int error_code) {
   fprintf(stderr, "%s", fatal_error_code_to_string(error_code));
   fprintf(stderr, " ***\n");
 }
-#line 2 "io.c"
 /**
  * @file io.c
  *
@@ -2083,7 +2077,6 @@ int file_peek_byte(FILE* input) {
   ungetc(result, input);
   return result;
 }
-#line 2 "logger.c"
 
 /**
  * @file logger.c
@@ -2403,7 +2396,6 @@ __attribute__((format(printf, 4, 5))) void
     va_end(args);
   }
 }
-#line 2 "random.c"
 
 /**
  * @file random.c
@@ -2492,7 +2484,6 @@ uint64_t random_next_uint64_below(random_state_t* state, uint64_t maximum) {
   }
 #endif /* 0 */
 }
-#line 2 "string-alist.c"
 /**
  * @file string-alist.c
  *
@@ -2588,7 +2579,6 @@ value_result_t alist_find(string_alist_t* list, char* key) {
   }
   return (value_result_t){.nf_error = NF_ERROR_NOT_FOUND};
 }
-#line 2 "string-hashtable.c"
 /**
  * @file string-hashtable.c
  *
@@ -2697,7 +2687,6 @@ value_result_t string_ht_find(string_hashtable_t* ht, char* key) {
   string_alist_t* list = ht->buckets[bucket];
   return alist_find(list, key);
 }
-#line 2 "string-tree.c"
 
 /**
  * @file string-tree.c
@@ -2967,7 +2956,6 @@ string_tree_t* string_tree_delete(string_tree_t* t, char* key) {
   t->right = string_tree_split(t->right);
   return t;
 }
-#line 2 "string-util.c"
 /**
  * @file string-util.c
  *
@@ -3389,7 +3377,6 @@ uint64_t fasthash64(const void* buf, size_t len, uint64_t seed) {
 
   return mix(h);
 }
-#line 2 "test.c"
 /**
  * @file test.c
  *
@@ -3444,7 +3431,6 @@ __attribute__((format(printf, 3, 4))) void
   va_end(args);
   exit(1);
 }
-#line 2 "tokenizer.c"
 /**
  * @file tokenizer.c
  *
@@ -3533,7 +3519,6 @@ value_array_t* tokenize_memory_range(uint8_t* str, uint64_t length,
 void add_duplicate(value_array_t* token_array, const char* data) {
   value_array_add(token_array, str_to_value(string_duplicate(data)));
 }
-#line 2 "uint64.c"
 /**
  * @file uint64.c
  *
@@ -3571,7 +3556,6 @@ int uint64_highest_bit_set(uint64_t n) {
     return 0;
   }
 }
-#line 2 "value.c"
 
 #ifndef _VALUE_H_
 #define _VALUE_H_
@@ -3726,7 +3710,6 @@ static inline boolean_t is_not_ok(value_result_t value) {
 }
 
 #endif /* _VALUE_H_ */
-#line 2 "value-array.c"
 
 /**
  * @file value-array.c

@@ -106,3 +106,23 @@ buffer_t* buffer_read_until(buffer_t* buffer, FILE* input, char end_of_line) {
   }
   return buffer;
 }
+
+/**
+ * @function file_peek_char
+ *
+ * Returns the next byte from the input (as an int not u8_t) or -1 if
+ * the end of the file input has been reached. A a byte is read, then
+ * the byte is "pushed back" into the input stream so that if
+ * file_peek_char, fgetc, or a host of other functions attempt to read
+ * the input then
+ */
+int file_peek_byte(FILE* input) {
+  if (feof(input)) {
+    return -1;
+  }
+  int result = fgetc(input);
+  // ungetc doesn't "push back" -1 according to
+  // https://en.cppreference.com/w/c/io/ungetc
+  ungetc(result, input);
+  return result;
+}

@@ -43,6 +43,44 @@ void test_string_printf(void) {
   }
 }
 
+void check_legal(char* value, uint64_t expected) {
+  log_warn("Checking %s", value);
+  value_result_t result = string_parse_uint64(value);
+  if (is_not_ok(result) || result.u64 != expected) {
+    test_fail("string_parse_uint64");
+  }
+}
+
+void check_illegal(char* value) {
+  log_warn("Checking %s", value);
+  value_result_t result = string_parse_uint64(value);
+  if (is_ok(result)) {
+    test_fail("an illegal value was parsed as uint64 '%s'", value);
+  }
+}
+
+void test_number_parsing() {
+  check_legal("0", 0);
+  check_legal("1", 1);
+  check_legal("64", 64);
+  check_legal("333", 333);
+  check_legal("9123456789", 9123456789);
+  check_legal("0x0", 0x0);
+  check_legal("0xf", 0xf);
+  check_legal("0x10", 0x10);
+  check_legal("0xab", 0xab);
+  check_legal("0xabcdef19", 0xabcdef19);
+  check_legal("0b0", 0);
+  check_legal("0b1010", 10);
+  check_illegal("");
+  check_illegal("INFO");
+  check_illegal("0INFO");
+  check_illegal("0b0INFO");
+  check_illegal("0x0INFO");
+  check_illegal("0x");
+  check_illegal("0b");
+}
+
 int main(int argc, char** argv) {
 
   if (!(string_is_null_or_empty(NULL))) {
@@ -98,33 +136,14 @@ int main(int argc, char** argv) {
     test_fail("string_hash");
   }
 
+  test_number_parsing();
+
   // Memory leak. So what, this is a test...
   if (!(string_equal(string_substring("The quick brown fox", 4, 9), "quick"))) {
     test_fail("string_substring");
   }
 
   check_memory_hashtable_padding();
-
-  if (string_parse_uint64("0").u64 != 0) {
-    test_fail("string_parse_uint64");
-  }
-  if (string_parse_uint64("1").u64 != 1) {
-    test_fail("string_parse_uint64");
-  }
-  if (string_parse_uint64("0xf").u64 != 15) {
-    test_fail("string_parse_uint64");
-  }
-  if (string_parse_uint64("0b0").u64 != 0) {
-    test_fail("string_parse_uint64");
-  }
-  if (string_parse_uint64("0b1010").u64 != 10) {
-    test_fail("string_parse_uint64");
-  }
-
-  if (is_ok(string_parse_uint64("INFO"))) {
-    test_fail(
-        "a non numeric string should not be able to be parsed as a number");
-  }
 
   if (!string_duplicate("The quick brown fox")) {
     test_fail("string_duplicate");

@@ -83,6 +83,7 @@ typedef enum {
   ERROR_ILLEGAL_ARGUMENT,
   ERROR_MEMORY_START_PADDING_ERROR,
   ERROR_MEMORY_END_PADDING_ERROR,
+  ERROR_FATAL,
 } error_code_t;
 
 extern _Noreturn void fatal_error_impl(char* file, int line, int error_code);
@@ -334,6 +335,9 @@ extern char* uint64_to_string(uint64_t number);
 extern uint64_t string_hash(const char* str);
 extern char* string_substring(const char* str, int start, int end);
 extern value_result_t string_parse_uint64(const char* string);
+extern value_result_t string_parse_uint64_dec(const char* string);
+extern value_result_t string_parse_uint64_hex(const char* string);
+extern value_result_t string_parse_uint64_bin(const char* string);
 extern char* string_duplicate(const char* src);
 extern char* string_append(const char* a, const char* b);
 extern char* string_left_pad(const char* a, int count, char ch);
@@ -365,7 +369,7 @@ struct logger_state_S {
 
 typedef struct logger_state_S logger_state_t;
 
- #ifndef LOGGER_DEFAULT_LEVEL
+#ifndef LOGGER_DEFAULT_LEVEL
 #define LOGGER_DEFAULT_LEVEL LOGGER_WARN
 #endif /* LOGGER_DEFAULT_LEVEL */
 
@@ -1817,6 +1821,7 @@ typedef enum {
   ERROR_ILLEGAL_ARGUMENT,
   ERROR_MEMORY_START_PADDING_ERROR,
   ERROR_MEMORY_END_PADDING_ERROR,
+  ERROR_FATAL,
 } error_code_t;
 
 extern _Noreturn void fatal_error_impl(char* file, int line, int error_code);
@@ -2164,7 +2169,7 @@ struct logger_state_S {
 
 typedef struct logger_state_S logger_state_t;
 
- #ifndef LOGGER_DEFAULT_LEVEL
+#ifndef LOGGER_DEFAULT_LEVEL
 #define LOGGER_DEFAULT_LEVEL LOGGER_WARN
 #endif /* LOGGER_DEFAULT_LEVEL */
 
@@ -2992,6 +2997,9 @@ extern char* uint64_to_string(uint64_t number);
 extern uint64_t string_hash(const char* str);
 extern char* string_substring(const char* str, int start, int end);
 extern value_result_t string_parse_uint64(const char* string);
+extern value_result_t string_parse_uint64_dec(const char* string);
+extern value_result_t string_parse_uint64_hex(const char* string);
+extern value_result_t string_parse_uint64_bin(const char* string);
 extern char* string_duplicate(const char* src);
 extern char* string_append(const char* a, const char* b);
 extern char* string_left_pad(const char* a, int count, char ch);
@@ -3115,70 +3123,87 @@ value_result_t string_parse_uint64_dec(const char* string) {
   uint64_t integer = 0;
 
   if (len == 0) {
-    return (value_result_t){
-      .u64 = 0,
-      .nf_error = NF_ERROR_NOT_PARSED_AS_NUMBER};
+    return (value_result_t){.u64 = 0,
+                            .nf_error = NF_ERROR_NOT_PARSED_AS_NUMBER};
   }
 
   for (int i = 0; i < len; i++) {
     char ch = string[i];
     if (ch < '0' || ch > '9') {
-      return (value_result_t){
-        .u64 = 0,
-        .nf_error = NF_ERROR_NOT_PARSED_AS_NUMBER};
+      return (value_result_t){.u64 = 0,
+                              .nf_error = NF_ERROR_NOT_PARSED_AS_NUMBER};
     }
-    uint64_t digit = *string - '0';
+    uint64_t digit = string[i] - '0';
     integer = integer * 10 + digit;
   }
 
   return (value_result_t){.u64 = integer, .nf_error = NF_OK};
 }
 
-value_result_t string_parse_uint64_hex(const char* string) {
-  boolean_t at_least_one_number = false;
+/**
+ * Parse a sequence of zeros and ones. A prefix like 0b should be
+ * stripped before calling this routine and the string must only
+ * contain the digits 0 and 1.
+ */
+value_result_t string_parse_uint64_bin(const char* string) {
+  uint64_t len = strlen(string);
   uint64_t integer = 0;
-  uint64_t digit;
 
-  int i = 0;
-  if (string[i] == '0' && (string[i + 1] == 'x' || string[i + 1] == 'X')) {
-    i += 2;
+  if (len == 0) {
+    return (value_result_t){.u64 = 0,
+                            .nf_error = NF_ERROR_NOT_PARSED_AS_NUMBER};
   }
 
-  while (string[i] != '\0') {
-    digit = string[i] - '0';
-    if (digit > 9) {
-      digit = string[i] - 'a' + 10;
+  for (int i = 0; i < len; i++) {
+    char ch = string[i];
+    if (ch < '0' || ch > '1') {
+      return (value_result_t){.u64 = 0,
+                              .nf_error = NF_ERROR_NOT_PARSED_AS_NUMBER};
     }
-    integer = integer * 16 + digit;
-    i++;
-    at_least_one_number = true;
+    uint64_t digit = string[i] - '0';
+    integer = integer << 1 | digit;
   }
 
-  return (value_result_t){
-      .u64 = integer,
-      .nf_error = at_least_one_number ? NF_OK : NF_ERROR_NOT_PARSED_AS_NUMBER};
+  return (value_result_t){.u64 = integer, .nf_error = NF_OK};
 }
 
-value_result_t string_parse_uint64_bin(const char* string) {
-  boolean_t at_least_one_number = false;
+static inline boolean_t is_hex_digit(char ch) {
+  return (ch >= '0' && ch <= '9') || (ch >= 'a' && ch <= 'f');
+}
+
+static inline uint64_t hex_digit_to_value(char ch) {
+  if (ch >= '0' && ch <= '9') {
+    return ch - '0';
+  } else {
+    return (ch - 'a') + 10;
+  }
+}
+
+/**
+ * Parse a sequence of characters "0123456789abcdef" to an uint64_t. A
+ * prefix like 0x should be striped before calling this routine.
+ *
+ */
+value_result_t string_parse_uint64_hex(const char* string) {
+  uint64_t len = strlen(string);
   uint64_t integer = 0;
-  uint64_t digit;
 
-  int i = 0;
-  if (string[i] == '0' && (string[i + 1] == 'b' || string[i + 1] == 'B')) {
-    i += 2;
+  if (len == 0) {
+    return (value_result_t){.u64 = 0,
+                            .nf_error = NF_ERROR_NOT_PARSED_AS_NUMBER};
   }
 
-  while (string[i] != '\0') {
-    digit = string[i] - '0';
-    integer = integer * 2 + digit;
-    i++;
-    at_least_one_number = true;
+  for (int i = 0; i < len; i++) {
+    char ch = string[i];
+    if (!is_hex_digit(ch)) {
+      return (value_result_t){.u64 = 0,
+                              .nf_error = NF_ERROR_NOT_PARSED_AS_NUMBER};
+    }
+    uint64_t digit = hex_digit_to_value(ch);
+    integer = integer << 4 | digit;
   }
 
-  return (value_result_t){
-      .u64 = integer,
-      .nf_error = at_least_one_number ? NF_OK : NF_ERROR_NOT_PARSED_AS_NUMBER};
+  return (value_result_t){.u64 = integer, .nf_error = NF_OK};
 }
 
 /**
@@ -3199,9 +3224,9 @@ value_result_t string_parse_uint64_bin(const char* string) {
  */
 value_result_t string_parse_uint64(const char* string) {
   if (string_starts_with(string, "0x")) {
-    return string_parse_uint64_hex(string);
+    return string_parse_uint64_hex(&string[2]);
   } else if (string_starts_with(string, "0b")) {
-    return string_parse_uint64_bin(string);
+    return string_parse_uint64_bin(&string[2]);
   } else {
     return string_parse_uint64_dec(string);
   }

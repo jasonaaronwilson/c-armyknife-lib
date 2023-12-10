@@ -13,6 +13,7 @@
 #ifndef _IO_H_
 #define _IO_H_
 
+#include <limits.h>
 #include <stdint.h>
 
 __attribute__((warn_unused_result)) extern buffer_t*
@@ -143,4 +144,29 @@ int file_peek_byte(FILE* input) {
  */
 boolean_t file_eof(FILE* input) {
   return feof(input) || file_peek_byte(input) < 0;
+}
+
+#define FILE_COPY_STREAM_BUFFER_SIZE 1024
+
+/**
+ * Copy some or all of an input stream to an output stream.
+ */
+void file_copy_stream(FILE* input, FILE* output, boolean_t until_eof,
+                      uint64_t size) {
+  if (until_eof) {
+    size = ULLONG_MAX;
+  }
+
+  uint8_t buffer[FILE_COPY_STREAM_BUFFER_SIZE];
+  while (size > 0) {
+    int minimum = size < FILE_COPY_STREAM_BUFFER_SIZE
+                      ? size
+                      : FILE_COPY_STREAM_BUFFER_SIZE;
+    uint64_t n_read = fread(buffer, 1, minimum, input);
+    if (n_read == 0) {
+      break;
+    }
+    fwrite(buffer, 1, n_read, output);
+    size -= n_read;
+  }
 }

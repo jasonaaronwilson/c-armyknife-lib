@@ -118,7 +118,7 @@ void _Noreturn fatal_error_impl(char* file, int line, int error_code) {
       fprintf(stderr,
               "Sleeping for %lu seconds so you can attach a debugger.\n",
               sleep_time.u64);
-      fprintf(stderr, "  gdb %s %d\n", get_program_path(), getpid());
+      fprintf(stderr, "  gdb -tui %s %d\n", get_program_path(), getpid());
       sleep(sleep_time.u64);
     }
   }

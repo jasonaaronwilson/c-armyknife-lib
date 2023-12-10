@@ -23,6 +23,10 @@ extern void buffer_write_file(buffer_t* bytes, char* file_name);
 __attribute__((warn_unused_result)) extern buffer_t*
     buffer_read_until(buffer_t* buffer, FILE* input, char end_of_line);
 
+int file_peek_byte(FILE* input);
+
+boolean_t file_eof(FILE* input);
+
 #endif /* _IO_H_ */
 
 // ======================================================================
@@ -99,6 +103,9 @@ void buffer_write_file(buffer_t* bytes, char* file_name) {
 buffer_t* buffer_read_until(buffer_t* buffer, FILE* input, char end_of_line) {
   while (!feof(input)) {
     int ch = fgetc(input);
+    if (ch < 0) {
+      return buffer;
+    }
     if (ch == end_of_line) {
       return buffer;
     }
@@ -123,6 +130,17 @@ int file_peek_byte(FILE* input) {
   int result = fgetc(input);
   // ungetc doesn't "push back" -1 according to
   // https://en.cppreference.com/w/c/io/ungetc
-  ungetc(result, input);
+  // But who is going to trust that...
+  if (result >= 0) {
+    ungetc(result, input);
+  }
   return result;
+}
+
+/**
+ * Return true if an input stream is at the end of the file. I don't
+ * know what "feof" really does but it doesn't actually do this.
+ */
+boolean_t file_eof(FILE* input) {
+  return feof(input) || file_peek_byte(input) < 0;
 }

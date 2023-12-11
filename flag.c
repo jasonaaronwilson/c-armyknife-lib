@@ -1,78 +1,125 @@
-#line 2 "command-line-parser.c"
+#line 2 "flag.c"
 /**
- * @file command-line-parser.c
+ * @file flag.c
  *
- * WARNING: this is deperecated. Use flag_* functions instead which
- * provide a more declarative interface to the same functionality
- * which is more pleasant and extensible.
+ * A simple command line parser for commands, flags, and "file"
+ * arguments with a declarative style configuration.
  *
- * A simple command line parser for GNU long style flags and file
- * arguments.
+ * There are two general modes for parsing. One permits "commands"
+ * (allowing an interface similar to "git", "apt", "yum" and "docker")
+ * and other tools and the more traditional non command mode. For now,
+ * commands should not begin with a "-" character.
  *
- * Takes a command line and returns an array of "file" arguments and a
- * string_hashtable of command line flags.
+ * In traditional mode, the configuration and then the actual parsing
+ * might be as simple as:
+ *
+ * ```
+ *   // Often these would be global variables...
+ *   boolean_t FLAG_verbose = true; // default value
+ *   array_t* FLAG_file_args = make_value_array(1);
+ *
+ *   flag_program_name("oarchive");
+ *   flag_boolean("--verbose", &FLAG_verbose);
+ *   flag_file_args(&FLAG_files);
+ *
+ *   buffer_t* error = parse_command_file(false, argc, argv);
+ *   if (error) {
+ *     // Automatically generated based on the current configuration.
+ *     flag_print_help(error);
+ *     exit(1);
+ *   }
+ * ```
+ *
+ * To make the auto generated help more helpful, a description can be
+ * added to the program or the last flag declared using
+ * flag_description(). To make the program easier to use, you can also
+ * define alaises for flags (and commands).
+ *
+ * Parsing git style command based command lines are equally
+ * easy. After all of the globally applicable flags have been
+ * "declared", simply use flag_command(). You can then add a
+ * description for the command as well as defining the flags that
+ * should only apply when a particular command was seen. Obviously
+ * flag_command() can be called multiple times. Sometimes it will be
+ * necesary to define the same flag on multiple commands (say if 2/3
+ * commands accept the flag but the other one doesn't). You should be
+ * able to refactor the declaration code to make this somewhat more
+ * pleasant.
+ *
+ * Note that once any command is provided, if a command is not
+ * provided then an error will be returned while parsing so it is
+ * currently not possible to sometimes use commands and sometimes not
+ * use them. This may be a may benefit. For additional consistency,
+ * the command is always required to be the first argument on the
+ * command line, i.e., before any flags or "files".
+ *
+ * Besides the obvious command line types, it's possible to add flags
+ * for enums (really just named integers) and to even use custom value
+ * parsers in the future.
+ *
+ * This interface is not thread safe but generally a program will
+ * define and parse command line arguments in the initial thread
+ * before spawning threads so this isn't a terrible restriction.
+ *
+ * TODO(jawilson): strict mode and custom parsers.
  */
 
-#ifndef _COMMAND_LINE_PARSER_H_
-#define _COMMAND_LINE_PARSER_H_
-
-struct command_line_command_descriptor_S {
-  char* name;
-  char* help_string;
-};
-
-typedef struct command_line_command_descriptor_S
-    command_line_command_descriptor_t;
+#ifndef _FLAG_H_
+#define _FLAG_H_
 
 /**
- * @constants command_line_flag_type_t
+ * @enum command_line_flag_type_t
  */
 typedef enum {
-  command_line_flag_type_string,
   command_line_flag_type_boolean,
-  command_line_flag_type_unsigned,
-  command_line_flag_type_signed,
+  command_line_flag_type_string,
+  command_line_flag_type_uint64,
+  command_line_flag_type_int64,
   command_line_flag_type_double,
+  command_line_flag_type_enum,
+  command_line_flag_type_custom,
 } command_line_flag_type_t;
 
-struct command_line_flag_descriptor_S {
-  char* long_name;
+struct program_descriptor_S {
+  char* name;
+  char* description;
+  string_tree_t* flags;
+  string_tree_t* commands;
+}
+
+struct command_descriptor_S {
+  program_descriptor_t* program;
+  char* name;
+  char* description;
+  char* write_back_ptr;
+  string_tree_t* flags;
+};
+
+struct flag_descriptor_S {
+  char* name;
   command_line_flag_type_t arg_type;
   char* help_string;
+  void* write_back_ptr;
+  // TODO(jawilson): add custom parser call back (and call back data).
 };
 
-typedef struct command_line_flag_descriptor_S command_line_flag_descriptor_t;
+extern void flag_program_name(char* name);
+extern void flag_file_args(value_array_t** write_back_ptr);
 
-struct command_line_parser_configuation_S {
-  char* program_name;
-  char* program_description;
-  value_array_t* command_descriptors;
-  value_array_t* flag_descriptors;
-};
+extern void flag_boolean(char* name, boolean_t* write_back_ptr);
+extern void flag_string(char* name, boolean_t* write_back_ptr);
+extern void flag_uint64(char* name, boolean_t* write_back_ptr);
+extern void flag_int64(char* name, boolean_t* write_back_ptr);
+// TODO(jawilson): flag_enum, and flag_custom
+extern void flag_description(char* description);
+extern void flag_alias(char* alias);
+extern buffer_t* flag_parse_command_line(int argc, char** argv);
 
-typedef struct command_line_parser_configuation_S
-    command_line_parser_configuation_t;
+#endif /* _FLAG_H_ */
 
-struct command_line_parse_result_S {
-  char* program;
-  char* command;
-  string_hashtable_t* flags;
-  value_array_t* files;
-};
-
-typedef struct command_line_parse_result_S command_line_parse_result_t;
-
-extern command_line_command_descriptor_t*
-    make_command_line_command_descriptor(char* name, char* help_string);
-
-extern command_line_flag_descriptor_t* make_command_line_flag_descriptor(
-    char* long_name, command_line_flag_type_t arg_type, char* help_string);
-
-extern command_line_parse_result_t
-    parse_command_line(int argc, char** argv,
-                       command_line_parser_configuation_t* config);
-
-#endif /* _COMMAND_LINE_PARSER_H_ */
+program_descriptor_t* program;
+command_descriptor_t* current_command;
+flag_descriptor_t* current_flag;
 
 /**
  * @function make_command_line_command_descriptor

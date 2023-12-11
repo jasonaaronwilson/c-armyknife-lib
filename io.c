@@ -28,6 +28,9 @@ int file_peek_byte(FILE* input);
 
 boolean_t file_eof(FILE* input);
 
+void file_copy_stream(FILE* input, FILE* output, boolean_t until_eof,
+                      uint64_t size);
+
 #endif /* _IO_H_ */
 
 // ======================================================================

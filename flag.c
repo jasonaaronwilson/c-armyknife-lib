@@ -2,33 +2,17 @@
 /**
  * @file flag.c
  *
- * A command line parser for flags, sub-commands (if you "opt-in" by
- * defining a sub-command), and uninterpreted "file" arguments (aka
- * left-over arguments) with a pragmatic declarative(ish)
- * configuration.
+ * A command line parser for flags (and the uninterpreted "file"
+ * arguments, aka "left-over" arguments). We use a pragmatic
+ * declarative configuration and unless you need to localize the
+ * result right now, we also automatically generate the "usage" /
+ * "help" documentation (via flag_print_help).
  *
- * Currently, unless you need to localize, we also give you "show
- * help" behavior practically for free.
- *
- * Using "sub-commands" simply means that your tool is more like
- * "git", "apt", "yum" or "docker") versus more traditional command
- * liner tools.
- *
- * We are a little more specific about where the sub-command should be
- * located in the command (it *must* currently be in the first
- * position). Personally I'm confused with each tool having it's own
- * opinion about this. OTOH, you can already massage the argument list
- * to work around my opinioated stance in several ways for example by
- * "bubbling up" anything that looks like one of your commands to the
- * beginning of the argc/argv array passed to flag_parse_command_line
- * and then using this parser. I'm likely to even provide that
- * functionality soon even though I think it is wrong.
- * 
- * Here is an example:
+ * Here is maybe the smallest example you might possibly use:
  *
  * ```
  *   // For simple tools, just use "global" variaables but you can place
- *   // stuff wherever you choose,
+ *   // stuff wherever you choose, for example an a struct you can pass around.
  *
  *   boolean_t FLAG_verbose = true; // default value
  *   array_t* FLAG_file_args = NULL;
@@ -37,7 +21,7 @@
  *   flag_boolean("--verbose", &FLAG_verbose);
  *   flag_file_args(&FLAG_files);
  *
- *   char* error = parse_command_file(false, argc, argv);
+ *   char* error = flag_parse_command_line(argc, argv);
  *   if (error) {
  *     flag_print_help(error);
  *     exit(1);
@@ -46,59 +30,57 @@
  *
  * To make the auto generated help be the most useful, a human
  * readable description can be added to the last mentioned "thing" via
- * flag_description(). This will make the generated "usage" much
- * better. Pretend it's mandatory and you will have a better tool.
+ * flag_description().
  *
  * To make your program "easier" to use, you can also define aliases
  * for certain flags (or commands!).
  *
- * Behaving roughtly lke git where there is a subcommand just happens
- * when you define *any* sub-command though at the cost (at least now)
- * that everything invocation must do the same. First define all of
- * the globally applicable flags and then simply use flag_command() so
- * you can define command specific flags. You should then add a
- * description for the command as well as defining the flags that
- * should *only* apply when a particular command was first
- * seen. Obviously flag_command() can be called multiple times to
- * define multiple "sub commands" using different command names and
- * aliases are supported.
+ * Another capability is Using "sub-commands" so that your tool can be
+ * a little more like "git", "apt", "yum" or "docker") versus more
+ * traditional command line tools. We are a little more specific about
+ * where the sub-command should be located in the command (it *must*
+ * currently be in the first position). You can easily work around my
+ * opinionated stance in several ways for example by "bubbling up"
+ * anything that looks like one of your commands to the beginning of
+ * the argument array passed to flag_parse_command_line. The
+ * sub-command functionality is automatically enabled once you define
+ * *any* sub-command. It's possible to create flags that only apply
+ * when the correct sub-command is used.
  *
- * Note that once any command is defined, if the user ellides a
- * command then an error will be returned while parsing. You can
- * probably figure out something to work around this by sorting your
- * "command" to the position that flag_parse_command_line() expects
- * and I may eventually provide some helpers if I lose the clarity war
- * which I'm always going to lose to the brevity folks.
+ * Obviously flag_command() (just like flag_<type> can be called)
+ * multiple times to define multiple "sub commands" using different
+ * command names.
  *
- * Besides the obvious basic command line types like integers or
- * strings, it's possible to add flags for enums (really just named
- * integers with a passed in sizeof) and eventually to use custom
- * value parsers so that lists, maps, and trees can be command line
- * arguments. Want to parse a date? Even though I'm not providing it,
- * you can do it and catch errors before something unexpected happens.
+ * Aliases for flags and commands are also supported.
+ *
+ * Besides the obvious basic types like integers and strings, it's
+ * possible to add flags for enums (really just named integers with a
+ * passed in sizeof) and eventually custom value parsers so that lists
+ * and maps can be command line arguments. Want to parse a date? Even
+ * though I'm not providing it, you can do it and catch errors before
+ * something unexpected happens.
  *
  * The interface presented here is *not* thread safe but generally a
  * program will define and parse command line arguments in the initial
  * thread before spawning threads so this isn't a terrible
  * restriction.
  *
- * Note that flags and "left-over" arguments are not allowed to be
+ * Currently, flags and "left-over" arguments are not allowed to be
  * freely mixed. Once something that doesn't start with a "-" is seen,
- * all remaining arguments are treated as left-over arguments. The
+ * all remaining arguments are treated as "left-over" arguments. The
  * special flag "--" can be used by the user to seperate things that
- * might be misinterpred as a flag but the user has explicitly stated
- * that they should be treated as left-over arguments.
+ * might otherwise be misinterpred.
  *
  * Note that when an error is returned, some of the "write backs" may
- * be partially applied and so the default value may have changed as
- * well. Unless you are running a test, the best option will be to
- * show help and exit to prevent continuing execution.
- *
- * Limitations:
+ * have been partially applied changing the default value they may
+ * already contain. Unless you are running a test, the best option
+ * will be to show help and exit to prevent continuing execution from
+ * an undefined state.
  *
  * I think adding a "switch" type may make sense since we currently
  * don't support flags like "-abCdefG" where each each letter is a
- * different flag alias.
+ * different flag alias nor do we support "--no-" long format which is
+ * sometimes used to "negate" a switch.
  *
  * TODO(jawilson): strict mode and custom parsers.
  * TODO(jawilson): allow stdin, stdout, and stderr deescriptions.

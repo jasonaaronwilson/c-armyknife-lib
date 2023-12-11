@@ -84,6 +84,7 @@ typedef enum {
   ERROR_MEMORY_START_PADDING_ERROR,
   ERROR_MEMORY_END_PADDING_ERROR,
   ERROR_FATAL,
+  ERROR_ILLEGAL_STATE,
 } error_code_t;
 
 extern _Noreturn void fatal_error_impl(char* file, int line, int error_code);
@@ -1530,6 +1531,10 @@ buffer_t*
 /**
  * @file command-line-parser.c
  *
+ * WARNING: this is deperecated. Use flag_* functions instead which
+ * provide a more declarative interface to the same functionality
+ * which is more pleasant and extensible.
+ *
  * A simple command line parser for GNU long style flags and file
  * arguments.
  *
@@ -1825,6 +1830,7 @@ typedef enum {
   ERROR_MEMORY_START_PADDING_ERROR,
   ERROR_MEMORY_END_PADDING_ERROR,
   ERROR_FATAL,
+  ERROR_ILLEGAL_STATE,
 } error_code_t;
 
 extern _Noreturn void fatal_error_impl(char* file, int line, int error_code);

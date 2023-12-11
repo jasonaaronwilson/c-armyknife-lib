@@ -56,6 +56,7 @@ typedef enum {
   ERROR_MEMORY_START_PADDING_ERROR,
   ERROR_MEMORY_END_PADDING_ERROR,
   ERROR_FATAL,
+  ERROR_ILLEGAL_STATE,
 } error_code_t;
 
 extern _Noreturn void fatal_error_impl(char* file, int line, int error_code);

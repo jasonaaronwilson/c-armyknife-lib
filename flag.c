@@ -114,8 +114,7 @@ struct program_descriptor_S {
   string_tree_t* commands;
   value_array_t** write_back_file_args_ptr;
 };
-
-
+typedef struct program_descriptor_S program_descriptor_t;
 
 struct command_descriptor_S {
   program_descriptor_t* program;
@@ -125,14 +124,17 @@ struct command_descriptor_S {
   value_array_t** write_back_file_args_ptr;
   string_tree_t* flags;
 };
+typedef struct  command_descriptor_S command_descriptor_t;
 
 struct flag_descriptor_S {
   char* name;
+  char* description;
   flag_type_t flag_type;
   char* help_string;
   void* write_back_ptr;
   // TODO(jawilson): add custom parser call back (and call back data).
 };
+typedef struct  flag_descriptor_S flag_descriptor_t;
 
 extern void flag_program_name(char* name);
 extern void flag_description(char* description);
@@ -212,9 +214,9 @@ void flag_file_args(value_array_t** write_back_file_args_ptr) {
 // name is passed in explicitly to allow aliases.
 void add_flag(char* name) {
   if (current_command != NULL) {
-    current_command->flags = string_tree_insert(current_command->flags, name, current_flag);
+    current_command->flags = string_tree_insert(current_command->flags, name, ptr_to_value(current_flag));
   } else if (current_program != NULL) {
-    current_program->write_back_file_args_ptr = write_back_file_args_ptr;
+    current_program->flags = string_tree_insert(current_program->flags, name, ptr_to_value(current_flag));
   } else {
     log_fatal("A current program or command must be executed first");
     fatal_error(ERROR_ILLEGAL_STATE);

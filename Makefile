@@ -8,6 +8,7 @@ SRC_C = allocate.c \
 	boolean.c \
 	buffer.c \
 	command-line-parser.c \
+	flag.c \
 	fatal-error.c \
 	io.c \
 	logger.c \
@@ -35,6 +36,7 @@ ORDERED_H = \
 	string-alist.h \
 	string-hashtable.h \
 	string-tree.h \
+	flag.h \
 	command-line-parser.h \
 	io.h \
 	tokenizer.h \

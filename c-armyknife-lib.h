@@ -1874,7 +1874,7 @@ command_line_parse_result_t
  *
  * ```
  *   // For simple tools, just use "global" variaables but you can place
- *   // stuff wherever you choose, for example in a struct you can pass 
+ *   // stuff wherever you choose, for example in a struct you can pass
  *   // around.
  *
  *   boolean_t FLAG_verbose = true; // default value is true instead of
@@ -2032,7 +2032,8 @@ flag_key_value_t flag_split_argument(char* arg);
 void parse_and_write_value(flag_descriptor_t* flag, flag_key_value_t key_value);
 void parse_and_write_boolean(flag_descriptor_t* flag,
                              flag_key_value_t key_value);
-void parse_and_write_uint64(flag_descriptor_t* flag, flag_key_value_t key_value);
+void parse_and_write_uint64(flag_descriptor_t* flag,
+                            flag_key_value_t key_value);
 
 // Global Variables
 

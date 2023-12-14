@@ -77,6 +77,7 @@ TESTS= \
 	./string-alist-test.sh \
 	./string-hashtable-test.sh \
 	./command-line-parser-test.sh \
+	./flag-test.sh \
 	./tokenizer-test.sh \
 	./io-test.sh \
 	./value-array-test.sh \

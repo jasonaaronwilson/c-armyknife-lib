@@ -26,6 +26,7 @@
 
 // SSCF generated file from: boolean.c
 
+#line 14 "boolean.c"
 #ifndef _BOOLEAN_H_
 #define _BOOLEAN_H_
 
@@ -48,6 +49,7 @@ typedef bool boolean_t;
 #endif /* _BOOLEAN_H_ */
 // SSCF generated file from: fatal-error.c
 
+#line 23 "fatal-error.c"
 #ifndef _FATAL_ERROR_H_
 #define _FATAL_ERROR_H_
 
@@ -101,6 +103,7 @@ extern void configure_fatal_errors(fatal_error_config_t config);
 #endif /* _FATAL_ERROR_H_ */
 // SSCF generated file from: value.c
 
+#line 3 "value.c"
 #ifndef _VALUE_H_
 #define _VALUE_H_
 
@@ -253,9 +256,12 @@ static inline boolean_t is_not_ok(value_result_t value) {
   return value.nf_error != NF_OK;
 }
 
+#define cast(expr, type) ((type) (expr))
+
 #endif /* _VALUE_H_ */
 // SSCF generated file from: allocate.c
 
+#line 29 "allocate.c"
 #ifndef _ALLOCATE_H_
 #define _ALLOCATE_H_
 
@@ -311,6 +317,7 @@ extern void check_memory_hashtable_padding();
 #endif /* _ALLOCATE_H_ */
 // SSCF generated file from: uint64.c
 
+#line 9 "uint64.c"
 #ifndef _UINT64_H_
 #define _UINT64_H_
 
@@ -321,6 +328,7 @@ extern int uint64_highest_bit_set(uint64_t n);
 #endif /* _UINT64_H_ */
 // SSCF generated file from: string-util.c
 
+#line 13 "string-util.c"
 #ifndef _STRING_UTIL_H_
 #define _STRING_UTIL_H_
 
@@ -348,6 +356,7 @@ __attribute__((format(printf, 1, 2))) extern char* string_printf(char* format,
 #endif /* _STRING_UTIL_H_ */
 // SSCF generated file from: logger.c
 
+#line 65 "logger.c"
 #ifndef _LOGGER_H_
 #define _LOGGER_H_
 
@@ -487,6 +496,7 @@ static inline boolean_t should_log_info() {
 #endif /* _LOGGER_H_ */
 // SSCF generated file from: buffer.c
 
+#line 2 "buffer.c"
 #ifndef _BUFFER_H_
 #define _BUFFER_H_
 
@@ -557,6 +567,7 @@ __attribute__((format(printf, 2, 3))) extern buffer_t*
 #endif /* _BUFFER_H_ */
 // SSCF generated file from: value-array.c
 
+#line 15 "value-array.c"
 #ifndef _VALUE_ARRAY_H_
 #define _VALUE_ARRAY_H_
 
@@ -588,6 +599,7 @@ extern value_t value_array_delete_at(value_array_t* array, uint32_t position);
 #endif /* _VALUE_ARRAY_H_ */
 // SSCF generated file from: string-alist.c
 
+#line 8 "string-alist.c"
 #ifndef _STRING_ALIST_H_
 #define _STRING_ALIST_H_
 
@@ -627,6 +639,7 @@ __attribute__((warn_unused_result)) extern string_alist_t*
 #endif /* _STRING_ALIST_H_ */
 // SSCF generated file from: string-hashtable.c
 
+#line 14 "string-hashtable.c"
 #ifndef _STRING_HASHTABLE_H_
 #define _STRING_HASHTABLE_H_
 
@@ -668,6 +681,7 @@ extern value_result_t string_ht_find(string_hashtable_t* ht, char* key);
 #endif /* _STRING_HASHTABLE_H_ */
 // SSCF generated file from: string-tree.c
 
+#line 20 "string-tree.c"
 #ifndef _STRING_TREE_H_
 #define _STRING_TREE_H_
 
@@ -733,6 +747,7 @@ __attribute__((warn_unused_result)) extern string_tree_t*
 #endif /* _STRING_TREE_H_ */
 // SSCF generated file from: flag.c
 
+#line 92 "flag.c"
 #ifndef _FLAG_H_
 #define _FLAG_H_
 
@@ -796,6 +811,7 @@ extern char* flag_parse_command_line(int argc, char** argv);
 #endif /* _FLAG_H_ */
 // SSCF generated file from: command-line-parser.c
 
+#line 16 "command-line-parser.c"
 #ifndef _COMMAND_LINE_PARSER_H_
 #define _COMMAND_LINE_PARSER_H_
 
@@ -858,6 +874,7 @@ extern command_line_parse_result_t
 #endif /* _COMMAND_LINE_PARSER_H_ */
 // SSCF generated file from: io.c
 
+#line 13 "io.c"
 #ifndef _IO_H_
 #define _IO_H_
 
@@ -882,6 +899,7 @@ void file_copy_stream(FILE* input, FILE* output, boolean_t until_eof,
 #endif /* _IO_H_ */
 // SSCF generated file from: tokenizer.c
 
+#line 7 "tokenizer.c"
 #ifndef _TOKENIZER_H_
 #define _TOKENIZER_H_
 
@@ -895,6 +913,7 @@ extern value_array_t* tokenize_memory_range(uint8_t* start, uint64_t length,
 #endif /* _TOKENIZER_H_ */
 // SSCF generated file from: random.c
 
+#line 16 "random.c"
 #ifndef _RANDOM_H_
 #define _RANDOM_H_
 
@@ -913,6 +932,7 @@ extern uint64_t random_next_uint64_below(random_state_t* state,
 #endif /* _RANDOM_H_ */
 // SSCF generated file from: test.c
 
+#line 13 "test.c"
 #ifndef _TEST_H_
 #define _TEST_H_
 
@@ -1993,6 +2013,24 @@ extern char* flag_parse_command_line(int argc, char** argv);
 
 #endif /* _FLAG_H_ */
 
+// Non exported data structures
+
+struct flag_key_value_S {
+  char* key;
+  char* value;
+};
+typedef struct flag_key_value_S flag_key_value_t;
+
+// Non exported function prototypes
+
+command_descriptor_t* flag_find_command_descriptor(char* name);
+flag_descriptor_t* flag_find_flag_descriptor(command_descriptor_t* command, char* name);
+flag_key_value_t flag_split_argument(char* arg);
+void parse_and_write_value(flag_descriptor_t* flag, flag_key_value_t key_value);
+void parse_and_write_boolean(flag_descriptor_t* flag, flag_key_value_t key_value);
+
+// Global Variables
+
 program_descriptor_t* current_program;
 command_descriptor_t* current_command;
 flag_descriptor_t* current_flag;
@@ -2071,40 +2109,7 @@ void flag_boolean(char* name, boolean_t* write_back_ptr) {
   current_flag->flag_type = flag_type_boolean;
   current_flag->name = name;
   current_flag->write_back_ptr = write_back_ptr;
-  add_flag();
-}
-
-void flags_show_usage(FILE* out) {
-  /*
-  if (config->command_descriptors) {
-    fprintf(stdout, "Usage: %s <command> <flags*> <files*>\n",
-            config->program_name);
-  } else {
-    fprintf(stdout, "Usage: %s <flags*> <files*>\n", config->program_name);
-  }
-  if (config->program_description) {
-    fprintf(stdout, "\n%s\n", config->program_description);
-  }
-  if (config->command_descriptors) {
-    fprintf(stdout, "\nCommands:\n");
-    for (int i = 0; i < config->command_descriptors->length; i++) {
-      command_line_command_descriptor_t* command_descriptor
-          = value_array_get(config->command_descriptors, i).ptr;
-      fprintf(stdout, "    %s [[%s]]\n", command_descriptor->name,
-              command_descriptor->help_string);
-    }
-  }
-  if (config->flag_descriptors) {
-    fprintf(stdout, "\nFlags:\n");
-    for (int i = 0; i < config->flag_descriptors->length; i++) {
-      command_line_flag_descriptor_t* flag
-          = value_array_get(config->flag_descriptors, i).ptr;
-      fprintf(stdout, "    --%s=<flag-value> (%s)\n", flag->long_name,
-              flag->help_string);
-    }
-  }
-  */
-  fprintf(out, "flags_show_usage() is not yet implemented!");
+  add_flag(name);
 }
 
 /**
@@ -2185,7 +2190,7 @@ command_descriptor_t* flag_find_command_descriptor(char* name) {
     log_fatal("flag_get_command() shouldn't not be called when we don't have any defined commands.");
     fatal_error(ERROR_ILLEGAL_STATE);
   }
-  value_result_t command_value = string_tree_find(current_program->coommands, name);
+  value_result_t command_value = string_tree_find(current_program->commands, name);
   if (is_ok(command_value)) {
     return ((command_descriptor_t*) (command_value.ptr));
   } else {
@@ -2197,7 +2202,7 @@ command_descriptor_t* flag_find_command_descriptor(char* name) {
 // the command doesn't have a definition for flag, then the the
 // "program" might have a definition for the flag so we also search
 // it.
-flag_descriptor_t flag_find_flag_descriptor(command_descriptor_t* command, char* name) {
+flag_descriptor_t* flag_find_flag_descriptor(command_descriptor_t* command, char* name) {
   /*
     WRONG
 
@@ -2208,6 +2213,7 @@ flag_descriptor_t flag_find_flag_descriptor(command_descriptor_t* command, char*
     return NULL;
   }
   */
+  return NULL;
 }
 
 // The returned key will start with one or more "-" characters. 
@@ -2229,10 +2235,8 @@ flag_descriptor_t flag_find_flag_descriptor(command_descriptor_t* command, char*
 // be useful to look out for.
 flag_key_value_t flag_split_argument(char* arg) {
   int equal_sign_index = string_index_of_char(arg, '=');
-  char* value = NULL;
   if (equal_sign_index >= 0) {
     char* key = string_substring(arg, 0, equal_sign_index);
-    char* value = NULL;
     // We know there is an "=". If nothing comes after it, we want to
     // set value to "" instead of NULL so that we don't try to process
     // the next argument. So --foo and --foo=, will *not* be treeated
@@ -2241,6 +2245,64 @@ flag_key_value_t flag_split_argument(char* arg) {
     return (flag_key_value_t) { .key = key, .value = value };
   }
   return (flag_key_value_t) { .key = arg, .value = NULL };
+}
+
+// Figure out what parser to use for the value, parse it, and then use
+// the address in the flag descriptor to write the flag value to where
+// the user requested.
+void parse_and_write_value(flag_descriptor_t* flag, flag_key_value_t key_value) {
+  switch (flag->flag_type) {
+  case flag_type_boolean:
+    parse_and_write_boolean(flag, key_value);
+    break;
+
+  default:
+    fatal_error(ERROR_ILLEGAL_STATE);
+    break;
+  }
+}
+
+void parse_and_write_boolean(flag_descriptor_t* flag, flag_key_value_t key_value) {
+  if (string_equal("true", key_value.value)) {
+    *cast(flag->write_back_ptr, boolean_t*) = true;
+  } else if (string_equal("false", key_value.value)) {
+    *cast(flag->write_back_ptr, boolean_t*) = false;
+  } else {
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+}
+
+void flags_show_usage(FILE* out) {
+  /*
+  if (config->command_descriptors) {
+    fprintf(stdout, "Usage: %s <command> <flags*> <files*>\n",
+            config->program_name);
+  } else {
+    fprintf(stdout, "Usage: %s <flags*> <files*>\n", config->program_name);
+  }
+  if (config->program_description) {
+    fprintf(stdout, "\n%s\n", config->program_description);
+  }
+  if (config->command_descriptors) {
+    fprintf(stdout, "\nCommands:\n");
+    for (int i = 0; i < config->command_descriptors->length; i++) {
+      command_line_command_descriptor_t* command_descriptor
+          = value_array_get(config->command_descriptors, i).ptr;
+      fprintf(stdout, "    %s [[%s]]\n", command_descriptor->name,
+              command_descriptor->help_string);
+    }
+  }
+  if (config->flag_descriptors) {
+    fprintf(stdout, "\nFlags:\n");
+    for (int i = 0; i < config->flag_descriptors->length; i++) {
+      command_line_flag_descriptor_t* flag
+          = value_array_get(config->flag_descriptors, i).ptr;
+      fprintf(stdout, "    --%s=<flag-value> (%s)\n", flag->long_name,
+              flag->help_string);
+    }
+  }
+  */
+  fprintf(out, "flags_show_usage() is not yet implemented!");
 }
 #line 2 "fatal-error.c"
 /**
@@ -4280,6 +4342,8 @@ static inline boolean_t is_ok(value_result_t value) {
 static inline boolean_t is_not_ok(value_result_t value) {
   return value.nf_error != NF_OK;
 }
+
+#define cast(expr, type) ((type) (expr))
 
 #endif /* _VALUE_H_ */
 #line 2 "value-array.c"

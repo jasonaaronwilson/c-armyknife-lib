@@ -124,7 +124,7 @@ struct command_descriptor_S {
   value_array_t** write_back_file_args_ptr;
   string_tree_t* flags;
 };
-typedef struct  command_descriptor_S command_descriptor_t;
+typedef struct command_descriptor_S command_descriptor_t;
 
 struct flag_descriptor_S {
   char* name;
@@ -134,7 +134,7 @@ struct flag_descriptor_S {
   void* write_back_ptr;
   // TODO(jawilson): add custom parser call back (and call back data).
 };
-typedef struct  flag_descriptor_S flag_descriptor_t;
+typedef struct flag_descriptor_S flag_descriptor_t;
 
 extern void flag_program_name(char* name);
 extern void flag_description(char* description);
@@ -150,6 +150,26 @@ extern void flag_alias(char* alias);
 extern char* flag_parse_command_line(int argc, char** argv);
 
 #endif /* _FLAG_H_ */
+
+// Non exported data structures
+
+struct flag_key_value_S {
+  char* key;
+  char* value;
+};
+typedef struct flag_key_value_S flag_key_value_t;
+
+// Non exported function prototypes
+
+command_descriptor_t* flag_find_command_descriptor(char* name);
+flag_descriptor_t* flag_find_flag_descriptor(command_descriptor_t* command,
+                                             char* name);
+flag_key_value_t flag_split_argument(char* arg);
+void parse_and_write_value(flag_descriptor_t* flag, flag_key_value_t key_value);
+void parse_and_write_boolean(flag_descriptor_t* flag,
+                             flag_key_value_t key_value);
+
+// Global Variables
 
 program_descriptor_t* current_program;
 command_descriptor_t* current_command;
@@ -214,9 +234,11 @@ void flag_file_args(value_array_t** write_back_file_args_ptr) {
 // name is passed in explicitly to allow aliases.
 void add_flag(char* name) {
   if (current_command != NULL) {
-    current_command->flags = string_tree_insert(current_command->flags, name, ptr_to_value(current_flag));
+    current_command->flags = string_tree_insert(current_command->flags, name,
+                                                ptr_to_value(current_flag));
   } else if (current_program != NULL) {
-    current_program->flags = string_tree_insert(current_program->flags, name, ptr_to_value(current_flag));
+    current_program->flags = string_tree_insert(current_program->flags, name,
+                                                ptr_to_value(current_flag));
   } else {
     log_fatal("A current program or command must be executed first");
     fatal_error(ERROR_ILLEGAL_STATE);
@@ -229,7 +251,178 @@ void flag_boolean(char* name, boolean_t* write_back_ptr) {
   current_flag->flag_type = flag_type_boolean;
   current_flag->name = name;
   current_flag->write_back_ptr = write_back_ptr;
-  add_flag();
+  add_flag(name);
+}
+
+/**
+ * @function flag_parse_command_line
+ *
+ * Parses a command line writing back the actual parsed values so they
+ * can be used after command line parsing.
+ *
+ * When an error occurs, return a string with an error message OR NULL
+ * if parsing was successfull.
+ */
+char* flag_parse_command_line(int argc, char** argv) {
+  if (current_program == NULL) {
+    log_fatal(
+        "flag_parse_command_line can't be called unless flag_program_name() is "
+        "first called.");
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+
+  int start = 1;
+  command_descriptor_t* command = NULL;
+  if (current_program->commands) {
+    char* name = argv[1];
+    command = flag_find_command_descriptor(name);
+    if (command == NULL) {
+      return string_printf(
+          "The first command line argument is not a known command: %s", name);
+    }
+    start = 2;
+  }
+
+  value_array_t* files = make_value_array(argc);
+  boolean_t parse_flags = true;
+
+  for (int i = start; i < argc; i++) {
+    char* arg = argv[i];
+    if (parse_flags) {
+      if (string_equal(arg, "--")) {
+        parse_flags = false;
+        continue;
+      }
+
+      if (string_starts_with(arg, "-")) {
+        flag_key_value_t key_value = flag_split_argument(arg);
+        if (key_value.key == NULL) {
+          return string_printf("This argument is not a well formed flag: %s",
+                               arg);
+        }
+        flag_descriptor_t* flag
+            = flag_find_flag_descriptor(command, key_value.key);
+        if (flag == NULL) {
+          return string_printf(
+              "The argument looks like a flag but was not found: '%s'\n"
+              "You may want to use ' -- ' to seperate flags from non flag "
+              "arguments.",
+              arg);
+        }
+        // If the value is NULL, that means there was no "=" sign
+        // which means we should grab the next argument directly. When
+        // the argument ends with a trailing "=", we get back an empty
+        // string which is legal for purely string arguments but other
+        // argument types will generaly error out during parsing.
+        if (key_value.value == NULL) {
+          // TODO(jawilson): bounds checking!
+          i++;
+          key_value.value = argv[i];
+        }
+        parse_and_write_value(flag, key_value);
+        continue;
+      }
+    }
+    // Either it doesn't look like a flag or else we are no longer
+    // parsing flags because we saw "--".
+    value_array_add(files, str_to_value(arg));
+  }
+
+  // write back left-overs...
+  return NULL;
+}
+
+// Search the implicit "current_program" to see if anyone define
+// "name" as a commmand.,
+command_descriptor_t* flag_find_command_descriptor(char* name) {
+  if (current_program->commands == NULL) {
+    log_fatal(
+        "flag_get_command() shouldn't not be called when we don't have any "
+        "defined commands.");
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+  value_result_t command_value
+      = string_tree_find(current_program->commands, name);
+  if (is_ok(command_value)) {
+    return ((command_descriptor_t*) (command_value.ptr));
+  } else {
+    return NULL;
+  }
+}
+
+// Search the command for a matching flag and return that first. If
+// the command doesn't have a definition for flag, then the the
+// "program" might have a definition for the flag so we also search
+// it.
+flag_descriptor_t* flag_find_flag_descriptor(command_descriptor_t* command,
+                                             char* name) {
+  /*
+    WRONG
+
+  value_result_t command_value = string_tree_find(current_program->coommands,
+  name); if (is_ok(command_value)) { return ((command_descriptor_t*)
+  (command_value.ptr)); } else { return NULL;
+  }
+  */
+  return NULL;
+}
+
+// The returned key will start with one or more "-" characters.
+//
+// BTW, we are way down in the call stack and are not prepared to
+// properly deal with say "---", and the caller currently actually
+// benefits from seeing either "-" or "--" prepended to the key so we
+// don't even bother to detect if there are more than two dashes. If
+// this is illegal, the key (aka flag) is not found and better error
+// reporting will happen in the caller.
+//
+// This actually looks like it could be a useful addition to the
+// library if it can be given a descriptive generic name. Split on
+// first?
+//
+// TODO(jawilson): Nothing says that error handler couldn't do as part
+// of fuzzy matching notice this and be more helpful as a special
+// case. Long command lines get broken at weird places so that might
+// be useful to look out for.
+flag_key_value_t flag_split_argument(char* arg) {
+  int equal_sign_index = string_index_of_char(arg, '=');
+  if (equal_sign_index >= 0) {
+    char* key = string_substring(arg, 0, equal_sign_index);
+    // We know there is an "=". If nothing comes after it, we want to
+    // set value to "" instead of NULL so that we don't try to process
+    // the next argument. So --foo and --foo=, will *not* be treeated
+    // the same way.
+    char* value = string_substring(arg, equal_sign_index + 1, strlen(arg));
+    return (flag_key_value_t){.key = key, .value = value};
+  }
+  return (flag_key_value_t){.key = arg, .value = NULL};
+}
+
+// Figure out what parser to use for the value, parse it, and then use
+// the address in the flag descriptor to write the flag value to where
+// the user requested.
+void parse_and_write_value(flag_descriptor_t* flag,
+                           flag_key_value_t key_value) {
+  switch (flag->flag_type) {
+  case flag_type_boolean:
+    parse_and_write_boolean(flag, key_value);
+    break;
+
+  default:
+    fatal_error(ERROR_ILLEGAL_STATE);
+    break;
+  }
+}
+
+void parse_and_write_boolean(flag_descriptor_t* flag,
+                             flag_key_value_t key_value) {
+  if (string_equal("true", key_value.value)) {
+    *cast(flag->write_back_ptr, boolean_t*) = true;
+  } else if (string_equal("false", key_value.value)) {
+    *cast(flag->write_back_ptr, boolean_t*) = false;
+  } else {
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
 }
 
 void flags_show_usage(FILE* out) {
@@ -263,140 +456,4 @@ void flags_show_usage(FILE* out) {
   }
   */
   fprintf(out, "flags_show_usage() is not yet implemented!");
-}
-
-/**
- * @function flag_parse_command_line
- *
- * Parses a command line writing back the actual parsed values so they
- * can be used after command line parsing.
- *
- * When an error occurs, return a string with an error message OR NULL
- * if parsing was successfull.
- */
-char* flag_parse_command_line(int argc, char** argv) {
-  if (current_program == NULL) {
-    log_fatal("flag_parse_command_line can't be called unless flag_program_name() is first called.");
-    fatal_error(ERROR_ILLEGAL_STATE);
-  }
-  
-  int start = 1;
-  command_descriptor_t* command = NULL;
-  if (current_program->commands) {
-    char* name = argv[1];
-    command = flag_find_command_descriptor(name);
-    if (command == NULL) {
-      return string_printf("The first command line argument is not a known command: %s", name);
-    }
-    start = 2;
-  }
-  
-  value_array_t* files = make_value_array(argc);
-  boolean_t parse_flags = true;
-
-  for (int i = start; i < argc; i++) {
-    char* arg = argv[i];
-    if (parse_flags) {
-      if (string_equal(arg, "--")) {
-        parse_flags = false;
-        continue;
-      }
-
-      if (string_starts_with(arg, "-")) {
-        flag_key_value_t key_value = flag_split_argument(arg);
-        if (key_value.key == NULL) {
-          return string_printf("This argument is not a well formed flag: %s", arg);
-        }
-        flag_descriptor_t* flag = flag_find_flag_descriptor(command, key_value.key);
-        if (flag == NULL) {
-          return string_printf("The argument looks like a flag but was not found: '%s'\n"
-                               "You may want to use ' -- ' to seperate flags from non flag arguments.",
-                               arg);
-        }
-        // If the value is NULL, that means there was no "=" sign
-        // which means we should grab the next argument directly. When
-        // the argument ends with a trailing "=", we get back an empty
-        // string which is legal for purely string arguments but other
-        // argument types will generaly error out during parsing.
-        if (key_value.value == NULL) {
-          // TODO(jawilson): bounds checking!
-          i++;
-          key_value.value = argv[i];
-        }
-        parse_and_write_value(flag, key_value);
-        continue;
-      }
-    }
-    // Either it doesn't look like a flag or else we are no longer
-    // parsing flags because we saw "--".
-    value_array_add(files, str_to_value(arg));
-  }
-
-  // write back left-overs...
-  return NULL;
-}
-
-// Search the implicit "current_program" to see if anyone define
-// "name" as a commmand.,
-command_descriptor_t* flag_find_command_descriptor(char* name) {
-  if (current_program->commands == NULL) {
-    log_fatal("flag_get_command() shouldn't not be called when we don't have any defined commands.");
-    fatal_error(ERROR_ILLEGAL_STATE);
-  }
-  value_result_t command_value = string_tree_find(current_program->coommands, name);
-  if (is_ok(command_value)) {
-    return ((command_descriptor_t*) (command_value.ptr));
-  } else {
-    return NULL;
-  }
-}
-
-// Search the command for a matching flag and return that first. If
-// the command doesn't have a definition for flag, then the the
-// "program" might have a definition for the flag so we also search
-// it.
-flag_descriptor_t flag_find_flag_descriptor(command_descriptor_t* command, char* name) {
-  /*
-    WRONG
-
-  value_result_t command_value = string_tree_find(current_program->coommands, name);
-  if (is_ok(command_value)) {
-    return ((command_descriptor_t*) (command_value.ptr));
-  } else {
-    return NULL;
-  }
-  */
-}
-
-// The returned key will start with one or more "-" characters. 
-//
-// BTW, we are way down in the call stack and are not prepared to
-// properly deal with say "---", and the caller currently actually
-// benefits from seeing either "-" or "--" prepended to the key so we
-// don't even bother to detect if there are more than two dashes. If
-// this is illegal, the key (aka flag) is not found and better error
-// reporting will happen in the caller.
-//
-// This actually looks like it could be a useful addition to the
-// library if it can be given a descriptive generic name. Split on
-// first?
-//
-// TODO(jawilson): Nothing says that error handler couldn't do as part
-// of fuzzy matching notice this and be more helpful as a special
-// case. Long command lines get broken at weird places so that might
-// be useful to look out for.
-flag_key_value_t flag_split_argument(char* arg) {
-  int equal_sign_index = string_index_of_char(arg, '=');
-  char* value = NULL;
-  if (equal_sign_index >= 0) {
-    char* key = string_substring(arg, 0, equal_sign_index);
-    char* value = NULL;
-    // We know there is an "=". If nothing comes after it, we want to
-    // set value to "" instead of NULL so that we don't try to process
-    // the next argument. So --foo and --foo=, will *not* be treeated
-    // the same way.
-    char* value = string_substring(arg, equal_sign_index + 1, strlen(arg));
-    return (flag_key_value_t) { .key = key, .value = value };
-  }
-  return (flag_key_value_t) { .key = arg, .value = NULL };
 }

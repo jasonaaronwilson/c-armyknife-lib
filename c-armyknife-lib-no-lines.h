@@ -253,6 +253,8 @@ static inline boolean_t is_not_ok(value_result_t value) {
   return value.nf_error != NF_OK;
 }
 
+#define cast(expr, type) ((type) (expr))
+
 #endif /* _VALUE_H_ */
 // SSCF generated file from: allocate.c
 
@@ -1988,6 +1990,24 @@ extern char* flag_parse_command_line(int argc, char** argv);
 
 #endif /* _FLAG_H_ */
 
+// Non exported data structures
+
+struct flag_key_value_S {
+  char* key;
+  char* value;
+};
+typedef struct flag_key_value_S flag_key_value_t;
+
+// Non exported function prototypes
+
+command_descriptor_t* flag_find_command_descriptor(char* name);
+flag_descriptor_t* flag_find_flag_descriptor(command_descriptor_t* command, char* name);
+flag_key_value_t flag_split_argument(char* arg);
+void parse_and_write_value(flag_descriptor_t* flag, flag_key_value_t key_value);
+void parse_and_write_boolean(flag_descriptor_t* flag, flag_key_value_t key_value);
+
+// Global Variables
+
 program_descriptor_t* current_program;
 command_descriptor_t* current_command;
 flag_descriptor_t* current_flag;
@@ -2066,40 +2086,7 @@ void flag_boolean(char* name, boolean_t* write_back_ptr) {
   current_flag->flag_type = flag_type_boolean;
   current_flag->name = name;
   current_flag->write_back_ptr = write_back_ptr;
-  add_flag();
-}
-
-void flags_show_usage(FILE* out) {
-  /*
-  if (config->command_descriptors) {
-    fprintf(stdout, "Usage: %s <command> <flags*> <files*>\n",
-            config->program_name);
-  } else {
-    fprintf(stdout, "Usage: %s <flags*> <files*>\n", config->program_name);
-  }
-  if (config->program_description) {
-    fprintf(stdout, "\n%s\n", config->program_description);
-  }
-  if (config->command_descriptors) {
-    fprintf(stdout, "\nCommands:\n");
-    for (int i = 0; i < config->command_descriptors->length; i++) {
-      command_line_command_descriptor_t* command_descriptor
-          = value_array_get(config->command_descriptors, i).ptr;
-      fprintf(stdout, "    %s [[%s]]\n", command_descriptor->name,
-              command_descriptor->help_string);
-    }
-  }
-  if (config->flag_descriptors) {
-    fprintf(stdout, "\nFlags:\n");
-    for (int i = 0; i < config->flag_descriptors->length; i++) {
-      command_line_flag_descriptor_t* flag
-          = value_array_get(config->flag_descriptors, i).ptr;
-      fprintf(stdout, "    --%s=<flag-value> (%s)\n", flag->long_name,
-              flag->help_string);
-    }
-  }
-  */
-  fprintf(out, "flags_show_usage() is not yet implemented!");
+  add_flag(name);
 }
 
 /**
@@ -2180,7 +2167,7 @@ command_descriptor_t* flag_find_command_descriptor(char* name) {
     log_fatal("flag_get_command() shouldn't not be called when we don't have any defined commands.");
     fatal_error(ERROR_ILLEGAL_STATE);
   }
-  value_result_t command_value = string_tree_find(current_program->coommands, name);
+  value_result_t command_value = string_tree_find(current_program->commands, name);
   if (is_ok(command_value)) {
     return ((command_descriptor_t*) (command_value.ptr));
   } else {
@@ -2192,7 +2179,7 @@ command_descriptor_t* flag_find_command_descriptor(char* name) {
 // the command doesn't have a definition for flag, then the the
 // "program" might have a definition for the flag so we also search
 // it.
-flag_descriptor_t flag_find_flag_descriptor(command_descriptor_t* command, char* name) {
+flag_descriptor_t* flag_find_flag_descriptor(command_descriptor_t* command, char* name) {
   /*
     WRONG
 
@@ -2203,6 +2190,7 @@ flag_descriptor_t flag_find_flag_descriptor(command_descriptor_t* command, char*
     return NULL;
   }
   */
+  return NULL;
 }
 
 // The returned key will start with one or more "-" characters. 
@@ -2224,10 +2212,8 @@ flag_descriptor_t flag_find_flag_descriptor(command_descriptor_t* command, char*
 // be useful to look out for.
 flag_key_value_t flag_split_argument(char* arg) {
   int equal_sign_index = string_index_of_char(arg, '=');
-  char* value = NULL;
   if (equal_sign_index >= 0) {
     char* key = string_substring(arg, 0, equal_sign_index);
-    char* value = NULL;
     // We know there is an "=". If nothing comes after it, we want to
     // set value to "" instead of NULL so that we don't try to process
     // the next argument. So --foo and --foo=, will *not* be treeated
@@ -2236,6 +2222,64 @@ flag_key_value_t flag_split_argument(char* arg) {
     return (flag_key_value_t) { .key = key, .value = value };
   }
   return (flag_key_value_t) { .key = arg, .value = NULL };
+}
+
+// Figure out what parser to use for the value, parse it, and then use
+// the address in the flag descriptor to write the flag value to where
+// the user requested.
+void parse_and_write_value(flag_descriptor_t* flag, flag_key_value_t key_value) {
+  switch (flag->flag_type) {
+  case flag_type_boolean:
+    parse_and_write_boolean(flag, key_value);
+    break;
+
+  default:
+    fatal_error(ERROR_ILLEGAL_STATE);
+    break;
+  }
+}
+
+void parse_and_write_boolean(flag_descriptor_t* flag, flag_key_value_t key_value) {
+  if (string_equal("true", key_value.value)) {
+    *cast(flag->write_back_ptr, boolean_t*) = true;
+  } else if (string_equal("false", key_value.value)) {
+    *cast(flag->write_back_ptr, boolean_t*) = false;
+  } else {
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+}
+
+void flags_show_usage(FILE* out) {
+  /*
+  if (config->command_descriptors) {
+    fprintf(stdout, "Usage: %s <command> <flags*> <files*>\n",
+            config->program_name);
+  } else {
+    fprintf(stdout, "Usage: %s <flags*> <files*>\n", config->program_name);
+  }
+  if (config->program_description) {
+    fprintf(stdout, "\n%s\n", config->program_description);
+  }
+  if (config->command_descriptors) {
+    fprintf(stdout, "\nCommands:\n");
+    for (int i = 0; i < config->command_descriptors->length; i++) {
+      command_line_command_descriptor_t* command_descriptor
+          = value_array_get(config->command_descriptors, i).ptr;
+      fprintf(stdout, "    %s [[%s]]\n", command_descriptor->name,
+              command_descriptor->help_string);
+    }
+  }
+  if (config->flag_descriptors) {
+    fprintf(stdout, "\nFlags:\n");
+    for (int i = 0; i < config->flag_descriptors->length; i++) {
+      command_line_flag_descriptor_t* flag
+          = value_array_get(config->flag_descriptors, i).ptr;
+      fprintf(stdout, "    --%s=<flag-value> (%s)\n", flag->long_name,
+              flag->help_string);
+    }
+  }
+  */
+  fprintf(out, "flags_show_usage() is not yet implemented!");
 }
 /**
  * @file fatal-error.c
@@ -4263,6 +4307,8 @@ static inline boolean_t is_ok(value_result_t value) {
 static inline boolean_t is_not_ok(value_result_t value) {
   return value.nf_error != NF_OK;
 }
+
+#define cast(expr, type) ((type) (expr))
 
 #endif /* _VALUE_H_ */
 

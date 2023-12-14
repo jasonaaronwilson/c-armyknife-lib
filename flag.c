@@ -5,16 +5,18 @@
  * A command line parser for flags (and the uninterpreted "file"
  * arguments, aka "left-over" arguments). We use a pragmatic
  * declarative configuration and unless you need to localize the
- * result right now, we also automatically generate the "usage" /
- * "help" documentation (via flag_print_help).
+ * result, we also automatically generate the "usage" / "help"
+ * documentation (via flag_print_help).
  *
  * Here is maybe the smallest example you might possibly use:
  *
  * ```
  *   // For simple tools, just use "global" variaables but you can place
- *   // stuff wherever you choose, for example an a struct you can pass around.
+ *   // stuff wherever you choose, for example in a struct you can pass
+ *   // around.
  *
- *   boolean_t FLAG_verbose = true; // default value
+ *   boolean_t FLAG_verbose = true; // default value is true instead of
+ *                                  // false in this case
  *   array_t* FLAG_file_args = NULL;
  *
  *   flag_program_name("program-name");
@@ -33,9 +35,9 @@
  * flag_description().
  *
  * To make your program "easier" to use, you can also define aliases
- * for certain flags (or commands!).
+ * for flags and ("sub-commands" explained below).
  *
- * Another capability is Using "sub-commands" so that your tool can be
+ * Another capability is using "sub-commands" so that your tool can be
  * a little more like "git", "apt", "yum" or "docker") versus more
  * traditional command line tools. We are a little more specific about
  * where the sub-command should be located in the command (it *must*
@@ -62,14 +64,14 @@
  *
  * The interface presented here is *not* thread safe but generally a
  * program will define and parse command line arguments in the initial
- * thread before spawning threads so this isn't a terrible
+ * thread before spawning other threads so this isn't a terrible
  * restriction.
  *
  * Currently, flags and "left-over" arguments are not allowed to be
  * freely mixed. Once something that doesn't start with a "-" is seen,
  * all remaining arguments are treated as "left-over" arguments. The
  * special flag "--" can be used by the user to seperate things that
- * might otherwise be misinterpred.
+ * might otherwise be misinterpreted.
  *
  * Note that when an error is returned, some of the "write backs" may
  * have been partially applied changing the default value they may
@@ -168,6 +170,8 @@ flag_key_value_t flag_split_argument(char* arg);
 void parse_and_write_value(flag_descriptor_t* flag, flag_key_value_t key_value);
 void parse_and_write_boolean(flag_descriptor_t* flag,
                              flag_key_value_t key_value);
+void parse_and_write_uint64(flag_descriptor_t* flag,
+                            flag_key_value_t key_value);
 
 // Global Variables
 
@@ -232,7 +236,13 @@ void flag_file_args(value_array_t** write_back_file_args_ptr) {
 
 // Place a flag in either the current_command or current_program. The
 // name is passed in explicitly to allow aliases.
-void add_flag(char* name) {
+void add_flag(char* name, boolean_t* write_back_ptr, flag_type_t flag_type) {
+  current_flag = malloc_struct(flag_descriptor_t);
+  current_flag->flag_type = flag_type;
+  current_flag->name = name;
+  current_flag->write_back_ptr = write_back_ptr;
+
+  // TODO(jawilson): check for a flag with the same name?
   if (current_command != NULL) {
     current_command->flags = string_tree_insert(current_command->flags, name,
                                                 ptr_to_value(current_flag));
@@ -246,13 +256,28 @@ void add_flag(char* name) {
 }
 
 void flag_boolean(char* name, boolean_t* write_back_ptr) {
-  // TODO(jawilson): check for a flag with the same name?
-  current_flag = malloc_struct(flag_descriptor_t);
-  current_flag->flag_type = flag_type_boolean;
-  current_flag->name = name;
-  current_flag->write_back_ptr = write_back_ptr;
-  add_flag(name);
+  add_flag(name, write_back_ptr, flag_type_boolean);
 }
+
+void flag_string(char* name, boolean_t* write_back_ptr) {
+  add_flag(name, write_back_ptr, flag_type_string);
+}
+
+void flag_uint64(char* name, boolean_t* write_back_ptr) {
+  add_flag(name, write_back_ptr, flag_type_uint64);
+}
+
+void flag_int64(char* name, boolean_t* write_back_ptr) {
+  add_flag(name, write_back_ptr, flag_type_int64);
+}
+
+void flag_double(char* name, boolean_t* write_back_ptr) {
+  add_flag(name, write_back_ptr, flag_type_double);
+}
+
+// TODO(jawilson): flag_type_switch,
+// flag_type_enum,
+// flag_type_custom,
 
 /**
  * @function flag_parse_command_line
@@ -414,6 +439,14 @@ void parse_and_write_value(flag_descriptor_t* flag,
     parse_and_write_boolean(flag, key_value);
     break;
 
+  case flag_type_string:
+    *cast(char**, flag->write_back_ptr) = key_value.value;
+    break;
+
+  case flag_type_uint64:
+    parse_and_write_uint64(flag, key_value);
+    break;
+
   default:
     fatal_error(ERROR_ILLEGAL_STATE);
     break;
@@ -429,6 +462,16 @@ void parse_and_write_boolean(flag_descriptor_t* flag,
   } else if (string_equal("false", val) || string_equal("f", val)
              || string_equal("0", val)) {
     *cast(boolean_t*, flag->write_back_ptr) = false;
+  } else {
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+}
+
+void parse_and_write_uint64(flag_descriptor_t* flag,
+                            flag_key_value_t key_value) {
+  value_result_t val_result = string_parse_uint64(key_value.value);
+  if (is_ok(val_result)) {
+    *cast(uint64_t*, flag->write_back_ptr) = val_result.u64;
   } else {
     fatal_error(ERROR_ILLEGAL_STATE);
   }

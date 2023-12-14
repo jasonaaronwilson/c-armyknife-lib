@@ -253,7 +253,7 @@ static inline boolean_t is_not_ok(value_result_t value) {
   return value.nf_error != NF_OK;
 }
 
-#define cast(expr, type) ((type) (expr))
+#define cast(type, expr) ((type)(expr))
 
 #endif /* _VALUE_H_ */
 // SSCF generated file from: allocate.c
@@ -770,7 +770,7 @@ struct command_descriptor_S {
   value_array_t** write_back_file_args_ptr;
   string_tree_t* flags;
 };
-typedef struct  command_descriptor_S command_descriptor_t;
+typedef struct command_descriptor_S command_descriptor_t;
 
 struct flag_descriptor_S {
   char* name;
@@ -780,7 +780,7 @@ struct flag_descriptor_S {
   void* write_back_ptr;
   // TODO(jawilson): add custom parser call back (and call back data).
 };
-typedef struct  flag_descriptor_S flag_descriptor_t;
+typedef struct flag_descriptor_S flag_descriptor_t;
 
 extern void flag_program_name(char* name);
 extern void flag_description(char* description);
@@ -1963,7 +1963,7 @@ struct command_descriptor_S {
   value_array_t** write_back_file_args_ptr;
   string_tree_t* flags;
 };
-typedef struct  command_descriptor_S command_descriptor_t;
+typedef struct command_descriptor_S command_descriptor_t;
 
 struct flag_descriptor_S {
   char* name;
@@ -1973,7 +1973,7 @@ struct flag_descriptor_S {
   void* write_back_ptr;
   // TODO(jawilson): add custom parser call back (and call back data).
 };
-typedef struct  flag_descriptor_S flag_descriptor_t;
+typedef struct flag_descriptor_S flag_descriptor_t;
 
 extern void flag_program_name(char* name);
 extern void flag_description(char* description);
@@ -2001,10 +2001,12 @@ typedef struct flag_key_value_S flag_key_value_t;
 // Non exported function prototypes
 
 command_descriptor_t* flag_find_command_descriptor(char* name);
-flag_descriptor_t* flag_find_flag_descriptor(command_descriptor_t* command, char* name);
+flag_descriptor_t* flag_find_flag_descriptor(command_descriptor_t* command,
+                                             char* name);
 flag_key_value_t flag_split_argument(char* arg);
 void parse_and_write_value(flag_descriptor_t* flag, flag_key_value_t key_value);
-void parse_and_write_boolean(flag_descriptor_t* flag, flag_key_value_t key_value);
+void parse_and_write_boolean(flag_descriptor_t* flag,
+                             flag_key_value_t key_value);
 
 // Global Variables
 
@@ -2071,9 +2073,11 @@ void flag_file_args(value_array_t** write_back_file_args_ptr) {
 // name is passed in explicitly to allow aliases.
 void add_flag(char* name) {
   if (current_command != NULL) {
-    current_command->flags = string_tree_insert(current_command->flags, name, ptr_to_value(current_flag));
+    current_command->flags = string_tree_insert(current_command->flags, name,
+                                                ptr_to_value(current_flag));
   } else if (current_program != NULL) {
-    current_program->flags = string_tree_insert(current_program->flags, name, ptr_to_value(current_flag));
+    current_program->flags = string_tree_insert(current_program->flags, name,
+                                                ptr_to_value(current_flag));
   } else {
     log_fatal("A current program or command must be executed first");
     fatal_error(ERROR_ILLEGAL_STATE);
@@ -2100,21 +2104,24 @@ void flag_boolean(char* name, boolean_t* write_back_ptr) {
  */
 char* flag_parse_command_line(int argc, char** argv) {
   if (current_program == NULL) {
-    log_fatal("flag_parse_command_line can't be called unless flag_program_name() is first called.");
+    log_fatal(
+        "flag_parse_command_line can't be called unless flag_program_name() is "
+        "first called.");
     fatal_error(ERROR_ILLEGAL_STATE);
   }
-  
+
   int start = 1;
   command_descriptor_t* command = NULL;
   if (current_program->commands) {
     char* name = argv[1];
     command = flag_find_command_descriptor(name);
     if (command == NULL) {
-      return string_printf("The first command line argument is not a known command: %s", name);
+      return string_printf(
+          "The first command line argument is not a known command: %s", name);
     }
     start = 2;
   }
-  
+
   value_array_t* files = make_value_array(argc);
   boolean_t parse_flags = true;
 
@@ -2129,13 +2136,17 @@ char* flag_parse_command_line(int argc, char** argv) {
       if (string_starts_with(arg, "-")) {
         flag_key_value_t key_value = flag_split_argument(arg);
         if (key_value.key == NULL) {
-          return string_printf("This argument is not a well formed flag: %s", arg);
-        }
-        flag_descriptor_t* flag = flag_find_flag_descriptor(command, key_value.key);
-        if (flag == NULL) {
-          return string_printf("The argument looks like a flag but was not found: '%s'\n"
-                               "You may want to use ' -- ' to seperate flags from non flag arguments.",
+          return string_printf("This argument is not a well formed flag: %s",
                                arg);
+        }
+        flag_descriptor_t* flag
+            = flag_find_flag_descriptor(command, key_value.key);
+        if (flag == NULL) {
+          return string_printf(
+              "The argument looks like a flag but was not found: '%s'\n"
+              "You may want to use ' -- ' to seperate flags from non flag "
+              "arguments.",
+              arg);
         }
         // If the value is NULL, that means there was no "=" sign
         // which means we should grab the next argument directly. When
@@ -2164,10 +2175,13 @@ char* flag_parse_command_line(int argc, char** argv) {
 // "name" as a commmand.,
 command_descriptor_t* flag_find_command_descriptor(char* name) {
   if (current_program->commands == NULL) {
-    log_fatal("flag_get_command() shouldn't not be called when we don't have any defined commands.");
+    log_fatal(
+        "flag_get_command() shouldn't not be called when we don't have any "
+        "defined commands.");
     fatal_error(ERROR_ILLEGAL_STATE);
   }
-  value_result_t command_value = string_tree_find(current_program->commands, name);
+  value_result_t command_value
+      = string_tree_find(current_program->commands, name);
   if (is_ok(command_value)) {
     return ((command_descriptor_t*) (command_value.ptr));
   } else {
@@ -2179,21 +2193,26 @@ command_descriptor_t* flag_find_command_descriptor(char* name) {
 // the command doesn't have a definition for flag, then the the
 // "program" might have a definition for the flag so we also search
 // it.
-flag_descriptor_t* flag_find_flag_descriptor(command_descriptor_t* command, char* name) {
-  /*
-    WRONG
-
-  value_result_t command_value = string_tree_find(current_program->coommands, name);
-  if (is_ok(command_value)) {
-    return ((command_descriptor_t*) (command_value.ptr));
-  } else {
-    return NULL;
+flag_descriptor_t* flag_find_flag_descriptor(/*nullable*/
+                                             command_descriptor_t* command,
+                                             char* name) {
+  if (command != NULL) {
+    value_result_t command_flag_value = string_tree_find(command->flags, name);
+    if (is_ok(command_flag_value)) {
+      return cast(flag_descriptor_t*, command_flag_value.ptr);
+    }
   }
-  */
+
+  value_result_t program_flag_value
+    = string_tree_find(current_program->flags, name);
+  if (is_ok(program_flag_value)) {
+    return cast(flag_descriptor_t*, program_flag_value.ptr);
+  }
+
   return NULL;
 }
 
-// The returned key will start with one or more "-" characters. 
+// The returned key will start with one or more "-" characters.
 //
 // BTW, we are way down in the call stack and are not prepared to
 // properly deal with say "---", and the caller currently actually
@@ -2219,15 +2238,16 @@ flag_key_value_t flag_split_argument(char* arg) {
     // the next argument. So --foo and --foo=, will *not* be treeated
     // the same way.
     char* value = string_substring(arg, equal_sign_index + 1, strlen(arg));
-    return (flag_key_value_t) { .key = key, .value = value };
+    return (flag_key_value_t){.key = key, .value = value};
   }
-  return (flag_key_value_t) { .key = arg, .value = NULL };
+  return (flag_key_value_t){.key = arg, .value = NULL};
 }
 
 // Figure out what parser to use for the value, parse it, and then use
 // the address in the flag descriptor to write the flag value to where
 // the user requested.
-void parse_and_write_value(flag_descriptor_t* flag, flag_key_value_t key_value) {
+void parse_and_write_value(flag_descriptor_t* flag,
+                           flag_key_value_t key_value) {
   switch (flag->flag_type) {
   case flag_type_boolean:
     parse_and_write_boolean(flag, key_value);
@@ -2239,11 +2259,13 @@ void parse_and_write_value(flag_descriptor_t* flag, flag_key_value_t key_value) 
   }
 }
 
-void parse_and_write_boolean(flag_descriptor_t* flag, flag_key_value_t key_value) {
-  if (string_equal("true", key_value.value)) {
-    *cast(flag->write_back_ptr, boolean_t*) = true;
-  } else if (string_equal("false", key_value.value)) {
-    *cast(flag->write_back_ptr, boolean_t*) = false;
+void parse_and_write_boolean(flag_descriptor_t* flag,
+                             flag_key_value_t key_value) {
+  char* val = key_value.value;
+  if (string_equal("true", val) || string_equal("t", val) || string_equal("1", val)) {
+    *cast(boolean_t*, flag->write_back_ptr) = true;
+  } else if (string_equal("false", val) || string_equal("f", val) || string_equal("0", val)  ) {
+    *cast(boolean_t*, flag->write_back_ptr) = false;
   } else {
     fatal_error(ERROR_ILLEGAL_STATE);
   }
@@ -4308,7 +4330,7 @@ static inline boolean_t is_not_ok(value_result_t value) {
   return value.nf_error != NF_OK;
 }
 
-#define cast(expr, type) ((type) (expr))
+#define cast(type, expr) ((type)(expr))
 
 #endif /* _VALUE_H_ */
 

@@ -350,20 +350,26 @@ command_descriptor_t* flag_find_command_descriptor(char* name) {
   }
 }
 
-// Search the command for a matching flag and return that first. If
+// Search the command for a matching flag and return that first but if
 // the command doesn't have a definition for flag, then the the
 // "program" might have a definition for the flag so we also search
-// it.
-flag_descriptor_t* flag_find_flag_descriptor(command_descriptor_t* command,
+// for it there.
+flag_descriptor_t* flag_find_flag_descriptor(/*nullable*/
+                                             command_descriptor_t* command,
                                              char* name) {
-  /*
-    WRONG
-
-  value_result_t command_value = string_tree_find(current_program->coommands,
-  name); if (is_ok(command_value)) { return ((command_descriptor_t*)
-  (command_value.ptr)); } else { return NULL;
+  if (command != NULL) {
+    value_result_t command_flag_value = string_tree_find(command->flags, name);
+    if (is_ok(command_flag_value)) {
+      return cast(flag_descriptor_t*, command_flag_value.ptr);
+    }
   }
-  */
+
+  value_result_t program_flag_value
+      = string_tree_find(current_program->flags, name);
+  if (is_ok(program_flag_value)) {
+    return cast(flag_descriptor_t*, program_flag_value.ptr);
+  }
+
   return NULL;
 }
 
@@ -416,10 +422,13 @@ void parse_and_write_value(flag_descriptor_t* flag,
 
 void parse_and_write_boolean(flag_descriptor_t* flag,
                              flag_key_value_t key_value) {
-  if (string_equal("true", key_value.value)) {
-    *cast(flag->write_back_ptr, boolean_t*) = true;
-  } else if (string_equal("false", key_value.value)) {
-    *cast(flag->write_back_ptr, boolean_t*) = false;
+  char* val = key_value.value;
+  if (string_equal("true", val) || string_equal("t", val)
+      || string_equal("1", val)) {
+    *cast(boolean_t*, flag->write_back_ptr) = true;
+  } else if (string_equal("false", val) || string_equal("f", val)
+             || string_equal("0", val)) {
+    *cast(boolean_t*, flag->write_back_ptr) = false;
   } else {
     fatal_error(ERROR_ILLEGAL_STATE);
   }

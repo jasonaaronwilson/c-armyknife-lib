@@ -152,6 +152,6 @@ static inline boolean_t is_not_ok(value_result_t value) {
   return value.nf_error != NF_OK;
 }
 
-#define cast(expr, type) ((type)(expr))
+#define cast(type, expr) ((type)(expr))
 
 #endif /* _VALUE_H_ */

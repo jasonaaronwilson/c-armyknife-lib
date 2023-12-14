@@ -143,9 +143,10 @@ extern void flag_description(char* description);
 extern void flag_file_args(value_array_t** write_back_ptr);
 
 extern void flag_boolean(char* name, boolean_t* write_back_ptr);
-extern void flag_string(char* name, boolean_t* write_back_ptr);
-extern void flag_uint64(char* name, boolean_t* write_back_ptr);
-extern void flag_int64(char* name, boolean_t* write_back_ptr);
+extern void flag_string(char* name, char** write_back_ptr);
+extern void flag_uint64(char* name, uint64_t* write_back_ptr);
+extern void flag_int64(char* name, int64_t* write_back_ptr);
+extern void flag_double(char* name, double* write_back_ptr);
 // TODO(jawilson): flag_enum(name, size), and flag_custom
 extern void flag_alias(char* alias);
 
@@ -236,7 +237,7 @@ void flag_file_args(value_array_t** write_back_file_args_ptr) {
 
 // Place a flag in either the current_command or current_program. The
 // name is passed in explicitly to allow aliases.
-void add_flag(char* name, boolean_t* write_back_ptr, flag_type_t flag_type) {
+void add_flag(char* name, void* write_back_ptr, flag_type_t flag_type) {
   current_flag = malloc_struct(flag_descriptor_t);
   current_flag->flag_type = flag_type;
   current_flag->name = name;
@@ -259,19 +260,19 @@ void flag_boolean(char* name, boolean_t* write_back_ptr) {
   add_flag(name, write_back_ptr, flag_type_boolean);
 }
 
-void flag_string(char* name, boolean_t* write_back_ptr) {
+void flag_string(char* name, char** write_back_ptr) {
   add_flag(name, write_back_ptr, flag_type_string);
 }
 
-void flag_uint64(char* name, boolean_t* write_back_ptr) {
+void flag_uint64(char* name, uint64_t* write_back_ptr) {
   add_flag(name, write_back_ptr, flag_type_uint64);
 }
 
-void flag_int64(char* name, boolean_t* write_back_ptr) {
+void flag_int64(char* name, int64_t* write_back_ptr) {
   add_flag(name, write_back_ptr, flag_type_int64);
 }
 
-void flag_double(char* name, boolean_t* write_back_ptr) {
+void flag_double(char* name, double* write_back_ptr) {
   add_flag(name, write_back_ptr, flag_type_double);
 }
 

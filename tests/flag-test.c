@@ -51,7 +51,38 @@ void test_boolean() {
   }
 }
 
+void test_uint64() {
+  char* args[2];
+  args[0] = "uint64-test";
+  args[1] = "--number=0";
+
+  uint64_t FLAG_number = 0;
+  value_array_t* FLAG_files = NULL;
+
+  flag_program_name("uint64-test");
+  flag_uint64("--number", &FLAG_number);
+  flag_file_args(&FLAG_files);
+
+  char* error = flag_parse_command_line(2, args);
+  if (error) {
+    exit(1);
+  }
+  if (FLAG_number != 0) {
+    exit(1);
+  }
+
+  args[1] = "--number=0xf";
+  error = flag_parse_command_line(2, args);
+  if (error) {
+    exit(1);
+  }
+  if (FLAG_number != 0xf) {
+    exit(1);
+  }
+}
+
 int main(int argc, char** argv) {
   test_boolean();
+  test_uint64();
   exit(0);
 }

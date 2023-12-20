@@ -70,13 +70,9 @@ void test_alist_random() {
   for (int i = 0; i < iterations; i++) {
     uint64_t next = random_next(&state);
     if ((next & 3) == 0) {
-      if (is_ok(alist_find(list, uint64_to_string(next)))) {
-        test_fail("found an element we deleted");
-      }
+      test_assert(is_not_ok(alist_find(list, uint64_to_string(next))));
     } else {
-      if (!is_ok(alist_find(list, uint64_to_string(next)))) {
-        test_fail("element should be found");
-      }
+      test_assert(is_ok(alist_find(list, uint64_to_string(next))));
     }
   }
 }

@@ -12,25 +12,17 @@ void test_string_ht() {
   value_result_t value;
 
   value = string_ht_find(ht, "a");
-  if (is_ok(value)) {
-    test_fail("find in empty ht should return NULL");
-  }
+  test_assert(is_not_ok(value));
 
   ht = string_ht_insert(ht, "a", str_to_value("A"));
   value = string_ht_find(ht, "a");
-  if (is_not_ok(value) || strcmp("A", value.str) != 0) {
-    test_fail("should have found 'A'");
-  }
+  test_assert(is_ok(value) && string_equal("A", value.str));
 
   ht = string_ht_insert(ht, "b", str_to_value("B"));
   value = string_ht_find(ht, "a");
-  if (is_not_ok(value) || strcmp("A", value.str) != 0) {
-    test_fail("should have found 'A'");
-  }
+  test_assert(is_ok(value) && string_equal("A", value.str));
   value = string_ht_find(ht, "b");
-  if (is_not_ok(value) || strcmp("B", value.str) != 0) {
-    test_fail("should have found 'B'");
-  }
+  test_assert(is_ok(value) && string_equal("B", value.str));
 
   // Add a few more elements to the front of the ht.
   ht = string_ht_insert(ht, "c", str_to_value("C"));
@@ -39,17 +31,13 @@ void test_string_ht() {
   // Finally delete a node.
   ht = string_ht_delete(ht, "b");
   value = string_ht_find(ht, "b");
-  if (is_ok(value)) {
-    test_fail("should not have found a value for 'b'");
-  }
+  test_assert(is_not_ok(value));
+
   value = string_ht_find(ht, "a");
-  if (is_not_ok(value) || strcmp("A", value.str) != 0) {
-    test_fail("should have found 'A'");
-  }
+  test_assert(is_ok(value) && string_equal("A", value.str));
+
   value = string_ht_find(ht, "c");
-  if (is_not_ok(value) || strcmp("C", value.str) != 0) {
-    test_fail("should have found 'C'");
-  }
+  test_assert(is_ok(value) && string_equal("C", value.str));
 
   // clang-format off
   string_ht_foreach(ht, key, value, { 
@@ -82,13 +70,9 @@ void test_ht_random() {
   for (int i = 0; i < iterations; i++) {
     uint64_t next = random_next(&state);
     if ((next & 3) == 0) {
-      if (is_ok(string_ht_find(ht, uint64_to_string(next)))) {
-        test_fail("found an element we deleted");
-      }
+      test_assert(is_not_ok(string_ht_find(ht, uint64_to_string(next))));
     } else {
-      if (is_not_ok(string_ht_find(ht, uint64_to_string(next)))) {
-        test_fail("element should be found");
-      }
+      test_assert(is_ok(string_ht_find(ht, uint64_to_string(next))));
     }
   }
 }

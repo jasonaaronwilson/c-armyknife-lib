@@ -81,6 +81,36 @@ void test_uint64() {
   }
 }
 
+void test_string() {
+  char* args[2];
+  args[0] = "string-test";
+  args[1] = "--string=0";
+
+  char* FLAG_string = 0;
+  value_array_t* FLAG_files = NULL;
+
+  flag_program_name("string-test");
+  flag_string("--string", &FLAG_string);
+  flag_file_args(&FLAG_files);
+
+  char* error = flag_parse_command_line(2, args);
+  if (error) {
+    exit(1);
+  }
+  if (!string_equal("0", FLAG_string)) {
+    exit(1);
+  }
+
+  args[1] = "--string=hello world";
+  error = flag_parse_command_line(2, args);
+  if (error) {
+    exit(1);
+  }
+  if (!string_equal("hello world", FLAG_string)) {
+    exit(1);
+  }
+}
+
 int main(int argc, char** argv) {
   test_boolean();
   test_uint64();

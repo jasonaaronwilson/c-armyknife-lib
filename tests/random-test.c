@@ -20,9 +20,7 @@ void test_random_next_u64_bellow() {
   random_state_t state = random_state_for_test();
   for (int i = 0; i < 1000000; i++) {
     uint64_t next = random_next_uint64_below(&state, 100);
-    if (next >= 100) {
-      test_fail("Got a bad value from random_next_uint64_below");
-    }
+    test_assert(next < 100);
     counts[next]++;
   }
   for (int i = 0; i < 100; i += 5) {

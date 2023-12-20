@@ -14,11 +14,8 @@ void test_write_then_read(char* file_name) {
 
   buffer_t* world_buf = make_buffer(1);
   world_buf = buffer_append_file_contents(world_buf, file_name);
-
-  if (!string_equal(buffer_to_c_string(hello_buf),
-                    buffer_to_c_string(world_buf))) {
-    test_fail("should read back what we wrote!");
-  }
+  test_assert(string_equal(buffer_to_c_string(hello_buf),
+                           buffer_to_c_string(world_buf)));
 }
 
 int main(int argc, char** argv) {

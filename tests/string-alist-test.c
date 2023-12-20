@@ -13,25 +13,17 @@ void test_alist() {
   value_result_t value;
 
   value = alist_find(list, "a");
-  if (is_ok(value)) {
-    test_fail("find in empty list should return NULL");
-  }
+  test_assert(is_not_ok(value));
 
   list = alist_insert(list, "a", str_to_value("A"));
   value = alist_find(list, "a");
-  if (is_not_ok(value) || strcmp("A", value.str) != 0) {
-    test_fail("should have found 'A'");
-  }
+  test_assert(is_ok(value) && string_equal("A", value.str));
 
   list = alist_insert(list, "b", str_to_value("B"));
   value = alist_find(list, "a");
-  if (is_not_ok(value) || strcmp("A", value.str) != 0) {
-    test_fail("should have found 'A'");
-  }
+  test_assert(is_ok(value) && string_equal("A", value.str));
   value = alist_find(list, "b");
-  if (is_not_ok(value) || strcmp("B", value.str) != 0) {
-    test_fail("should have found 'B'");
-  }
+  test_assert(is_ok(value) && string_equal("B", value.str));
 
   // Add a few more elements to the front of the list.
   list = alist_insert(list, "c", str_to_value("C"));
@@ -40,17 +32,12 @@ void test_alist() {
   // Finally delete a node.
   list = alist_delete(list, "b");
   value = alist_find(list, "b");
-  if (is_ok(value)) {
-    test_fail("should not have found a value for 'b'");
-  }
+  test_assert(is_not_ok(value));
+
   value = alist_find(list, "a");
-  if (is_not_ok(value) || strcmp("A", value.str) != 0) {
-    test_fail("should have found 'A'");
-  }
+  test_assert(is_ok(value) && string_equal("A", value.str));
   value = alist_find(list, "c");
-  if (is_not_ok(value) || strcmp("C", value.str) != 0) {
-    test_fail("should have found 'C'");
-  }
+  test_assert(is_ok(value) && string_equal("C", value.str));
 
   // clang-format off
   string_alist_foreach(list, key, value, { 

@@ -43,7 +43,7 @@
  */
 #define test_assert(condition)                                                 \
   do {                                                                         \
-    if (!condition)                                                            \
+    if (!(condition))                                                          \
       test_fail("A test assertion failed. Condition expression was: %s",       \
                 #condition);                                                   \
   } while (0)

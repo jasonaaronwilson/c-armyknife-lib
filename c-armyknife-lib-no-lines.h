@@ -949,7 +949,7 @@ extern uint64_t random_next_uint64_below(random_state_t* state,
  */
 #define test_assert(condition)                                                 \
   do {                                                                         \
-    if (!condition)                                                            \
+    if (!(condition))                                                          \
       test_fail("A test assertion failed. Condition expression was: %s",       \
                 #condition);                                                   \
   } while (0)
@@ -4103,7 +4103,7 @@ uint64_t fasthash64(const void* buf, size_t len, uint64_t seed) {
  */
 #define test_assert(condition)                                                 \
   do {                                                                         \
-    if (!condition)                                                            \
+    if (!(condition))                                                          \
       test_fail("A test assertion failed. Condition expression was: %s",       \
                 #condition);                                                   \
   } while (0)

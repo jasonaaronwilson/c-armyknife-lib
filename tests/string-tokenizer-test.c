@@ -14,20 +14,14 @@ int main(int argc, char** argv) {
   // Lots of memory leaking below but this is only a test...
 
   tokens = string_tokenize("The quick brown fox", " ");
-  if (tokens->length != 4) {
-    test_fail("tokenize");
-  }
+  test_assert(tokens->length == 4);
 
   tokens = string_tokenize("The#quick#brown fox", " #");
-  if (tokens->length != 4) {
-    test_fail("tokenize");
-  }
+  test_assert(tokens->length == 4);
 
   tokens = string_tokenize("The#quick#brown fox", " #");
-  if (tokens->length != 4
-      || !string_equal("quick", value_array_get(tokens, 1).str)) {
-    test_fail("tokenize");
-  }
+  test_assert((tokens->length == 4)
+              && string_equal("quick", value_array_get(tokens, 1).str));
 
   exit(0);
 }

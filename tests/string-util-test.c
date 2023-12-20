@@ -17,46 +17,27 @@
 #include "../c-armyknife-lib.h"
 
 void test_string_printf(void) {
-  if (!string_equal("Hello!", string_printf("%s!", "Hello"))) {
-    test_fail("string_printf");
-  }
-
-  if (!string_equal("Hello World!", string_printf("%s!", "Hello World"))) {
-    test_fail("string_printf");
-  }
-
-  if (!string_equal("42 OMG", string_printf("%d %s", 42, "OMG"))) {
-    test_fail("string_printf");
-  }
-
-  if (!string_equal("42 - OMG", string_printf("%d - %s", 42, "OMG"))) {
-    test_fail("string_printf");
-  }
-
-  if (!string_equal("42 -- OMG", string_printf("%d -- %s", 42, "OMG"))) {
-    test_fail("string_printf");
-  }
-
-  if (!string_equal("42 A longer string 24",
-                    string_printf("%d %s %d", 42, "A longer string", 24))) {
-    test_fail("string_printf");
-  }
+  test_assert(string_equal("Hello!", string_printf("%s!", "Hello")));
+  test_assert(
+      string_equal("Hello World!", string_printf("%s!", "Hello World")));
+  test_assert(string_equal("42 OMG", string_printf("%d %s", 42, "OMG")));
+  test_assert(string_equal("42 - OMG", string_printf("%d - %s", 42, "OMG")));
+  test_assert(string_equal("42 -- OMG", string_printf("%d -- %s", 42, "OMG")));
+  test_assert(
+      string_equal("42 A longer string 24",
+                   string_printf("%d %s %d", 42, "A longer string", 24)));
 }
 
 void check_legal(char* value, uint64_t expected) {
   log_warn("Checking %s", value);
   value_result_t result = string_parse_uint64(value);
-  if (is_not_ok(result) || result.u64 != expected) {
-    test_fail("string_parse_uint64");
-  }
+  test_assert(is_ok(result) && result.u64 == expected);
 }
 
 void check_illegal(char* value) {
   log_warn("Checking %s", value);
   value_result_t result = string_parse_uint64(value);
-  if (is_ok(result)) {
-    test_fail("an illegal value was parsed as uint64 '%s'", value);
-  }
+  test_assert(is_not_ok(result));
 }
 
 void test_number_parsing() {
@@ -81,8 +62,7 @@ void test_number_parsing() {
   check_illegal("0b");
 }
 
-int main(int argc, char** argv) {
-
+void test_is_null_or_empty() {
   if (!(string_is_null_or_empty(NULL))) {
     test_fail("string_is_null_or_empty");
   }
@@ -92,63 +72,54 @@ int main(int argc, char** argv) {
   if (string_is_null_or_empty("not empty")) {
     test_fail("string_is_null_or_empty");
   }
+}
 
-
+void test_string_equal() {
   if (!(string_equal("abc", "abc"))) {
     test_fail("string_equal");
   }
   if (string_equal("abc", "ABC")) {
     test_fail("string_equal");
   }
+}
 
-
+void test_starts_with() {
   if (!(string_starts_with("The quick brown fox", "The quick"))) {
     test_fail("string_starts_with");
   }
   if (string_starts_with("The quick brown fox", "THE QUICK")) {
     test_fail("string_starts_with");
   }
+}
 
-
+void test_ends_with() {
   if (!(string_ends_with("The quick brown fox", "brown fox"))) {
     test_fail("string_ends_with");
   }
   if (string_ends_with("The quick brown fox", "red dog")) {
     test_fail("string_ends_with");
   }
+}
 
+void test_string_contains_char() {
   if (!(string_contains_char("The quick brown fox", 'q'))) {
     test_fail("string_contains_char");
   }
   if (string_contains_char("The quick brown fox", 'Z')) {
     test_fail("string_contains_char");
   }
+}
 
+void test_string_index_of_char() {
   if (string_index_of_char("The quick brown fox", 'q') != 4) {
     test_fail("string_index_of_char");
   }
   if (string_index_of_char("The quick brown fox", 'Z') >= 0) {
     test_fail("string_index_of_char");
   }
+}
 
-  if (string_hash("The quick brown fox")
-      == string_hash("The QUICK brown fox")) {
-    test_fail("string_hash");
-  }
-
-  test_number_parsing();
-
-  // Memory leak. So what, this is a test...
-  if (!(string_equal(string_substring("The quick brown fox", 4, 9), "quick"))) {
-    test_fail("string_substring");
-  }
-
-  check_memory_hashtable_padding();
-
-  if (!string_duplicate("The quick brown fox")) {
-    test_fail("string_duplicate");
-  }
-
+void test_string_left_pad() {
   if (!string_equal("      ", string_left_pad("", 6, ' '))) {
     test_fail("string_left_pad");
   }
@@ -164,7 +135,31 @@ int main(int argc, char** argv) {
   if (!string_equal("abcdefg", string_left_pad("abcdefg", 6, ' '))) {
     test_fail("string_left_pad");
   }
+}
 
+int main(int argc, char** argv) {
+  test_is_null_or_empty();
+  test_string_equal();
+  test_starts_with();
+  test_ends_with();
+  test_string_index_of_char();
+
+  test_assert(string_hash("The quick brown fox")
+              != string_hash("The QUICK brown fox"));
+
+  test_number_parsing();
+
+  // Memory leak. So what, this is a test...
+  if (!(string_equal(string_substring("The quick brown fox", 4, 9), "quick"))) {
+    test_fail("string_substring");
+  }
+
+  check_memory_hashtable_padding();
+
+  test_assert(string_equal("The quick brown fox",
+                           string_duplicate("The quick brown fox")));
+
+  test_string_left_pad();
   test_string_printf();
 
   exit(0);

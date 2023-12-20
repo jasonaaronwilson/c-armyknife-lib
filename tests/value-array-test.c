@@ -16,9 +16,9 @@ void test() {
   value_array_add(array, str_to_value("e"));
   value_array_add(array, str_to_value("f"));
 
-  if (!string_equal("c", value_array_get(array, 2).str)) {
-    test_fail("expected 'c'");
-  }
+  test_assert(string_equal("a", value_array_get(array, 0).str));
+  test_assert(string_equal("c", value_array_get(array, 2).str));
+  test_assert(string_equal("f", value_array_get(array, 5).str));
 }
 
 void test_replace() {
@@ -30,14 +30,9 @@ void test_replace() {
   value_array_add(array, str_to_value("e"));
   value_array_add(array, str_to_value("f"));
 
-  if (!string_equal("c", value_array_get(array, 2).str)) {
-    test_fail("expected 'c'");
-  }
-
+  test_assert(string_equal("c", value_array_get(array, 2).str));
   value_array_replace(array, 2, str_to_value("C"));
-  if (!string_equal("C", value_array_get(array, 2).str)) {
-    test_fail("expected 'C'");
-  }
+  test_assert(string_equal("C", value_array_get(array, 2).str));
 }
 
 void test_push_pop() {
@@ -46,30 +41,20 @@ void test_push_pop() {
   value_array_push(array, str_to_value("b"));
   value_array_push(array, str_to_value("c"));
 
-  if (!string_equal("c", value_array_pop(array).str)) {
-    test_fail("expected 'c'");
-  }
-  if (!string_equal("b", value_array_pop(array).str)) {
-    test_fail("expected 'b'");
-  }
-  if (!string_equal("a", value_array_pop(array).str)) {
-    test_fail("expected 'a'");
-  }
+  test_assert(string_equal("c", value_array_pop(array).str));
+  test_assert(string_equal("b", value_array_pop(array).str));
+  test_assert(string_equal("a", value_array_pop(array).str));
 }
 
 void test_insert_at_and_delete_at() {
   value_array_t* array = make_value_array(1);
   value_array_insert_at(array, 0, str_to_value("a"));
 
-  if (!string_equal("a", value_array_get(array, 0).str)) {
-    test_fail("insert at failed #0");
-  }
+  test_assert(string_equal("a", value_array_get(array, 0).str));
 
   value_array_insert_at(array, 0, str_to_value("b"));
-  if (!string_equal("b", value_array_get(array, 0).str)
-      || !string_equal("a", value_array_get(array, 1).str)) {
-    test_fail("insert at failed #1");
-  }
+  test_assert(string_equal("b", value_array_get(array, 0).str));
+  test_assert(string_equal("a", value_array_get(array, 1).str));
 
   value_array_insert_at(array, 0, str_to_value("c"));
   if (!string_equal("c", value_array_get(array, 0).str)
@@ -81,15 +66,9 @@ void test_insert_at_and_delete_at() {
     test_fail("insert at failed #2");
   }
 
-  if (!string_equal("c", value_array_delete_at(array, 0).str)) {
-    test_fail("expected 'c'");
-  }
-  if (!string_equal("b", value_array_delete_at(array, 0).str)) {
-    test_fail("expected 'b'");
-  }
-  if (!string_equal("a", value_array_delete_at(array, 0).str)) {
-    test_fail("expected 'a'");
-  }
+  test_assert(string_equal("c", value_array_delete_at(array, 0).str));
+  test_assert(string_equal("b", value_array_delete_at(array, 0).str));
+  test_assert(string_equal("a", value_array_delete_at(array, 0).str));
 }
 
 #define RANDOM_TEST_ITERATION_LIMIT 1000

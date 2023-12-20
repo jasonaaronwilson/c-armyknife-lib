@@ -13,25 +13,17 @@ void test_tree() {
   value_result_t value;
 
   value = string_tree_find(tree, "a");
-  if (is_ok(value)) {
-    test_fail("find in empty list should return NULL");
-  }
+  test_assert(is_not_ok(value));
 
   tree = string_tree_insert(tree, "a", str_to_value("A"));
   value = string_tree_find(tree, "a");
-  if (is_not_ok(value) || strcmp("A", value.str) != 0) {
-    test_fail("should have found 'A'");
-  }
+  test_assert(is_ok(value) && string_equal("A", value.str));
 
   tree = string_tree_insert(tree, "b", str_to_value("B"));
   value = string_tree_find(tree, "a");
-  if (is_not_ok(value) || strcmp("A", value.str) != 0) {
-    test_fail("should have found 'A'");
-  }
+  test_assert(is_ok(value) && string_equal("A", value.str));
   value = string_tree_find(tree, "b");
-  if (is_not_ok(value) || strcmp("B", value.str) != 0) {
-    test_fail("should have found 'B'");
-  }
+  test_assert(is_ok(value) && string_equal("B", value.str));
 
   // Add a few more elements
   tree = string_tree_insert(tree, "c", str_to_value("C"));
@@ -40,18 +32,13 @@ void test_tree() {
   // Finally delete a node.
   tree = string_tree_delete(tree, "b");
   value = string_tree_find(tree, "b");
-  if (is_ok(value)) {
-    test_fail("should not have found a value for 'b'");
-  }
+  test_assert(is_not_ok(value));
 
   value = string_tree_find(tree, "a");
-  if (is_not_ok(value) || strcmp("A", value.str) != 0) {
-    test_fail("should have found 'A'");
-  }
+  test_assert(is_ok(value) && string_equal("A", value.str));
+
   value = string_tree_find(tree, "c");
-  if (is_not_ok(value) || strcmp("C", value.str) != 0) {
-    test_fail("should have found 'C'");
-  }
+  test_assert(is_ok(value) && string_equal("C", value.str));
 
   tree = string_tree_insert(tree, "e", str_to_value("E"));
   tree = string_tree_insert(tree, "f", str_to_value("F"));
@@ -70,9 +57,7 @@ void test_tree() {
 void check_values(string_tree_t* t) {
   if (t) {
     char* value_to_key_string = uint64_to_string((t->value).u64);
-    if (strcmp(t->key, value_to_key_string) != 0) {
-      test_fail("the value and key are not matching");
-    }
+    test_assert(string_equal(t->key, value_to_key_string));
     check_values(t->left);
     check_values(t->right);
   }
@@ -152,13 +137,9 @@ void test_random_insertion_and_deletion() {
     }
 
     if ((next & 3) == 0) {
-      if (is_ok(lookup_result)) {
-        test_fail("deleted item should not be found!");
-      }
+      test_assert(is_not_ok(lookup_result));
     } else {
-      if (is_not_ok(lookup_result)) {
-        test_fail("non deleted item should be found");
-      }
+      test_assert(is_ok(lookup_result));
     }
   }
 }

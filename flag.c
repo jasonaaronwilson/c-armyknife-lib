@@ -354,7 +354,8 @@ char* flag_parse_command_line(int argc, char** argv) {
     value_array_add(files, str_to_value(arg));
   }
 
-  // write back left-overs...
+  // Write back the left-over arguments
+  *(current_program->write_back_file_args_ptr) = files;
   return NULL;
 }
 

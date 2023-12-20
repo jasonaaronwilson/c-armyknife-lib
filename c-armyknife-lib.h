@@ -959,6 +959,19 @@ extern uint64_t random_next_uint64_below(random_state_t* state,
     test_fail_and_exit(__FILE__, __LINE__, format, ##__VA_ARGS__);             \
   } while (0)
 
+
+/**
+ * @macro test_assert
+ *
+ * Evaluate the condition and fail the test if the result is false.
+ */
+#define test_assert(condition)                                                 \
+  do {                                                                         \
+    if (!condition)                                                            \
+      test_fail("A test assertion failed. Condition expression was: %s",       \
+                #condition);                                                   \
+  } while (0)
+
 #endif /* _TEST_H_ */
 #ifdef C_ARMYKNIFE_LIB_IMPL
 #line 2 "allocate.c"
@@ -2217,7 +2230,8 @@ char* flag_parse_command_line(int argc, char** argv) {
     value_array_add(files, str_to_value(arg));
   }
 
-  // write back left-overs...
+  // Write back the left-over arguments
+  *(current_program->write_back_file_args_ptr) = files;
   return NULL;
 }
 
@@ -4111,6 +4125,19 @@ uint64_t fasthash64(const void* buf, size_t len, uint64_t seed) {
 #define test_fail(format, ...)                                                 \
   do {                                                                         \
     test_fail_and_exit(__FILE__, __LINE__, format, ##__VA_ARGS__);             \
+  } while (0)
+
+
+/**
+ * @macro test_assert
+ *
+ * Evaluate the condition and fail the test if the result is false.
+ */
+#define test_assert(condition)                                                 \
+  do {                                                                         \
+    if (!condition)                                                            \
+      test_fail("A test assertion failed. Condition expression was: %s",       \
+                #condition);                                                   \
   } while (0)
 
 #endif /* _TEST_H_ */

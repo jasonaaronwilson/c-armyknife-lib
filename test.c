@@ -35,6 +35,19 @@
     test_fail_and_exit(__FILE__, __LINE__, format, ##__VA_ARGS__);             \
   } while (0)
 
+
+/**
+ * @macro test_assert
+ *
+ * Evaluate the condition and fail the test if the result is false.
+ */
+#define test_assert(condition)                                                 \
+  do {                                                                         \
+    if (!condition)                                                            \
+      test_fail("A test assertion failed. Condition expression was: %s",       \
+                #condition);                                                   \
+  } while (0)
+
 #endif /* _TEST_H_ */
 
 /**

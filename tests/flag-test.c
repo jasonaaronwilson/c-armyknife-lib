@@ -23,32 +23,31 @@ void test_boolean() {
   flag_file_args(&FLAG_files);
 
   char* error = flag_parse_command_line(3, args);
-  if (error) {
-    exit(1);
-  }
-  if (!FLAG_true_boolean || FLAG_false_boolean) {
-    exit(1);
-  }
+  test_assert(!error);
+  test_assert(FLAG_true_boolean);
+  test_assert(!FLAG_false_boolean);
 
+  // ----------------------------------------------------------------------
+
+  FLAG_true_boolean = false;
+  FLAG_false_boolean = true;
   args[1] = "--true-boolean=1";
   args[2] = "--false-boolean=0";
   error = flag_parse_command_line(3, args);
-  if (error) {
-    exit(1);
-  }
-  if (!FLAG_true_boolean || FLAG_false_boolean) {
-    exit(1);
-  }
+  test_assert(!error);
+  test_assert(FLAG_true_boolean);
+  test_assert(!FLAG_false_boolean);
 
+  // ----------------------------------------------------------------------
+
+  FLAG_true_boolean = false;
+  FLAG_false_boolean = true;
   args[1] = "--true-boolean=t";
   args[2] = "--false-boolean=f";
   error = flag_parse_command_line(3, args);
-  if (error) {
-    exit(1);
-  }
-  if (!FLAG_true_boolean || FLAG_false_boolean) {
-    exit(1);
-  }
+  test_assert(!error);
+  test_assert(FLAG_true_boolean);
+  test_assert(!FLAG_false_boolean);
 }
 
 void test_uint64() {
@@ -64,21 +63,15 @@ void test_uint64() {
   flag_file_args(&FLAG_files);
 
   char* error = flag_parse_command_line(2, args);
-  if (error) {
-    exit(1);
-  }
-  if (FLAG_number != 0) {
-    exit(1);
-  }
+  test_assert(!error);
+  test_assert(FLAG_number == 0);
+
+  // ----------------------------------------------------------------------
 
   args[1] = "--number=0xf";
   error = flag_parse_command_line(2, args);
-  if (error) {
-    exit(1);
-  }
-  if (FLAG_number != 0xf) {
-    exit(1);
-  }
+  test_assert(!error);
+  test_assert(FLAG_number == 0xf);
 }
 
 void test_string() {
@@ -86,7 +79,7 @@ void test_string() {
   args[0] = "string-test";
   args[1] = "--string=0";
 
-  char* FLAG_string = 0;
+  char* FLAG_string = NULL;
   value_array_t* FLAG_files = NULL;
 
   flag_program_name("string-test");
@@ -94,25 +87,43 @@ void test_string() {
   flag_file_args(&FLAG_files);
 
   char* error = flag_parse_command_line(2, args);
-  if (error) {
-    exit(1);
-  }
-  if (!string_equal("0", FLAG_string)) {
-    exit(1);
-  }
+  test_assert(!error);
+  test_assert(string_equal("0", FLAG_string));
+
+  // ----------------------------------------------------------------------
 
   args[1] = "--string=hello world";
   error = flag_parse_command_line(2, args);
-  if (error) {
-    exit(1);
-  }
-  if (!string_equal("hello world", FLAG_string)) {
-    exit(1);
-  }
+  test_assert(!error);
+  test_assert(string_equal("hello world", FLAG_string));
+}
+
+void test_leftovers() {
+  char* args[4];
+  args[0] = "leftovers-test";
+  args[1] = "--string=0";
+  args[2] = "file1";
+  args[3] = "dir/file2";
+
+  char* FLAG_string = NULL;
+  value_array_t* FLAG_files = NULL;
+
+  flag_program_name("leftovers-test");
+  flag_string("--string", &FLAG_string);
+  flag_file_args(&FLAG_files);
+
+  char* error = flag_parse_command_line(4, args);
+  test_assert(!error);
+  test_assert(string_equal("0", FLAG_string));
+  test_assert(FLAG_files);
+  test_assert(string_equal("file1", value_array_get(FLAG_files, 0).str));
+  test_assert(string_equal("dir/file2", value_array_get(FLAG_files, 1).str));
 }
 
 int main(int argc, char** argv) {
   test_boolean();
   test_uint64();
+  test_string();
+  test_leftovers();
   exit(0);
 }

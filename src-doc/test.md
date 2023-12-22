@@ -3,6 +3,10 @@
 A set of macros and inline functions to help write tests for the
 armyknife library (or your own tests).
  
+## @macro test_assert
+
+Evaluate the condition and fail the test if the result is false.
+ 
 ## @macro test_fail
 
 Immediately fail a test after printing a message (supplied the same

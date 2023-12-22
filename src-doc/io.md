@@ -28,3 +28,16 @@ TODO(jawilson): write a proper test!
 
 Writes the contents of the buffer to the given file.
  
+## @function file_peek_char
+
+Returns the next byte from the input (as an int not u8_t) or -1 if
+the end of the file input has been reached. A a byte is read, then
+the byte is "pushed back" into the input stream so that if
+file_peek_char, fgetc, or a host of other functions attempt to read
+the input then
+ 
+## Copy some or all of an input stream to an output stream.
+ 
+## Return true if an input stream is at the end of the file. I don't
+know what "feof" really does but it doesn't actually do this.
+ 

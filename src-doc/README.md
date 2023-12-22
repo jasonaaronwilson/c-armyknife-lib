@@ -16,6 +16,8 @@
 
 * [uint64.md](uint64.md)
 
+* [flag.md](flag.md)
+
 * [tokenizer.md](tokenizer.md)
 
 * [fatal-error.md](fatal-error.md)

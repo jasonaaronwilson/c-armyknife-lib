@@ -77,3 +77,11 @@ Return a substring of the given string as a newly allocated string.
 
 Convert a uint64_t number to a string.
  
+## Parse a sequence of characters "0123456789abcdef" to an uint64_t. A
+prefix like 0x should be striped before calling this routine.
+
+ 
+## Parse a sequence of zeros and ones. A prefix like 0b should be
+stripped before calling this routine and the string must only
+contain the digits 0 and 1.
+ 

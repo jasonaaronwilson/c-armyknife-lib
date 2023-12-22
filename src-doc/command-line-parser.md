@@ -1,5 +1,9 @@
 # @file command-line-parser.c
 
+WARNING: this is deperecated. Use flag_* functions instead which
+provide a more declarative interface to the same functionality
+which is more pleasant and extensible.
+
 A simple command line parser for GNU long style flags and file
 arguments.
 

@@ -117,3 +117,5 @@ be set to LOGGER_WARN unless you change it in a debugger, and those
 logging statements will be sent to stderr which is probably not
 convenient.
  
+## Determine if logging at the INFO level is enabled.
+ 

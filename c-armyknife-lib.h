@@ -793,6 +793,7 @@ extern void flag_string(char* name, char** write_back_ptr);
 extern void flag_uint64(char* name, uint64_t* write_back_ptr);
 extern void flag_int64(char* name, int64_t* write_back_ptr);
 extern void flag_double(char* name, double* write_back_ptr);
+extern void flag_enum(char* name, int* write_back_ptr);
 extern void flag_enum_64(char* name, uint64_t* write_back_ptr);
 extern void flag_enum_value(char* name, uint64_t value);
 extern void flag_alias(char* alias);
@@ -2012,6 +2013,7 @@ extern void flag_string(char* name, char** write_back_ptr);
 extern void flag_uint64(char* name, uint64_t* write_back_ptr);
 extern void flag_int64(char* name, int64_t* write_back_ptr);
 extern void flag_double(char* name, double* write_back_ptr);
+extern void flag_enum(char* name, int* write_back_ptr);
 extern void flag_enum_64(char* name, uint64_t* write_back_ptr);
 extern void flag_enum_value(char* name, uint64_t value);
 extern void flag_alias(char* alias);
@@ -2150,6 +2152,28 @@ void flag_int64(char* name, int64_t* write_back_ptr) {
 
 void flag_double(char* name, double* write_back_ptr) {
   add_flag(name, write_back_ptr, flag_type_double);
+}
+
+/**
+ * @function flag_enum
+ *
+ * This should handle normal enums (which are represented in C as an
+ * "int" when you use the enum to declare the type of the variable)
+ * though an LLM is telling me that sometimes C will try to stuff
+ * enum's into smaller types when they fit and I don't know enough to
+ * say if this will be a problem.
+ *
+ * You will need to cast the write_back_ptr to int* to call this
+ * function without getting a warning with Clang and other
+ * compilers. Since you will probably declare the flag only once but
+ * use it multiple times, this extra cast may not matter too much. You
+ * could consider using an explicitly size type like uint64_t or
+ * int64_t instead to hold the enum value and essentially only use
+ * "enum" as a convenient way to "define" constants.
+ */
+void flag_enum(char* name, int* write_back_ptr) {
+  add_flag(name, write_back_ptr, flag_type_enum);
+  current_flag->enum_size = sizeof(int) * 8;
 }
 
 void flag_enum_64(char* name, uint64_t* write_back_ptr) {
@@ -2383,9 +2407,20 @@ char* parse_and_write_enum(flag_descriptor_t* flag,
   value_result_t val_result
       = string_tree_find(flag->enum_values, key_value.value);
   if (is_ok(val_result)) {
-    // TODO(jawilson): switch on size, check upper bits, etc.
-    *cast(uint64_t*, flag->write_back_ptr) = val_result.u64;
-    return NULL;
+    switch (flag->enum_size) {
+    case 64:
+      // TODO(jawilson): switch on size, check upper bits, etc.
+      *cast(uint64_t*, flag->write_back_ptr) = val_result.u64;
+      return NULL;
+    case 32:
+      // TODO(jawilson): switch on size, check upper bits, etc.
+      *cast(uint32_t*, flag->write_back_ptr) = val_result.u64;
+      return NULL;
+
+    default:
+      fatal_error(ERROR_ILLEGAL_STATE);
+      break;
+    }
   }
   return string_printf("Flag %s does not accept the argument value %s",
                        key_value.key, key_value.value);

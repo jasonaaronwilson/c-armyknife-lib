@@ -134,6 +134,8 @@ struct flag_descriptor_S {
   flag_type_t flag_type;
   char* help_string;
   void* write_back_ptr;
+  int enum_size;
+  string_tree_t* enum_values;
   // TODO(jawilson): add custom parser call back (and call back data).
 };
 typedef struct flag_descriptor_S flag_descriptor_t;
@@ -147,8 +149,11 @@ extern void flag_string(char* name, char** write_back_ptr);
 extern void flag_uint64(char* name, uint64_t* write_back_ptr);
 extern void flag_int64(char* name, int64_t* write_back_ptr);
 extern void flag_double(char* name, double* write_back_ptr);
-// TODO(jawilson): flag_enum(name, size), and flag_custom
+extern void flag_enum_64(char* name, uint64_t* write_back_ptr);
+extern void flag_enum_value(char* name, uint64_t value);
 extern void flag_alias(char* alias);
+
+// TODO(jawilson): flag_custom
 
 extern char* flag_parse_command_line(int argc, char** argv);
 
@@ -165,14 +170,22 @@ typedef struct flag_key_value_S flag_key_value_t;
 // Non exported function prototypes
 
 command_descriptor_t* flag_find_command_descriptor(char* name);
+
 flag_descriptor_t* flag_find_flag_descriptor(command_descriptor_t* command,
                                              char* name);
+
 flag_key_value_t flag_split_argument(char* arg);
-void parse_and_write_value(flag_descriptor_t* flag, flag_key_value_t key_value);
-void parse_and_write_boolean(flag_descriptor_t* flag,
-                             flag_key_value_t key_value);
-void parse_and_write_uint64(flag_descriptor_t* flag,
+
+char* parse_and_write_value(flag_descriptor_t* flag,
                             flag_key_value_t key_value);
+
+char* parse_and_write_boolean(flag_descriptor_t* flag,
+                              flag_key_value_t key_value);
+
+char* parse_and_write_uint64(flag_descriptor_t* flag,
+                             flag_key_value_t key_value);
+
+char* parse_and_write_enum(flag_descriptor_t* flag, flag_key_value_t key_value);
 
 // Global Variables
 
@@ -276,8 +289,22 @@ void flag_double(char* name, double* write_back_ptr) {
   add_flag(name, write_back_ptr, flag_type_double);
 }
 
+void flag_enum_64(char* name, uint64_t* write_back_ptr) {
+  add_flag(name, write_back_ptr, flag_type_enum);
+  current_flag->enum_size = 64;
+}
+
+void flag_enum_value(char* name, uint64_t value) {
+  if (!current_flag || current_flag->flag_type != flag_type_enum) {
+    log_fatal("The current flag is not an enum type");
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+
+  current_flag->enum_values = string_tree_insert(current_flag->enum_values,
+                                                 name, u64_to_value(value));
+}
+
 // TODO(jawilson): flag_type_switch,
-// flag_type_enum,
 // flag_type_custom,
 
 /**
@@ -345,7 +372,10 @@ char* flag_parse_command_line(int argc, char** argv) {
           i++;
           key_value.value = argv[i];
         }
-        parse_and_write_value(flag, key_value);
+        char* error = parse_and_write_value(flag, key_value);
+        if (error) {
+          return error;
+        }
         continue;
       }
     }
@@ -434,29 +464,31 @@ flag_key_value_t flag_split_argument(char* arg) {
 // Figure out what parser to use for the value, parse it, and then use
 // the address in the flag descriptor to write the flag value to where
 // the user requested.
-void parse_and_write_value(flag_descriptor_t* flag,
-                           flag_key_value_t key_value) {
+char* parse_and_write_value(flag_descriptor_t* flag,
+                            flag_key_value_t key_value) {
   switch (flag->flag_type) {
   case flag_type_boolean:
-    parse_and_write_boolean(flag, key_value);
-    break;
+    return parse_and_write_boolean(flag, key_value);
 
   case flag_type_string:
     *cast(char**, flag->write_back_ptr) = key_value.value;
-    break;
+    return NULL;
 
   case flag_type_uint64:
-    parse_and_write_uint64(flag, key_value);
-    break;
+    return parse_and_write_uint64(flag, key_value);
+
+  case flag_type_enum:
+    return parse_and_write_enum(flag, key_value);
 
   default:
     fatal_error(ERROR_ILLEGAL_STATE);
     break;
   }
+  return "<ILLEGAL-STATE-NOT-REACHED>";
 }
 
-void parse_and_write_boolean(flag_descriptor_t* flag,
-                             flag_key_value_t key_value) {
+char* parse_and_write_boolean(flag_descriptor_t* flag,
+                              flag_key_value_t key_value) {
   char* val = key_value.value;
   if (string_equal("true", val) || string_equal("t", val)
       || string_equal("1", val)) {
@@ -465,19 +497,47 @@ void parse_and_write_boolean(flag_descriptor_t* flag,
              || string_equal("0", val)) {
     *cast(boolean_t*, flag->write_back_ptr) = false;
   } else {
-    fatal_error(ERROR_ILLEGAL_STATE);
+    return string_printf("boolean flag %s does not accept value %s",
+                         key_value.key, key_value.value);
   }
+  return NULL;
 }
 
-void parse_and_write_uint64(flag_descriptor_t* flag,
-                            flag_key_value_t key_value) {
+char* parse_and_write_uint64(flag_descriptor_t* flag,
+                             flag_key_value_t key_value) {
+  value_result_t val_result = string_parse_uint64(key_value.value);
+  if (is_ok(val_result)) {
+    *cast(uint64_t*, flag->write_back_ptr) = val_result.u64;
+  } else {
+    return string_printf("uint64_t flag %s does not accept value %s",
+                         key_value.key, key_value.value);
+  }
+  return NULL;
+}
+
+char* parse_and_write_enum(flag_descriptor_t* flag,
+                           flag_key_value_t key_value) {
+  value_result_t val_result
+      = string_tree_find(flag->enum_values, key_value.value);
+  if (is_ok(val_result)) {
+    // TODO(jawilson): switch on size, check upper bits, etc.
+    *cast(uint64_t*, flag->write_back_ptr) = val_result.u64;
+    return NULL;
+  }
+  return string_printf("Flag %s does not accept the argument value %s",
+                       key_value.key, key_value.value);
+
+  // TODO(jawilson): allow specifying by value if allowed
+  /*
   value_result_t val_result = string_parse_uint64(key_value.value);
   if (is_ok(val_result)) {
     *cast(uint64_t*, flag->write_back_ptr) = val_result.u64;
   } else {
     fatal_error(ERROR_ILLEGAL_STATE);
   }
+  */
 }
+
 
 void flags_show_usage(FILE* out) {
   /*

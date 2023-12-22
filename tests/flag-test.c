@@ -48,6 +48,12 @@ void test_boolean() {
   test_assert(!error);
   test_assert(FLAG_true_boolean);
   test_assert(!FLAG_false_boolean);
+
+  // ----------------------------------------------------------------------
+
+  args[1] = "--true-boolean=BAD";
+  error = flag_parse_command_line(3, args);
+  test_assert(error);
 }
 
 void test_uint64() {
@@ -72,6 +78,13 @@ void test_uint64() {
   error = flag_parse_command_line(2, args);
   test_assert(!error);
   test_assert(FLAG_number == 0xf);
+
+  // ----------------------------------------------------------------------
+
+  args[1] = "--number=0b110";
+  error = flag_parse_command_line(2, args);
+  test_assert(!error);
+  test_assert(FLAG_number == 6);
 }
 
 void test_string() {
@@ -120,10 +133,53 @@ void test_leftovers() {
   test_assert(string_equal("dir/file2", value_array_get(FLAG_files, 1).str));
 }
 
+typedef enum {
+  test_enum_unknown,
+  test_enum_a,
+  test_enum_b,
+  test_enum_c
+} test_enum_t;
+
+void test_enum_64() {
+  char* args[2];
+  args[0] = "enum-64-test";
+  args[1] = "--enum=a";
+
+  uint64_t FLAG_enum = test_enum_unknown;
+  value_array_t* FLAG_files = NULL;
+
+  flag_program_name("enum-64-test");
+  flag_enum_64("--enum", &FLAG_enum);
+  flag_enum_value("a", test_enum_a);
+  flag_enum_value("A", test_enum_a);
+  flag_enum_value("b", test_enum_b);
+  flag_enum_value("c", test_enum_c);
+
+  flag_file_args(&FLAG_files);
+
+  char* error = flag_parse_command_line(2, args);
+  test_assert(!error);
+  test_assert(FLAG_enum == test_enum_a);
+
+  // ----------------------------------------------------------------------
+
+  args[1] = "--enum=b";
+  error = flag_parse_command_line(2, args);
+  test_assert(!error);
+  test_assert(FLAG_enum == test_enum_b);
+
+  // ----------------------------------------------------------------------
+
+  args[1] = "--enum=BAD";
+  error = flag_parse_command_line(2, args);
+  test_assert(error);
+}
+
 int main(int argc, char** argv) {
   test_boolean();
   test_uint64();
   test_string();
+  test_enum_64();
   test_leftovers();
   exit(0);
 }

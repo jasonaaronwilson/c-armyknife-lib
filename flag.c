@@ -25,7 +25,7 @@
  *
  *   char* error = flag_parse_command_line(argc, argv);
  *   if (error) {
- *     flag_print_help(error);
+ *     flag_print_help(stderr, error);
  *     exit(1);
  *   }
  * ```
@@ -157,6 +157,8 @@ extern void flag_alias(char* alias);
 // TODO(jawilson): flag_custom
 
 extern char* flag_parse_command_line(int argc, char** argv);
+
+extern void flag_print_help(FILE* out, char* error);
 
 #endif /* _FLAG_H_ */
 
@@ -572,8 +574,13 @@ char* parse_and_write_enum(flag_descriptor_t* flag,
   */
 }
 
-
-void flags_show_usage(FILE* out) {
+/**
+ * @function flag_print_help
+ *
+ * Print help according to the flags and "sub-commands" that have been
+ * defined.
+ */
+void flag_print_help(FILE* out, char* message) {
   /*
   if (config->command_descriptors) {
     fprintf(stdout, "Usage: %s <command> <flags*> <files*>\n",
@@ -603,5 +610,5 @@ void flags_show_usage(FILE* out) {
     }
   }
   */
-  fprintf(out, "flags_show_usage() is not yet implemented!");
+  fprintf(out, "flag_print_help() is not yet implemented!");
 }

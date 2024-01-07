@@ -49,52 +49,35 @@ string_hashtable_t* initial_seen_hashtable() {
   return seen;
 }
 
-value_array_t* get_command_line_flag_descriptors() {
-  value_array_t* result = make_value_array(1);
-  value_array_add(result, ptr_to_value(make_command_line_flag_descriptor(
-                              "use-tree", command_line_flag_type_boolean,
-                              "When true, use a tree instead of a hashtable")));
-  return result;
-}
-
-command_line_parser_configuation_t* get_command_line_parser_config() {
-  command_line_parser_configuation_t* config
-      = malloc_struct(command_line_parser_configuation_t);
-  config->program_name = "unique-file-lines";
-  config->program_description
-      = "Similar to 'cat' but duplicate 'lines' are elided.";
-  config->command_descriptors = NULL;
-  config->flag_descriptors = get_command_line_flag_descriptors();
-  return config;
-}
-
 int main(int argc, char** argv) {
-  command_line_parse_result_t args_and_files
-      = parse_command_line(argc, argv, get_command_line_parser_config());
+  // Flag Parsing
 
-  // I'm not sure how this could even happen but cheap fast fail code,
-  // especially that which may be cargo culted, doesn't upset me
-  // unless inside an "inner" loop.
-  if (args_and_files.command != NULL) {
-    fatal_error(ERROR_BAD_COMMAND_LINE);
-  }
+  boolean_t FLAG_use_tree = false;
+  value_array_t* FLAG_files = NULL;
 
-  boolean_t use_tree = is_ok(string_ht_find(args_and_files.flags, "use-tree"));
-  if (use_tree) {
-    fprintf(stderr, "Using a tree instead of a hash-table");
+  flag_program_name(argv[0]);
+  flag_description("Similar to 'cat' but duplicate 'lines' are elided.");
+  flag_boolean("--use-tree", &FLAG_use_tree);
+  flag_description("When true, use a tree instead of a hashtable");
+  flag_file_args(&FLAG_files);
+
+  char* error = flag_parse_command_line(argc, argv);
+  if (error) {
+    flag_print_help(stderr, error);
+    exit(1);
   }
 
   string_hashtable_t* seen = initial_seen_hashtable();
   string_tree_t* seen_tree = NULL;
 
-  for (int i = 0; i < args_and_files.files->length; i++) {
-    char* file_name = value_array_get(args_and_files.files, i).str;
+  for (int i = 0; i < FLAG_files->length; i++) {
+    char* file_name = value_array_get(FLAG_files, i).str;
     buffer_t* buffer = make_buffer(1);
     buffer = buffer_append_file_contents(buffer, file_name);
     value_array_t* lines = buffer_tokenize(buffer, "\n");
     for (int j = 0; j < lines->length; j++) {
       char* line = value_array_get(lines, j).str;
-      if (use_tree) {
+      if (FLAG_use_tree) {
         value_result_t find_result = string_tree_find(seen_tree, line);
         if (!is_ok(find_result)) {
           seen_tree

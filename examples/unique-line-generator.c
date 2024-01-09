@@ -21,59 +21,41 @@
 #define C_ARMYKNIFE_LIB_IMPL
 #include "../c-armyknife-lib.h"
 
-value_array_t* get_command_line_flag_descriptors() {
-  value_array_t* result = make_value_array(1);
-  value_array_add(result,
-                  ptr_to_value(make_command_line_flag_descriptor(
-                      "number-of-lines", command_line_flag_type_unsigned,
-                      "Number of lines to generate")));
-  value_array_add(result, ptr_to_value(make_command_line_flag_descriptor(
-                              "max-number", command_line_flag_type_unsigned,
-                              "The maximum number to generate")));
-  return result;
-}
-
-command_line_parser_configuation_t* get_command_line_parser_config() {
-  command_line_parser_configuation_t* config
-      = malloc_struct(command_line_parser_configuation_t);
-  config->program_name = "unique-line-generator";
-  config->program_description
-      = "Generate large numbers of unique lines (sent to stdout)";
-  config->command_descriptors = NULL;
-  config->flag_descriptors = get_command_line_flag_descriptors();
-  return config;
-}
-
 int main(int argc, char** argv) {
   configure_fatal_errors((fatal_error_config_t){
       .catch_sigsegv = true,
   });
-  command_line_parse_result_t args_and_files
-      = parse_command_line(argc, argv, get_command_line_parser_config());
 
-  // I'm not sure how this could even happen but cheap fast fail code,
-  // especially that which may be cargo culted, doesn't upset me
-  // unless inside an "inner" loop.
-  if (args_and_files.command != NULL) {
-    fatal_error(ERROR_BAD_COMMAND_LINE);
+  // Flag Parsing
+
+  uint64_t FLAG_number_of_lines = 1024;
+  uint64_t FLAG_max_number = 0xffffffff;
+  value_array_t* FLAG_files = NULL;
+
+  flag_program_name(argv[0]);
+  flag_description("Generate (highly probable) unique lines.");
+
+  flag_uint64("--number-of-lines", &FLAG_number_of_lines);
+  flag_description("Number of lines to generate");
+
+  flag_uint64("--max-number", &FLAG_max_number);
+  flag_description("The maximum number to generate");
+
+  flag_file_args(&FLAG_files);
+
+  char* error = flag_parse_command_line(argc, argv);
+  if (error) {
+    flag_print_help(stderr, error);
+    exit(1);
   }
 
-  uint64_t number_of_lines
-      = string_parse_uint64(
-            string_ht_find(args_and_files.flags, "number-of-lines").str)
-            .u64;
-  uint64_t max_number
-      = string_parse_uint64(
-            string_ht_find(args_and_files.flags, "max-number").str)
-            .u64;
-
   fprintf(stdout, "# number-of-lines=%d max-number=%d\n",
-          number_of_lines & 0xfffffff, max_number & 0xfffffff);
+          FLAG_number_of_lines & 0xfffffff, FLAG_max_number & 0xfffffff);
 
   random_state_t state = random_state_for_test();
 
-  for (int i = 0; i < number_of_lines; i++) {
-    uint64_t random_n = random_next_uint64_below(&state, max_number);
+  for (int i = 0; i < FLAG_number_of_lines; i++) {
+    uint64_t random_n = random_next_uint64_below(&state, FLAG_max_number);
     fprintf(stdout, "%d\n", random_n & 0xfffffff);
   }
 

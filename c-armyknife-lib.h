@@ -3259,7 +3259,7 @@ uint64_t random_next_uint64_below(random_state_t* state, uint64_t maximum) {
   if (maximum == 0) {
     fatal_error(ERROR_ILLEGAL_ARGUMENT);
   }
-#if 0
+#if 1
   // This is simpler and works well in practice (it seems).
   return random_next(state) % maximum;
 #else

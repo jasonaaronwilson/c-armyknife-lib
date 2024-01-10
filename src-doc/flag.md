@@ -23,7 +23,7 @@ Here is maybe the smallest example you might possibly use:
 
   char* error = flag_parse_command_line(argc, argv);
   if (error) {
-    flag_print_help(error);
+    flag_print_help(stderr, error);
     exit(1);
   }
 ```
@@ -92,6 +92,22 @@ don't require an argument. --bubble-gum, --no-bubble-gum.
 
 Sets a description for the last "thing" "started".
  
+## @function flag_enum
+
+This should handle normal enums (which are represented in C as an
+"int" when you use the enum to declare the type of the variable)
+though an LLM is telling me that sometimes C will try to stuff
+enum's into smaller types when they fit and I don't know enough to
+say if this will be a problem.
+
+You will need to cast the write_back_ptr to int* to call this
+function without getting a warning with Clang and other
+compilers. Since you will probably declare the flag only once but
+use it multiple times, this extra cast may not matter too much. You
+could consider using an explicitly size type like uint64_t or
+int64_t instead to hold the enum value and essentially only use
+"enum" as a convenient way to "define" constants.
+ 
 ## @function flag_file_args
 
 Set where to write "left-over" arguments (which are usually file
@@ -111,6 +127,11 @@ can be used after command line parsing.
 
 When an error occurs, return a string with an error message OR NULL
 if parsing was successfull.
+ 
+## @function flag_print_help
+
+Print help according to the flags and "sub-commands" that have been
+defined.
  
 ## @function flag_program_name
 

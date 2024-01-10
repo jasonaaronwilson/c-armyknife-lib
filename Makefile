@@ -89,7 +89,7 @@ test:
 	(cd tests && mkdir -p build && ../run-tests.sh ${TESTS})
 
 doc:
-	c-markdown-extractor --output-dir=src-doc *.c
+	c-markdown-extractor --output-dir=./src-doc/ *.c
 
 cfd:	clean format diff
 

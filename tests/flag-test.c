@@ -1,5 +1,5 @@
 ///
-/// Test out command line parsing.
+/// Test command line parsing.
 ///
 
 #include <stdlib.h>
@@ -7,7 +7,7 @@
 #define C_ARMYKNIFE_LIB_IMPL
 #include "../c-armyknife-lib.h"
 
-void test_boolean() {
+void test_boolean(void) {
   char* args[3];
   args[0] = "boolean-test";
   args[1] = "--true-boolean=true";
@@ -56,7 +56,7 @@ void test_boolean() {
   test_assert(error);
 }
 
-void test_uint64() {
+void test_uint64(void) {
   char* args[2];
   args[0] = "uint64-test";
   args[1] = "--number=0";
@@ -87,7 +87,7 @@ void test_uint64() {
   test_assert(FLAG_number == 6);
 }
 
-void test_string() {
+void test_string(void) {
   char* args[2];
   args[0] = "string-test";
   args[1] = "--string=0";
@@ -111,7 +111,7 @@ void test_string() {
   test_assert(string_equal("hello world", FLAG_string));
 }
 
-void test_leftovers() {
+void test_leftovers(void) {
   char* args[4];
   args[0] = "leftovers-test";
   args[1] = "--string=0";
@@ -140,7 +140,7 @@ typedef enum {
   test_enum_c
 } test_enum_t;
 
-void test_enum_64() {
+void test_enum_64(void) {
   char* args[2];
   args[0] = "enum-64-test";
   args[1] = "--enum=a";
@@ -175,7 +175,7 @@ void test_enum_64() {
   test_assert(error);
 }
 
-void test_enum() {
+void test_enum(void) {
   char* args[2];
   args[0] = "enum-test";
   args[1] = "--enum=a";
@@ -210,12 +210,52 @@ void test_enum() {
   test_assert(error);
 }
 
+void test_command(void) {
+
+  boolean_t FLAG_true_boolean = false;
+  value_array_t* FLAG_files = NULL;
+  char* FLAG_sub_command;
+
+  char* args[3];
+  args[0] = "foo";
+  args[1] = "sub_command_zero";
+  args[2] = "--true-boolean=true";
+
+  flag_program_name(__func__);
+  flag_command("sub_command_zero", &FLAG_sub_command);
+  flag_boolean("--true-boolean", &FLAG_true_boolean);
+  flag_file_args(&FLAG_files);
+
+  char* error = flag_parse_command_line(3, args);
+  test_assert(!error);
+  test_assert(FLAG_true_boolean);
+
+#if 0
+  // ----------------------------------------------------------------------
+
+  args[1] = "--enum=b";
+  error = flag_parse_command_line(2, args);
+  test_assert(!error);
+  test_assert(FLAG_enum == test_enum_b);
+
+  // ----------------------------------------------------------------------
+
+  args[1] = "--enum=BAD";
+  error = flag_parse_command_line(2, args);
+  test_assert(error);
+#endif /* 0 */
+}
+
 int main(int argc, char** argv) {
+  configure_fatal_errors((fatal_error_config_t){
+      .catch_sigsegv = true,
+  });
   test_boolean();
   test_uint64();
   test_string();
   test_enum();
   test_enum_64();
   test_leftovers();
+  test_command();
   exit(0);
 }

@@ -766,7 +766,7 @@ struct command_descriptor_S {
   program_descriptor_t* program;
   char* name;
   char* description;
-  char* write_back_ptr;
+  char** write_back_ptr;
   value_array_t** write_back_file_args_ptr;
   string_tree_t* flags;
 };
@@ -787,6 +787,7 @@ typedef struct flag_descriptor_S flag_descriptor_t;
 extern void flag_program_name(char* name);
 extern void flag_description(char* description);
 extern void flag_file_args(value_array_t** write_back_ptr);
+extern void flag_command(char* name, char** write_back_ptr);
 
 extern void flag_boolean(char* name, boolean_t* write_back_ptr);
 extern void flag_string(char* name, char** write_back_ptr);
@@ -1983,7 +1984,7 @@ struct command_descriptor_S {
   program_descriptor_t* program;
   char* name;
   char* description;
-  char* write_back_ptr;
+  char** write_back_ptr;
   value_array_t** write_back_file_args_ptr;
   string_tree_t* flags;
 };
@@ -2004,6 +2005,7 @@ typedef struct flag_descriptor_S flag_descriptor_t;
 extern void flag_program_name(char* name);
 extern void flag_description(char* description);
 extern void flag_file_args(value_array_t** write_back_ptr);
+extern void flag_command(char* name, char** write_back_ptr);
 
 extern void flag_boolean(char* name, boolean_t* write_back_ptr);
 extern void flag_string(char* name, char** write_back_ptr);
@@ -2068,6 +2070,20 @@ void flag_program_name(char* name) {
   current_program->name = name;
   current_command = NULL;
   current_flag = NULL;
+}
+
+/**
+ * @function flag_program_name
+ *
+ * Starts the command line configuration builder process and sets the
+ * program name to be used in the automatically generated help string.
+ */
+void flag_command(char* name, char** write_back_ptr) {
+  current_command = malloc_struct(command_descriptor_t);
+  current_command->name = name;
+  current_command->write_back_ptr = write_back_ptr;
+  current_flag = NULL;
+  current_program->commands = string_tree_insert(current_program->commands, name, ptr_to_value(current_command));
 }
 
 /**
@@ -2271,7 +2287,12 @@ char* flag_parse_command_line(int argc, char** argv) {
   }
 
   // Write back the left-over arguments
-  *(current_program->write_back_file_args_ptr) = files;
+  if (command != NULL && command->write_back_file_args_ptr != NULL) {
+    *(command->write_back_file_args_ptr) = files;
+  }
+  if (current_program->write_back_file_args_ptr != NULL) {
+    *(current_program->write_back_file_args_ptr) = files;
+  }
   return NULL;
 }
 

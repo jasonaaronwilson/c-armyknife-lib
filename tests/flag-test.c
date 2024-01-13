@@ -210,7 +210,7 @@ void test_enum(void) {
   test_assert(error);
 }
 
-void test_command(void) {
+void test_command_1(void) {
 
   boolean_t FLAG_true_boolean = false;
   value_array_t* FLAG_files = NULL;
@@ -221,29 +221,36 @@ void test_command(void) {
   args[1] = "sub_command_zero";
   args[2] = "--true-boolean=true";
 
-  flag_program_name(__func__);
+  flag_program_name("foo");
+  flag_boolean("--true-boolean", &FLAG_true_boolean);
   flag_command("sub_command_zero", &FLAG_sub_command);
+  flag_file_args(&FLAG_files);
+
+  char* error = flag_parse_command_line(3, args);
+  test_assert(!error);
+  test_assert(FLAG_true_boolean);
+}
+
+void test_command_2(void) {
+
+  boolean_t FLAG_true_boolean = false;
+  value_array_t* FLAG_files = NULL;
+  char* FLAG_sub_command;
+
+  char* args[3];
+  args[0] = "foo";
+  args[1] = "sub_command_zero";
+  args[2] = "--true-boolean=true";
+
+  flag_program_name("foo");
+  flag_command("sub_command_zero", &FLAG_sub_command);
+  // This is the only line that has changed since test_command_1
   flag_boolean("--true-boolean", &FLAG_true_boolean);
   flag_file_args(&FLAG_files);
 
   char* error = flag_parse_command_line(3, args);
   test_assert(!error);
   test_assert(FLAG_true_boolean);
-
-#if 0
-  // ----------------------------------------------------------------------
-
-  args[1] = "--enum=b";
-  error = flag_parse_command_line(2, args);
-  test_assert(!error);
-  test_assert(FLAG_enum == test_enum_b);
-
-  // ----------------------------------------------------------------------
-
-  args[1] = "--enum=BAD";
-  error = flag_parse_command_line(2, args);
-  test_assert(error);
-#endif /* 0 */
 }
 
 int main(int argc, char** argv) {
@@ -256,6 +263,7 @@ int main(int argc, char** argv) {
   test_enum();
   test_enum_64();
   test_leftovers();
-  test_command();
+  test_command_1();
+  test_command_2();
   exit(0);
 }

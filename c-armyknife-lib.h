@@ -2106,7 +2106,8 @@ void flag_command(char* name, char** write_back_ptr) {
   current_command->name = name;
   current_command->write_back_ptr = write_back_ptr;
   current_flag = NULL;
-  current_program->commands = string_tree_insert(current_program->commands, name, ptr_to_value(current_command));
+  current_program->commands = string_tree_insert(
+      current_program->commands, name, ptr_to_value(current_command));
 }
 
 /**

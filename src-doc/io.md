@@ -28,6 +28,11 @@ TODO(jawilson): write a proper test!
 
 Writes the contents of the buffer to the given file.
  
+## @function file_eof
+
+Return true if an input stream is at the end of the file. I don't
+know what "feof" really does but it doesn't actually do this.
+ 
 ## @function file_peek_char
 
 Returns the next byte from the input (as an int not u8_t) or -1 if
@@ -45,8 +50,7 @@ indicating that condition. Gemini claims that fseek may not work on
 associated with an input stream (which seems to match up when
 running on Debian Bookworm...).
  
-## Copy some or all of an input stream to an output stream.
- 
-## Return true if an input stream is at the end of the file. I don't
-know what "feof" really does but it doesn't actually do this.
+## @funtion file_copy_stream
+
+Copy some or all of an input stream to an output stream.
  

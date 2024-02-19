@@ -144,6 +144,8 @@ int file_peek_byte(FILE* input) {
 }
 
 /**
+ * @function file_eof
+ *
  * Return true if an input stream is at the end of the file. I don't
  * know what "feof" really does but it doesn't actually do this.
  */
@@ -154,6 +156,8 @@ boolean_t file_eof(FILE* input) {
 #define FILE_COPY_STREAM_BUFFER_SIZE 1024
 
 /**
+ * @funtion file_copy_stream
+ *
  * Copy some or all of an input stream to an output stream.
  */
 void file_copy_stream(FILE* input, FILE* output, boolean_t until_eof,

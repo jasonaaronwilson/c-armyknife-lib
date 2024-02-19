@@ -906,6 +906,8 @@ boolean_t file_eof(FILE* input);
 void file_copy_stream(FILE* input, FILE* output, boolean_t until_eof,
                       uint64_t size);
 
+void file_skip_bytes(FILE* input, uint64_t n_bytes);
+
 #endif /* _IO_H_ */
 // SSCF generated file from: tokenizer.c
 
@@ -2765,6 +2767,8 @@ boolean_t file_eof(FILE* input);
 void file_copy_stream(FILE* input, FILE* output, boolean_t until_eof,
                       uint64_t size);
 
+void file_skip_bytes(FILE* input, uint64_t n_bytes);
+
 #endif /* _IO_H_ */
 
 // ======================================================================
@@ -2905,6 +2909,31 @@ void file_copy_stream(FILE* input, FILE* output, boolean_t until_eof,
     }
     fwrite(buffer, 1, n_read, output);
     size -= n_read;
+  }
+}
+
+/**
+ * Read n_bytes from the given input stream. Gemini claims that fseek
+ * may not work on "stdin" and claims there may be a seekable proprety
+ * associated with an input stream.
+ */
+void file_skip_bytes(FILE* input, uint64_t n_bytes) {
+
+  // We'd try to do it like this but Gemini claims that this doesn't
+  // reliably work for stdin. That is bonkers!
+  //
+  // fseek(in, size, SEEK_CUR);
+
+  while (1) {
+    if (n_bytes == 0 || feof(input)) {
+      return;
+    }
+    int ch = fgetc(input);
+    if (ch < 0) {
+      // TODO(jawilson): fixme?
+      return;
+    }
+    n_bytes--;
   }
 }
 #line 2 "logger.c"

@@ -345,6 +345,10 @@ void flag_enum_value(char* name, uint64_t value) {
                                                  name, u64_to_value(value));
 }
 
+void flag_alias(char* alias) {
+  // TODO(jawilson): fixme!
+}
+
 // TODO(jawilson): flag_type_switch,
 // flag_type_custom,
 

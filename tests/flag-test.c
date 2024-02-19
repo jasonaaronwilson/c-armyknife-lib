@@ -253,6 +253,26 @@ void test_command_2(void) {
   test_assert(FLAG_true_boolean);
 }
 
+void test_bad_command(void) {
+  value_array_t* FLAG_files = NULL;
+  char* FLAG_sub_command;
+
+  char* args[2];
+  args[0] = "foo";
+  args[1] = "bad_command";
+
+  flag_program_name("foo");
+  flag_command("good_command", &FLAG_sub_command);
+  flag_command("good_command_two", &FLAG_sub_command);
+  flag_file_args(&FLAG_files);
+
+  char* error = flag_parse_command_line(3, args);
+  test_assert(error);
+  test_assert_string_equal(
+      "The first command line argument is not a known command: bad_command",
+      error);
+}
+
 int main(int argc, char** argv) {
   configure_fatal_errors((fatal_error_config_t){
       .catch_sigsegv = true,
@@ -265,5 +285,6 @@ int main(int argc, char** argv) {
   test_leftovers();
   test_command_1();
   test_command_2();
+  test_bad_command();
   exit(0);
 }

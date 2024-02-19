@@ -981,6 +981,18 @@ extern uint64_t random_next_uint64_below(random_state_t* state,
                 #condition);                                                   \
   } while (0)
 
+/**
+ * @macro test_assert_string_equal
+ *
+ * Assert that two c strings are the same.
+ */
+#define test_assert_string_equal(a, b)                                         \
+  do {                                                                         \
+    if (!string_equal(a, b)) {                                                 \
+      test_fail("A test string equal assertion failed %s == %s", a, b);        \
+    }                                                                          \
+  } while (0)
+
 #endif /* _TEST_H_ */
 #ifdef C_ARMYKNIFE_LIB_IMPL
 #line 2 "allocate.c"
@@ -2228,6 +2240,10 @@ void flag_enum_value(char* name, uint64_t value) {
 
   current_flag->enum_values = string_tree_insert(current_flag->enum_values,
                                                  name, u64_to_value(value));
+}
+
+void flag_alias(char* alias) {
+  // TODO(jawilson): fixme!
 }
 
 // TODO(jawilson): flag_type_switch,
@@ -4269,6 +4285,18 @@ uint64_t fasthash64(const void* buf, size_t len, uint64_t seed) {
     if (!(condition))                                                          \
       test_fail("A test assertion failed. Condition expression was: %s",       \
                 #condition);                                                   \
+  } while (0)
+
+/**
+ * @macro test_assert_string_equal
+ *
+ * Assert that two c strings are the same.
+ */
+#define test_assert_string_equal(a, b)                                         \
+  do {                                                                         \
+    if (!string_equal(a, b)) {                                                 \
+      test_fail("A test string equal assertion failed %s == %s", a, b);        \
+    }                                                                          \
   } while (0)
 
 #endif /* _TEST_H_ */

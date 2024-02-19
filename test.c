@@ -48,6 +48,18 @@
                 #condition);                                                   \
   } while (0)
 
+/**
+ * @macro test_assert_string_equal
+ *
+ * Assert that two c strings are the same.
+ */
+#define test_assert_string_equal(a, b)                                         \
+  do {                                                                         \
+    if (!string_equal(a, b)) {                                                 \
+      test_fail("A test string equal assertion failed %s == %s", a, b);        \
+    }                                                                          \
+  } while (0)
+
 #endif /* _TEST_H_ */
 
 /**

@@ -3607,9 +3607,14 @@ __attribute__((warn_unused_result)) extern string_tree_t*
  * Find the value associate with the key in the tree.
  */
 value_result_t string_tree_find(string_tree_t* t, char* key) {
+  if (key == NULL) {
+    fatal_error(ERROR_ILLEGAL_NULL_ARGUMENT);
+  }
+
   if (t == NULL) {
     return (value_result_t){.nf_error = NF_ERROR_NOT_FOUND};
   }
+
   int cmp_result = strcmp(key, t->key);
   if (cmp_result < 0) {
     return string_tree_find(t->left, key);

@@ -229,6 +229,8 @@ void test_command_1(void) {
   char* error = flag_parse_command_line(3, args);
   test_assert(!error);
   test_assert(FLAG_true_boolean);
+
+  test_assert_string_equal("sub_command_zero", FLAG_sub_command);
 }
 
 void test_command_2(void) {
@@ -251,6 +253,8 @@ void test_command_2(void) {
   char* error = flag_parse_command_line(3, args);
   test_assert(!error);
   test_assert(FLAG_true_boolean);
+
+  test_assert_string_equal("sub_command_zero", FLAG_sub_command);
 }
 
 void test_bad_command(void) {

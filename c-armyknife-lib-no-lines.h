@@ -2247,13 +2247,16 @@ char* flag_parse_command_line(int argc, char** argv) {
   command_descriptor_t* command = NULL;
   if (current_program->commands) {
     if (argc <= 1) {
-      return "This program requires a command but not enough arguments were given";
+      return "This program requires a command but not enough arguments were "
+             "given";
     }
     char* name = argv[1];
     command = flag_find_command_descriptor(name);
     if (command == NULL) {
       return string_printf(
           "The first command line argument is not a known command: %s", name);
+    } else {
+      *(command->write_back_ptr) = command->name;
     }
     start = 2;
   }
@@ -3098,6 +3101,9 @@ value_result_t parse_log_level_enum(char* str) {
   }
 }
 
+// FORWARD DECLARATION
+char* logger_level_to_string(int level);
+
 /**
  * @function logger_init
  *
@@ -3126,7 +3132,8 @@ void logger_init(void) {
     }
   }
 
-  fprintf(stderr, "Level is set to %d", global_logger_state.level);
+  fprintf(stderr, "Level is set to %d (%s)\n", global_logger_state.level,
+          logger_level_to_string(global_logger_state.level));
 
   char* output_file_name = getenv("ARMYKNIFE_LIB_LOG_FILE");
 

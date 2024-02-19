@@ -381,6 +381,8 @@ char* flag_parse_command_line(int argc, char** argv) {
     if (command == NULL) {
       return string_printf(
           "The first command line argument is not a known command: %s", name);
+    } else {
+      *(command->write_back_ptr) = command->name;
     }
     start = 2;
   }

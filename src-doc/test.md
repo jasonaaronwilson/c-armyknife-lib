@@ -7,6 +7,10 @@ armyknife library (or your own tests).
 
 Evaluate the condition and fail the test if the result is false.
  
+## @macro test_assert_string_equal
+
+Assert that two c strings are the same.
+ 
 ## @macro test_fail
 
 Immediately fail a test after printing a message (supplied the same

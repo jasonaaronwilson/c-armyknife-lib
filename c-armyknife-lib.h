@@ -2913,9 +2913,14 @@ void file_copy_stream(FILE* input, FILE* output, boolean_t until_eof,
 }
 
 /**
- * Read n_bytes from the given input stream. Gemini claims that fseek
- * may not work on "stdin" and claims there may be a seekable proprety
- * associated with an input stream.
+ * @function file_skip_bytes
+ *
+ * Skip n_bytes from the given input stream unless the end of the file
+ * is reached first in which case we silently return without
+ * indicating that condition. Gemini claims that fseek may not work on
+ * "stdin" and further claims there may be a seekable proprety
+ * associated with an input stream (which seems to match up when
+ * running on Debian Bookworm...).
  */
 void file_skip_bytes(FILE* input, uint64_t n_bytes) {
 

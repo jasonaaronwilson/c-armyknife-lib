@@ -36,6 +36,15 @@ the byte is "pushed back" into the input stream so that if
 file_peek_char, fgetc, or a host of other functions attempt to read
 the input then
  
+## @function file_skip_bytes
+
+Skip n_bytes from the given input stream unless the end of the file
+is reached first in which case we silently return without
+indicating that condition. Gemini claims that fseek may not work on
+"stdin" and further claims there may be a seekable proprety
+associated with an input stream (which seems to match up when
+running on Debian Bookworm...).
+ 
 ## Copy some or all of an input stream to an output stream.
  
 ## Return true if an input stream is at the end of the file. I don't

@@ -266,10 +266,29 @@ void test_bad_command(void) {
   flag_command("good_command_two", &FLAG_sub_command);
   flag_file_args(&FLAG_files);
 
-  char* error = flag_parse_command_line(3, args);
+  char* error = flag_parse_command_line(2, args);
   test_assert(error);
   test_assert_string_equal(
       "The first command line argument is not a known command: bad_command",
+      error);
+}
+
+void test_bad_empty_command(void) {
+  value_array_t* FLAG_files = NULL;
+  char* FLAG_sub_command;
+
+  char* args[1];
+  args[0] = "foo";
+
+  flag_program_name("foo");
+  flag_command("good_command", &FLAG_sub_command);
+  flag_command("good_command_two", &FLAG_sub_command);
+  flag_file_args(&FLAG_files);
+
+  char* error = flag_parse_command_line(1, args);
+  test_assert(error);
+  test_assert_string_equal(
+      "This program requires a command but not enough arguments were given",
       error);
 }
 
@@ -286,5 +305,6 @@ int main(int argc, char** argv) {
   test_command_1();
   test_command_2();
   test_bad_command();
+  test_bad_empty_command();
   exit(0);
 }

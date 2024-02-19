@@ -2269,6 +2269,9 @@ char* flag_parse_command_line(int argc, char** argv) {
   int start = 1;
   command_descriptor_t* command = NULL;
   if (current_program->commands) {
+    if (argc <= 1) {
+      return "This program requires a command but not enough arguments were given";
+    }
     char* name = argv[1];
     command = flag_find_command_descriptor(name);
     if (command == NULL) {

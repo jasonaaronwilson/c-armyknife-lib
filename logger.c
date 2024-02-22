@@ -249,8 +249,9 @@ void logger_init(void) {
     }
   }
 
-  fprintf(stderr, "Level is set to %d (%s)\n", global_logger_state.level,
-          logger_level_to_string(global_logger_state.level));
+  fprintf(stderr, "Log level is set to %s (%d)\n",
+          logger_level_to_string(global_logger_state.level),
+          global_logger_state.level);
 
   char* output_file_name = getenv("ARMYKNIFE_LIB_LOG_FILE");
 

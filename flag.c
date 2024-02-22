@@ -408,9 +408,9 @@ char* flag_parse_command_line(int argc, char** argv) {
             = flag_find_flag_descriptor(command, key_value.key);
         if (flag == NULL) {
           return string_printf(
-              "The argument looks like a flag but was not found: '%s'\n"
-              "You may want to use ' -- ' to seperate flags from non flag "
-              "arguments.",
+              "The argument looks like a flag but was not found: '%s'\n\n"
+              "(You may want to use ' -- ' to seperate flags from non flag "
+              "arguments (aka file arguments).)",
               arg);
         }
         // If the value is NULL, that means there was no "=" sign
@@ -605,10 +605,11 @@ char* parse_and_write_enum(flag_descriptor_t* flag,
   */
 }
 
-void flag_print_flags(FILE* out, string_tree_t* flags) {
+void flag_print_flags(FILE* out, char* header, string_tree_t* flags) {
+  fprintf(out, "%s\n", header);
   // clang-format off
   string_tree_foreach(flags, key, value, {
-      fprintf(out, "    %s\t%s\n", key, cast(flag_descriptor_t*, value.ptr)->description);
+      fprintf(out, "      %s\t%s\n", key, cast(flag_descriptor_t*, value.ptr)->description);
     });
   // clang-format on
 }
@@ -620,35 +621,32 @@ void flag_print_flags(FILE* out, string_tree_t* flags) {
  * defined.
  */
 void flag_print_help(FILE* out, char* message) {
-  fprintf(out, "Message: %s\n", message);
+  fprintf(out, "\nMessage: %s\n", message);
 
   if (current_program == NULL) {
     fprintf(out,
-            "Command line parsing has not been configured so help can not be "
+            "Command line parsing was not configured so help can not be "
             "provided.");
     return;
   }
 
   if (current_program->commands != NULL) {
-    fprintf(out, "Usage: %s <command> <flags> <files>\n",
+    fprintf(out, "\nUsage: %s <command> <flags> <files>\n",
             current_program->name);
-    fprintf(out, "Description: %s\n", current_program->description);
+    fprintf(out, "\nDescription: %s\n\n", current_program->description);
 
-    flag_print_flags(out, current_program->flags);
+    flag_print_flags(out, "Global flags:", current_program->flags);
+
+    fprintf(out, "\nCommands:\n");
     // clang-format off
     string_tree_foreach(current_program->commands, key, value, {
-	fprintf(out, "    %s\t%s\n", key, cast(command_descriptor_t*, value.ptr)->description);
-	flag_print_flags(out, cast(command_descriptor_t*, value.ptr)->flags);
+	fprintf(out, "\n    %s\t%s\n", key, cast(command_descriptor_t*, value.ptr)->description);
+	flag_print_flags(out, "      Flags:", cast(command_descriptor_t*, value.ptr)->flags);
       });
     // clang-format on
   } else {
-    fprintf(out, "Usage: %s <flags> <files>\n", current_program->name);
-    fprintf(out, "Description: %s\n", current_program->description);
-
-    // clang-format off
-    string_tree_foreach(current_program->flags, key, value, {
-	fprintf(out, "    %s\t%s\n", key, cast(flag_descriptor_t*, value.ptr)->description);
-      });
-    // clang-format on
+    fprintf(out, "\nUsage: %s <flags> <files>\n", current_program->name);
+    fprintf(out, "\nDescription: %s\n\n", current_program->description);
+    flag_print_flags(out, "Flags:", current_program->flags);
   }
 }

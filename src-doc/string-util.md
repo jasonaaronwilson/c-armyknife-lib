@@ -44,6 +44,11 @@ Return true if the given string is NULL or strlen is zero.
 Prefix a string with left padding (if necessary) to make it at
 least N bytes long.
  
+## @function string_left_right
+
+Append right padding to a string (if necessary) to make it at least
+N bytes long.
+ 
 ## @function string_parse_uint64
 
 Parse a string as a uint64_t.

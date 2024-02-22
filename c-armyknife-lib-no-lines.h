@@ -24,6 +24,32 @@
  * correctly.
  */
 
+// SSCF generated file from: min-max.c
+
+#ifndef _MIN_MAX_H_
+#define _MIN_MAX_H_
+
+/**
+ * @macro min
+ *
+ * Produce the minimum of a and b. Prior to C23, we evalutate one of
+ * the arguments twice but we eventually hope to evaluate each
+ * argument only once and use the "auto" argument so that the macro
+ * works for any type that can be compared with <.
+ */
+#define min(a, b) ((a) < (b) ? (a) : (b))
+
+/**
+ * @macro max
+ *
+ * Produce the maximum of a and b. Prior to C23, we evalutate one of
+ * the arguments twice but we eventually hope to evaluate each
+ * argument only once and use the "auto" argument so that the macro
+ * works for any type that can be compared with >.
+ */
+#define max(a, b) ((a) > (b) ? (a) : (b))
+
+#endif /* _MIN_MAX_H_ */
 // SSCF generated file from: boolean.c
 
 #ifndef _BOOLEAN_H_
@@ -344,6 +370,7 @@ extern value_result_t string_parse_uint64_bin(const char* string);
 extern char* string_duplicate(const char* src);
 extern char* string_append(const char* a, const char* b);
 extern char* string_left_pad(const char* a, int count, char ch);
+extern char* string_right_pad(const char* a, int count, char ch);
 __attribute__((format(printf, 1, 2))) extern char* string_printf(char* format,
                                                                  ...);
 
@@ -2512,7 +2539,7 @@ void flag_print_help(FILE* out, char* message) {
     fprintf(out, "\nDescription: %s\n\n", current_program->description);
 
     flag_print_flags(out, "Global flags:", current_program->flags);
-    
+
     fprintf(out, "\nCommands:\n");
     // clang-format off
     string_tree_foreach(current_program->commands, key, value, {
@@ -3177,8 +3204,9 @@ void logger_init(void) {
     }
   }
 
-  fprintf(stderr, "Log level is set to %s (%d)\n", logger_level_to_string(global_logger_state.level),
-	  global_logger_state.level);
+  fprintf(stderr, "Log level is set to %s (%d)\n",
+          logger_level_to_string(global_logger_state.level),
+          global_logger_state.level);
 
   char* output_file_name = getenv("ARMYKNIFE_LIB_LOG_FILE");
 
@@ -3253,6 +3281,36 @@ __attribute__((format(printf, 4, 5))) void
     va_end(args);
   }
 }
+/**
+ * @file min-max.c
+ *
+ * Macros version of min and max functions.
+ */
+
+#ifndef _MIN_MAX_H_
+#define _MIN_MAX_H_
+
+/**
+ * @macro min
+ *
+ * Produce the minimum of a and b. Prior to C23, we evalutate one of
+ * the arguments twice but we eventually hope to evaluate each
+ * argument only once and use the "auto" argument so that the macro
+ * works for any type that can be compared with <.
+ */
+#define min(a, b) ((a) < (b) ? (a) : (b))
+
+/**
+ * @macro max
+ *
+ * Produce the maximum of a and b. Prior to C23, we evalutate one of
+ * the arguments twice but we eventually hope to evaluate each
+ * argument only once and use the "auto" argument so that the macro
+ * works for any type that can be compared with >.
+ */
+#define max(a, b) ((a) > (b) ? (a) : (b))
+
+#endif /* _MIN_MAX_H_ */
 
 /**
  * @file random.c
@@ -3850,6 +3908,7 @@ extern value_result_t string_parse_uint64_bin(const char* string);
 extern char* string_duplicate(const char* src);
 extern char* string_append(const char* a, const char* b);
 extern char* string_left_pad(const char* a, int count, char ch);
+extern char* string_right_pad(const char* a, int count, char ch);
 __attribute__((format(printf, 1, 2))) extern char* string_printf(char* format,
                                                                  ...);
 
@@ -4135,7 +4194,8 @@ char* string_left_pad(const char* str, int n, char ch) {
   if (str_length > n) {
     return string_duplicate(str);
   }
-  char* result = (char*) malloc_bytes(n + 1);
+
+  char* result = (char*) malloc_bytes(max(n, str_length) + 1);
   for (int i = 0; i < n - str_length; i++) {
     result[i] = ch;
   }
@@ -4145,6 +4205,29 @@ char* string_left_pad(const char* str, int n, char ch) {
   result[n] = '\0';
   return result;
 }
+
+/**
+ * @function string_left_right
+ *
+ * Append right padding to a string (if necessary) to make it at least
+ * N bytes long.
+ */
+char* string_right_pad(const char* str, int n, char ch) {
+  int str_length = strlen(str);
+  if (str_length > n) {
+    return string_duplicate(str);
+  }
+  char* result = (char*) malloc_bytes(max(n, str_length) + 1);
+  for (int i = 0; i < str_length; i++) {
+    result[i + (n - str_length)] = str[i];
+  }
+  for (int i = str_length; i < n; i++) {
+    result[i] = ch;
+  }
+  result[n] = '\0';
+  return result;
+}
+
 
 // Allows tests to make the temporary buffer small to more easily test
 // the case where vsnprintf is called twice because the first time it

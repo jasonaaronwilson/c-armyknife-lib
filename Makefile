@@ -12,6 +12,7 @@ SRC_C = allocate.c \
 	fatal-error.c \
 	io.c \
 	logger.c \
+	min-max.c \
 	random.c \
 	string-alist.c \
 	string-hashtable.c \
@@ -24,6 +25,7 @@ SRC_C = allocate.c \
 	value-array.c
 
 ORDERED_H = \
+	min-max.h \
 	boolean.h \
 	fatal-error.h \
 	value.h \

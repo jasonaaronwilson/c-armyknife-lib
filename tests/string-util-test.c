@@ -132,8 +132,28 @@ void test_string_left_pad() {
     test_fail("string_left_pad");
   }
 
-  if (!string_equal("abcdefg", string_left_pad("abcdefg", 6, ' '))) {
+  if (!string_equal("abcdefghijklmnop",
+                    string_left_pad("abcdefghijklmnop", 6, ' '))) {
     test_fail("string_left_pad");
+  }
+}
+
+void test_string_right_pad() {
+  if (!string_equal("      ", string_right_pad("", 6, ' '))) {
+    test_fail("string_right_pad");
+  }
+
+  if (!string_equal("abc   ", string_right_pad("abc", 6, ' '))) {
+    test_fail("string_right_pad");
+  }
+
+  if (!string_equal("abcxyz", string_right_pad("abcxyz", 6, ' '))) {
+    test_fail("string_right_pad");
+  }
+
+  if (!string_equal("abcdefghijklmnop",
+                    string_right_pad("abcdefghijklmnop", 6, ' '))) {
+    test_fail("string_right_pad");
   }
 }
 
@@ -160,6 +180,8 @@ int main(int argc, char** argv) {
                            string_duplicate("The quick brown fox")));
 
   test_string_left_pad();
+  test_string_right_pad();
+
   test_string_printf();
 
   exit(0);

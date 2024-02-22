@@ -31,6 +31,7 @@ extern value_result_t string_parse_uint64_bin(const char* string);
 extern char* string_duplicate(const char* src);
 extern char* string_append(const char* a, const char* b);
 extern char* string_left_pad(const char* a, int count, char ch);
+extern char* string_right_pad(const char* a, int count, char ch);
 __attribute__((format(printf, 1, 2))) extern char* string_printf(char* format,
                                                                  ...);
 
@@ -316,7 +317,8 @@ char* string_left_pad(const char* str, int n, char ch) {
   if (str_length > n) {
     return string_duplicate(str);
   }
-  char* result = (char*) malloc_bytes(n + 1);
+
+  char* result = (char*) malloc_bytes(max(n, str_length) + 1);
   for (int i = 0; i < n - str_length; i++) {
     result[i] = ch;
   }
@@ -326,6 +328,29 @@ char* string_left_pad(const char* str, int n, char ch) {
   result[n] = '\0';
   return result;
 }
+
+/**
+ * @function string_left_right
+ *
+ * Append right padding to a string (if necessary) to make it at least
+ * N bytes long.
+ */
+char* string_right_pad(const char* str, int n, char ch) {
+  int str_length = strlen(str);
+  if (str_length > n) {
+    return string_duplicate(str);
+  }
+  char* result = (char*) malloc_bytes(max(n, str_length) + 1);
+  for (int i = 0; i < str_length; i++) {
+    result[i + (n - str_length)] = str[i];
+  }
+  for (int i = str_length; i < n; i++) {
+    result[i] = ch;
+  }
+  result[n] = '\0';
+  return result;
+}
+
 
 // Allows tests to make the temporary buffer small to more easily test
 // the case where vsnprintf is called twice because the first time it

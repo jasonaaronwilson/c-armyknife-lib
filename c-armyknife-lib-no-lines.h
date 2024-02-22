@@ -2481,6 +2481,14 @@ char* parse_and_write_enum(flag_descriptor_t* flag,
   */
 }
 
+void flag_print_flags(FILE* out, string_tree_t* flags) {
+  // clang-format off
+  string_tree_foreach(flags, key, value, {
+      fprintf(out, "    %s\t%s\n", key, cast(flag_descriptor_t*, value.ptr)->description);
+    });
+  // clang-format on
+}
+
 /**
  * @function flag_print_help
  *
@@ -2488,36 +2496,34 @@ char* parse_and_write_enum(flag_descriptor_t* flag,
  * defined.
  */
 void flag_print_help(FILE* out, char* message) {
-  /*
-  if (config->command_descriptors) {
-    fprintf(stdout, "Usage: %s <command> <flags*> <files*>\n",
-            config->program_name);
+  fprintf(out, "Message: %s\n", message);
+
+  if (current_program == NULL) {
+    fprintf(out, "Command line parsing has not been configured so help can not be provided.");
+    return;
+  }
+
+  if (current_program->commands != NULL) {
+    fprintf(out, "Usage: %s <command> <flags> <files>\n", current_program->name);
+    fprintf(out, "Description: %s\n", current_program->description);
+
+    flag_print_flags(out, current_program->flags);
+    // clang-format off
+    string_tree_foreach(current_program->commands, key, value, {
+	fprintf(out, "    %s\t%s\n", key, cast(command_descriptor_t*, value.ptr)->description);
+	flag_print_flags(out, cast(command_descriptor_t*, value.ptr)->flags);
+      });
+    // clang-format on
   } else {
-    fprintf(stdout, "Usage: %s <flags*> <files*>\n", config->program_name);
+    fprintf(out, "Usage: %s <flags> <files>\n", current_program->name);
+    fprintf(out, "Description: %s\n", current_program->description);
+
+    // clang-format off
+    string_tree_foreach(current_program->flags, key, value, {
+	fprintf(out, "    %s\t%s\n", key, cast(flag_descriptor_t*, value.ptr)->description);
+      });
+    // clang-format on
   }
-  if (config->program_description) {
-    fprintf(stdout, "\n%s\n", config->program_description);
-  }
-  if (config->command_descriptors) {
-    fprintf(stdout, "\nCommands:\n");
-    for (int i = 0; i < config->command_descriptors->length; i++) {
-      command_line_command_descriptor_t* command_descriptor
-          = value_array_get(config->command_descriptors, i).ptr;
-      fprintf(stdout, "    %s [[%s]]\n", command_descriptor->name,
-              command_descriptor->help_string);
-    }
-  }
-  if (config->flag_descriptors) {
-    fprintf(stdout, "\nFlags:\n");
-    for (int i = 0; i < config->flag_descriptors->length; i++) {
-      command_line_flag_descriptor_t* flag
-          = value_array_get(config->flag_descriptors, i).ptr;
-      fprintf(stdout, "    --%s=<flag-value> (%s)\n", flag->long_name,
-              flag->help_string);
-    }
-  }
-  */
-  fprintf(out, "flag_print_help() is not yet implemented!");
 }
 /**
  * @file fatal-error.c
@@ -2855,6 +2861,8 @@ int file_peek_byte(FILE* input) {
 }
 
 /**
+ * @function file_eof
+ *
  * Return true if an input stream is at the end of the file. I don't
  * know what "feof" really does but it doesn't actually do this.
  */
@@ -2865,6 +2873,8 @@ boolean_t file_eof(FILE* input) {
 #define FILE_COPY_STREAM_BUFFER_SIZE 1024
 
 /**
+ * @funtion file_copy_stream
+ *
  * Copy some or all of an input stream to an output stream.
  */
 void file_copy_stream(FILE* input, FILE* output, boolean_t until_eof,

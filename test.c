@@ -53,11 +53,20 @@
  *
  * Assert that two c strings are the same.
  */
-#define test_assert_string_equal(a, b)                                         \
-  do {                                                                         \
-    if (!string_equal(a, b)) {                                                 \
-      test_fail("A test string equal assertion failed %s == %s", a, b);        \
-    }                                                                          \
+#define test_assert_string_equal(a, b)                                          \
+  do {                                                                          \
+    if (!b) {                                                                   \
+      test_fail(                                                                \
+          "A test string equal assertion failed\n  Expected:\n    ⟦%s⟧\n  " \
+          "But was:\n    nullptr\n",                                            \
+          a);                                                                   \
+    }                                                                           \
+    if (!string_equal(a, b)) {                                                  \
+      test_fail(                                                                \
+          "A test string equal assertion failed\n  Expected:\n    ⟦%s⟧\n  " \
+          "But was:\n    ⟦%s⟧\n",                                               \
+          a, b);                                                                \
+    }                                                                           \
   } while (0)
 
 #endif /* _TEST_H_ */

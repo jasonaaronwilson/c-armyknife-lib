@@ -120,41 +120,19 @@ void test_string_index_of_char() {
 }
 
 void test_string_left_pad() {
-  if (!string_equal("      ", string_left_pad("", 6, ' '))) {
-    test_fail("string_left_pad");
-  }
-
-  if (!string_equal("   abc", string_left_pad("abc", 6, ' '))) {
-    test_fail("string_left_pad");
-  }
-
-  if (!string_equal("abcxyz", string_left_pad("abcxyz", 6, ' '))) {
-    test_fail("string_left_pad");
-  }
-
-  if (!string_equal("abcdefghijklmnop",
-                    string_left_pad("abcdefghijklmnop", 6, ' '))) {
-    test_fail("string_left_pad");
-  }
+  test_assert_string_equal("      ", string_left_pad("", 6, ' '));
+  test_assert_string_equal("   abc", string_left_pad("abc", 6, ' '));
+  test_assert_string_equal("abcxyz", string_left_pad("abcxyz", 6, ' '));
+  test_assert_string_equal("abcdefghijklmnop",
+                           string_left_pad("abcdefghijklmnop", 6, ' '));
 }
 
 void test_string_right_pad() {
-  if (!string_equal("      ", string_right_pad("", 6, ' '))) {
-    test_fail("string_right_pad");
-  }
-
-  if (!string_equal("abc   ", string_right_pad("abc", 6, ' '))) {
-    test_fail("string_right_pad");
-  }
-
-  if (!string_equal("abcxyz", string_right_pad("abcxyz", 6, ' '))) {
-    test_fail("string_right_pad");
-  }
-
-  if (!string_equal("abcdefghijklmnop",
-                    string_right_pad("abcdefghijklmnop", 6, ' '))) {
-    test_fail("string_right_pad");
-  }
+  test_assert_string_equal("      ", string_right_pad("", 6, ' '));
+  test_assert_string_equal("abc   ", string_right_pad("abc", 6, ' '));
+  test_assert_string_equal("abcxyz", string_right_pad("abcxyz", 6, ' '));
+  test_assert_string_equal("abcdefghijklmnop",
+                           string_right_pad("abcdefghijklmnop", 6, ' '));
 }
 
 int main(int argc, char** argv) {

@@ -309,48 +309,70 @@ char* uint64_to_string(uint64_t number) {
 /**
  * @function string_left_pad
  *
- * Prefix a string with left padding (if necessary) to make it at
- * least N bytes long.
+ * Prepend left left padding (if necessary) to make it at least N
+ * bytes long.
  */
 char* string_left_pad(const char* str, int n, char ch) {
-  int str_length = strlen(str);
-  if (str_length > n) {
-    return string_duplicate(str);
+  if (n < 0) {
+    fatal_error(ERROR_ILLEGAL_RANGE);
   }
 
-  char* result = (char*) malloc_bytes(max(n, str_length) + 1);
-  for (int i = 0; i < n - str_length; i++) {
-    result[i] = ch;
+  int input_length = strlen(str);
+
+  // Calculate padding needed
+  int padding_needed = n - input_length;
+
+  // As usual, since buffer's grow as needed, we are tolerant of a
+  // wrong initial computation of the length though getting this wrong
+  // is wasteful... In this case we do the wasteful thing knowing that
+  // we will free everything shortly. We just want the correct result,
+  // not necessarily as fast as possible.
+
+  int len = 1; // max(padding_needed + input_length, input_length) + 1;
+
+  buffer_t* buffer = make_buffer(len);
+  for (int i = 0; i < padding_needed; i++) {
+    buffer = buffer_append_byte(buffer, ch);
   }
-  for (int i = 0; i < str_length; i++) {
-    result[i + (n - str_length)] = str[i];
-  }
-  result[n] = '\0';
+  buffer = buffer_append_string(buffer, str);
+  char* result = buffer_to_c_string(buffer);
+  free_bytes(buffer);
   return result;
 }
 
 /**
- * @function string_left_right
+ * @function string_right_pad
  *
  * Append right padding to a string (if necessary) to make it at least
  * N bytes long.
  */
 char* string_right_pad(const char* str, int n, char ch) {
-  int str_length = strlen(str);
-  if (str_length > n) {
-    return string_duplicate(str);
+  if (n < 0) {
+    fatal_error(ERROR_ILLEGAL_RANGE);
   }
-  char* result = (char*) malloc_bytes(max(n, str_length) + 1);
-  for (int i = 0; i < str_length; i++) {
-    result[i + (n - str_length)] = str[i];
+
+  int input_length = strlen(str);
+
+  // Calculate padding needed
+  int padding_needed = n - input_length;
+
+  // As usual, since buffer's grow as needed, we are tolerant of a
+  // wrong initial computation of the length though getting this wrong
+  // is wasteful... In this case we do the wasteful thing knowing that
+  // we will free everything shortly. We just want the correct result,
+  // not necessarily as fast as possible.
+
+  int len = 1; // max(padding_needed + input_length, input_length) + 1;
+
+  buffer_t* buffer = make_buffer(len);
+  buffer = buffer_append_string(buffer, str);
+  for (int i = 0; i < padding_needed; i++) {
+    buffer = buffer_append_byte(buffer, ch);
   }
-  for (int i = str_length; i < n; i++) {
-    result[i] = ch;
-  }
-  result[n] = '\0';
+  char* result = buffer_to_c_string(buffer);
+  free_bytes(buffer);
   return result;
 }
-
 
 // Allows tests to make the temporary buffer small to more easily test
 // the case where vsnprintf is called twice because the first time it

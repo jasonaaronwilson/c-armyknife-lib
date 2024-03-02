@@ -1020,13 +1020,13 @@ extern uint64_t random_next_uint64_below(random_state_t* state,
   do {                                                                          \
     if (!b) {                                                                   \
       test_fail(                                                                \
-          "A test string equal assertion failed\n  Expected:\n    ⟦%s⟧\n  "     \
+          "A test string equal assertion failed\n  Expected:\n    ⟦%s⟧\n  " \
           "But was:\n    nullptr\n",                                            \
           a);                                                                   \
     }                                                                           \
     if (!string_equal(a, b)) {                                                  \
       test_fail(                                                                \
-          "A test string equal assertion failed\n  Expected:\n    ⟦%s⟧\n  "     \
+          "A test string equal assertion failed\n  Expected:\n    ⟦%s⟧\n  " \
           "But was:\n    ⟦%s⟧\n",                                               \
           a, b);                                                                \
     }                                                                           \
@@ -4472,13 +4472,13 @@ uint64_t fasthash64(const void* buf, size_t len, uint64_t seed) {
   do {                                                                          \
     if (!b) {                                                                   \
       test_fail(                                                                \
-          "A test string equal assertion failed\n  Expected:\n    ⟦%s⟧\n  "     \
+          "A test string equal assertion failed\n  Expected:\n    ⟦%s⟧\n  " \
           "But was:\n    nullptr\n",                                            \
           a);                                                                   \
     }                                                                           \
     if (!string_equal(a, b)) {                                                  \
       test_fail(                                                                \
-          "A test string equal assertion failed\n  Expected:\n    ⟦%s⟧\n  "     \
+          "A test string equal assertion failed\n  Expected:\n    ⟦%s⟧\n  " \
           "But was:\n    ⟦%s⟧\n",                                               \
           a, b);                                                                \
     }                                                                           \

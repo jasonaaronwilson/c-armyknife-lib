@@ -636,6 +636,9 @@ __attribute__((warn_unused_result)) extern string_alist_t*
 __attribute__((warn_unused_result)) extern string_alist_t*
     alist_delete(string_alist_t* list, char* key);
 
+__attribute__((warn_unused_result)) extern uint64_t
+    alist_length(string_alist_t* list);
+
 /**
  * @macro string_alist_foreach
  *
@@ -661,8 +664,7 @@ __attribute__((warn_unused_result)) extern string_alist_t*
 
 struct string_hashtable_S {
   uint64_t n_buckets;
-  // TODO(jawilson): keep track of the number of entries in the
-  // hashtable so we can automtically grow the hashtable.
+  uint64_t n_entries;
   string_alist_t* buckets[0];
 };
 
@@ -677,6 +679,15 @@ __attribute__((warn_unused_result)) extern string_hashtable_t*
     string_ht_delete(string_hashtable_t* ht, char* key);
 
 extern value_result_t string_ht_find(string_hashtable_t* ht, char* key);
+
+/**
+ * @function string_ht_num_entries
+ *
+ * Returns the number of entries in the hashtable.
+ */
+static inline uint64_t string_ht_num_entries(string_hashtable_t* ht) {
+  return ht->n_entries;
+}
 
 /**
  * @macro string_ht_foreach
@@ -3433,6 +3444,9 @@ __attribute__((warn_unused_result)) extern string_alist_t*
 __attribute__((warn_unused_result)) extern string_alist_t*
     alist_delete(string_alist_t* list, char* key);
 
+__attribute__((warn_unused_result)) extern uint64_t
+    alist_length(string_alist_t* list);
+
 /**
  * @macro string_alist_foreach
  *
@@ -3503,6 +3517,23 @@ value_result_t alist_find(string_alist_t* list, char* key) {
   }
   return (value_result_t){.nf_error = NF_ERROR_NOT_FOUND};
 }
+
+/**
+ * @function alist_length
+ *
+ * Determine the length of an alist.
+ *
+ * The alist argument MAY be null.
+ */
+__attribute__((warn_unused_result)) extern uint64_t
+    alist_length(string_alist_t* list) {
+  uint64_t result = 0;
+  while (list) {
+    result++;
+    list = list->next;
+  }
+  return result;
+}
 /**
  * @file string-hashtable.c
  *
@@ -3520,8 +3551,7 @@ value_result_t alist_find(string_alist_t* list, char* key) {
 
 struct string_hashtable_S {
   uint64_t n_buckets;
-  // TODO(jawilson): keep track of the number of entries in the
-  // hashtable so we can automtically grow the hashtable.
+  uint64_t n_entries;
   string_alist_t* buckets[0];
 };
 
@@ -3536,6 +3566,15 @@ __attribute__((warn_unused_result)) extern string_hashtable_t*
     string_ht_delete(string_hashtable_t* ht, char* key);
 
 extern value_result_t string_ht_find(string_hashtable_t* ht, char* key);
+
+/**
+ * @function string_ht_num_entries
+ *
+ * Returns the number of entries in the hashtable.
+ */
+static inline uint64_t string_ht_num_entries(string_hashtable_t* ht) {
+  return ht->n_entries;
+}
 
 /**
  * @macro string_ht_foreach
@@ -3582,7 +3621,13 @@ string_hashtable_t* string_ht_insert(string_hashtable_t* ht, char* key,
   uint64_t hashcode = string_hash(key);
   int bucket = hashcode % ht->n_buckets;
   string_alist_t* list = ht->buckets[bucket];
-  ht->buckets[bucket] = alist_insert(list, key, value);
+  uint64_t len = alist_length(list);
+  list = alist_insert(list, key, value);
+  ht->buckets[bucket] = list;
+  uint64_t len_after = alist_length(list);
+  if (len_after > len) {
+    ht->n_entries++;
+  }
   return ht;
 }
 
@@ -3596,7 +3641,13 @@ string_hashtable_t* string_ht_delete(string_hashtable_t* ht, char* key) {
   uint64_t hashcode = string_hash(key);
   int bucket = hashcode % ht->n_buckets;
   string_alist_t* list = ht->buckets[bucket];
-  ht->buckets[bucket] = alist_delete(list, key);
+  uint64_t len = alist_length(list);
+  list = alist_delete(list, key);
+  ht->buckets[bucket] = list;
+  uint64_t len_after = alist_length(list);
+  if (len_after < len) {
+    ht->n_entries--;
+  }
   return ht;
 }
 

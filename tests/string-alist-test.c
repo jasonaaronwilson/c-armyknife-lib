@@ -14,16 +14,19 @@ void test_alist() {
 
   value = alist_find(list, "a");
   test_assert(is_not_ok(value));
+  test_assert(alist_length(list) == 0);
 
   list = alist_insert(list, "a", str_to_value("A"));
   value = alist_find(list, "a");
   test_assert(is_ok(value) && string_equal("A", value.str));
+  test_assert(alist_length(list) == 1);
 
   list = alist_insert(list, "b", str_to_value("B"));
   value = alist_find(list, "a");
   test_assert(is_ok(value) && string_equal("A", value.str));
   value = alist_find(list, "b");
   test_assert(is_ok(value) && string_equal("B", value.str));
+  test_assert(alist_length(list) == 2);
 
   // Add a few more elements to the front of the list.
   list = alist_insert(list, "c", str_to_value("C"));

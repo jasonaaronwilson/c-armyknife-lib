@@ -63,7 +63,8 @@ int main(int argc, char** argv) {
   char* error = flag_parse_command_line(argc, argv);
 
   if (argc <= 1) {
-    flag_print_help(stderr, "This implementation doesn't accept 'stdin' as an input");
+    flag_print_help(stderr,
+                    "This implementation doesn't accept 'stdin' as an input");
     exit(1);
   }
 
@@ -75,7 +76,7 @@ int main(int argc, char** argv) {
   string_hashtable_t* seen = initial_seen_hashtable();
   string_tree_t* seen_tree = NULL;
 
-  // This is about the worst way we could write this. So? 
+  // This is about the worst way we could write this. So?
   for (int i = 0; i < FLAG_files->length; i++) {
     char* file_name = value_array_get(FLAG_files, i).str;
     buffer_t* buffer = make_buffer(1);

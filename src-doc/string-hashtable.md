@@ -32,3 +32,7 @@ Find an association in the hashtable.
 
 Insert an association into the hashtable.
  
+## @function string_ht_num_entries
+
+Returns the number of entries in the hashtable.
+ 

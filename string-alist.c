@@ -24,6 +24,9 @@ __attribute__((warn_unused_result)) extern string_alist_t*
 __attribute__((warn_unused_result)) extern string_alist_t*
     alist_delete(string_alist_t* list, char* key);
 
+__attribute__((warn_unused_result)) extern uint64_t
+    alist_length(string_alist_t* list);
+
 /**
  * @macro string_alist_foreach
  *
@@ -93,4 +96,21 @@ value_result_t alist_find(string_alist_t* list, char* key) {
     list = list->next;
   }
   return (value_result_t){.nf_error = NF_ERROR_NOT_FOUND};
+}
+
+/**
+ * @function alist_length
+ *
+ * Determine the length of an alist.
+ *
+ * The alist argument MAY be null.
+ */
+__attribute__((warn_unused_result)) extern uint64_t
+    alist_length(string_alist_t* list) {
+  uint64_t result = 0;
+  while (list) {
+    result++;
+    list = list->next;
+  }
+  return result;
 }

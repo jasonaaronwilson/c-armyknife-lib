@@ -23,3 +23,9 @@ actually found).
 
 Insert a new key and value into an assocation list.
  
+## @function alist_length
+
+Determine the length of an alist.
+
+The alist argument MAY be null.
+ 

@@ -41,13 +41,8 @@ Return true if the given string is NULL or strlen is zero.
  
 ## @function string_left_pad
 
-Prefix a string with left padding (if necessary) to make it at
-least N bytes long.
- 
-## @function string_left_right
-
-Append right padding to a string (if necessary) to make it at least
-N bytes long.
+Prepend left left padding (if necessary) to make it at least N
+bytes long.
  
 ## @function string_parse_uint64
 
@@ -69,6 +64,11 @@ detected in future versions of the library.
 Perform printf to a buffer and return the result as a dynamically
 allocated string. The string is automatically allocated to the
 appropriate size.
+ 
+## @function string_right_pad
+
+Append right padding to a string (if necessary) to make it at least
+N bytes long.
  
 ## @function string_starts_with
 

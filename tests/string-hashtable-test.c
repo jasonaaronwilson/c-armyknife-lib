@@ -13,12 +13,15 @@ void test_string_ht() {
 
   value = string_ht_find(ht, "a");
   test_assert(is_not_ok(value));
+  test_assert(string_ht_num_entries(ht) == 0);
 
   ht = string_ht_insert(ht, "a", str_to_value("A"));
   value = string_ht_find(ht, "a");
   test_assert(is_ok(value) && string_equal("A", value.str));
+  test_assert(string_ht_num_entries(ht) == 1);
 
   ht = string_ht_insert(ht, "b", str_to_value("B"));
+  test_assert(string_ht_num_entries(ht) == 2);
   value = string_ht_find(ht, "a");
   test_assert(is_ok(value) && string_equal("A", value.str));
   value = string_ht_find(ht, "b");
@@ -27,11 +30,13 @@ void test_string_ht() {
   // Add a few more elements to the front of the ht.
   ht = string_ht_insert(ht, "c", str_to_value("C"));
   ht = string_ht_insert(ht, "d", str_to_value("D"));
+  test_assert(string_ht_num_entries(ht) == 4);
 
   // Finally delete a node.
   ht = string_ht_delete(ht, "b");
   value = string_ht_find(ht, "b");
   test_assert(is_not_ok(value));
+  test_assert(string_ht_num_entries(ht) == 3);
 
   value = string_ht_find(ht, "a");
   test_assert(is_ok(value) && string_equal("A", value.str));

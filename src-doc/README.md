@@ -6,6 +6,8 @@
 
 * [string-tree.md](string-tree.md)
 
+* [min-max.md](min-max.md)
+
 * [value-array.md](value-array.md)
 
 * [buffer.md](buffer.md)

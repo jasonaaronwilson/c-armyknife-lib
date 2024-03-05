@@ -61,6 +61,15 @@ void test_ht_random() {
     ht = string_ht_insert(ht, uint64_to_string(next), u64_to_value(next));
   }
 
+  // Now make sure everything we just added is found (sort of redudant
+  // with the final check but catching errors early already bisects a
+  // failing test and nobody hates that!)
+  state = random_state_for_test();
+  for (int i = 0; i < iterations; i++) {
+    uint64_t next = random_next(&state);
+    test_assert(is_ok(string_ht_find(ht, uint64_to_string(next))));
+  }
+
   // Now delete a bunch of things
   state = random_state_for_test();
   for (int i = 0; i < iterations; i++) {
@@ -70,7 +79,8 @@ void test_ht_random() {
     }
   }
 
-  // Make sure everything deleted is not found
+  // Make sure everything inserted is found and everything deleted is
+  // not found.
   state = random_state_for_test();
   for (int i = 0; i < iterations; i++) {
     uint64_t next = random_next(&state);
@@ -80,6 +90,8 @@ void test_ht_random() {
       test_assert(is_ok(string_ht_find(ht, uint64_to_string(next))));
     }
   }
+
+  log_test("This final bucket count of the hashtable is %lu", ht->n_buckets);
 }
 
 int main(int argc, char** argv) {

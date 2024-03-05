@@ -41,6 +41,7 @@ DEBUG = 2
 INFO = 3
 WARN = 4
 FATAL = 5
+TEST = 6
 
 The most overlooked part of logging may be that putting PII or
 other information into logs may violate GDPR and other privacy laws
@@ -91,6 +92,15 @@ compiler with some level of optimization turned on should not
 change it's code generation strategy at all if you leave one of these
 statements in your source code and you should easily be able to
 upgrade them to a real level later.
+ 
+## @macro log_test
+
+Log at the TEST level using printf style formatting. This should
+only be used inside of test code to communicate very basic
+information back to the user when running a test and is therefore
+independent of the actual log level.
+
+If you really want to
  
 ## @macro log_trace
 

@@ -44,6 +44,7 @@
  * INFO = 3
  * WARN = 4
  * FATAL = 5
+ * TEST = 6
  *
  * The most overlooked part of logging may be that putting PII or
  * other information into logs may violate GDPR and other privacy laws
@@ -74,6 +75,7 @@
 #define LOGGER_INFO 3
 #define LOGGER_WARN 4
 #define LOGGER_FATAL 5
+#define LOGGER_TEST 6
 
 struct logger_state_S {
   boolean_t initialized;
@@ -196,6 +198,21 @@ static inline boolean_t should_log_info() {
     if (global_logger_state.level <= LOGGER_FATAL) {                           \
       logger_impl(__FILE__, __LINE__, LOGGER_FATAL, format, ##__VA_ARGS__);    \
     }                                                                          \
+  } while (0)
+
+/**
+ * @macro log_test
+ *
+ * Log at the TEST level using printf style formatting. This should
+ * only be used inside of test code to communicate very basic
+ * information back to the user when running a test and is therefore
+ * independent of the actual log level.
+ *
+ * If you really want to
+ */
+#define log_test(format, ...)                                                  \
+  do {                                                                         \
+    logger_impl(__FILE__, __LINE__, LOGGER_TEST, format, ##__VA_ARGS__);       \
   } while (0)
 
 #endif /* _LOGGER_H_ */

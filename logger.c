@@ -207,8 +207,6 @@ static inline boolean_t should_log_info() {
  * only be used inside of test code to communicate very basic
  * information back to the user when running a test and is therefore
  * independent of the actual log level.
- *
- * If you really want to
  */
 #define log_test(format, ...)                                                  \
   do {                                                                         \

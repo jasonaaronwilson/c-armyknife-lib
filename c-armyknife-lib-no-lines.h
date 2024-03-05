@@ -522,12 +522,11 @@ static inline boolean_t should_log_info() {
  * information back to the user when running a test and is therefore
  * independent of the actual log level.
  *
- * If you really want to 
+ * If you really want to
  */
 #define log_test(format, ...)                                                  \
   do {                                                                         \
-    logger_impl(__FILE__, __LINE__, LOGGER_TEST, format,                       \
-                ##__VA_ARGS__);                                                \
+    logger_impl(__FILE__, __LINE__, LOGGER_TEST, format, ##__VA_ARGS__);       \
   } while (0)
 
 #endif /* _LOGGER_H_ */
@@ -3227,12 +3226,11 @@ static inline boolean_t should_log_info() {
  * information back to the user when running a test and is therefore
  * independent of the actual log level.
  *
- * If you really want to 
+ * If you really want to
  */
 #define log_test(format, ...)                                                  \
   do {                                                                         \
-    logger_impl(__FILE__, __LINE__, LOGGER_TEST, format,                       \
-                ##__VA_ARGS__);                                                \
+    logger_impl(__FILE__, __LINE__, LOGGER_TEST, format, ##__VA_ARGS__);       \
   } while (0)
 
 #endif /* _LOGGER_H_ */

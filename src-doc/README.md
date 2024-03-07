@@ -1,40 +1,44 @@
 # Source Documentation Index
 
-* [test.md](test.md)
-
-* [value.md](value.md)
-
-* [string-tree.md](string-tree.md)
-
 * [min-max.md](min-max.md)
-
-* [value-array.md](value-array.md)
-
-* [buffer.md](buffer.md)
 
 * [allocate.md](allocate.md)
 
-* [string-hashtable.md](string-hashtable.md)
+* [tokenizer.md](tokenizer.md)
 
 * [uint64.md](uint64.md)
 
-* [flag.md](flag.md)
-
-* [tokenizer.md](tokenizer.md)
-
-* [fatal-error.md](fatal-error.md)
+* [string-tree.md](string-tree.md)
 
 * [logger.md](logger.md)
 
-* [boolean.md](boolean.md)
+* [value-array.md](value-array.md)
 
-* [string-util.md](string-util.md)
+* [value.md](value.md)
+
+* [test.md](test.md)
+
+* [value-hashtable.md](value-hashtable.md)
 
 * [string-alist.md](string-alist.md)
 
+* [string-hashtable.md](string-hashtable.md)
+
+* [boolean.md](boolean.md)
+
+* [flag.md](flag.md)
+
+* [string-util.md](string-util.md)
+
 * [random.md](random.md)
 
+* [value-alist.md](value-alist.md)
+
 * [io.md](io.md)
+
+* [buffer.md](buffer.md)
+
+* [fatal-error.md](fatal-error.md)
 
 * [command-line-parser.md](command-line-parser.md)
 

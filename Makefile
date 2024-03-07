@@ -22,6 +22,7 @@ SRC_C = allocate.c \
 	tokenizer.c \
 	uint64.c \
 	value.c \
+	value-alist.c \
 	value-array.c
 
 ORDERED_H = \
@@ -35,6 +36,7 @@ ORDERED_H = \
 	logger.h \
 	buffer.h \
 	value-array.h \
+	value-alist.h \
 	string-alist.h \
 	string-hashtable.h \
 	string-tree.h \

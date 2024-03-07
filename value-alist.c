@@ -1,96 +1,104 @@
-#line 2 "string-alist.c"
+#line 2 "value-alist.c"
 /**
- * @file string-alist.c
+ * @file value-alist.c
  *
- * An association list (a type of map) from a string to a value_t.
+ * An association list (a type of map) from value_t to value_t.
  */
 
-#ifndef _STRING_ALIST_H_
-#define _STRING_ALIST_H_
+#ifndef _VALUE_ALIST_H_
+#define _VALUE_ALIST_H_
 
-struct string_alist_S {
-  struct string_alist_S* next;
-  char* key;
+struct value_alist_S {
+  struct value_alist_S* next;
+  value_t key;
   value_t value;
 };
 
-typedef struct string_alist_S string_alist_t;
+typedef struct value_alist_S value_alist_t;
 
-extern value_result_t alist_find(string_alist_t* list, char* key);
+extern value_result_t value_alist_find(value_alist_t* list,
+                                       value_comparison_fn* cmp_fn,
+                                       value_t key);
 
-__attribute__((warn_unused_result)) extern string_alist_t*
-    alist_insert(string_alist_t* list, char* key, value_t value);
+__attribute__((warn_unused_result)) extern value_alist_t*
+    value_alist_insert(value_alist_t* list, value_comparison_fn* cmp_fn,
+                       value_t key, value_t value);
 
-__attribute__((warn_unused_result)) extern string_alist_t*
-    alist_delete(string_alist_t* list, char* key);
+__attribute__((warn_unused_result)) extern value_alist_t*
+    value_alist_delete(value_alist_t* list, value_comparison_fn* cmp_fn,
+                       value_t key);
 
 __attribute__((warn_unused_result)) extern uint64_t
-    alist_length(string_alist_t* list);
+    value_alist_length(value_alist_t* list);
 
 /**
- * @macro string_alist_foreach
+ * @macro value_alist_foreach
  *
  * Allows iteration over the keys and values in a string association
  * list.
  */
-#define string_alist_foreach(alist, key_var, value_var, statements)            \
+#define value_alist_foreach(alist, key_var, value_var, statements)             \
   do {                                                                         \
-    string_alist_t* head = alist;                                              \
+    value_alist_t* head = alist;                                               \
     while (head) {                                                             \
-      char* key_var = head->key;                                               \
+      value_t key_ = head->key;                                                \
       value_t value_var = head->value;                                         \
       statements;                                                              \
       head = head->next;                                                       \
     }                                                                          \
   } while (0)
 
-#endif /* _STRING_ALIST_H_ */
+#endif /* _VALUE_ALIST_H_ */
 
 /**
- * @function alist_insert
+ * @function value_alist_insert
  *
  * Insert a new key and value into an assocation list.
  */
-string_alist_t* alist_insert(string_alist_t* list, char* key, value_t value) {
-  string_alist_t* result = (malloc_struct(string_alist_t));
-  result->next = alist_delete(list, key);
+value_alist_t* value_alist_insert(value_alist_t* list,
+                                  value_comparison_fn* cmp_fn, value_t key,
+                                  value_t value) {
+  value_alist_t* result = (malloc_struct(value_alist_t));
+  result->next = value_alist_delete(list, cmp_fn, key);
   result->key = key;
   result->value = value;
   return result;
 }
 
 /**
- * @function alist_delete
+ * @function value_alist_delete
  *
  * Delete the key and associated value from the given association
  * list. Neither the key nor the value associated are themselves
  * freed.
  */
-string_alist_t* alist_delete(string_alist_t* list, char* key) {
+value_alist_t* value_alist_delete(value_alist_t* list,
+                                  value_comparison_fn* cmp_fn, value_t key) {
   // This appears to be logically correct but could easily blow out
   // the stack with a long list.
   if (list == NULL) {
     return list;
   }
-  if (strcmp(key, list->key) == 0) {
-    string_alist_t* result = list->next;
+  if ((*cmp_fn)(key, list->key) == 0) {
+    value_alist_t* result = list->next;
     free_bytes(list);
     return result;
   }
-  list->next = alist_delete(list->next, key);
+  list->next = value_alist_delete(list->next, cmp_fn, key);
   return list;
 }
 
 /**
- * @function alist_find
+ * @function value_alist_find
  *
  * Find the value associate with the given key. Use is_ok() or
  * is_not_ok() to see if the value is valid (i.e., if the key was
  * actually found).
  */
-value_result_t alist_find(string_alist_t* list, char* key) {
+value_result_t value_alist_find(value_alist_t* list,
+                                value_comparison_fn* cmp_fn, value_t key) {
   while (list) {
-    if (strcmp(key, list->key) == 0) {
+    if ((*cmp_fn)(key, list->key) == 0) {
       return (value_result_t){.val = list->value};
     }
     list = list->next;
@@ -99,14 +107,14 @@ value_result_t alist_find(string_alist_t* list, char* key) {
 }
 
 /**
- * @function alist_length
+ * @function value_alist_length
  *
  * Determine the length of an alist.
  *
  * The alist argument MAY be null.
  */
 __attribute__((warn_unused_result)) extern uint64_t
-    alist_length(string_alist_t* list) {
+    value_alist_length(value_alist_t* list) {
   uint64_t result = 0;
   while (list) {
     result++;

@@ -68,6 +68,17 @@ pointers and booleans).
 Our primary goal is to make collections convenient. Using typedef
 and inline functions you can also make these safer at compile time.
  
+## @typedef value_comparison_fn
+
+A type for a function pointer which will compare two values,
+returning -1 when value1 < value2, 0 when value1 == value2, and 1
+when value1 > value2.
+ 
+## @typedef value_hash_fn
+
+A type for a function pointer which will hash it's value_t* to a
+uint64_t.
+ 
 ## @typedef value_result_t
 
 A pair of a value_t and a non-fatal error code. When the error code

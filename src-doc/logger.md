@@ -99,8 +99,6 @@ Log at the TEST level using printf style formatting. This should
 only be used inside of test code to communicate very basic
 information back to the user when running a test and is therefore
 independent of the actual log level.
-
-If you really want to
  
 ## @macro log_trace
 

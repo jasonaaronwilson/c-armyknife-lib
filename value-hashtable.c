@@ -1,6 +1,6 @@
-#line 2 "string-hashtable.c"
+#line 2 "value-hashtable.c"
 /**
- * @file string-hashtable.c
+ * @file value-hashtable.c
  *
  * A very thread-unsafe hash map of C style zero terminated byte
  * "strings" to a value_t.

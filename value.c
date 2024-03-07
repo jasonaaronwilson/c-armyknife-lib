@@ -154,4 +154,21 @@ static inline boolean_t is_not_ok(value_result_t value) {
 
 #define cast(type, expr) ((type) (expr))
 
+/**
+ * @typedef value_comparison_fn
+ *
+ * A type for a function pointer which will compare two values,
+ * returning -1 when value1 < value2, 0 when value1 == value2, and 1
+ * when value1 > value2.
+ */
+typedef int (*value_comparison_fn)(value_t value1, value_t value2);
+
+/**
+ * @typedef value_hash_fn
+ *
+ * A type for a function pointer which will hash it's value_t* to a
+ * uint64_t.
+ */
+typedef uint64_t (*value_hash_fn)(value_t value1);
+
 #endif /* _VALUE_H_ */

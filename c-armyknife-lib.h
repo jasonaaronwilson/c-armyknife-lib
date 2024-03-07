@@ -285,6 +285,23 @@ static inline boolean_t is_not_ok(value_result_t value) {
 
 #define cast(type, expr) ((type) (expr))
 
+/**
+ * @typedef value_comparison_fn
+ *
+ * A type for a function pointer which will compare two values,
+ * returning -1 when value1 < value2, 0 when value1 == value2, and 1
+ * when value1 > value2.
+ */
+typedef int (*value_comparison_fn)(value_t value1, value_t value2);
+
+/**
+ * @typedef value_hash_fn
+ *
+ * A type for a function pointer which will hash it's value_t* to a
+ * uint64_t.
+ */
+typedef uint64_t (*value_hash_fn)(value_t value1);
+
 #endif /* _VALUE_H_ */
 // SSCF generated file from: allocate.c
 
@@ -529,8 +546,6 @@ static inline boolean_t should_log_info() {
  * only be used inside of test code to communicate very basic
  * information back to the user when running a test and is therefore
  * independent of the actual log level.
- *
- * If you really want to
  */
 #define log_test(format, ...)                                                  \
   do {                                                                         \
@@ -641,6 +656,49 @@ extern void value_array_insert_at(value_array_t* array, uint32_t position,
 extern value_t value_array_delete_at(value_array_t* array, uint32_t position);
 
 #endif /* _VALUE_ARRAY_H_ */
+// SSCF generated file from: value-alist.c
+
+#line 8 "value-alist.c"
+#ifndef _VALUE_ALIST_H_
+#define _VALUE_ALIST_H_
+
+struct value_alist_S {
+  struct value_alist_S* next;
+  value_t key;
+  value_t value;
+};
+
+typedef struct value_alist_S value_alist_t;
+
+extern value_result_t value_alist_find(value_alist_t* list, value_comparison_fn* cmp_fn, value_t key);
+
+__attribute__((warn_unused_result)) extern value_alist_t*
+value_alist_insert(value_alist_t* list, value_comparison_fn* cmp_fn, value_t key, value_t value);
+
+__attribute__((warn_unused_result)) extern value_alist_t*
+value_alist_delete(value_alist_t* list, value_comparison_fn* cmp_fn, value_t key);
+
+__attribute__((warn_unused_result)) extern uint64_t
+    value_alist_length(value_alist_t* list);
+
+/**
+ * @macro value_alist_foreach
+ *
+ * Allows iteration over the keys and values in a string association
+ * list.
+ */
+#define value_alist_foreach(alist, key_var, value_var, statements)             \
+  do {                                                                         \
+    value_alist_t* head = alist;                                               \
+    while (head) {                                                             \
+      value_t key_ = head->key;                                                \
+      value_t value_var = head->value;                                         \
+      statements;                                                              \
+      head = head->next;                                                       \
+    }                                                                          \
+  } while (0)
+
+#endif /* _VALUE_ALIST_H_ */
 // SSCF generated file from: string-alist.c
 
 #line 8 "string-alist.c"
@@ -3252,8 +3310,6 @@ static inline boolean_t should_log_info() {
  * only be used inside of test code to communicate very basic
  * information back to the user when running a test and is therefore
  * independent of the actual log level.
- *
- * If you really want to
  */
 #define log_test(format, ...)                                                  \
   do {                                                                         \
@@ -4977,7 +5033,140 @@ static inline boolean_t is_not_ok(value_result_t value) {
 
 #define cast(type, expr) ((type) (expr))
 
+/**
+ * @typedef value_comparison_fn
+ *
+ * A type for a function pointer which will compare two values,
+ * returning -1 when value1 < value2, 0 when value1 == value2, and 1
+ * when value1 > value2.
+ */
+typedef int (*value_comparison_fn)(value_t value1, value_t value2);
+
+/**
+ * @typedef value_hash_fn
+ *
+ * A type for a function pointer which will hash it's value_t* to a
+ * uint64_t.
+ */
+typedef uint64_t (*value_hash_fn)(value_t value1);
+
 #endif /* _VALUE_H_ */
+#line 2 "value-alist.c"
+/**
+ * @file value-alist.c
+ *
+ * An association list (a type of map) from value_t to value_t.
+ */
+
+#ifndef _VALUE_ALIST_H_
+#define _VALUE_ALIST_H_
+
+struct value_alist_S {
+  struct value_alist_S* next;
+  value_t key;
+  value_t value;
+};
+
+typedef struct value_alist_S value_alist_t;
+
+extern value_result_t value_alist_find(value_alist_t* list, value_comparison_fn* cmp_fn, value_t key);
+
+__attribute__((warn_unused_result)) extern value_alist_t*
+value_alist_insert(value_alist_t* list, value_comparison_fn* cmp_fn, value_t key, value_t value);
+
+__attribute__((warn_unused_result)) extern value_alist_t*
+value_alist_delete(value_alist_t* list, value_comparison_fn* cmp_fn, value_t key);
+
+__attribute__((warn_unused_result)) extern uint64_t
+    value_alist_length(value_alist_t* list);
+
+/**
+ * @macro value_alist_foreach
+ *
+ * Allows iteration over the keys and values in a string association
+ * list.
+ */
+#define value_alist_foreach(alist, key_var, value_var, statements)             \
+  do {                                                                         \
+    value_alist_t* head = alist;                                               \
+    while (head) {                                                             \
+      value_t key_ = head->key;                                                \
+      value_t value_var = head->value;                                         \
+      statements;                                                              \
+      head = head->next;                                                       \
+    }                                                                          \
+  } while (0)
+
+#endif /* _VALUE_ALIST_H_ */
+
+/**
+ * @function value_alist_insert
+ *
+ * Insert a new key and value into an assocation list.
+ */
+value_alist_t* value_alist_insert(value_alist_t* list, value_comparison_fn* cmp_fn, value_t key, value_t value) {
+  value_alist_t* result = (malloc_struct(value_alist_t));
+  result->next = value_alist_delete(list, cmp_fn, key);
+  result->key = key;
+  result->value = value;
+  return result;
+}
+
+/**
+ * @function value_alist_delete
+ *
+ * Delete the key and associated value from the given association
+ * list. Neither the key nor the value associated are themselves
+ * freed.
+ */
+value_alist_t* value_alist_delete(value_alist_t* list, value_comparison_fn* cmp_fn, value_t key) {
+  // This appears to be logically correct but could easily blow out
+  // the stack with a long list.
+  if (list == NULL) {
+    return list;
+  }
+  if ((*cmp_fn)(key, list->key) == 0) {
+    value_alist_t* result = list->next;
+    free_bytes(list);
+    return result;
+  }
+  list->next = value_alist_delete(list->next, cmp_fn, key);
+  return list;
+}
+
+/**
+ * @function value_alist_find
+ *
+ * Find the value associate with the given key. Use is_ok() or
+ * is_not_ok() to see if the value is valid (i.e., if the key was
+ * actually found).
+ */
+value_result_t value_alist_find(value_alist_t* list, value_comparison_fn* cmp_fn, value_t key) {
+  while (list) {
+    if ((*cmp_fn)(key, list->key) == 0) {
+      return (value_result_t){.val = list->value};
+    }
+    list = list->next;
+  }
+  return (value_result_t){.nf_error = NF_ERROR_NOT_FOUND};
+}
+
+/**
+ * @function value_alist_length
+ *
+ * Determine the length of an alist.
+ *
+ * The alist argument MAY be null.
+ */
+__attribute__((warn_unused_result)) extern uint64_t
+    value_alist_length(value_alist_t* list) {
+  uint64_t result = 0;
+  while (list) {
+    result++;
+    list = list->next;
+  }
+  return result;
+}
 #line 2 "value-array.c"
 
 /**

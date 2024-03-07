@@ -23,7 +23,8 @@ SRC_C = allocate.c \
 	uint64.c \
 	value.c \
 	value-alist.c \
-	value-array.c
+	value-array.c \
+	value-hashtable.c
 
 ORDERED_H = \
 	min-max.h \
@@ -38,6 +39,7 @@ ORDERED_H = \
 	value-array.h \
 	value-alist.h \
 	string-alist.h \
+	value-hashtable.h \
 	string-hashtable.h \
 	string-tree.h \
 	flag.h \

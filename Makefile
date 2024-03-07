@@ -82,6 +82,7 @@ TESTS= \
 	./buffer-test.sh \
 	./value-alist-test.sh \
 	./string-alist-test.sh \
+	./value-hashtable-test.sh \
 	./string-hashtable-test.sh \
 	./command-line-parser-test.sh \
 	./flag-test.sh \

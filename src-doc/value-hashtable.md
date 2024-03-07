@@ -1,28 +1,16 @@
 # @file value-hashtable.c
 
-A very thread-unsafe hash map of C style zero terminated byte
-"strings" to a value_t.
+A very thread-unsafe hash map of value_t to value_t.
 
-Please don't expect C++, JVM, or Rust level of performance for at
-least these reasons:
-
-1) We are probably using a slower (but higher quality) hash
-function than they use for strings, a design decision I made to
-have a single "good enough" hash function to use everywhere in this
-library because I assume you will find the right cryptography
-library to meet those needs.
-
-2) Probably a bigger impact on modern processors is that we use
-chaining which is considered less friendly than open addressing and
-other techniques. However, I wanted an implementation that was
-simple and reusing string_alist_t seems to have done the trick.
+Please don't expect C++, JVM, or Rust level of performance since we
+use chaining which is considered slower than open addressing.
  
-## @macro string_ht_foreach
+## @macro value_ht_foreach
 
 Allows traversing all elements of a hashtable in an unspecified
 order.
  
-## @function make_string_hashtable
+## @function make_value_hashtable
 
 Create a hashtable with the given number of buckets.
 
@@ -30,7 +18,7 @@ The minimum number of buckets is currently 2 to make it less likely
 we run into some resize loop depending on the values of
 ARMYKNIFE_HT_LOAD_FACTOR and AK_HT_UPSCALE_MULTIPLIER).
  
-## @function string_hashtable_upsize_internal
+## @function value_hashtable_upsize_internal
 
 This function is called automatically when an insert brings the
 number of entries above the number of buckets times
@@ -44,20 +32,20 @@ by making a new larger hashtable using
 AK_HT_UPSCALE_MULTIPLIER to compute the new number of buckets
 (currently 1.75).
  
-## @function string_ht_delete
+## @function value_ht_delete
 
 Delete an association from the hashtable. It is not an error to
 delete a key that doesn't exist in the hashtable.
  
-## @function string_ht_find
+## @function value_ht_find
 
 Find an association in the hashtable.
  
-## @function string_ht_insert
+## @function value_ht_insert
 
 Insert an association into the hashtable.
  
-## @function string_ht_num_entries
+## @function value_ht_num_entries
 
 Returns the number of entries in the hashtable.
  

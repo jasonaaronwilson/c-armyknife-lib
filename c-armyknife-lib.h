@@ -786,15 +786,21 @@ typedef struct value_hashtable_S value_hashtable_t;
 extern value_hashtable_t* make_value_hashtable(uint64_t n_buckets);
 
 __attribute__((warn_unused_result)) extern value_hashtable_t*
-value_ht_insert(value_hashtable_t* ht, value_hash_fn hash_fn, value_comparison_fn cmp_fn, value_t key, value_t value);
+    value_ht_insert(value_hashtable_t* ht, value_hash_fn hash_fn,
+                    value_comparison_fn cmp_fn, value_t key, value_t value);
 
 __attribute__((warn_unused_result)) extern value_hashtable_t*
-value_ht_delete(value_hashtable_t* ht, value_hash_fn hash_fn, value_comparison_fn cmp_fn, value_t key);
+    value_ht_delete(value_hashtable_t* ht, value_hash_fn hash_fn,
+                    value_comparison_fn cmp_fn, value_t key);
 
-extern value_result_t value_ht_find(value_hashtable_t* ht, value_hash_fn hash_fn, value_comparison_fn cmp_fn, value_t key);
+extern value_result_t value_ht_find(value_hashtable_t* ht,
+                                    value_hash_fn hash_fn,
+                                    value_comparison_fn cmp_fn, value_t key);
 
 __attribute__((warn_unused_result)) extern value_hashtable_t*
-value_hashtable_upsize_internal(value_hashtable_t* ht, value_hash_fn hash_fn, value_comparison_fn cmp_fn);
+    value_hashtable_upsize_internal(value_hashtable_t* ht,
+                                    value_hash_fn hash_fn,
+                                    value_comparison_fn cmp_fn);
 
 /**
  * @function value_ht_num_entries
@@ -811,12 +817,12 @@ static inline uint64_t value_ht_num_entries(value_hashtable_t* ht) {
  * Allows traversing all elements of a hashtable in an unspecified
  * order.
  */
-#define value_ht_foreach(ht, key_var, value_var, statements)                  \
+#define value_ht_foreach(ht, key_var, value_var, statements)                   \
   do {                                                                         \
     for (int ht_index = 0; ht_index < ht->n_buckets; ht_index++) {             \
-      value_alist_t* alist = ht->buckets[ht_index];                           \
+      value_alist_t* alist = ht->buckets[ht_index];                            \
       if (alist != NULL) {                                                     \
-        value_alist_foreach(alist, key_var, value_var, statements);           \
+        value_alist_foreach(alist, key_var, value_var, statements);            \
       }                                                                        \
     }                                                                          \
   } while (0)
@@ -5523,15 +5529,21 @@ typedef struct value_hashtable_S value_hashtable_t;
 extern value_hashtable_t* make_value_hashtable(uint64_t n_buckets);
 
 __attribute__((warn_unused_result)) extern value_hashtable_t*
-value_ht_insert(value_hashtable_t* ht, value_hash_fn hash_fn, value_comparison_fn cmp_fn, value_t key, value_t value);
+    value_ht_insert(value_hashtable_t* ht, value_hash_fn hash_fn,
+                    value_comparison_fn cmp_fn, value_t key, value_t value);
 
 __attribute__((warn_unused_result)) extern value_hashtable_t*
-value_ht_delete(value_hashtable_t* ht, value_hash_fn hash_fn, value_comparison_fn cmp_fn, value_t key);
+    value_ht_delete(value_hashtable_t* ht, value_hash_fn hash_fn,
+                    value_comparison_fn cmp_fn, value_t key);
 
-extern value_result_t value_ht_find(value_hashtable_t* ht, value_hash_fn hash_fn, value_comparison_fn cmp_fn, value_t key);
+extern value_result_t value_ht_find(value_hashtable_t* ht,
+                                    value_hash_fn hash_fn,
+                                    value_comparison_fn cmp_fn, value_t key);
 
 __attribute__((warn_unused_result)) extern value_hashtable_t*
-value_hashtable_upsize_internal(value_hashtable_t* ht, value_hash_fn hash_fn, value_comparison_fn cmp_fn);
+    value_hashtable_upsize_internal(value_hashtable_t* ht,
+                                    value_hash_fn hash_fn,
+                                    value_comparison_fn cmp_fn);
 
 /**
  * @function value_ht_num_entries
@@ -5548,12 +5560,12 @@ static inline uint64_t value_ht_num_entries(value_hashtable_t* ht) {
  * Allows traversing all elements of a hashtable in an unspecified
  * order.
  */
-#define value_ht_foreach(ht, key_var, value_var, statements)                  \
+#define value_ht_foreach(ht, key_var, value_var, statements)                   \
   do {                                                                         \
     for (int ht_index = 0; ht_index < ht->n_buckets; ht_index++) {             \
-      value_alist_t* alist = ht->buckets[ht_index];                           \
+      value_alist_t* alist = ht->buckets[ht_index];                            \
       if (alist != NULL) {                                                     \
-        value_alist_foreach(alist, key_var, value_var, statements);           \
+        value_alist_foreach(alist, key_var, value_var, statements);            \
       }                                                                        \
     }                                                                          \
   } while (0)
@@ -5584,8 +5596,9 @@ value_hashtable_t* make_value_hashtable(uint64_t n_buckets) {
  *
  * Insert an association into the hashtable.
  */
-value_hashtable_t* value_ht_insert(value_hashtable_t* ht, value_hash_fn hash_fn, value_comparison_fn cmp_fn, value_t key,
-                                     value_t value) {
+value_hashtable_t* value_ht_insert(value_hashtable_t* ht, value_hash_fn hash_fn,
+                                   value_comparison_fn cmp_fn, value_t key,
+                                   value_t value) {
   uint64_t hashcode = hash_fn(key);
   int bucket = hashcode % ht->n_buckets;
   value_alist_t* list = ht->buckets[bucket];
@@ -5612,7 +5625,8 @@ value_hashtable_t* value_ht_insert(value_hashtable_t* ht, value_hash_fn hash_fn,
  * Delete an association from the hashtable. It is not an error to
  * delete a key that doesn't exist in the hashtable.
  */
-value_hashtable_t* value_ht_delete(value_hashtable_t* ht, value_hash_fn hash_fn, value_comparison_fn cmp_fn, value_t key) {
+value_hashtable_t* value_ht_delete(value_hashtable_t* ht, value_hash_fn hash_fn,
+                                   value_comparison_fn cmp_fn, value_t key) {
   uint64_t hashcode = hash_fn(key);
   int bucket = hashcode % ht->n_buckets;
   value_alist_t* list = ht->buckets[bucket];
@@ -5631,7 +5645,8 @@ value_hashtable_t* value_ht_delete(value_hashtable_t* ht, value_hash_fn hash_fn,
  *
  * Find an association in the hashtable.
  */
-value_result_t value_ht_find(value_hashtable_t* ht, value_hash_fn hash_fn, value_comparison_fn cmp_fn, value_t key) {
+value_result_t value_ht_find(value_hashtable_t* ht, value_hash_fn hash_fn,
+                             value_comparison_fn cmp_fn, value_t key) {
   uint64_t hashcode = hash_fn(key);
   int bucket = hashcode % ht->n_buckets;
   value_alist_t* list = ht->buckets[bucket];
@@ -5654,7 +5669,9 @@ by making a new larger hashtable using
  * AK_HT_UPSCALE_MULTIPLIER to compute the new number of buckets
  * (currently 1.75).
  */
-value_hashtable_t* value_hashtable_upsize_internal(value_hashtable_t* ht, value_hash_fn hash_fn, value_comparison_fn cmp_fn) {
+value_hashtable_t* value_hashtable_upsize_internal(value_hashtable_t* ht,
+                                                   value_hash_fn hash_fn,
+                                                   value_comparison_fn cmp_fn) {
   uint64_t new_num_buckets = ht->n_buckets * AK_HT_UPSCALE_MULTIPLIER;
   value_hashtable_t* result = make_value_hashtable(new_num_buckets);
   // clang-format off

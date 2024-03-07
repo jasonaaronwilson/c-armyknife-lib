@@ -78,6 +78,7 @@ TESTS= \
 	./uint64-test.sh \
 	./string-util-test.sh \
 	./buffer-test.sh \
+	./value-alist-test.sh \
 	./string-alist-test.sh \
 	./string-hashtable-test.sh \
 	./command-line-parser-test.sh \

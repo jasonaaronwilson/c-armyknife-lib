@@ -17,15 +17,14 @@ struct value_alist_S {
 typedef struct value_alist_S value_alist_t;
 
 extern value_result_t value_alist_find(value_alist_t* list,
-                                       value_comparison_fn* cmp_fn,
-                                       value_t key);
+                                       value_comparison_fn cmp_fn, value_t key);
 
 __attribute__((warn_unused_result)) extern value_alist_t*
-    value_alist_insert(value_alist_t* list, value_comparison_fn* cmp_fn,
+    value_alist_insert(value_alist_t* list, value_comparison_fn cmp_fn,
                        value_t key, value_t value);
 
 __attribute__((warn_unused_result)) extern value_alist_t*
-    value_alist_delete(value_alist_t* list, value_comparison_fn* cmp_fn,
+    value_alist_delete(value_alist_t* list, value_comparison_fn cmp_fn,
                        value_t key);
 
 __attribute__((warn_unused_result)) extern uint64_t
@@ -41,7 +40,7 @@ __attribute__((warn_unused_result)) extern uint64_t
   do {                                                                         \
     value_alist_t* head = alist;                                               \
     while (head) {                                                             \
-      value_t key_ = head->key;                                                \
+      value_t key_var = head->key;                                             \
       value_t value_var = head->value;                                         \
       statements;                                                              \
       head = head->next;                                                       \
@@ -56,7 +55,7 @@ __attribute__((warn_unused_result)) extern uint64_t
  * Insert a new key and value into an assocation list.
  */
 value_alist_t* value_alist_insert(value_alist_t* list,
-                                  value_comparison_fn* cmp_fn, value_t key,
+                                  value_comparison_fn cmp_fn, value_t key,
                                   value_t value) {
   value_alist_t* result = (malloc_struct(value_alist_t));
   result->next = value_alist_delete(list, cmp_fn, key);
@@ -73,7 +72,7 @@ value_alist_t* value_alist_insert(value_alist_t* list,
  * freed.
  */
 value_alist_t* value_alist_delete(value_alist_t* list,
-                                  value_comparison_fn* cmp_fn, value_t key) {
+                                  value_comparison_fn cmp_fn, value_t key) {
   // This appears to be logically correct but could easily blow out
   // the stack with a long list.
   if (list == NULL) {
@@ -95,10 +94,10 @@ value_alist_t* value_alist_delete(value_alist_t* list,
  * is_not_ok() to see if the value is valid (i.e., if the key was
  * actually found).
  */
-value_result_t value_alist_find(value_alist_t* list,
-                                value_comparison_fn* cmp_fn, value_t key) {
+value_result_t value_alist_find(value_alist_t* list, value_comparison_fn cmp_fn,
+                                value_t key) {
   while (list) {
-    if ((*cmp_fn)(key, list->key) == 0) {
+    if (cmp_fn(key, list->key) == 0) {
       return (value_result_t){.val = list->value};
     }
     list = list->next;

@@ -1,2 +1,2 @@
 #!/bin/bash
-exec ./build-and-run.sh string-alist-test.c string-alist-test
+exec ./build-and-run.sh value-alist-test.c value-alist-test

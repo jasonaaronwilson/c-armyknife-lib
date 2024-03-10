@@ -2499,7 +2499,22 @@ void flag_enum_value(char* name, uint64_t value) {
 }
 
 void flag_alias(char* alias) {
-  // TODO(jawilson): fixme!
+  if (current_flag != NULL) {
+    // TODO(jawilson): check for a flag with the same name?
+    if (current_command != NULL) {
+      current_command->flags = string_tree_insert(current_command->flags, alias,
+						  ptr_to_value(current_flag));
+    } else if (current_program != NULL) {
+      current_program->flags = string_tree_insert(current_program->flags, alias,
+						  ptr_to_value(current_flag));
+    } else {
+      log_fatal("A current program or command must exist first");
+      fatal_error(ERROR_ILLEGAL_STATE);
+    }
+  } else {
+      log_fatal("A current flag must present to use flag_alias");
+      fatal_error(ERROR_ILLEGAL_STATE);
+  }
 }
 
 // TODO(jawilson): flag_type_switch,
@@ -3076,7 +3091,7 @@ __attribute__((warn_unused_result)) buffer_t*
  * into a buffer.
  */
 __attribute__((warn_unused_result)) extern buffer_t*
-buffer_append_all(buffer_t* bytes, FILE* input) {
+    buffer_append_all(buffer_t* bytes, FILE* input) {
   uint8_t buffer[1024];
   while (1) {
     uint64_t n_read = fread(buffer, 1, sizeof(buffer), input);

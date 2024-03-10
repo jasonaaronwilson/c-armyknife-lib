@@ -296,6 +296,31 @@ void test_bad_empty_command(void) {
       error);
 }
 
+void test_alias(void) {
+  value_array_t* FLAG_files = NULL;
+  boolean_t FLAG_true_boolean = false;
+
+  char* args[2];
+  args[0] = "foo";
+  args[1] = "--true-boolean=true";
+
+  flag_program_name("foo");
+  flag_boolean("--true-boolean", &FLAG_true_boolean);
+  flag_alias("--true");
+
+  flag_file_args(&FLAG_files);
+
+  char* error = flag_parse_command_line(2, args);
+  test_assert(!error && FLAG_true_boolean);
+
+  FLAG_true_boolean = false;
+  args[1] = "--true=true";
+
+  error = flag_parse_command_line(2, args);
+  test_assert(!error && FLAG_true_boolean);
+}
+
+
 int main(int argc, char** argv) {
   configure_fatal_errors((fatal_error_config_t){
       .catch_sigsegv = true,
@@ -310,5 +335,6 @@ int main(int argc, char** argv) {
   test_command_2();
   test_bad_command();
   test_bad_empty_command();
+  test_alias();
   exit(0);
 }

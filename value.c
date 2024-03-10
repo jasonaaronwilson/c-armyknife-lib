@@ -172,9 +172,23 @@ typedef int (*value_comparison_fn)(value_t value1, value_t value2);
 typedef uint64_t (*value_hash_fn)(value_t value1);
 
 int cmp_string_values(value_t value1, value_t value2);
+uint64_t hash_string_value(value_t value1);
 
 #endif /* _VALUE_H_ */
 
+/**
+ * @function cmp_string_values
+ *
+ * Assumes value1 and value2 are char* (aka strings or C strings) and
+ * does the equivalent of strcmp on them.
+ */
 int cmp_string_values(value_t value1, value_t value2) {
   return strcmp(value1.str, value2.str);
 }
+
+/**
+ * @function string_hash
+ *
+ * Assumes value1 is char* and performs a string hash on it.
+ */
+uint64_t hash_string_value(value_t value1) { return string_hash(value1.str); }

@@ -303,6 +303,7 @@ typedef int (*value_comparison_fn)(value_t value1, value_t value2);
 typedef uint64_t (*value_hash_fn)(value_t value1);
 
 int cmp_string_values(value_t value1, value_t value2);
+uint64_t hash_string_value(value_t value1);
 
 #endif /* _VALUE_H_ */
 // SSCF generated file from: allocate.c
@@ -712,8 +713,7 @@ __attribute__((warn_unused_result)) extern uint64_t
 #ifndef _STRING_ALIST_H_
 #define _STRING_ALIST_H_
 
-struct string_alist_S {
-};
+struct string_alist_S {};
 
 typedef struct string_alist_S string_alist_t;
 
@@ -725,7 +725,8 @@ typedef struct string_alist_S string_alist_t;
  * actually found).
  */
 static inline value_result_t alist_find(string_alist_t* list, char* key) {
-  return value_alist_find((value_alist_t*) list, cmp_string_values, str_to_value(key));
+  return value_alist_find((value_alist_t*) list, cmp_string_values,
+                          str_to_value(key));
 }
 
 /**
@@ -733,10 +734,10 @@ static inline value_result_t alist_find(string_alist_t* list, char* key) {
  *
  * Insert a new key and value into an assocation list.
  */
-__attribute__((warn_unused_result)) 
-static inline string_alist_t*
-alist_insert(string_alist_t* list, char* key, value_t value) {
-  return (string_alist_t*) value_alist_insert((value_alist_t*) list, cmp_string_values, str_to_value(key), value);
+__attribute__((warn_unused_result)) static inline string_alist_t*
+    alist_insert(string_alist_t* list, char* key, value_t value) {
+  return (string_alist_t*) value_alist_insert(
+      (value_alist_t*) list, cmp_string_values, str_to_value(key), value);
 }
 
 /**
@@ -746,10 +747,10 @@ alist_insert(string_alist_t* list, char* key, value_t value) {
  * list. Neither the key nor the value associated are themselves
  * freed.
  */
-__attribute__((warn_unused_result)) 
-static inline string_alist_t*
-alist_delete(string_alist_t* list, char* key) {
-  return (string_alist_t*) value_alist_delete((value_alist_t*) list, cmp_string_values, str_to_value(key));
+__attribute__((warn_unused_result)) static inline string_alist_t*
+    alist_delete(string_alist_t* list, char* key) {
+  return (string_alist_t*) value_alist_delete(
+      (value_alist_t*) list, cmp_string_values, str_to_value(key));
 }
 
 /**
@@ -759,9 +760,8 @@ alist_delete(string_alist_t* list, char* key) {
  *
  * The alist argument MAY be null.
  */
-__attribute__((warn_unused_result)) 
-static inline uint64_t
-alist_length(string_alist_t* list) {
+__attribute__((warn_unused_result)) static inline uint64_t
+    alist_length(string_alist_t* list) {
   return value_alist_length((value_alist_t*) list);
 }
 
@@ -771,12 +771,12 @@ alist_length(string_alist_t* list) {
  * Allows iteration over the keys and values in a string association
  * list.
  */
-#define string_alist_foreach(alist, key_var, value_var, statements)             \
-  do {                                                                          \
-    value_alist_foreach((value_alist_t*) alist, key_var ## _value, value_var, { \
-      char* key_var = (key_var ## _value).str; \
-      statements; \
-    }); \
+#define string_alist_foreach(alist, key_var, value_var, statements)            \
+  do {                                                                         \
+    value_alist_foreach((value_alist_t*) alist, key_var##_value, value_var, {  \
+      char* key_var = (key_var##_value).str;                                   \
+      statements;                                                              \
+    });                                                                        \
   } while (0)
 
 #endif /* _STRING_ALIST_H_ */
@@ -865,54 +865,63 @@ static inline uint64_t value_ht_num_entries(value_hashtable_t* ht) {
 #endif /* _VALUE_HASHTABLE_H_ */
 // SSCF generated file from: string-hashtable.c
 
-#line 23 "string-hashtable.c"
+#line 10 "string-hashtable.c"
 #ifndef _STRING_HASHTABLE_H_
 #define _STRING_HASHTABLE_H_
 
-/**
- * @compiliation_option ARMYKNIFE_HT_LOAD_FACTOR
- *
- * The "load factor" is the ratio of the number of keys in the hash
- * table to the most optimistic capacity for the table if every key
- * happened to be hashed to a different bucket. When the load factor
- * reaches this value, the hash table will be resized to a larger
- * capacity to improve performance. A higher value allows for a denser
- * hash table but can lead to more collisions and slower lookups and
- * insertions. A lower value wastes memory but reduces collisions.
- */
-#ifndef ARMYKNIFE_HT_LOAD_FACTOR
-#define ARMYKNIFE_HT_LOAD_FACTOR 0.75
-#endif /* ARMYKNIFE_HT_LOAD_FACTOR */
-
-/**
- * @compiliation_option AK_HT_UPSCALE_MULTIPLIER
- *
- * In all cases this should be a number > 1.0.
- */
-#ifndef AK_HT_UPSCALE_MULTIPLIER
-#define AK_HT_UPSCALE_MULTIPLIER 1.75
-#endif /* AK_HT_UPSCALE_MULTIPLIER */
-
 struct string_hashtable_S {
-  uint64_t n_buckets;
-  uint64_t n_entries;
-  string_alist_t* buckets[0];
 };
 
 typedef struct string_hashtable_S string_hashtable_t;
 
-extern string_hashtable_t* make_string_hashtable(uint64_t n_buckets);
+/**
+ * @function make_string_hashtable
+ *
+ * Create a hashtable with the given number of buckets.
+ *
+ * The minimum number of buckets is currently 2 to make it less likely
+ * we run into some resize loop depending on the values of
+ * ARMYKNIFE_HT_LOAD_FACTOR and AK_HT_UPSCALE_MULTIPLIER).
+ */
+static inline string_hashtable_t* make_string_hashtable(uint64_t n_buckets) {
+  return (string_hashtable_t*) make_value_hashtable(n_buckets);
+}
 
-__attribute__((warn_unused_result)) extern string_hashtable_t*
-    string_ht_insert(string_hashtable_t* ht, char* key, value_t value);
+/**
+ * @function string_ht_insert
+ *
+ * Insert an association into the hashtable.
+ */
+__attribute__((warn_unused_result)) 
+static inline string_hashtable_t*
+string_ht_insert(string_hashtable_t* ht, char* key, value_t value) {
+  return (string_hashtable_t*) value_ht_insert((value_hashtable_t*) ht, hash_string_value, cmp_string_values,
+					       str_to_value(key), 
+					       value);
+}
 
-__attribute__((warn_unused_result)) extern string_hashtable_t*
-    string_ht_delete(string_hashtable_t* ht, char* key);
+/**
+ * @function string_ht_delete
+ *
+ * Delete an association from the hashtable. It is not an error to
+ * delete a key that doesn't exist in the hashtable.
+ */
+__attribute__((warn_unused_result)) 
+static inline string_hashtable_t*
+string_ht_delete(string_hashtable_t* ht, char* key) {
+  return (string_hashtable_t*) value_ht_delete((value_hashtable_t*) ht, hash_string_value, cmp_string_values,
+					       str_to_value(key));
+}
 
-extern value_result_t string_ht_find(string_hashtable_t* ht, char* key);
-
-__attribute__((warn_unused_result)) extern string_hashtable_t*
-    string_hashtable_upsize_internal(string_hashtable_t* ht);
+/**
+ * @function string_ht_find
+ *
+ * Find an association in the hashtable.
+ */
+static inline value_result_t
+string_ht_find(string_hashtable_t* ht, char* key) {
+  return value_ht_find((value_hashtable_t*) ht, hash_string_value, cmp_string_values, str_to_value(key));
+}
 
 /**
  * @function string_ht_num_entries
@@ -920,7 +929,7 @@ __attribute__((warn_unused_result)) extern string_hashtable_t*
  * Returns the number of entries in the hashtable.
  */
 static inline uint64_t string_ht_num_entries(string_hashtable_t* ht) {
-  return ht->n_entries;
+  return value_ht_num_entries((value_hashtable_t*) ht);
 }
 
 /**
@@ -931,12 +940,10 @@ static inline uint64_t string_ht_num_entries(string_hashtable_t* ht) {
  */
 #define string_ht_foreach(ht, key_var, value_var, statements)                  \
   do {                                                                         \
-    for (int ht_index = 0; ht_index < ht->n_buckets; ht_index++) {             \
-      string_alist_t* alist = ht->buckets[ht_index];                           \
-      if (alist != NULL) {                                                     \
-        string_alist_foreach(alist, key_var, value_var, statements);           \
-      }                                                                        \
-    }                                                                          \
+    value_ht_foreach(((value_hashtable_t*) ht), key_var ## _value, value_var, { \
+       char* key_var = (key_var ## _value).str;                                \
+       statements;                                                             \
+    });                                                                        \
   } while (0)
 
 #endif /* _STRING_HASHTABLE_H_ */
@@ -3742,8 +3749,7 @@ uint64_t random_next_uint64_below(random_state_t* state, uint64_t maximum) {
 #ifndef _STRING_ALIST_H_
 #define _STRING_ALIST_H_
 
-struct string_alist_S {
-};
+struct string_alist_S {};
 
 typedef struct string_alist_S string_alist_t;
 
@@ -3755,7 +3761,8 @@ typedef struct string_alist_S string_alist_t;
  * actually found).
  */
 static inline value_result_t alist_find(string_alist_t* list, char* key) {
-  return value_alist_find((value_alist_t*) list, cmp_string_values, str_to_value(key));
+  return value_alist_find((value_alist_t*) list, cmp_string_values,
+                          str_to_value(key));
 }
 
 /**
@@ -3763,10 +3770,10 @@ static inline value_result_t alist_find(string_alist_t* list, char* key) {
  *
  * Insert a new key and value into an assocation list.
  */
-__attribute__((warn_unused_result)) 
-static inline string_alist_t*
-alist_insert(string_alist_t* list, char* key, value_t value) {
-  return (string_alist_t*) value_alist_insert((value_alist_t*) list, cmp_string_values, str_to_value(key), value);
+__attribute__((warn_unused_result)) static inline string_alist_t*
+    alist_insert(string_alist_t* list, char* key, value_t value) {
+  return (string_alist_t*) value_alist_insert(
+      (value_alist_t*) list, cmp_string_values, str_to_value(key), value);
 }
 
 /**
@@ -3776,10 +3783,10 @@ alist_insert(string_alist_t* list, char* key, value_t value) {
  * list. Neither the key nor the value associated are themselves
  * freed.
  */
-__attribute__((warn_unused_result)) 
-static inline string_alist_t*
-alist_delete(string_alist_t* list, char* key) {
-  return (string_alist_t*) value_alist_delete((value_alist_t*) list, cmp_string_values, str_to_value(key));
+__attribute__((warn_unused_result)) static inline string_alist_t*
+    alist_delete(string_alist_t* list, char* key) {
+  return (string_alist_t*) value_alist_delete(
+      (value_alist_t*) list, cmp_string_values, str_to_value(key));
 }
 
 /**
@@ -3789,9 +3796,8 @@ alist_delete(string_alist_t* list, char* key) {
  *
  * The alist argument MAY be null.
  */
-__attribute__((warn_unused_result)) 
-static inline uint64_t
-alist_length(string_alist_t* list) {
+__attribute__((warn_unused_result)) static inline uint64_t
+    alist_length(string_alist_t* list) {
   return value_alist_length((value_alist_t*) list);
 }
 
@@ -3801,12 +3807,12 @@ alist_length(string_alist_t* list) {
  * Allows iteration over the keys and values in a string association
  * list.
  */
-#define string_alist_foreach(alist, key_var, value_var, statements)             \
-  do {                                                                          \
-    value_alist_foreach((value_alist_t*) alist, key_var ## _value, value_var, { \
-      char* key_var = (key_var ## _value).str; \
-      statements; \
-    }); \
+#define string_alist_foreach(alist, key_var, value_var, statements)            \
+  do {                                                                         \
+    value_alist_foreach((value_alist_t*) alist, key_var##_value, value_var, {  \
+      char* key_var = (key_var##_value).str;                                   \
+      statements;                                                              \
+    });                                                                        \
   } while (0)
 
 #endif /* _STRING_ALIST_H_ */
@@ -3815,97 +3821,17 @@ alist_length(string_alist_t* list) {
  * @file string-hashtable.c
  *
  * A very thread-unsafe hash map of C style zero terminated byte
- * "strings" to a value_t.
- *
- * Please don't expect C++, JVM, or Rust level of performance for at
- * least these reasons:
- *
- * 1) We are probably using a slower (but higher quality) hash
- * function than they use for strings, a design decision I made to
- * have a single "good enough" hash function to use everywhere in this
- * library because I assume you will find the right cryptography
- * library to meet those needs.
- *
- * 2) Probably a bigger impact on modern processors is that we use
- * chaining which is considered less friendly than open addressing and
- * other techniques. However, I wanted an implementation that was
- * simple and reusing string_alist_t seems to have done the trick.
+ * "strings" to a value_t. This is an oqaque reference around a
+ * value_hashtable.
  */
 
 #ifndef _STRING_HASHTABLE_H_
 #define _STRING_HASHTABLE_H_
 
-/**
- * @compiliation_option ARMYKNIFE_HT_LOAD_FACTOR
- *
- * The "load factor" is the ratio of the number of keys in the hash
- * table to the most optimistic capacity for the table if every key
- * happened to be hashed to a different bucket. When the load factor
- * reaches this value, the hash table will be resized to a larger
- * capacity to improve performance. A higher value allows for a denser
- * hash table but can lead to more collisions and slower lookups and
- * insertions. A lower value wastes memory but reduces collisions.
- */
-#ifndef ARMYKNIFE_HT_LOAD_FACTOR
-#define ARMYKNIFE_HT_LOAD_FACTOR 0.75
-#endif /* ARMYKNIFE_HT_LOAD_FACTOR */
-
-/**
- * @compiliation_option AK_HT_UPSCALE_MULTIPLIER
- *
- * In all cases this should be a number > 1.0.
- */
-#ifndef AK_HT_UPSCALE_MULTIPLIER
-#define AK_HT_UPSCALE_MULTIPLIER 1.75
-#endif /* AK_HT_UPSCALE_MULTIPLIER */
-
 struct string_hashtable_S {
-  uint64_t n_buckets;
-  uint64_t n_entries;
-  string_alist_t* buckets[0];
 };
 
 typedef struct string_hashtable_S string_hashtable_t;
-
-extern string_hashtable_t* make_string_hashtable(uint64_t n_buckets);
-
-__attribute__((warn_unused_result)) extern string_hashtable_t*
-    string_ht_insert(string_hashtable_t* ht, char* key, value_t value);
-
-__attribute__((warn_unused_result)) extern string_hashtable_t*
-    string_ht_delete(string_hashtable_t* ht, char* key);
-
-extern value_result_t string_ht_find(string_hashtable_t* ht, char* key);
-
-__attribute__((warn_unused_result)) extern string_hashtable_t*
-    string_hashtable_upsize_internal(string_hashtable_t* ht);
-
-/**
- * @function string_ht_num_entries
- *
- * Returns the number of entries in the hashtable.
- */
-static inline uint64_t string_ht_num_entries(string_hashtable_t* ht) {
-  return ht->n_entries;
-}
-
-/**
- * @macro string_ht_foreach
- *
- * Allows traversing all elements of a hashtable in an unspecified
- * order.
- */
-#define string_ht_foreach(ht, key_var, value_var, statements)                  \
-  do {                                                                         \
-    for (int ht_index = 0; ht_index < ht->n_buckets; ht_index++) {             \
-      string_alist_t* alist = ht->buckets[ht_index];                           \
-      if (alist != NULL) {                                                     \
-        string_alist_foreach(alist, key_var, value_var, statements);           \
-      }                                                                        \
-    }                                                                          \
-  } while (0)
-
-#endif /* _STRING_HASHTABLE_H_ */
 
 /**
  * @function make_string_hashtable
@@ -3916,14 +3842,8 @@ static inline uint64_t string_ht_num_entries(string_hashtable_t* ht) {
  * we run into some resize loop depending on the values of
  * ARMYKNIFE_HT_LOAD_FACTOR and AK_HT_UPSCALE_MULTIPLIER).
  */
-string_hashtable_t* make_string_hashtable(uint64_t n_buckets) {
-  if (n_buckets < 2) {
-    fatal_error(ERROR_ILLEGAL_INITIAL_CAPACITY);
-  }
-  string_hashtable_t* result = (string_hashtable_t*) (malloc_bytes(
-      sizeof(string_hashtable_t) + sizeof(string_alist_t*) * n_buckets));
-  result->n_buckets = n_buckets;
-  return result;
+static inline string_hashtable_t* make_string_hashtable(uint64_t n_buckets) {
+  return (string_hashtable_t*) make_value_hashtable(n_buckets);
 }
 
 /**
@@ -3931,26 +3851,12 @@ string_hashtable_t* make_string_hashtable(uint64_t n_buckets) {
  *
  * Insert an association into the hashtable.
  */
-string_hashtable_t* string_ht_insert(string_hashtable_t* ht, char* key,
-                                     value_t value) {
-  uint64_t hashcode = string_hash(key);
-  int bucket = hashcode % ht->n_buckets;
-  string_alist_t* list = ht->buckets[bucket];
-  uint64_t len = alist_length(list);
-  list = alist_insert(list, key, value);
-  ht->buckets[bucket] = list;
-  uint64_t len_after = alist_length(list);
-  if (len_after > len) {
-    ht->n_entries++;
-    // Without this, a hash table would never grow and thus as the
-    // number of entries grows large, the hashtable would only improve
-    // performance over an alist by a constant amount (which could
-    // still be an impressive speedup...)
-    if (ht->n_entries >= (ht->n_buckets * ARMYKNIFE_HT_LOAD_FACTOR)) {
-      ht = string_hashtable_upsize_internal(ht);
-    }
-  }
-  return ht;
+__attribute__((warn_unused_result)) 
+static inline string_hashtable_t*
+string_ht_insert(string_hashtable_t* ht, char* key, value_t value) {
+  return (string_hashtable_t*) value_ht_insert((value_hashtable_t*) ht, hash_string_value, cmp_string_values,
+					       str_to_value(key), 
+					       value);
 }
 
 /**
@@ -3959,18 +3865,11 @@ string_hashtable_t* string_ht_insert(string_hashtable_t* ht, char* key,
  * Delete an association from the hashtable. It is not an error to
  * delete a key that doesn't exist in the hashtable.
  */
-string_hashtable_t* string_ht_delete(string_hashtable_t* ht, char* key) {
-  uint64_t hashcode = string_hash(key);
-  int bucket = hashcode % ht->n_buckets;
-  string_alist_t* list = ht->buckets[bucket];
-  uint64_t len = alist_length(list);
-  list = alist_delete(list, key);
-  ht->buckets[bucket] = list;
-  uint64_t len_after = alist_length(list);
-  if (len_after < len) {
-    ht->n_entries--;
-  }
-  return ht;
+__attribute__((warn_unused_result)) 
+static inline string_hashtable_t*
+string_ht_delete(string_hashtable_t* ht, char* key) {
+  return (string_hashtable_t*) value_ht_delete((value_hashtable_t*) ht, hash_string_value, cmp_string_values,
+					       str_to_value(key));
 }
 
 /**
@@ -3978,48 +3877,35 @@ string_hashtable_t* string_ht_delete(string_hashtable_t* ht, char* key) {
  *
  * Find an association in the hashtable.
  */
-value_result_t string_ht_find(string_hashtable_t* ht, char* key) {
-  uint64_t hashcode = string_hash(key);
-  int bucket = hashcode % ht->n_buckets;
-  string_alist_t* list = ht->buckets[bucket];
-  return alist_find(list, key);
+static inline value_result_t
+string_ht_find(string_hashtable_t* ht, char* key) {
+  return value_ht_find((value_hashtable_t*) ht, hash_string_value, cmp_string_values, str_to_value(key));
 }
 
 /**
- * @function string_hashtable_upsize_internal
+ * @function string_ht_num_entries
  *
- * This function is called automatically when an insert brings the
- * number of entries above the number of buckets times
- * ARMYKNIFE_HT_LOAD_FACTOR (defaults to 75%). We don't even check
- * that constraint is valid (hence the _internal suffix).
- *
- * Hopefully based on the name you can infer this function will only
- * ever "grow" a hashtable by deciding on a size of the new larger
- * hash-table and copying
-
-by making a new larger hashtable using
- * AK_HT_UPSCALE_MULTIPLIER to compute the new number of buckets
- * (currently 1.75).
+ * Returns the number of entries in the hashtable.
  */
-string_hashtable_t* string_hashtable_upsize_internal(string_hashtable_t* ht) {
-  uint64_t new_num_buckets = ht->n_buckets * AK_HT_UPSCALE_MULTIPLIER;
-  string_hashtable_t* result = make_string_hashtable(new_num_buckets);
-  // clang-format off
-  string_ht_foreach(ht, key, value, {
-      string_hashtable_t* should_be_result = string_ht_insert(result, key, value);
-      // If an insertion into the bigger hashtable results in it's own
-      // resize, then the results will be unpredictable (at least
-      // without more code). This is likely to only happen when
-      // growing a very small hashtable and depends on values choosen
-      // for ARMYKNIFE_HT_LOAD_FACTOR and AK_HT_UPSCALE_MULTIPLIER.
-      if (result != should_be_result) {
-	fatal_error(ERROR_ILLEGAL_STATE);
-      }
-  });
-  free_bytes(ht);
-  // clang-format on
-  return result;
+static inline uint64_t string_ht_num_entries(string_hashtable_t* ht) {
+  return value_ht_num_entries((value_hashtable_t*) ht);
 }
+
+/**
+ * @macro string_ht_foreach
+ *
+ * Allows traversing all elements of a hashtable in an unspecified
+ * order.
+ */
+#define string_ht_foreach(ht, key_var, value_var, statements)                  \
+  do {                                                                         \
+    value_ht_foreach(((value_hashtable_t*) ht), key_var ## _value, value_var, { \
+       char* key_var = (key_var ## _value).str;                                \
+       statements;                                                             \
+    });                                                                        \
+  } while (0)
+
+#endif /* _STRING_HASHTABLE_H_ */
 #line 2 "string-tree.c"
 
 /**
@@ -5181,12 +5067,26 @@ typedef int (*value_comparison_fn)(value_t value1, value_t value2);
 typedef uint64_t (*value_hash_fn)(value_t value1);
 
 int cmp_string_values(value_t value1, value_t value2);
+uint64_t hash_string_value(value_t value1);
 
 #endif /* _VALUE_H_ */
 
+/**
+ * @function cmp_string_values
+ *
+ * Assumes value1 and value2 are char* (aka strings or C strings) and
+ * does the equivalent of strcmp on them.
+ */
 int cmp_string_values(value_t value1, value_t value2) {
   return strcmp(value1.str, value2.str);
 }
+
+/**
+ * @function string_hash
+ *
+ * Assumes value1 is char* and performs a string hash on it.
+ */
+uint64_t hash_string_value(value_t value1) { return string_hash(value1.str); }
 #line 2 "value-alist.c"
 /**
  * @file value-alist.c

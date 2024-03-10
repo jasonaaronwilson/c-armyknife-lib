@@ -1,6 +1,8 @@
 # @file string-alist.c
 
 An association list (a type of map) from a string to a value_t.
+
+This simply wraps value-alist.c.
  
 ## @macro string_alist_foreach
 

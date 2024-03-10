@@ -89,6 +89,11 @@ is set, the value_t should never be looked at (most likely will be
 
 An un-typed union of integers, doubles, and pointers.
  
+## @function cmp_string_values
+
+Assumes value1 and value2 are char* (aka strings or C strings) and
+does the equivalent of strcmp on them.
+ 
 ## @function is_not_ok
 
 Return true if the given value_result_t contains an error, such as
@@ -98,6 +103,10 @@ NF_ERROR_NOT_FOUND.
 
 Return true if the given value_result_t contains a legal value
 instead of an error condition.
+ 
+## @function string_hash
+
+Assumes value1 is char* and performs a string hash on it.
  
 ## @enum non_fatal_error_code_t
 

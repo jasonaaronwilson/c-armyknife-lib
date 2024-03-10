@@ -3,6 +3,11 @@
 This contains routines to read the contents of a file or write a
 new file.
  
+## @function buffer_append_all
+
+Completely reads everything from the input FILE* putting everything
+into a buffer.
+ 
 ## @function buffer_append_file_contents
 
 Completely reads a file and appends the contents to the passed in

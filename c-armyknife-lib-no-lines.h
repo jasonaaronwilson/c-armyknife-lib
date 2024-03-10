@@ -855,10 +855,13 @@ static inline uint64_t value_ht_num_entries(value_hashtable_t* ht) {
 #ifndef _STRING_HASHTABLE_H_
 #define _STRING_HASHTABLE_H_
 
-struct string_hashtable_S {
-};
+struct string_hashtable_S {};
 
 typedef struct string_hashtable_S string_hashtable_t;
+
+static inline value_hashtable_t* to_value_hashtable(string_hashtable_t* ht) {
+  return (value_hashtable_t*) ht;
+}
 
 /**
  * @function make_string_hashtable
@@ -878,10 +881,11 @@ static inline string_hashtable_t* make_string_hashtable(uint64_t n_buckets) {
  *
  * Insert an association into the hashtable.
  */
-__attribute__((warn_unused_result)) 
-static inline string_hashtable_t*
-string_ht_insert(string_hashtable_t* ht, char* key, value_t value) {
-  return (string_hashtable_t*) value_ht_insert((value_hashtable_t*) ht, hash_string_value, cmp_string_values,
+__attribute__((warn_unused_result)) static inline string_hashtable_t*
+    string_ht_insert(string_hashtable_t* ht, char* key, value_t value) {
+  return (string_hashtable_t*) value_ht_insert(to_value_hashtable(ht),
+					       hash_string_value, 
+					       cmp_string_values,
 					       str_to_value(key), 
 					       value);
 }
@@ -892,10 +896,9 @@ string_ht_insert(string_hashtable_t* ht, char* key, value_t value) {
  * Delete an association from the hashtable. It is not an error to
  * delete a key that doesn't exist in the hashtable.
  */
-__attribute__((warn_unused_result)) 
-static inline string_hashtable_t*
-string_ht_delete(string_hashtable_t* ht, char* key) {
-  return (string_hashtable_t*) value_ht_delete((value_hashtable_t*) ht, hash_string_value, cmp_string_values,
+__attribute__((warn_unused_result)) static inline string_hashtable_t*
+    string_ht_delete(string_hashtable_t* ht, char* key) {
+  return (string_hashtable_t*) value_ht_delete(to_value_hashtable(ht), hash_string_value, cmp_string_values,
 					       str_to_value(key));
 }
 
@@ -904,9 +907,9 @@ string_ht_delete(string_hashtable_t* ht, char* key) {
  *
  * Find an association in the hashtable.
  */
-static inline value_result_t
-string_ht_find(string_hashtable_t* ht, char* key) {
-  return value_ht_find((value_hashtable_t*) ht, hash_string_value, cmp_string_values, str_to_value(key));
+static inline value_result_t string_ht_find(string_hashtable_t* ht, char* key) {
+  return value_ht_find(to_value_hashtable(ht), hash_string_value,
+                       cmp_string_values, str_to_value(key));
 }
 
 /**
@@ -915,7 +918,7 @@ string_ht_find(string_hashtable_t* ht, char* key) {
  * Returns the number of entries in the hashtable.
  */
 static inline uint64_t string_ht_num_entries(string_hashtable_t* ht) {
-  return value_ht_num_entries((value_hashtable_t*) ht);
+  return value_ht_num_entries(to_value_hashtable(ht));
 }
 
 /**
@@ -926,9 +929,9 @@ static inline uint64_t string_ht_num_entries(string_hashtable_t* ht) {
  */
 #define string_ht_foreach(ht, key_var, value_var, statements)                  \
   do {                                                                         \
-    value_ht_foreach(((value_hashtable_t*) ht), key_var ## _value, value_var, { \
-       char* key_var = (key_var ## _value).str;                                \
-       statements;                                                             \
+    value_ht_foreach(to_value_hashtable(ht), key_var##_value, value_var, { \
+      char* key_var = (key_var##_value).str;                                   \
+      statements;                                                              \
     });                                                                        \
   } while (0)
 
@@ -3795,10 +3798,13 @@ __attribute__((warn_unused_result)) static inline uint64_t
 #ifndef _STRING_HASHTABLE_H_
 #define _STRING_HASHTABLE_H_
 
-struct string_hashtable_S {
-};
+struct string_hashtable_S {};
 
 typedef struct string_hashtable_S string_hashtable_t;
+
+static inline value_hashtable_t* to_value_hashtable(string_hashtable_t* ht) {
+  return (value_hashtable_t*) ht;
+}
 
 /**
  * @function make_string_hashtable
@@ -3818,10 +3824,11 @@ static inline string_hashtable_t* make_string_hashtable(uint64_t n_buckets) {
  *
  * Insert an association into the hashtable.
  */
-__attribute__((warn_unused_result)) 
-static inline string_hashtable_t*
-string_ht_insert(string_hashtable_t* ht, char* key, value_t value) {
-  return (string_hashtable_t*) value_ht_insert((value_hashtable_t*) ht, hash_string_value, cmp_string_values,
+__attribute__((warn_unused_result)) static inline string_hashtable_t*
+    string_ht_insert(string_hashtable_t* ht, char* key, value_t value) {
+  return (string_hashtable_t*) value_ht_insert(to_value_hashtable(ht),
+					       hash_string_value, 
+					       cmp_string_values,
 					       str_to_value(key), 
 					       value);
 }
@@ -3832,10 +3839,9 @@ string_ht_insert(string_hashtable_t* ht, char* key, value_t value) {
  * Delete an association from the hashtable. It is not an error to
  * delete a key that doesn't exist in the hashtable.
  */
-__attribute__((warn_unused_result)) 
-static inline string_hashtable_t*
-string_ht_delete(string_hashtable_t* ht, char* key) {
-  return (string_hashtable_t*) value_ht_delete((value_hashtable_t*) ht, hash_string_value, cmp_string_values,
+__attribute__((warn_unused_result)) static inline string_hashtable_t*
+    string_ht_delete(string_hashtable_t* ht, char* key) {
+  return (string_hashtable_t*) value_ht_delete(to_value_hashtable(ht), hash_string_value, cmp_string_values,
 					       str_to_value(key));
 }
 
@@ -3844,9 +3850,9 @@ string_ht_delete(string_hashtable_t* ht, char* key) {
  *
  * Find an association in the hashtable.
  */
-static inline value_result_t
-string_ht_find(string_hashtable_t* ht, char* key) {
-  return value_ht_find((value_hashtable_t*) ht, hash_string_value, cmp_string_values, str_to_value(key));
+static inline value_result_t string_ht_find(string_hashtable_t* ht, char* key) {
+  return value_ht_find(to_value_hashtable(ht), hash_string_value,
+                       cmp_string_values, str_to_value(key));
 }
 
 /**
@@ -3855,7 +3861,7 @@ string_ht_find(string_hashtable_t* ht, char* key) {
  * Returns the number of entries in the hashtable.
  */
 static inline uint64_t string_ht_num_entries(string_hashtable_t* ht) {
-  return value_ht_num_entries((value_hashtable_t*) ht);
+  return value_ht_num_entries(to_value_hashtable(ht));
 }
 
 /**
@@ -3866,9 +3872,9 @@ static inline uint64_t string_ht_num_entries(string_hashtable_t* ht) {
  */
 #define string_ht_foreach(ht, key_var, value_var, statements)                  \
   do {                                                                         \
-    value_ht_foreach(((value_hashtable_t*) ht), key_var ## _value, value_var, { \
-       char* key_var = (key_var ## _value).str;                                \
-       statements;                                                             \
+    value_ht_foreach(to_value_hashtable(ht), key_var##_value, value_var, { \
+      char* key_var = (key_var##_value).str;                                   \
+      statements;                                                              \
     });                                                                        \
   } while (0)
 

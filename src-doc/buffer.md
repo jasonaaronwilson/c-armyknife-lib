@@ -46,6 +46,10 @@ As an optimization, the capacity of a buffer can be increased.
  
 ## @function buffer_length
 
+Clear a buffer without resizing it.
+ 
+## @function buffer_length
+
 Return the number of bytes that have been added to this byte array.
  
 ## @function buffer_printf

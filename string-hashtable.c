@@ -14,6 +14,10 @@ struct string_hashtable_S {};
 
 typedef struct string_hashtable_S string_hashtable_t;
 
+static inline value_hashtable_t* to_value_hashtable(string_hashtable_t* ht) {
+  return (value_hashtable_t*) ht;
+}
+
 /**
  * @function make_string_hashtable
  *
@@ -35,7 +39,7 @@ static inline string_hashtable_t* make_string_hashtable(uint64_t n_buckets) {
 __attribute__((warn_unused_result)) static inline string_hashtable_t*
     string_ht_insert(string_hashtable_t* ht, char* key, value_t value) {
   return (string_hashtable_t*) value_ht_insert(
-      (value_hashtable_t*) ht, hash_string_value, cmp_string_values,
+      to_value_hashtable(ht), hash_string_value, cmp_string_values,
       str_to_value(key), value);
 }
 
@@ -48,7 +52,7 @@ __attribute__((warn_unused_result)) static inline string_hashtable_t*
 __attribute__((warn_unused_result)) static inline string_hashtable_t*
     string_ht_delete(string_hashtable_t* ht, char* key) {
   return (string_hashtable_t*) value_ht_delete(
-      (value_hashtable_t*) ht, hash_string_value, cmp_string_values,
+      to_value_hashtable(ht), hash_string_value, cmp_string_values,
       str_to_value(key));
 }
 
@@ -58,7 +62,7 @@ __attribute__((warn_unused_result)) static inline string_hashtable_t*
  * Find an association in the hashtable.
  */
 static inline value_result_t string_ht_find(string_hashtable_t* ht, char* key) {
-  return value_ht_find((value_hashtable_t*) ht, hash_string_value,
+  return value_ht_find(to_value_hashtable(ht), hash_string_value,
                        cmp_string_values, str_to_value(key));
 }
 
@@ -68,7 +72,7 @@ static inline value_result_t string_ht_find(string_hashtable_t* ht, char* key) {
  * Returns the number of entries in the hashtable.
  */
 static inline uint64_t string_ht_num_entries(string_hashtable_t* ht) {
-  return value_ht_num_entries((value_hashtable_t*) ht);
+  return value_ht_num_entries(to_value_hashtable(ht));
 }
 
 /**
@@ -79,7 +83,7 @@ static inline uint64_t string_ht_num_entries(string_hashtable_t* ht) {
  */
 #define string_ht_foreach(ht, key_var, value_var, statements)                  \
   do {                                                                         \
-    value_ht_foreach(((value_hashtable_t*) ht), key_var##_value, value_var, {  \
+    value_ht_foreach(to_value_hashtable(ht), key_var##_value, value_var, {     \
       char* key_var = (key_var##_value).str;                                   \
       statements;                                                              \
     });                                                                        \

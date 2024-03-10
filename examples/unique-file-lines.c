@@ -40,11 +40,30 @@
 
 // result is a hashtable of strings -> true
 string_hashtable_t* initial_seen_hashtable() {
-  // Currently hashtables don't grow so at least make sure we reduce
-  // "scanning" by 1000% or more with a "large" initial hashtable
-  // (which doesn't even seem that large...).
   string_hashtable_t* seen = make_string_hashtable(128 * 1024);
   return seen;
+}
+
+void process_lines(buffer_t* buffer, string_hashtable_t** seen,
+                   string_tree_t** seen_tree, boolean_t use_tree) {
+  value_array_t* lines = buffer_tokenize(buffer, "\n");
+  for (int j = 0; j < lines->length; j++) {
+    char* line = value_array_get(lines, j).str;
+    if (use_tree) {
+      value_result_t find_result = string_tree_find(*seen_tree, line);
+      if (!is_ok(find_result)) {
+        *seen_tree
+            = string_tree_insert(*seen_tree, line, boolean_to_value(true));
+        fprintf(stdout, "%s\n", line);
+      }
+    } else {
+      value_result_t find_result = string_ht_find(*seen, line);
+      if (!is_ok(find_result)) {
+        *seen = string_ht_insert(*seen, line, boolean_to_value(true));
+        fprintf(stdout, "%s\n", line);
+      }
+    }
+  }
 }
 
 int main(int argc, char** argv) {
@@ -62,12 +81,6 @@ int main(int argc, char** argv) {
 
   char* error = flag_parse_command_line(argc, argv);
 
-  if (argc <= 1) {
-    flag_print_help(stderr,
-                    "This implementation doesn't accept 'stdin' as an input");
-    exit(1);
-  }
-
   if (error) {
     flag_print_help(stderr, error);
     exit(1);
@@ -77,28 +90,16 @@ int main(int argc, char** argv) {
   string_tree_t* seen_tree = NULL;
 
   // This is about the worst way we could write this. So?
+  buffer_t* buffer = make_buffer(1);
   for (int i = 0; i < FLAG_files->length; i++) {
     char* file_name = value_array_get(FLAG_files, i).str;
-    buffer_t* buffer = make_buffer(1);
     buffer = buffer_append_file_contents(buffer, file_name);
-    value_array_t* lines = buffer_tokenize(buffer, "\n");
-    for (int j = 0; j < lines->length; j++) {
-      char* line = value_array_get(lines, j).str;
-      if (FLAG_use_tree) {
-        value_result_t find_result = string_tree_find(seen_tree, line);
-        if (!is_ok(find_result)) {
-          seen_tree
-              = string_tree_insert(seen_tree, line, boolean_to_value(true));
-          fprintf(stdout, "%s\n", line);
-        }
-      } else {
-        value_result_t find_result = string_ht_find(seen, line);
-        if (!is_ok(find_result)) {
-          seen = string_ht_insert(seen, line, boolean_to_value(true));
-          fprintf(stdout, "%s\n", line);
-        }
-      }
-    }
+    process_lines(buffer, &seen, &seen_tree, FLAG_use_tree);
+    buffer_clear(buffer);
+  }
+  if (FLAG_files->length == 0) {
+    buffer = buffer_append_all(buffer, stdin);
+    process_lines(buffer, &seen, &seen_tree, FLAG_use_tree);
   }
 
   exit(0);

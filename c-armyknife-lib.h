@@ -607,6 +607,8 @@ extern char* buffer_c_substring(buffer_t* buffer, uint64_t start, uint64_t end);
 
 extern char* buffer_to_c_string(buffer_t* buffer);
 
+extern void buffer_clear(buffer_t* buffer);
+
 __attribute__((warn_unused_result)) extern buffer_t*
     buffer_increase_capacity(buffer_t* buffer, uint64_t capacity);
 
@@ -1119,6 +1121,9 @@ extern command_line_parse_result_t
 
 __attribute__((warn_unused_result)) extern buffer_t*
     buffer_append_file_contents(buffer_t* bytes, char* file_name);
+
+__attribute__((warn_unused_result)) extern buffer_t*
+    buffer_append_all(buffer_t* buffer, FILE* input);
 
 extern void buffer_write_file(buffer_t* bytes, char* file_name);
 
@@ -1688,6 +1693,8 @@ extern char* buffer_c_substring(buffer_t* buffer, uint64_t start, uint64_t end);
 
 extern char* buffer_to_c_string(buffer_t* buffer);
 
+extern void buffer_clear(buffer_t* buffer);
+
 __attribute__((warn_unused_result)) extern buffer_t*
     buffer_increase_capacity(buffer_t* buffer, uint64_t capacity);
 
@@ -1733,6 +1740,18 @@ buffer_t* make_buffer(uint32_t initial_capacity) {
  * Return the number of bytes that have been added to this byte array.
  */
 uint64_t buffer_length(buffer_t* array) { return array->length; }
+
+/**
+ * @function buffer_length
+ *
+ * Clear a buffer without resizing it.
+ */
+void buffer_clear(buffer_t* buffer) {
+  for (int i = 0; i < buffer->capacity; i++) {
+    buffer->elements[i] = 0;
+  }
+  buffer->length = 0;
+}
 
 /**
  * @function buffer_get
@@ -2997,6 +3016,9 @@ void print_error_code_name(int error_code) {
 __attribute__((warn_unused_result)) extern buffer_t*
     buffer_append_file_contents(buffer_t* bytes, char* file_name);
 
+__attribute__((warn_unused_result)) extern buffer_t*
+    buffer_append_all(buffer_t* buffer, FILE* input);
+
 extern void buffer_write_file(buffer_t* bytes, char* file_name);
 
 __attribute__((warn_unused_result)) extern buffer_t*
@@ -3041,18 +3063,28 @@ __attribute__((warn_unused_result)) buffer_t*
   bytes = buffer_increase_capacity(bytes, capacity);
 
   FILE* file = fopen(file_name, "r");
-  uint8_t buffer[1024];
+  bytes = buffer_append_all(bytes, file);
+  fclose(file);
 
+  return bytes;
+}
+
+/**
+ * @function buffer_append_all
+ *
+ * Completely reads everything from the input FILE* putting everything
+ * into a buffer.
+ */
+__attribute__((warn_unused_result)) extern buffer_t*
+buffer_append_all(buffer_t* bytes, FILE* input) {
+  uint8_t buffer[1024];
   while (1) {
-    uint64_t n_read = fread(buffer, 1, sizeof(buffer), file);
+    uint64_t n_read = fread(buffer, 1, sizeof(buffer), input);
     if (n_read == 0) {
       break;
     }
     bytes = buffer_append_bytes(bytes, buffer, n_read);
   }
-
-  fclose(file);
-
   return bytes;
 }
 

@@ -50,6 +50,8 @@ extern char* buffer_c_substring(buffer_t* buffer, uint64_t start, uint64_t end);
 
 extern char* buffer_to_c_string(buffer_t* buffer);
 
+extern void buffer_clear(buffer_t* buffer);
+
 __attribute__((warn_unused_result)) extern buffer_t*
     buffer_increase_capacity(buffer_t* buffer, uint64_t capacity);
 
@@ -95,6 +97,18 @@ buffer_t* make_buffer(uint32_t initial_capacity) {
  * Return the number of bytes that have been added to this byte array.
  */
 uint64_t buffer_length(buffer_t* array) { return array->length; }
+
+/**
+ * @function buffer_length
+ *
+ * Clear a buffer without resizing it.
+ */
+void buffer_clear(buffer_t* buffer) {
+  for (int i = 0; i < buffer->capacity; i++) {
+    buffer->elements[i] = 0;
+  }
+  buffer->length = 0;
+}
 
 /**
  * @function buffer_get

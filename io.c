@@ -19,6 +19,9 @@
 __attribute__((warn_unused_result)) extern buffer_t*
     buffer_append_file_contents(buffer_t* bytes, char* file_name);
 
+__attribute__((warn_unused_result)) extern buffer_t*
+    buffer_append_all(buffer_t* buffer, FILE* input);
+
 extern void buffer_write_file(buffer_t* bytes, char* file_name);
 
 __attribute__((warn_unused_result)) extern buffer_t*
@@ -63,18 +66,28 @@ __attribute__((warn_unused_result)) buffer_t*
   bytes = buffer_increase_capacity(bytes, capacity);
 
   FILE* file = fopen(file_name, "r");
-  uint8_t buffer[1024];
+  bytes = buffer_append_all(bytes, file);
+  fclose(file);
 
+  return bytes;
+}
+
+/**
+ * @function buffer_append_all
+ *
+ * Completely reads everything from the input FILE* putting everything
+ * into a buffer.
+ */
+__attribute__((warn_unused_result)) extern buffer_t*
+    buffer_append_all(buffer_t* bytes, FILE* input) {
+  uint8_t buffer[1024];
   while (1) {
-    uint64_t n_read = fread(buffer, 1, sizeof(buffer), file);
+    uint64_t n_read = fread(buffer, 1, sizeof(buffer), input);
     if (n_read == 0) {
       break;
     }
     bytes = buffer_append_bytes(bytes, buffer, n_read);
   }
-
-  fclose(file);
-
   return bytes;
 }
 

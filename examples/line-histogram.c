@@ -13,10 +13,9 @@
 
 // result is a hashtable of string -> uint64_t
 string_hashtable_t* initial_counts_hashtable() {
-  // Currently hashtables don't grow so at least make sure we reduce
-  // "scanning" by 1000% or more with a "large" initial hashtable
-  // (which doesn't even seem that large...).
-  string_hashtable_t* counts = make_string_hashtable(128 * 1024);
+  // The hashtable will resize as necessary but we still want a
+  // reasonable initial size.
+  string_hashtable_t* counts = make_string_hashtable(4096);
   return counts;
 }
 

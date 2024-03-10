@@ -171,4 +171,10 @@ typedef int (*value_comparison_fn)(value_t value1, value_t value2);
  */
 typedef uint64_t (*value_hash_fn)(value_t value1);
 
+int cmp_string_values(value_t value1, value_t value2);
+
 #endif /* _VALUE_H_ */
+
+int cmp_string_values(value_t value1, value_t value2) {
+  return strcmp(value1.str, value2.str);
+}

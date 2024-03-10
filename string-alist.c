@@ -3,60 +3,38 @@
  * @file string-alist.c
  *
  * An association list (a type of map) from a string to a value_t.
+ *
+ * This simply wraps value-alist.c.
  */
 
 #ifndef _STRING_ALIST_H_
 #define _STRING_ALIST_H_
 
-struct string_alist_S {
-  struct string_alist_S* next;
-  char* key;
-  value_t value;
-};
+struct string_alist_S {};
 
 typedef struct string_alist_S string_alist_t;
 
-extern value_result_t alist_find(string_alist_t* list, char* key);
-
-__attribute__((warn_unused_result)) extern string_alist_t*
-    alist_insert(string_alist_t* list, char* key, value_t value);
-
-__attribute__((warn_unused_result)) extern string_alist_t*
-    alist_delete(string_alist_t* list, char* key);
-
-__attribute__((warn_unused_result)) extern uint64_t
-    alist_length(string_alist_t* list);
-
 /**
- * @macro string_alist_foreach
+ * @function alist_find
  *
- * Allows iteration over the keys and values in a string association
- * list.
+ * Find the value associate with the given key. Use is_ok() or
+ * is_not_ok() to see if the value is valid (i.e., if the key was
+ * actually found).
  */
-#define string_alist_foreach(alist, key_var, value_var, statements)            \
-  do {                                                                         \
-    string_alist_t* head = alist;                                              \
-    while (head) {                                                             \
-      char* key_var = head->key;                                               \
-      value_t value_var = head->value;                                         \
-      statements;                                                              \
-      head = head->next;                                                       \
-    }                                                                          \
-  } while (0)
-
-#endif /* _STRING_ALIST_H_ */
+static inline value_result_t alist_find(string_alist_t* list, char* key) {
+  return value_alist_find((value_alist_t*) list, cmp_string_values,
+                          str_to_value(key));
+}
 
 /**
  * @function alist_insert
  *
  * Insert a new key and value into an assocation list.
  */
-string_alist_t* alist_insert(string_alist_t* list, char* key, value_t value) {
-  string_alist_t* result = (malloc_struct(string_alist_t));
-  result->next = alist_delete(list, key);
-  result->key = key;
-  result->value = value;
-  return result;
+__attribute__((warn_unused_result)) static inline string_alist_t*
+    alist_insert(string_alist_t* list, char* key, value_t value) {
+  return (string_alist_t*) value_alist_insert(
+      (value_alist_t*) list, cmp_string_values, str_to_value(key), value);
 }
 
 /**
@@ -66,36 +44,10 @@ string_alist_t* alist_insert(string_alist_t* list, char* key, value_t value) {
  * list. Neither the key nor the value associated are themselves
  * freed.
  */
-string_alist_t* alist_delete(string_alist_t* list, char* key) {
-  // This appears to be logically correct but could easily blow out
-  // the stack with a long list.
-  if (list == NULL) {
-    return list;
-  }
-  if (strcmp(key, list->key) == 0) {
-    string_alist_t* result = list->next;
-    free_bytes(list);
-    return result;
-  }
-  list->next = alist_delete(list->next, key);
-  return list;
-}
-
-/**
- * @function alist_find
- *
- * Find the value associate with the given key. Use is_ok() or
- * is_not_ok() to see if the value is valid (i.e., if the key was
- * actually found).
- */
-value_result_t alist_find(string_alist_t* list, char* key) {
-  while (list) {
-    if (strcmp(key, list->key) == 0) {
-      return (value_result_t){.val = list->value};
-    }
-    list = list->next;
-  }
-  return (value_result_t){.nf_error = NF_ERROR_NOT_FOUND};
+__attribute__((warn_unused_result)) static inline string_alist_t*
+    alist_delete(string_alist_t* list, char* key) {
+  return (string_alist_t*) value_alist_delete(
+      (value_alist_t*) list, cmp_string_values, str_to_value(key));
 }
 
 /**
@@ -105,12 +57,23 @@ value_result_t alist_find(string_alist_t* list, char* key) {
  *
  * The alist argument MAY be null.
  */
-__attribute__((warn_unused_result)) extern uint64_t
+__attribute__((warn_unused_result)) static inline uint64_t
     alist_length(string_alist_t* list) {
-  uint64_t result = 0;
-  while (list) {
-    result++;
-    list = list->next;
-  }
-  return result;
+  return value_alist_length((value_alist_t*) list);
 }
+
+/**
+ * @macro string_alist_foreach
+ *
+ * Allows iteration over the keys and values in a string association
+ * list.
+ */
+#define string_alist_foreach(alist, key_var, value_var, statements)            \
+  do {                                                                         \
+    value_alist_foreach((value_alist_t*) alist, key_var##_value, value_var, {  \
+      char* key_var = (key_var##_value).str;                                   \
+      statements;                                                              \
+    });                                                                        \
+  } while (0)
+
+#endif /* _STRING_ALIST_H_ */

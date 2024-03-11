@@ -54,10 +54,9 @@ void test_tree() {
   // clang-format on
 }
 
-void check_values(string_tree_t* t) {
+void check_values(value_tree_t* t) {
   if (t) {
-    char* value_to_key_string = uint64_to_string((t->value).u64);
-    test_assert(string_equal(t->key, value_to_key_string));
+    test_assert_string_equal(t->key.str, uint64_to_string(t->value.u64));
     check_values(t->left);
     check_values(t->right);
   }
@@ -102,7 +101,7 @@ void test_random_insertion_and_deletion() {
   }
 
   check_sequence(__FILE__, __LINE__, tree, ht, iterations);
-  check_values(tree);
+  check_values(cast(value_tree_t*, tree));
 
   // TODO(jawilson): delete 1/4 of the keys and repeat above checks.
   state = random_state_for_test();

@@ -390,6 +390,7 @@ struct utf8_decode_result_S {
 typedef struct utf8_decode_result_S utf8_decode_result_t;
 
 extern utf8_decode_result_t utf8_decode(const uint8_t* utf8_bytes);
+extern utf8_decode_result_t utf8_decode_two(const uint8_t* array);
 
 extern int string_is_null_or_empty(const char* str1);
 extern int string_equal(const char* str1, const char* str2);
@@ -4108,6 +4109,7 @@ struct utf8_decode_result_S {
 typedef struct utf8_decode_result_S utf8_decode_result_t;
 
 extern utf8_decode_result_t utf8_decode(const uint8_t* utf8_bytes);
+extern utf8_decode_result_t utf8_decode_two(const uint8_t* array);
 
 extern int string_is_null_or_empty(const char* str1);
 extern int string_equal(const char* str1, const char* str2);
@@ -4207,6 +4209,31 @@ utf8_decode_result_t utf8_decode(const uint8_t* utf8_bytes) {
 
   return (utf8_decode_result_t){.code_point = code_point,
                                 .num_bytes = num_bytes};
+}
+
+// TODO(jawilson): check for internal nulls?
+utf8_decode_result_t utf8_decode_two(const uint8_t* array) {
+  uint8_t firstByte = array[0];
+  if ((firstByte & 0x80) == 0) {
+    return (utf8_decode_result_t){.code_point = firstByte, .num_bytes = 1};
+  } else if ((firstByte & 0xE0) == 0xC0) {
+    // Two byte character
+    return (utf8_decode_result_t){.code_point = ((firstByte & 0x1F) << 6)
+                                                | (array[1] & 0x3F),
+                                  .num_bytes = 2};
+  } else if ((firstByte & 0xF0) == 0xE0) {
+    return (utf8_decode_result_t){.code_point = ((firstByte & 0x0F) << 12)
+                                                | ((array[1] & 0x3F) << 6)
+                                                | (array[2] & 0x3F),
+                                  .num_bytes = 3};
+  } else if ((firstByte & 0xF8) == 0xF0) {
+    return (utf8_decode_result_t){
+        .code_point = ((firstByte & 0x07) << 18) | ((array[1] & 0x3F) << 12)
+                      | ((array[2] & 0x3F) << 6) | (array[3] & 0x3F),
+        .num_bytes = 4};
+  } else {
+    return (utf8_decode_result_t){.error = true};
+  }
 }
 
 /**

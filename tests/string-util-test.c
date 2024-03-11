@@ -16,6 +16,46 @@
 #define C_ARMYKNIFE_LIB_IMPL
 #include "../c-armyknife-lib.h"
 
+void test_utf8_decode_ascii() {
+  uint8_t utf8_bytes[] = {'A'};
+  utf8_decode_result_t result = utf8_decode_two(utf8_bytes);
+  test_assert(result.error == false);
+  test_assert(result.num_bytes == 1);
+  test_assert(result.code_point == 'A');
+}
+
+void test_utf8_decode_two_byte() {
+  uint8_t utf8_bytes[] = {0xc3, 0x89}; // Character 'É' (U+00C9)
+  utf8_decode_result_t result = utf8_decode_two(utf8_bytes);
+  test_assert(result.error == false);
+  test_assert(result.num_bytes == 2);
+  test_assert(result.code_point == 0xC9);
+}
+
+#define TEST_INVALID_UTF8_SEQUENCE(...)                                        \
+  do {                                                                         \
+    uint8_t utf8_bytes[] = {__VA_ARGS__};                                      \
+    utf8_decode_result_t result = utf8_decode_two(utf8_bytes);                 \
+    test_assert(result.error == true);                                         \
+    test_assert(result.num_bytes == 0);                                        \
+    test_assert(result.code_point == 0);                                       \
+  } while (0)
+
+void test_utf8_decode_invalid_sequences() {
+  // From Chat GPT3.5
+  TEST_INVALID_UTF8_SEQUENCE(0xff, 0xff);
+
+  // From
+  // https://stackoverflow.com/questions/1301402/example-invalid-utf8-string
+  // ??? TEST_INVALID_UTF8_SEQUENCE(0xc3, 0x28);
+  TEST_INVALID_UTF8_SEQUENCE(0xa0, 0xa1);
+  // ??? TEST_INVALID_UTF8_SEQUENCE(0xe2, 0x28, 0xa1);
+  // ??? TEST_INVALID_UTF8_SEQUENCE(0xe2, 0x82, 0x28);
+  // ??? TEST_INVALID_UTF8_SEQUENCE(0xf0, 0x28, 0x8c, 0xbc);
+  // ??? TEST_INVALID_UTF8_SEQUENCE(0xf0,0x90,0x28,0xbc);
+  // ??? TEST_INVALID_UTF8_SEQUENCE(0xf0,0x28,0x8c,0x28);
+}
+
 void test_string_printf(void) {
   test_assert(string_equal("Hello!", string_printf("%s!", "Hello")));
   test_assert(
@@ -137,6 +177,11 @@ void test_string_right_pad() {
 
 int main(int argc, char** argv) {
   test_is_null_or_empty();
+
+  test_utf8_decode_ascii();
+  test_utf8_decode_two_byte();
+  test_utf8_decode_invalid_sequences();
+
   test_string_equal();
   test_starts_with();
   test_ends_with();

@@ -381,6 +381,16 @@ extern int uint64_highest_bit_set(uint64_t n);
 
 #include <stdint.h>
 
+struct utf8_decode_result_S {
+  uint32_t code_point;
+  uint8_t num_bytes;
+  boolean_t error;
+};
+
+typedef struct utf8_decode_result_S utf8_decode_result_t;
+
+extern utf8_decode_result_t utf8_decode(const uint8_t* utf8_bytes);
+
 extern int string_is_null_or_empty(const char* str1);
 extern int string_equal(const char* str1, const char* str2);
 extern int string_starts_with(const char* str1, const char* str2);
@@ -1023,8 +1033,7 @@ __attribute__((warn_unused_result)) extern value_tree_t*
 #ifndef _STRING_TREE_H_
 #define _STRING_TREE_H_
 
-struct string_tree_S {
-};
+struct string_tree_S {};
 
 typedef struct string_tree_S string_tree_t;
 
@@ -1034,7 +1043,8 @@ typedef struct string_tree_S string_tree_t;
  * Find the value associate with the key in the tree.
  */
 static inline value_result_t string_tree_find(string_tree_t* t, char* key) {
-  return value_tree_find(cast(value_tree_t*, t), cmp_string_values, str_to_value(key));
+  return value_tree_find(cast(value_tree_t*, t), cmp_string_values,
+                         str_to_value(key));
 }
 
 /**
@@ -1043,10 +1053,10 @@ static inline value_result_t string_tree_find(string_tree_t* t, char* key) {
  * Insert an association of key and a value (or update the current
  * value stored in the tree).
  */
-__attribute__((warn_unused_result)) 
-static inline string_tree_t*
-string_tree_insert(string_tree_t* t, char* key, value_t value) {
-  return (string_tree_t*)(value_tree_insert(cast(value_tree_t*, t), cmp_string_values, str_to_value(key), value));
+__attribute__((warn_unused_result)) static inline string_tree_t*
+    string_tree_insert(string_tree_t* t, char* key, value_t value) {
+  return (string_tree_t*) (value_tree_insert(
+      cast(value_tree_t*, t), cmp_string_values, str_to_value(key), value));
 }
 
 /**
@@ -1055,10 +1065,10 @@ string_tree_insert(string_tree_t* t, char* key, value_t value) {
  * Delete the association of key (if it exists in the tree). It is not
  * an error to delete a key that isn't present in the table.
  */
-__attribute__((warn_unused_result)) 
-static inline string_tree_t*
-string_tree_delete(string_tree_t* t, char* key) {
-  return (string_tree_t*)(value_tree_delete(cast(value_tree_t*, t), cmp_string_values, str_to_value(key)));
+__attribute__((warn_unused_result)) static inline string_tree_t*
+    string_tree_delete(string_tree_t* t, char* key) {
+  return (string_tree_t*) (value_tree_delete(
+      cast(value_tree_t*, t), cmp_string_values, str_to_value(key)));
 }
 
 /**
@@ -1086,10 +1096,11 @@ string_tree_delete(string_tree_t* t, char* key) {
  */
 #define string_tree_foreach(tree, key_var, value_var, statements)              \
   do {                                                                         \
-    value_tree_foreach(cast(value_tree_t*, tree), key_var ## _value, value_var, { \
-       char* key_var = (key_var ## _value).str;                                \
-       statements;                                                             \
-    });                                                                        \
+    value_tree_foreach(cast(value_tree_t*, tree), key_var##_value, value_var,  \
+                       {                                                       \
+                         char* key_var = (key_var##_value).str;                \
+                         statements;                                           \
+                       });                                                     \
   } while (0)
 
 #endif /* _STRING_TREE_H_ */
@@ -4000,8 +4011,7 @@ static inline uint64_t string_ht_num_entries(string_hashtable_t* ht) {
 #ifndef _STRING_TREE_H_
 #define _STRING_TREE_H_
 
-struct string_tree_S {
-};
+struct string_tree_S {};
 
 typedef struct string_tree_S string_tree_t;
 
@@ -4011,7 +4021,8 @@ typedef struct string_tree_S string_tree_t;
  * Find the value associate with the key in the tree.
  */
 static inline value_result_t string_tree_find(string_tree_t* t, char* key) {
-  return value_tree_find(cast(value_tree_t*, t), cmp_string_values, str_to_value(key));
+  return value_tree_find(cast(value_tree_t*, t), cmp_string_values,
+                         str_to_value(key));
 }
 
 /**
@@ -4020,10 +4031,10 @@ static inline value_result_t string_tree_find(string_tree_t* t, char* key) {
  * Insert an association of key and a value (or update the current
  * value stored in the tree).
  */
-__attribute__((warn_unused_result)) 
-static inline string_tree_t*
-string_tree_insert(string_tree_t* t, char* key, value_t value) {
-  return (string_tree_t*)(value_tree_insert(cast(value_tree_t*, t), cmp_string_values, str_to_value(key), value));
+__attribute__((warn_unused_result)) static inline string_tree_t*
+    string_tree_insert(string_tree_t* t, char* key, value_t value) {
+  return (string_tree_t*) (value_tree_insert(
+      cast(value_tree_t*, t), cmp_string_values, str_to_value(key), value));
 }
 
 /**
@@ -4032,10 +4043,10 @@ string_tree_insert(string_tree_t* t, char* key, value_t value) {
  * Delete the association of key (if it exists in the tree). It is not
  * an error to delete a key that isn't present in the table.
  */
-__attribute__((warn_unused_result)) 
-static inline string_tree_t*
-string_tree_delete(string_tree_t* t, char* key) {
-  return (string_tree_t*)(value_tree_delete(cast(value_tree_t*, t), cmp_string_values, str_to_value(key)));
+__attribute__((warn_unused_result)) static inline string_tree_t*
+    string_tree_delete(string_tree_t* t, char* key) {
+  return (string_tree_t*) (value_tree_delete(
+      cast(value_tree_t*, t), cmp_string_values, str_to_value(key)));
 }
 
 /**
@@ -4063,10 +4074,11 @@ string_tree_delete(string_tree_t* t, char* key) {
  */
 #define string_tree_foreach(tree, key_var, value_var, statements)              \
   do {                                                                         \
-    value_tree_foreach(cast(value_tree_t*, tree), key_var ## _value, value_var, { \
-       char* key_var = (key_var ## _value).str;                                \
-       statements;                                                             \
-    });                                                                        \
+    value_tree_foreach(cast(value_tree_t*, tree), key_var##_value, value_var,  \
+                       {                                                       \
+                         char* key_var = (key_var##_value).str;                \
+                         statements;                                           \
+                       });                                                     \
   } while (0)
 
 #endif /* _STRING_TREE_H_ */
@@ -4086,6 +4098,16 @@ string_tree_delete(string_tree_t* t, char* key) {
 #define _STRING_UTIL_H_
 
 #include <stdint.h>
+
+struct utf8_decode_result_S {
+  uint32_t code_point;
+  uint8_t num_bytes;
+  boolean_t error;
+};
+
+typedef struct utf8_decode_result_S utf8_decode_result_t;
+
+extern utf8_decode_result_t utf8_decode(const uint8_t* utf8_bytes);
 
 extern int string_is_null_or_empty(const char* str1);
 extern int string_equal(const char* str1, const char* str2);
@@ -4135,6 +4157,56 @@ int string_equal(const char* str1, const char* str2) {
     return string_is_null_or_empty(str2);
   }
   return strcmp(str1, str2) == 0;
+}
+
+// Function to determine the number of bytes for a UTF-8 character based on the
+// first byte
+static int utf8_bytes_for_first_byte(uint8_t first_byte) {
+  if (first_byte <= 0x7F) {
+    return 1;
+  } else if (first_byte <= 0xDF) {
+    return 2;
+  } else if (first_byte <= 0xEF) {
+    return 3;
+  } else if (first_byte <= 0xF7) {
+    return 4;
+  } else {
+    return -1; // Invalid UTF-8 character
+  }
+}
+
+/**
+ * @function utf8_decode
+ *
+ * Decodes the next code-point from a uint8_t* pointer.
+ */
+utf8_decode_result_t utf8_decode(const uint8_t* utf8_bytes) {
+  int num_bytes = utf8_bytes_for_first_byte(*utf8_bytes);
+  if (num_bytes == -1) {
+    // Invalid UTF-8 character
+    return (utf8_decode_result_t){.error = true};
+  }
+
+  uint32_t code_point = 0;
+
+  // Extract codepoint based on the number of bytes
+  if (num_bytes == 1) {
+    code_point = *utf8_bytes;
+  } else {
+    uint8_t mask = (1 << (7 - num_bytes));
+    code_point = *utf8_bytes & ~mask; // Get first byte bits
+
+    for (int i = 1; i < num_bytes; i++) {
+      if ((utf8_bytes[i] & 0xC0) != 0x80) {
+        // Invalid UTF-8 sequence
+        return (utf8_decode_result_t){.error = true};
+      }
+      code_point = (code_point << 6) | (utf8_bytes[i] & 0x3F);
+    }
+  }
+
+  return (utf8_decode_result_t){.code_point = code_point,
+                                .num_bytes = num_bytes};
 }
 
 /**

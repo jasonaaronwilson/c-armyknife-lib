@@ -15,6 +15,16 @@
 
 #include <stdint.h>
 
+struct utf8_decode_result_S {
+  uint32_t code_point;
+  uint8_t num_bytes;
+  boolean_t error;
+};
+
+typedef struct utf8_decode_result_S utf8_decode_result_t;
+
+extern utf8_decode_result_t utf8_decode(const uint8_t* utf8_bytes);
+
 extern int string_is_null_or_empty(const char* str1);
 extern int string_equal(const char* str1, const char* str2);
 extern int string_starts_with(const char* str1, const char* str2);
@@ -63,6 +73,56 @@ int string_equal(const char* str1, const char* str2) {
     return string_is_null_or_empty(str2);
   }
   return strcmp(str1, str2) == 0;
+}
+
+// Function to determine the number of bytes for a UTF-8 character based on the
+// first byte
+static int utf8_bytes_for_first_byte(uint8_t first_byte) {
+  if (first_byte <= 0x7F) {
+    return 1;
+  } else if (first_byte <= 0xDF) {
+    return 2;
+  } else if (first_byte <= 0xEF) {
+    return 3;
+  } else if (first_byte <= 0xF7) {
+    return 4;
+  } else {
+    return -1; // Invalid UTF-8 character
+  }
+}
+
+/**
+ * @function utf8_decode
+ *
+ * Decodes the next code-point from a uint8_t* pointer.
+ */
+utf8_decode_result_t utf8_decode(const uint8_t* utf8_bytes) {
+  int num_bytes = utf8_bytes_for_first_byte(*utf8_bytes);
+  if (num_bytes == -1) {
+    // Invalid UTF-8 character
+    return (utf8_decode_result_t){.error = true};
+  }
+
+  uint32_t code_point = 0;
+
+  // Extract codepoint based on the number of bytes
+  if (num_bytes == 1) {
+    code_point = *utf8_bytes;
+  } else {
+    uint8_t mask = (1 << (7 - num_bytes));
+    code_point = *utf8_bytes & ~mask; // Get first byte bits
+
+    for (int i = 1; i < num_bytes; i++) {
+      if ((utf8_bytes[i] & 0xC0) != 0x80) {
+        // Invalid UTF-8 sequence
+        return (utf8_decode_result_t){.error = true};
+      }
+      code_point = (code_point << 6) | (utf8_bytes[i] & 0x3F);
+    }
+  }
+
+  return (utf8_decode_result_t){.code_point = code_point,
+                                .num_bytes = num_bytes};
 }
 
 /**

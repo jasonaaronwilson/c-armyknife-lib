@@ -12,9 +12,9 @@
 
 * [logger.md](logger.md)
 
-* [value-array.md](value-array.md)
-
 * [value.md](value.md)
+
+* [value-array.md](value-array.md)
 
 * [test.md](test.md)
 
@@ -29,6 +29,8 @@
 * [flag.md](flag.md)
 
 * [string-util.md](string-util.md)
+
+* [value-tree.md](value-tree.md)
 
 * [random.md](random.md)
 

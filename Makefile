@@ -24,7 +24,8 @@ SRC_C = allocate.c \
 	value.c \
 	value-alist.c \
 	value-array.c \
-	value-hashtable.c
+	value-hashtable.c \
+	value-tree.c
 
 ORDERED_H = \
 	min-max.h \
@@ -41,6 +42,7 @@ ORDERED_H = \
 	string-alist.h \
 	value-hashtable.h \
 	string-hashtable.h \
+	value-tree.h \
 	string-tree.h \
 	flag.h \
 	command-line-parser.h \
@@ -90,6 +92,7 @@ TESTS= \
 	./io-test.sh \
 	./value-array-test.sh \
 	./random-test.sh \
+	./value-tree-test.sh \
 	./string-tree-test.sh \
 	./logger-test.sh
 

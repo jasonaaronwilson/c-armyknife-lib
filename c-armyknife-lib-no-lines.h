@@ -883,11 +883,9 @@ static inline string_hashtable_t* make_string_hashtable(uint64_t n_buckets) {
  */
 __attribute__((warn_unused_result)) static inline string_hashtable_t*
     string_ht_insert(string_hashtable_t* ht, char* key, value_t value) {
-  return (string_hashtable_t*) value_ht_insert(to_value_hashtable(ht),
-					       hash_string_value, 
-					       cmp_string_values,
-					       str_to_value(key), 
-					       value);
+  return (string_hashtable_t*) value_ht_insert(
+      to_value_hashtable(ht), hash_string_value, cmp_string_values,
+      str_to_value(key), value);
 }
 
 /**
@@ -898,8 +896,9 @@ __attribute__((warn_unused_result)) static inline string_hashtable_t*
  */
 __attribute__((warn_unused_result)) static inline string_hashtable_t*
     string_ht_delete(string_hashtable_t* ht, char* key) {
-  return (string_hashtable_t*) value_ht_delete(to_value_hashtable(ht), hash_string_value, cmp_string_values,
-					       str_to_value(key));
+  return (string_hashtable_t*) value_ht_delete(
+      to_value_hashtable(ht), hash_string_value, cmp_string_values,
+      str_to_value(key));
 }
 
 /**
@@ -929,7 +928,7 @@ static inline uint64_t string_ht_num_entries(string_hashtable_t* ht) {
  */
 #define string_ht_foreach(ht, key_var, value_var, statements)                  \
   do {                                                                         \
-    value_ht_foreach(to_value_hashtable(ht), key_var##_value, value_var, { \
+    value_ht_foreach(to_value_hashtable(ht), key_var##_value, value_var, {     \
       char* key_var = (key_var##_value).str;                                   \
       statements;                                                              \
     });                                                                        \
@@ -3826,11 +3825,9 @@ static inline string_hashtable_t* make_string_hashtable(uint64_t n_buckets) {
  */
 __attribute__((warn_unused_result)) static inline string_hashtable_t*
     string_ht_insert(string_hashtable_t* ht, char* key, value_t value) {
-  return (string_hashtable_t*) value_ht_insert(to_value_hashtable(ht),
-					       hash_string_value, 
-					       cmp_string_values,
-					       str_to_value(key), 
-					       value);
+  return (string_hashtable_t*) value_ht_insert(
+      to_value_hashtable(ht), hash_string_value, cmp_string_values,
+      str_to_value(key), value);
 }
 
 /**
@@ -3841,8 +3838,9 @@ __attribute__((warn_unused_result)) static inline string_hashtable_t*
  */
 __attribute__((warn_unused_result)) static inline string_hashtable_t*
     string_ht_delete(string_hashtable_t* ht, char* key) {
-  return (string_hashtable_t*) value_ht_delete(to_value_hashtable(ht), hash_string_value, cmp_string_values,
-					       str_to_value(key));
+  return (string_hashtable_t*) value_ht_delete(
+      to_value_hashtable(ht), hash_string_value, cmp_string_values,
+      str_to_value(key));
 }
 
 /**
@@ -3872,7 +3870,7 @@ static inline uint64_t string_ht_num_entries(string_hashtable_t* ht) {
  */
 #define string_ht_foreach(ht, key_var, value_var, statements)                  \
   do {                                                                         \
-    value_ht_foreach(to_value_hashtable(ht), key_var##_value, value_var, { \
+    value_ht_foreach(to_value_hashtable(ht), key_var##_value, value_var, {     \
       char* key_var = (key_var##_value).str;                                   \
       statements;                                                              \
     });                                                                        \

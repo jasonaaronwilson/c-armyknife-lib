@@ -46,6 +46,8 @@ void test_utf8_decode_three_bytes() {
   // still be valid
   TEST_VALID_UTF8_SEQUENCE(0x0F60A, 3, 0xEF, 0x98, 0x8A);
   TEST_VALID_UTF8_SEQUENCE(0x1f60a, 4, 0xF0, 0x9F, 0x98, 0x8A);
+
+  // echo Hello | iconv -f UTF-8 -t UCS-4 | xxd -p -c 4
 }
 
 #define TEST_INVALID_UTF8_SEQUENCE(...)                                        \

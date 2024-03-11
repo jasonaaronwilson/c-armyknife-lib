@@ -16,20 +16,36 @@
 #define C_ARMYKNIFE_LIB_IMPL
 #include "../c-armyknife-lib.h"
 
+#define TEST_VALID_UTF8_SEQUENCE(cp, n_bytes, ...)                             \
+  do {                                                                         \
+    uint8_t utf8_bytes[] = {__VA_ARGS__};                                      \
+    utf8_decode_result_t result = utf8_decode_two(utf8_bytes);                 \
+    test_assert(result.error == false);                                        \
+    test_assert(result.num_bytes == n_bytes);                                  \
+    test_assert(result.code_point == cp);                                      \
+  } while (0)
+
 void test_utf8_decode_ascii() {
-  uint8_t utf8_bytes[] = {'A'};
-  utf8_decode_result_t result = utf8_decode_two(utf8_bytes);
-  test_assert(result.error == false);
-  test_assert(result.num_bytes == 1);
-  test_assert(result.code_point == 'A');
+  TEST_VALID_UTF8_SEQUENCE('A', 1, 'A');
+  TEST_VALID_UTF8_SEQUENCE('Z', 1, 'Z');
+  TEST_VALID_UTF8_SEQUENCE('a', 1, 'a');
+  TEST_VALID_UTF8_SEQUENCE('z', 1, 'z');
+  TEST_VALID_UTF8_SEQUENCE('0', 1, '0');
+  TEST_VALID_UTF8_SEQUENCE('9', 1, '9');
 }
 
-void test_utf8_decode_two_byte() {
-  uint8_t utf8_bytes[] = {0xc3, 0x89}; // Character 'É' (U+00C9)
-  utf8_decode_result_t result = utf8_decode_two(utf8_bytes);
-  test_assert(result.error == false);
-  test_assert(result.num_bytes == 2);
-  test_assert(result.code_point == 0xC9);
+void test_utf8_decode_two_bytes() {
+  TEST_VALID_UTF8_SEQUENCE(0xc9, 2, 0xc3, 0x89);
+  TEST_VALID_UTF8_SEQUENCE(0xe9, 2, 0xc3, 0xa9);
+}
+
+void test_utf8_decode_three_bytes() {
+  // https://www.isthisthingon.org/unicode/index.phtml
+
+  // These may not map to a common unicode character but they should
+  // still be valid
+  TEST_VALID_UTF8_SEQUENCE(0x0F60A, 3, 0xEF, 0x98, 0x8A);
+  TEST_VALID_UTF8_SEQUENCE(0x1f60a, 4, 0xF0, 0x9F, 0x98, 0x8A);
 }
 
 #define TEST_INVALID_UTF8_SEQUENCE(...)                                        \
@@ -179,7 +195,8 @@ int main(int argc, char** argv) {
   test_is_null_or_empty();
 
   test_utf8_decode_ascii();
-  test_utf8_decode_two_byte();
+  test_utf8_decode_two_bytes();
+  test_utf8_decode_three_bytes();
   test_utf8_decode_invalid_sequences();
 
   test_string_equal();

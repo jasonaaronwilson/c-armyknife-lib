@@ -1,17 +1,7 @@
 # @file string-tree.c
 
-This is a balanced binary tree to associate a string to a value.
-
-Generally a string_alist is prefered for small "maps", and
-string_hashtable is prefered for large maps, but string_tree is the
-easiest way to get sorted results (which is most important for
-reproducibility).
-
-Currently we are using "AA" trees (see
-https://en.wikipedia.org/wiki/AA_tree) since it has simpler code
-than many other balanced trees (like red-block trees) and the
-Wikipedia article and paper spell out *most* of the non-trivial
-details.
+This is a balanced binary tree to associate a string to a value
+using an underlying value-tree.c.
  
 ## @macro string_tree_foreach
 

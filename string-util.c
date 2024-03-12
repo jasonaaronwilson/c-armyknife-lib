@@ -185,6 +185,10 @@ boolean_t string_contains_char(const char* str, char ch) {
   return string_index_of_char(str, ch) >= 0;
 }
 
+// TODO(jawilson): string_contains_code_point
+
+// TODO(jawilson): string_index_of_string
+
 /**
  * @function string_index_of_char
  *

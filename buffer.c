@@ -262,3 +262,5 @@ buffer_t*
     return buffer;
   }
 }
+
+// TODO(jawilson): buffer_append_code_point, aka, a UTF-8 encoder.

@@ -444,8 +444,7 @@ typedef struct logger_state_S logger_state_t;
 #define LOGGER_DEFAULT_LEVEL LOGGER_WARN
 #endif /* LOGGER_DEFAULT_LEVEL */
 
-logger_state_t global_logger_state
-    = (logger_state_t){.level = LOGGER_DEFAULT_LEVEL};
+extern logger_state_t global_logger_state;
 
 extern void logger_init(void);
 
@@ -2038,6 +2037,8 @@ buffer_t*
     return buffer;
   }
 }
+
+// TODO(jawilson): buffer_append_code_point, aka, a UTF-8 encoder.
 #line 2 "command-line-parser.c"
 /**
  * @file command-line-parser.c
@@ -3460,8 +3461,7 @@ typedef struct logger_state_S logger_state_t;
 #define LOGGER_DEFAULT_LEVEL LOGGER_WARN
 #endif /* LOGGER_DEFAULT_LEVEL */
 
-logger_state_t global_logger_state
-    = (logger_state_t){.level = LOGGER_DEFAULT_LEVEL};
+extern logger_state_t global_logger_state;
 
 extern void logger_init(void);
 
@@ -3584,6 +3584,8 @@ static inline boolean_t should_log_info() {
   } while (0)
 
 #endif /* _LOGGER_H_ */
+
+logger_state_t global_logger_state = (logger_state_t){.level = LOGGER_DEFAULT_LEVEL};
 
 value_result_t parse_log_level_enum(char* str) {
   if (strcmp("FATAL", str) == 0 || strcmp("fatal", str) == 0) {
@@ -4271,6 +4273,10 @@ int string_ends_with(const char* str1, const char* str2) {
 boolean_t string_contains_char(const char* str, char ch) {
   return string_index_of_char(str, ch) >= 0;
 }
+
+// TODO(jawilson): string_contains_code_point
+
+// TODO(jawilson): string_index_of_string
 
 /**
  * @function string_index_of_char

@@ -26,6 +26,12 @@ Append a single byte to the byte array.
 
 Append multiple bytes to the byte array.
  
+## @function buffer_append_repeated_byte
+
+Append 'count' copies of byte to the passed in buffer. This can be
+used for things like indentation or horizontal rules (composed from
+say '-', '=', or '*').
+ 
 ## @function buffer_append_string
 
 Append all of the bytes from a C string (except the ending NUL

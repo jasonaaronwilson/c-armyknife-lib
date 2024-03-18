@@ -68,6 +68,9 @@ __attribute__((warn_unused_result))
 __attribute__((format(printf, 2, 3))) extern buffer_t*
     buffer_printf(buffer_t* buffer, char* format, ...);
 
+__attribute__((warn_unused_result)) extern buffer_t*
+    buffer_append_repeated_byte(buffer_t* buffer, uint8_t byte, int count);
+
 #endif /* _BUFFER_H_ */
 
 // ======================================================================
@@ -264,3 +267,18 @@ buffer_t*
 }
 
 // TODO(jawilson): buffer_append_code_point, aka, a UTF-8 encoder.
+
+/**
+ * @function buffer_append_repeated_byte
+ *
+ * Append 'count' copies of byte to the passed in buffer. This can be
+ * used for things like indentation or horizontal rules (composed from
+ * say '-', '=', or '*').
+ */
+__attribute__((warn_unused_result)) extern buffer_t*
+    buffer_append_repeated_byte(buffer_t* buffer, uint8_t byte, int count) {
+  for (int i = 0; i < count; i++) {
+    buffer = buffer_append_byte(buffer, byte);
+  }
+  return buffer;
+}

@@ -78,6 +78,15 @@ Return true if str1 starts with all of str2.
 
 Return a substring of the given string as a newly allocated string.
  
+## @function string_truncate
+
+Return a copy of the string truncated to limit number of *bytes*
+(excluding the trailing zero). This is currently not unicode safe!
+
+When the string is truncated, we also add 'at_limit_suffix' which
+may make the returned string actually that many characters
+longer. This behavior is likely to change in a future version.
+ 
 ## @function uint64_to_string
 
 Convert a uint64_t number to a string.

@@ -193,6 +193,12 @@ void test_string_right_pad() {
                            string_right_pad("abcdefghijklmnop", 6, ' '));
 }
 
+void test_string_truncate() {
+  test_assert_string_equal("123", string_truncate("123", 5, "..."));
+  test_assert_string_equal("12345", string_truncate("12345", 5, "..."));
+  test_assert_string_equal("12345...", string_truncate("123456", 5, "..."));
+}
+
 int main(int argc, char** argv) {
   test_is_null_or_empty();
 

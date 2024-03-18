@@ -412,6 +412,7 @@ extern char* string_left_pad(const char* a, int count, char ch);
 extern char* string_right_pad(const char* a, int count, char ch);
 __attribute__((format(printf, 1, 2))) extern char* string_printf(char* format,
                                                                  ...);
+char* string_truncate(char* str, int limit, char* at_limit_suffix);
 
 #endif /* _STRING_UTIL_H_ */
 // SSCF generated file from: logger.c
@@ -638,6 +639,9 @@ __attribute__((warn_unused_result)) extern buffer_t*
 __attribute__((warn_unused_result))
 __attribute__((format(printf, 2, 3))) extern buffer_t*
     buffer_printf(buffer_t* buffer, char* format, ...);
+
+__attribute__((warn_unused_result))
+extern buffer_t* buffer_append_repeated_byte(buffer_t* buffer, uint8_t byte, int count);
 
 #endif /* _BUFFER_H_ */
 // SSCF generated file from: value-array.c
@@ -1843,6 +1847,9 @@ __attribute__((warn_unused_result))
 __attribute__((format(printf, 2, 3))) extern buffer_t*
     buffer_printf(buffer_t* buffer, char* format, ...);
 
+__attribute__((warn_unused_result))
+extern buffer_t* buffer_append_repeated_byte(buffer_t* buffer, uint8_t byte, int count);
+
 #endif /* _BUFFER_H_ */
 
 // ======================================================================
@@ -2039,6 +2046,14 @@ buffer_t*
 }
 
 // TODO(jawilson): buffer_append_code_point, aka, a UTF-8 encoder.
+
+__attribute__((warn_unused_result))
+extern buffer_t* buffer_append_repeated_byte(buffer_t* buffer, uint8_t byte, int count) {
+  for (int i = 0; i < count; i++) {
+    buffer = buffer_append_byte(buffer, byte);
+  }
+  return buffer;
+}
 #line 2 "command-line-parser.c"
 /**
  * @file command-line-parser.c
@@ -3585,7 +3600,8 @@ static inline boolean_t should_log_info() {
 
 #endif /* _LOGGER_H_ */
 
-logger_state_t global_logger_state = (logger_state_t){.level = LOGGER_DEFAULT_LEVEL};
+logger_state_t global_logger_state
+    = (logger_state_t){.level = LOGGER_DEFAULT_LEVEL};
 
 value_result_t parse_log_level_enum(char* str) {
   if (strcmp("FATAL", str) == 0 || strcmp("fatal", str) == 0) {
@@ -4134,6 +4150,7 @@ extern char* string_left_pad(const char* a, int count, char ch);
 extern char* string_right_pad(const char* a, int count, char ch);
 __attribute__((format(printf, 1, 2))) extern char* string_printf(char* format,
                                                                  ...);
+char* string_truncate(char* str, int limit, char* at_limit_suffix);
 
 #endif /* _STRING_UTIL_H_ */
 
@@ -4547,6 +4564,26 @@ char* string_right_pad(const char* str, int n, char ch) {
   buffer = buffer_append_string(buffer, str);
   for (int i = 0; i < padding_needed; i++) {
     buffer = buffer_append_byte(buffer, ch);
+  }
+  char* result = buffer_to_c_string(buffer);
+  free_bytes(buffer);
+  return result;
+}
+
+char* string_truncate(char* str, int limit, char* at_limit_suffix) {
+  // limit is just a guess, buffer's always grow as needed.
+  buffer_t* buffer = make_buffer(limit);
+  for (int i = 0;; i++) {
+    char ch = str[i];
+    if (ch == '\0') {
+      char* result = buffer_to_c_string(buffer);
+      free_bytes(buffer);
+      return result;
+    }
+    buffer = buffer_append_byte(buffer, ch);
+  }
+  if (at_limit_suffix) {
+    buffer = buffer_append_string(buffer, at_limit_suffix);
   }
   char* result = buffer_to_c_string(buffer);
   free_bytes(buffer);

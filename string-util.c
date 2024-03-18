@@ -45,6 +45,7 @@ extern char* string_left_pad(const char* a, int count, char ch);
 extern char* string_right_pad(const char* a, int count, char ch);
 __attribute__((format(printf, 1, 2))) extern char* string_printf(char* format,
                                                                  ...);
+char* string_truncate(char* str, int limit, char* at_limit_suffix);
 
 #endif /* _STRING_UTIL_H_ */
 
@@ -458,6 +459,36 @@ char* string_right_pad(const char* str, int n, char ch) {
   buffer = buffer_append_string(buffer, str);
   for (int i = 0; i < padding_needed; i++) {
     buffer = buffer_append_byte(buffer, ch);
+  }
+  char* result = buffer_to_c_string(buffer);
+  free_bytes(buffer);
+  return result;
+}
+
+/**
+ * @function string_truncate
+ *
+ * Return a copy of the string truncated to limit number of *bytes*
+ * (excluding the trailing zero). This is currently not unicode safe!
+ *
+ * When the string is truncated, we also add 'at_limit_suffix' which
+ * may make the returned string actually that many characters
+ * longer. This behavior is likely to change in a future version.
+ */
+char* string_truncate(char* str, int limit, char* at_limit_suffix) {
+  // limit is just a guess, buffer's always grow as needed.
+  buffer_t* buffer = make_buffer(limit);
+  for (int i = 0;; i++) {
+    char ch = str[i];
+    if (ch == '\0') {
+      char* result = buffer_to_c_string(buffer);
+      free_bytes(buffer);
+      return result;
+    }
+    buffer = buffer_append_byte(buffer, ch);
+  }
+  if (at_limit_suffix) {
+    buffer = buffer_append_string(buffer, at_limit_suffix);
   }
   char* result = buffer_to_c_string(buffer);
   free_bytes(buffer);

@@ -19,10 +19,23 @@
 #define TEST_VALID_UTF8_SEQUENCE(cp, n_bytes, ...)                             \
   do {                                                                         \
     uint8_t utf8_bytes[] = {__VA_ARGS__};                                      \
-    utf8_decode_result_t result = utf8_decode_two(utf8_bytes);                 \
+    utf8_decode_result_t result = utf8_decode(utf8_bytes);                     \
     test_assert(result.error == false);                                        \
     test_assert(result.num_bytes == n_bytes);                                  \
     test_assert(result.code_point == cp);                                      \
+    buffer_t* buffer = make_buffer(8);                                         \
+    buffer = buffer_append_code_point(buffer, cp);                             \
+    test_assert(buffer->length == n_bytes);                                    \
+    test_assert(buffer_get(buffer, 0) == utf8_bytes[0]);                       \
+    if (n_bytes > 1) {                                                         \
+      test_assert(buffer_get(buffer, 1) == utf8_bytes[1]);                     \
+    }                                                                          \
+    if (n_bytes > 2) {                                                         \
+      test_assert(buffer_get(buffer, 2) == utf8_bytes[2]);                     \
+    }                                                                          \
+    if (n_bytes > 3) {                                                         \
+      test_assert(buffer_get(buffer, 3) == utf8_bytes[3]);                     \
+    }                                                                          \
   } while (0)
 
 void test_utf8_decode_ascii() {
@@ -53,7 +66,7 @@ void test_utf8_decode_three_bytes() {
 #define TEST_INVALID_UTF8_SEQUENCE(...)                                        \
   do {                                                                         \
     uint8_t utf8_bytes[] = {__VA_ARGS__};                                      \
-    utf8_decode_result_t result = utf8_decode_two(utf8_bytes);                 \
+    utf8_decode_result_t result = utf8_decode(utf8_bytes);                     \
     test_assert(result.error == true);                                         \
     test_assert(result.num_bytes == 0);                                        \
     test_assert(result.code_point == 0);                                       \

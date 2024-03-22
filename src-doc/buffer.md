@@ -26,6 +26,17 @@ Append a single byte to the byte array.
 
 Append multiple bytes to the byte array.
  
+## @function buffer_append_code_point()
+
+Append a single code-point according to UTF-8 encoding (so 1 to 4
+bytes). While you can put anything you want into a buffer_t (not
+just valid UTF-8 sequences), if you then try to make a C string
+from the buffer then it might end up with a NUL ('\0') byte in the
+middle of it if you add code_point == 0 somewhere besides the end
+of the string.
+
+@see utf8_decode(const uint8_t* utf8_bytes).
+ 
 ## @function buffer_append_repeated_byte
 
 Append 'count' copies of byte to the passed in buffer. This can be

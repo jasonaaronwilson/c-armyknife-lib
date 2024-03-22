@@ -71,6 +71,9 @@ __attribute__((format(printf, 2, 3))) extern buffer_t*
 __attribute__((warn_unused_result)) extern buffer_t*
     buffer_append_repeated_byte(buffer_t* buffer, uint8_t byte, int count);
 
+__attribute__((warn_unused_result)) extern buffer_t*
+    buffer_append_code_point(buffer_t* buffer, uint32_t code_point);
+
 #endif /* _BUFFER_H_ */
 
 // ======================================================================
@@ -266,8 +269,6 @@ buffer_t*
   }
 }
 
-// TODO(jawilson): buffer_append_code_point, aka, a UTF-8 encoder.
-
 /**
  * @function buffer_append_repeated_byte
  *
@@ -281,4 +282,47 @@ __attribute__((warn_unused_result)) extern buffer_t*
     buffer = buffer_append_byte(buffer, byte);
   }
   return buffer;
+}
+
+/**
+ * @function buffer_append_code_point()
+ *
+ * Append a single code-point according to UTF-8 encoding (so 1 to 4
+ * bytes). While you can put anything you want into a buffer_t (not
+ * just valid UTF-8 sequences), if you then try to make a C string
+ * from the buffer then it might end up with a NUL ('\0') byte in the
+ * middle of it if you add code_point == 0 somewhere besides the end
+ * of the string.
+ *
+ * @see utf8_decode(const uint8_t* utf8_bytes).
+ */
+__attribute__((warn_unused_result)) extern buffer_t*
+    buffer_append_code_point(buffer_t* buffer, uint32_t code_point) {
+  if (code_point < 0x80) {
+    // 1-byte sequence for code points in the range 0-127
+    buffer = buffer_append_byte(buffer, code_point);
+    return buffer;
+  } else if (code_point < 0x800) {
+    // 2-byte sequence for code points in the range 128-2047
+    buffer = buffer_append_byte(buffer, 0xc0 | (code_point >> 6));
+    buffer = buffer_append_byte(buffer, 0x80 | (code_point & 0x3f));
+    return buffer;
+  } else if (code_point < 0x10000) {
+    // 3-byte sequence for code points in the range 2048-65535
+    buffer = buffer_append_byte(buffer, 0xe0 | (code_point >> 12));
+    buffer = buffer_append_byte(buffer, 0x80 | ((code_point >> 6) & 0x3f));
+    buffer = buffer_append_byte(buffer, 0x80 | (code_point & 0x3f));
+    return buffer;
+  } else if (code_point <= 0x10FFFF) {
+    // 4-byte sequence for code points in the range 65536-1114111
+    buffer = buffer_append_byte(buffer, 0xf0 | (code_point >> 18));
+    buffer = buffer_append_byte(buffer, 0x80 | ((code_point >> 12) & 0x3f));
+    buffer = buffer_append_byte(buffer, 0x80 | ((code_point >> 6) & 0x3f));
+    buffer = buffer_append_byte(buffer, 0x80 | (code_point & 0x3f));
+    return buffer;
+  } else {
+    // Code points beyond the valid UTF-8 range (0-0x10FFFF) are not supported
+    fatal_error(ERROR_ILLEGAL_UTF_8_CODE_POINT);
+    return 0; // Not Reached.
+  }
 }

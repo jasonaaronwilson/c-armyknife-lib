@@ -115,6 +115,7 @@ typedef enum {
   ERROR_FATAL,
   ERROR_ILLEGAL_STATE,
   ERROR_ILLEGAL_INPUT,
+  ERROR_ILLEGAL_UTF_8_CODE_POINT,
 } error_code_t;
 
 extern _Noreturn void fatal_error_impl(char* file, int line, int error_code);
@@ -391,7 +392,6 @@ struct utf8_decode_result_S {
 typedef struct utf8_decode_result_S utf8_decode_result_t;
 
 extern utf8_decode_result_t utf8_decode(const uint8_t* utf8_bytes);
-extern utf8_decode_result_t utf8_decode_two(const uint8_t* array);
 
 extern int string_is_null_or_empty(const char* str1);
 extern int string_equal(const char* str1, const char* str2);
@@ -640,8 +640,11 @@ __attribute__((warn_unused_result))
 __attribute__((format(printf, 2, 3))) extern buffer_t*
     buffer_printf(buffer_t* buffer, char* format, ...);
 
-__attribute__((warn_unused_result))
-extern buffer_t* buffer_append_repeated_byte(buffer_t* buffer, uint8_t byte, int count);
+__attribute__((warn_unused_result)) extern buffer_t*
+    buffer_append_repeated_byte(buffer_t* buffer, uint8_t byte, int count);
+
+__attribute__((warn_unused_result)) extern buffer_t*
+    buffer_append_code_point(buffer_t* buffer, uint32_t code_point);
 
 #endif /* _BUFFER_H_ */
 // SSCF generated file from: value-array.c
@@ -1847,8 +1850,11 @@ __attribute__((warn_unused_result))
 __attribute__((format(printf, 2, 3))) extern buffer_t*
     buffer_printf(buffer_t* buffer, char* format, ...);
 
-__attribute__((warn_unused_result))
-extern buffer_t* buffer_append_repeated_byte(buffer_t* buffer, uint8_t byte, int count);
+__attribute__((warn_unused_result)) extern buffer_t*
+    buffer_append_repeated_byte(buffer_t* buffer, uint8_t byte, int count);
+
+__attribute__((warn_unused_result)) extern buffer_t*
+    buffer_append_code_point(buffer_t* buffer, uint32_t code_point);
 
 #endif /* _BUFFER_H_ */
 
@@ -2045,14 +2051,62 @@ buffer_t*
   }
 }
 
-// TODO(jawilson): buffer_append_code_point, aka, a UTF-8 encoder.
-
-__attribute__((warn_unused_result))
-extern buffer_t* buffer_append_repeated_byte(buffer_t* buffer, uint8_t byte, int count) {
+/**
+ * @function buffer_append_repeated_byte
+ *
+ * Append 'count' copies of byte to the passed in buffer. This can be
+ * used for things like indentation or horizontal rules (composed from
+ * say '-', '=', or '*').
+ */
+__attribute__((warn_unused_result)) extern buffer_t*
+    buffer_append_repeated_byte(buffer_t* buffer, uint8_t byte, int count) {
   for (int i = 0; i < count; i++) {
     buffer = buffer_append_byte(buffer, byte);
   }
   return buffer;
+}
+
+/**
+ * @function buffer_append_code_point()
+ *
+ * Append a single code-point according to UTF-8 encoding (so 1 to 4
+ * bytes). While you can put anything you want into a buffer_t (not
+ * just valid UTF-8 sequences), if you then try to make a C string
+ * from the buffer then it might end up with a NUL ('\0') byte in the
+ * middle of it if you add code_point == 0 somewhere besides the end
+ * of the string.
+ *
+ * @see utf8_decode(const uint8_t* utf8_bytes).
+ */
+__attribute__((warn_unused_result)) extern buffer_t*
+    buffer_append_code_point(buffer_t* buffer, uint32_t code_point) {
+  if (code_point < 0x80) {
+    // 1-byte sequence for code points in the range 0-127
+    buffer = buffer_append_byte(buffer, code_point);
+    return buffer;
+  } else if (code_point < 0x800) {
+    // 2-byte sequence for code points in the range 128-2047
+    buffer = buffer_append_byte(buffer, 0xc0 | (code_point >> 6));
+    buffer = buffer_append_byte(buffer, 0x80 | (code_point & 0x3f));
+    return buffer;
+  } else if (code_point < 0x10000) {
+    // 3-byte sequence for code points in the range 2048-65535
+    buffer = buffer_append_byte(buffer, 0xe0 | (code_point >> 12));
+    buffer = buffer_append_byte(buffer, 0x80 | ((code_point >> 6) & 0x3f));
+    buffer = buffer_append_byte(buffer, 0x80 | (code_point & 0x3f));
+    return buffer;
+  } else if (code_point <= 0x10FFFF) {
+    // 4-byte sequence for code points in the range 65536-1114111
+    buffer = buffer_append_byte(buffer, 0xf0 | (code_point >> 18));
+    buffer = buffer_append_byte(buffer, 0x80 | ((code_point >> 12) & 0x3f));
+    buffer = buffer_append_byte(buffer, 0x80 | ((code_point >> 6) & 0x3f));
+    buffer = buffer_append_byte(buffer, 0x80 | (code_point & 0x3f));
+    return buffer;
+  } else {
+    // Code points beyond the valid UTF-8 range (0-0x10FFFF) are not supported
+    fatal_error(ERROR_ILLEGAL_UTF_8_CODE_POINT);
+    return 0; // Not Reached.
+  }
 }
 #line 2 "command-line-parser.c"
 /**
@@ -3027,6 +3081,7 @@ typedef enum {
   ERROR_FATAL,
   ERROR_ILLEGAL_STATE,
   ERROR_ILLEGAL_INPUT,
+  ERROR_ILLEGAL_UTF_8_CODE_POINT,
 } error_code_t;
 
 extern _Noreturn void fatal_error_impl(char* file, int line, int error_code);
@@ -4129,7 +4184,6 @@ struct utf8_decode_result_S {
 typedef struct utf8_decode_result_S utf8_decode_result_t;
 
 extern utf8_decode_result_t utf8_decode(const uint8_t* utf8_bytes);
-extern utf8_decode_result_t utf8_decode_two(const uint8_t* array);
 
 extern int string_is_null_or_empty(const char* str1);
 extern int string_equal(const char* str1, const char* str2);
@@ -4182,58 +4236,12 @@ int string_equal(const char* str1, const char* str2) {
   return strcmp(str1, str2) == 0;
 }
 
-// Function to determine the number of bytes for a UTF-8 character based on the
-// first byte
-static int utf8_bytes_for_first_byte(uint8_t first_byte) {
-  if (first_byte <= 0x7F) {
-    return 1;
-  } else if (first_byte <= 0xDF) {
-    return 2;
-  } else if (first_byte <= 0xEF) {
-    return 3;
-  } else if (first_byte <= 0xF7) {
-    return 4;
-  } else {
-    return -1; // Invalid UTF-8 character
-  }
-}
-
 /**
  * @function utf8_decode
  *
  * Decodes the next code-point from a uint8_t* pointer.
  */
-utf8_decode_result_t utf8_decode(const uint8_t* utf8_bytes) {
-  int num_bytes = utf8_bytes_for_first_byte(*utf8_bytes);
-  if (num_bytes == -1) {
-    // Invalid UTF-8 character
-    return (utf8_decode_result_t){.error = true};
-  }
-
-  uint32_t code_point = 0;
-
-  // Extract codepoint based on the number of bytes
-  if (num_bytes == 1) {
-    code_point = *utf8_bytes;
-  } else {
-    uint8_t mask = (1 << (7 - num_bytes));
-    code_point = *utf8_bytes & ~mask; // Get first byte bits
-
-    for (int i = 1; i < num_bytes; i++) {
-      if ((utf8_bytes[i] & 0xC0) != 0x80) {
-        // Invalid UTF-8 sequence
-        return (utf8_decode_result_t){.error = true};
-      }
-      code_point = (code_point << 6) | (utf8_bytes[i] & 0x3F);
-    }
-  }
-
-  return (utf8_decode_result_t){.code_point = code_point,
-                                .num_bytes = num_bytes};
-}
-
-// TODO(jawilson): check for internal nulls?
-utf8_decode_result_t utf8_decode_two(const uint8_t* array) {
+utf8_decode_result_t utf8_decode(const uint8_t* array) {
   uint8_t firstByte = array[0];
   if ((firstByte & 0x80) == 0) {
     return (utf8_decode_result_t){.code_point = firstByte, .num_bytes = 1};
@@ -4570,6 +4578,16 @@ char* string_right_pad(const char* str, int n, char ch) {
   return result;
 }
 
+/**
+ * @function string_truncate
+ *
+ * Return a copy of the string truncated to limit number of *bytes*
+ * (excluding the trailing zero). This is currently not unicode safe!
+ *
+ * When the string is truncated, we also add 'at_limit_suffix' which
+ * may make the returned string actually that many characters
+ * longer. This behavior is likely to change in a future version.
+ */
 char* string_truncate(char* str, int limit, char* at_limit_suffix) {
   // limit is just a guess, buffer's always grow as needed.
   buffer_t* buffer = make_buffer(limit);

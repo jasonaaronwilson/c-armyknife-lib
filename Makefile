@@ -18,6 +18,7 @@ SRC_C = allocate.c \
 	string-hashtable.c \
 	string-tree.c \
 	string-util.c \
+	terminal.c \
 	test.c \
 	tokenizer.c \
 	uint64.c \
@@ -47,6 +48,7 @@ ORDERED_H = \
 	flag.h \
 	command-line-parser.h \
 	io.h \
+	terminal.h \
 	tokenizer.h \
 	random.h \
 	test.h
@@ -94,7 +96,8 @@ TESTS= \
 	./random-test.sh \
 	./value-tree-test.sh \
 	./string-tree-test.sh \
-	./logger-test.sh
+	./logger-test.sh \
+	./terminal-test.sh
 
 test:
 	(cd tests && mkdir -p build && ../run-tests.sh ${TESTS})

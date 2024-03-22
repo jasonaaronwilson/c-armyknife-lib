@@ -36,6 +36,8 @@
 
 * [value-alist.md](value-alist.md)
 
+* [terminal.md](terminal.md)
+
 * [io.md](io.md)
 
 * [buffer.md](buffer.md)

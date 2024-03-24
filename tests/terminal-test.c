@@ -20,6 +20,23 @@ int main(int argc, char** argv) {
     buffer = buffer_printf(buffer, "World!\n");
   }
 
+  buffer = term_move_cursor_relative(buffer, -2, -2);
+  buffer = buffer_printf(buffer, "*");
+  buffer = term_move_cursor_relative(buffer, 3, 3);
+  buffer = buffer_printf(buffer, "*");
+
+  buffer = term_bold(buffer);
+  buffer = buffer_printf(buffer, "[Bold]");
+  buffer = term_reset_formatting(buffer);
+
+  buffer = term_underline(buffer);
+  buffer = buffer_printf(buffer, "[Underline]");
+  buffer = term_reset_formatting(buffer);
+
+  buffer = term_italic(buffer);
+  buffer = buffer_printf(buffer, "[Italic]");
+  buffer = term_reset_formatting(buffer);
+
   printf("%s", buffer_to_c_string(buffer));
 
   // TODO(jawilson): ability to query the initial foreground and

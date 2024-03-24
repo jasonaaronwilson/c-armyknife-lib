@@ -12,10 +12,25 @@ support and handle other terminals differently in the future
 
 https://github.com/termstandard/colors
  
+## @function term_bold
+
+Append a terminal escape sequence to a buffer that turns on "bold"
+text.
+ 
 ## @function term_clear_screen
 
 Append a terminal escape sequence to a buffer that clears the
 entire terminal.
+ 
+## @function term_dim
+
+Append a terminal escape sequence to a buffer that turns on "dim"
+text.
+ 
+## @function term_dim
+
+Append a terminal escape sequence to a buffer that turns on "italic"
+text.
  
 ## @function term_move_cursor_absolute
 
@@ -26,6 +41,20 @@ coordinate.
 (Traditionally terminals operate on a 1 based coordinate system but
 zero based indexes would perhaps be choosen now since most
 programming languages are zero based).
+ 
+## @function term_move_cursor_relative
+
+Append a terminal escape sequence to a buffer that instructs the
+terminal to move it's "cursor" relative to it's current poition. 0
+doesn't change the column or row, while negative will move either
+left or to the "top" of the terminal, while positive numbers move
+right or downwards towards the bottom of the terminal.
+ 
+## @function term_reset_formatting
+
+Append a terminal escape sequence to a buffer that resets the
+formatting (and appears to cancel the foreground and background
+color as well).
  
 ## @function term_set_background_color
 
@@ -42,4 +71,9 @@ terminal to change to foreground color to a 24bit RGB value.
 
 (Currently we don't automatically "downgrade" to 256 color or 16
 color terminals).
+ 
+## @function term_underline
+
+Append a terminal escape sequence to a buffer that turns on
+"underline" text.
  

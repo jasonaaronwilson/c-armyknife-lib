@@ -30,6 +30,25 @@ __attribute__((warn_unused_result)) extern buffer_t*
 __attribute__((warn_unused_result)) extern buffer_t*
     term_move_cursor_absolute(buffer_t* buffer, int x, int y);
 
+__attribute__((warn_unused_result)) extern buffer_t*
+    term_move_cursor_relative(buffer_t* buffer, int x, int y);
+
+__attribute__((warn_unused_result)) extern buffer_t*
+    term_bold(buffer_t* buffer);
+
+__attribute__((warn_unused_result)) extern buffer_t* term_dim(buffer_t* buffer);
+
+__attribute__((warn_unused_result)) extern buffer_t*
+    term_italic(buffer_t* buffer);
+
+__attribute__((warn_unused_result)) extern buffer_t*
+    term_underline(buffer_t* buffer);
+
+__attribute__((warn_unused_result)) extern buffer_t*
+    term_reset_formatting(buffer_t* buffer);
+
+// TODO(jawilson): terminal queries like request cursor position
+
 #endif /* _TERMINAL_H_ */
 
 #define TERM_ESCAPE_START "\033["
@@ -92,6 +111,87 @@ __attribute__((warn_unused_result)) extern buffer_t*
     term_move_cursor_absolute(buffer_t* buffer, int x, int y) {
   // Escape sequence for cursor movement (ESC [ y; x H)
   return buffer_printf(buffer, TERM_ESCAPE_START "%d;%dH", y + 1, x + 1);
+}
+
+/**
+ * @function term_move_cursor_relative
+ *
+ * Append a terminal escape sequence to a buffer that instructs the
+ * terminal to move it's "cursor" relative to it's current poition. 0
+ * doesn't change the column or row, while negative will move either
+ * left or to the "top" of the terminal, while positive numbers move
+ * right or downwards towards the bottom of the terminal.
+ */
+__attribute__((warn_unused_result)) extern buffer_t*
+    term_move_cursor_relative(buffer_t* buffer, int x, int y) {
+  // First handle the x position
+  if (x > 0) {
+    buffer = buffer_printf(buffer, TERM_ESCAPE_START "%dC", x);
+  } else if (x < 0) {
+    buffer = buffer_printf(buffer, TERM_ESCAPE_START "%dD", -x);
+  }
+  if (y > 0) {
+    buffer = buffer_printf(buffer, TERM_ESCAPE_START "%dB", y);
+  } else {
+    buffer = buffer_printf(buffer, TERM_ESCAPE_START "%dA", -y);
+  }
+  return buffer;
+}
+
+/**
+ * @function term_bold
+ *
+ * Append a terminal escape sequence to a buffer that turns on "bold"
+ * text.
+ */
+__attribute__((warn_unused_result)) extern buffer_t*
+    term_bold(buffer_t* buffer) {
+  return buffer_printf(buffer, TERM_ESCAPE_START "1m");
+}
+
+/**
+ * @function term_dim
+ *
+ * Append a terminal escape sequence to a buffer that turns on "dim"
+ * text.
+ */
+__attribute__((warn_unused_result)) extern buffer_t*
+    term_dim(buffer_t* buffer) {
+  return buffer_printf(buffer, TERM_ESCAPE_START "2m");
+}
+
+/**
+ * @function term_dim
+ *
+ * Append a terminal escape sequence to a buffer that turns on "italic"
+ * text.
+ */
+__attribute__((warn_unused_result)) extern buffer_t*
+    term_italic(buffer_t* buffer) {
+  return buffer_printf(buffer, TERM_ESCAPE_START "3m");
+}
+
+/**
+ * @function term_underline
+ *
+ * Append a terminal escape sequence to a buffer that turns on
+ * "underline" text.
+ */
+__attribute__((warn_unused_result)) extern buffer_t*
+    term_underline(buffer_t* buffer) {
+  return buffer_printf(buffer, TERM_ESCAPE_START "4m");
+}
+
+/**
+ * @function term_reset_formatting
+ *
+ * Append a terminal escape sequence to a buffer that resets the
+ * formatting (and appears to cancel the foreground and background
+ * color as well).
+ */
+__attribute__((warn_unused_result)) extern buffer_t*
+    term_reset_formatting(buffer_t* buffer) {
+  return buffer_printf(buffer, TERM_ESCAPE_START "0m");
 }
 
 /**

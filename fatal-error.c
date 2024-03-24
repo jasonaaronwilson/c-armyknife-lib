@@ -59,6 +59,7 @@ typedef enum {
   ERROR_ILLEGAL_STATE,
   ERROR_ILLEGAL_INPUT,
   ERROR_ILLEGAL_UTF_8_CODE_POINT,
+  ERROR_ILLEGAL_TERMINAL_COORDINATES,
 } error_code_t;
 
 extern _Noreturn void fatal_error_impl(char* file, int line, int error_code);

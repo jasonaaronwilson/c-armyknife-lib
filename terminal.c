@@ -18,6 +18,19 @@
  * https://github.com/termstandard/colors
  */
 
+struct box_drawing_S {
+  uint32_t upper_left_corner;
+  uint32_t upper_right_corner;
+  uint32_t lower_left_corner;
+  uint32_t lower_right_corner;
+  uint32_t top_edge;
+  uint32_t left_edge;
+  uint32_t right_edge;
+  uint32_t bottom_edge;
+};
+
+typedef struct box_drawing_S box_drawing_t;
+
 __attribute__((warn_unused_result)) extern buffer_t*
     term_clear_screen(buffer_t* buffer);
 
@@ -46,6 +59,10 @@ __attribute__((warn_unused_result)) extern buffer_t*
 
 __attribute__((warn_unused_result)) extern buffer_t*
     term_reset_formatting(buffer_t* buffer);
+
+__attribute__((warn_unused_result)) extern buffer_t*
+    term_draw_box(buffer_t* buffer, uint16_t x0, uint16_t y0, uint16_t x1,
+                  uint16_t y1, box_drawing_t* box);
 
 // TODO(jawilson): terminal queries like request cursor position
 
@@ -203,4 +220,39 @@ __attribute__((warn_unused_result)) extern buffer_t*
 __attribute__((warn_unused_result)) extern buffer_t*
     term_clear_screen(buffer_t* buffer) {
   return buffer_printf(buffer, TERM_ESCAPE_START "2J");
+}
+
+/**
+ * @function term_draw_box
+ *
+ * Append the terminal escape sequences to a buffer that draws a box.
+ */
+__attribute__((warn_unused_result)) extern buffer_t*
+    term_draw_box(buffer_t* buffer, uint16_t x0, uint16_t y0, uint16_t x1,
+                  uint16_t y1, box_drawing_t* box) {
+  // top
+  buffer = term_move_cursor_absolute(buffer, x0, y0);
+  buffer = buffer_append_code_point(buffer, box->upper_left_corner);
+  for (uint64_t x = x0 + 1; x < x1; x++) {
+    buffer = buffer_append_code_point(buffer, box->top_edge);
+  }
+  buffer = buffer_append_code_point(buffer, box->upper_right_corner);
+
+  // bottom
+  buffer = term_move_cursor_absolute(buffer, x0, y1);
+  buffer = buffer_append_code_point(buffer, box->lower_left_corner);
+  for (uint64_t x = x0 + 1; x < x1; x++) {
+    buffer = buffer_append_code_point(buffer, box->bottom_edge);
+  }
+  buffer = buffer_append_code_point(buffer, box->lower_right_corner);
+
+  // the sides
+  for (int y = y0 + 1; y < y1; y++) {
+    buffer = term_move_cursor_absolute(buffer, x0, y);
+    buffer = buffer_append_code_point(buffer, box->left_edge);
+    buffer = term_move_cursor_absolute(buffer, x1, y);
+    buffer = buffer_append_code_point(buffer, box->right_edge);
+  }
+
+  return buffer;
 }

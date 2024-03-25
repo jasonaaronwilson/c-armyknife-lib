@@ -37,6 +37,19 @@ int main(int argc, char** argv) {
   buffer = buffer_printf(buffer, "[Italic]");
   buffer = term_reset_formatting(buffer);
 
+  box_drawing_t box = {
+      .upper_left_corner = 0x250c,
+      .upper_right_corner = 0x2510,
+      .top_edge = 0x2500,
+      .bottom_edge = 0x2500,
+      .lower_left_corner = 0x2514,
+      .lower_right_corner = 0x2518,
+      .left_edge = 0x2502,
+      .right_edge = 0x2502,
+  };
+
+  buffer = term_draw_box(buffer, 5, 5, 40, 20, &box);
+
   printf("%s", buffer_to_c_string(buffer));
 
   // TODO(jawilson): ability to query the initial foreground and

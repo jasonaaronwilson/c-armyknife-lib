@@ -32,6 +32,10 @@ text.
 Append a terminal escape sequence to a buffer that turns on "italic"
 text.
  
+## @function term_draw_box
+
+Append the terminal escape sequences to a buffer that draws a box.
+ 
 ## @function term_move_cursor_absolute
 
 Append a terminal escape sequence to a buffer that instructs the

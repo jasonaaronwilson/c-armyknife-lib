@@ -48,7 +48,9 @@ int main(int argc, char** argv) {
       .right_edge = 0x2502,
   };
 
-  buffer = term_draw_box(buffer, 5, 5, 40, 20, &box);
+  for (int i = 0; i < 20; i++) {
+    buffer = term_draw_box(buffer, 5 + i, 5 + i, 40 + i, 20 + i, &box);
+  }
 
   printf("%s", buffer_to_c_string(buffer));
 

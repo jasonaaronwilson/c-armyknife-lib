@@ -5049,11 +5049,16 @@ __attribute__((warn_unused_result)) extern buffer_t*
   }
   buffer = buffer_append_code_point(buffer, box->lower_right_corner);
 
-  // the sides
+  // the sides (and the middle)
   for (int y = y0 + 1; y < y1; y++) {
     buffer = term_move_cursor_absolute(buffer, x0, y);
     buffer = buffer_append_code_point(buffer, box->left_edge);
-    buffer = term_move_cursor_absolute(buffer, x1, y);
+
+    for (int x = x0 + 1; x < x1; x++) {
+      buffer = buffer_append_code_point(buffer, ' ');
+    }
+    // buffer = term_move_cursor_absolute(buffer, x1, y);
+
     buffer = buffer_append_code_point(buffer, box->right_edge);
   }
 

@@ -7,6 +7,7 @@ examples:
 	gcc -g -rdynamic -O2 -o build/line-histogram line-histogram.c
 	gcc -g -rdynamic -o build/unique-line-generator unique-line-generator.c
 	gcc -g -rdynamic -o build/code-points code-points.c
+	gcc -g -rdynamic -o build/terminal-input terminal-input.c
 
 manual-smoke-test: examples
 	@echo "================================================================="

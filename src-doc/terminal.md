@@ -36,6 +36,15 @@ text.
 
 Append the terminal escape sequences to a buffer that draws a box.
  
+## @function term_echo_off
+
+Append a terminal escape sequence to turn on hardware echoing.
+ 
+## @function term_echo_off
+
+Turn off canonical input mode and echo and return the original
+terminal settings so they can be restored.
+ 
 ## @function term_move_cursor_absolute
 
 Append a terminal escape sequence to a buffer that instructs the

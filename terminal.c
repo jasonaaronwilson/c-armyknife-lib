@@ -2,6 +2,8 @@
 #ifndef _TERMINAL_H_
 #define _TERMINAL_H_
 
+#include <termios.h>
+
 /**
  * @file terminal.c
  *
@@ -63,6 +65,9 @@ __attribute__((warn_unused_result)) extern buffer_t*
 __attribute__((warn_unused_result)) extern buffer_t*
     term_draw_box(buffer_t* buffer, uint16_t x0, uint16_t y0, uint16_t x1,
                   uint16_t y1, box_drawing_t* box);
+
+extern struct termios term_echo_off();
+extern void term_echo_restore(struct termios oldt);
 
 // TODO(jawilson): terminal queries like request cursor position
 
@@ -261,3 +266,41 @@ __attribute__((warn_unused_result)) extern buffer_t*
 
   return buffer;
 }
+
+/**
+ * @function term_echo_off
+ *
+ * Turn off canonical input mode and echo and return the original
+ * terminal settings so they can be restored.
+ */
+extern struct termios term_echo_off() {
+  struct termios oldt;
+  struct termios newt;
+  tcgetattr(STDIN_FILENO, &oldt);
+  newt = oldt;
+
+  // Get the original terminal settings
+  tcgetattr(STDIN_FILENO, &oldt);
+  newt = oldt;
+
+  // Disable canonical input mode and echo
+  newt.c_lflag &= ~(ICANON | ECHO);
+  tcsetattr(STDIN_FILENO, TCSANOW, &newt);
+
+  return oldt;
+}
+
+/**
+ * @function term_echo_off
+ *
+ * Append a terminal escape sequence to turn on hardware echoing.
+ */
+extern void term_echo_restore(struct termios oldt) {
+  // Restore the original terminal settings
+  tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
+}
+
+// Set window title.
+// ESC ]0;this is the window title BEL
+
+// ESC ]8;;link ST (hyperlink)

@@ -5,6 +5,7 @@
  */
 
 #include <stdlib.h>
+#include <time.h>
 
 #define C_ARMYKNIFE_LIB_IMPL
 #include "../c-armyknife-lib.h"
@@ -30,8 +31,22 @@ int main(int argc, char** argv) {
 
   struct termios oldt = term_echo_off();
 
-  sleep(10);
+  time_t start_time = time(NULL);
+  time_t end_time = start_time + 30; // 30 seconds from start
 
+  buffer_t* buffer = make_buffer(10);
+  while (time(NULL) < end_time) {
+    buffer_clear(buffer);
+    buffer = buffer_read_ready_bytes(buffer, stdin, 10);
+    for (uint64_t i = 0; i < buffer_length(buffer); i++) {
+      uint8_t byte = buffer_get(buffer, i);
+      fputc(byte, stdout);
+      fflush(stdout);
+    }
+    usleep(1000);
+  }
+
+  // TODO(jawilson): maybe use atexit to make this a little more robust.
   term_echo_restore(oldt);
 
   exit(0);

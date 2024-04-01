@@ -13,8 +13,11 @@
 #ifndef _IO_H_
 #define _IO_H_
 
+#include <fcntl.h>
 #include <limits.h>
 #include <stdint.h>
+#include <stdio.h>
+#include <unistd.h>
 
 __attribute__((warn_unused_result)) extern buffer_t*
     buffer_append_file_contents(buffer_t* bytes, char* file_name);
@@ -26,6 +29,9 @@ extern void buffer_write_file(buffer_t* bytes, char* file_name);
 
 __attribute__((warn_unused_result)) extern buffer_t*
     buffer_read_until(buffer_t* buffer, FILE* input, char end_of_line);
+
+__attribute__((warn_unused_result)) extern buffer_t*
+    buffer_read_ready_bytes(buffer_t* buffer, FILE* input, uint64_t max_bytes);
 
 int file_peek_byte(FILE* input);
 
@@ -130,6 +136,60 @@ buffer_t* buffer_read_until(buffer_t* buffer, FILE* input, char end_of_line) {
     }
     buffer = buffer_append_byte(buffer, ch);
   }
+  return buffer;
+}
+
+/**
+ * @function buffer_read_ready_bytes
+ *
+ * Read from a FILE* until either the end of file is reached,
+ * max_bytes has been read, or there are no ready bytes. This function
+ * should never block.
+ */
+__attribute__((warn_unused_result)) extern buffer_t*
+    buffer_read_ready_bytes(buffer_t* buffer, FILE* input, uint64_t max_bytes) {
+  uint64_t bytes_remaining = max_bytes - buffer_length(buffer);
+
+  // Loop until either blocking would occur or max_bytes have been added
+  while (bytes_remaining > 0) {
+    // Use select to check if there's data available to be read
+    fd_set rfds;
+    struct timeval tv;
+
+    FD_ZERO(&rfds);
+    FD_SET(fileno(input), &rfds);
+
+    tv.tv_sec = 0;
+    tv.tv_usec = 0;
+
+    // The first argument to select must be one greater than the
+    // highest-numbered file descriptor we are selecting on. This
+    // feels kind of dumb so epoll or poll might work
+    // better. Additionally putting the file into non-blocking mode
+    // might allow reading more than one byte at a time but this is OK
+    // to just get something working.
+    int retval = select(fileno(input) + 1, &rfds, NULL, NULL, &tv);
+
+    if (retval == -1) {
+      fatal_error(ERROR_ILLEGAL_STATE);
+    } else if (retval) {
+      // Data available to be read
+      // log_trace("data available");
+      int byte = fgetc(input);
+      if (byte == EOF) {
+        log_warn("byte == EOF so returning nothing");
+        // End of file
+        return buffer;
+      }
+      buffer = buffer_append_byte(buffer, (uint8_t) byte);
+      // log_trace("buffer_length = %d", buffer_length(buffer));
+      bytes_remaining--;
+    } else {
+      // No data available without blocking.
+      break;
+    }
+  }
+
   return buffer;
 }
 

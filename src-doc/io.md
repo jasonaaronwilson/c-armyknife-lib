@@ -13,6 +13,12 @@ into a buffer.
 Completely reads a file and appends the contents to the passed in
 buffer. This is often much more convenient than streaming a file.
  
+## @function buffer_read_ready_bytes
+
+Read from a FILE* until either the end of file is reached,
+max_bytes has been read, or there are no ready bytes. This function
+should never block.
+ 
 ## @function buffer_read_until
 
 Read from a FILE* until either the end of file is reached or a

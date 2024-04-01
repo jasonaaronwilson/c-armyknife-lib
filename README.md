@@ -1,32 +1,54 @@
 # C Armyknife Library
 
-A small C library with a focus on command line utilities.
+A small fully open sourced C library with a focus on writing small
+text based command line utilities using only essential POSIX
+functionality.
 
 ## Features
 
-* fatal errors (with backtraces which are OK if you use the -rdynamic
-  compiler option though not close to Java quality yet)
-* "immediate" exit on any memory allocation failure plus zeroing
-  malloc to reduce undefined behavior
-  * with an LRU based over-write/under-write checker perfect for small
-    programs like tests
-* basic "immutable" string operations for example, string_append,
-  string_hash, and even string_left_pad
+* an extremely easy to use command line parser that even allows git
+  style subcommands if you want that. "--help" is essentially free
+  though you can easily make it much better with descriptions of flags
+  (and commands).
+
+* a logging mechanism that's literally as easy to use as "printf"
+  (though not really more "powerful" than printf...)
+
+* a fatal error mechanism (potentially with backtraces though not
+  close to Java quality yet; also easily catch segmentation faults
+  turning them into fatal errors; and make it trivial to attach a
+  debugger on error by delaying exit if requested)
+
+* a somewhat safer take on memory allocation
+
+   * always zeroing
+
+   * an optional debug LRU based over-write/under-write checker
+     perfect for small programs like tests that caught errors that
+     other tools didn't for me.
+
+* basic "immutable" string operations for example, string_append; and
+  also, string_hash, and decoding UTF-8 strings (and even
+  string_left_pad)
+
 * growable arrays of primitive values (that can be trivally used as a
   stack)
-* three similar interfaces for "maps" of string -> primitive values.
+
+* three similar interfaces for "maps" that provide time/space
+  tradeoffs
   * string_alist for small maps
   * string_ht for large maps
   * string_tree for sorted maps
-* command line parsing helper that handles GNU style "long" flags
-  (short flags will obviously be supported eventually).
+
 * a cross-platform deterministic random, and a few other small but
   useful routines.
+
 * a [companion documentation
   projecct](https://github.com/jasonaaronwilson/c-javadoc-extractor)
   so you can write your Javadoc style documentation in markdown and
   extract them to simple markdown files.
-* a test runner (bash script) suitable for smaller projects
+
+* a test suite and sample applications. 
 
 ## Links
 

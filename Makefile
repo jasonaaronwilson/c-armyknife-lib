@@ -7,7 +7,6 @@ install: c-armyknife-lib
 SRC_C = allocate.c \
 	boolean.c \
 	buffer.c \
-	command-line-parser.c \
 	flag.c \
 	fatal-error.c \
 	io.c \
@@ -46,7 +45,6 @@ ORDERED_H = \
 	value-tree.h \
 	string-tree.h \
 	flag.h \
-	command-line-parser.h \
 	io.h \
 	terminal.h \
 	tokenizer.h \
@@ -88,7 +86,6 @@ TESTS= \
 	./string-alist-test.sh \
 	./value-hashtable-test.sh \
 	./string-hashtable-test.sh \
-	./command-line-parser-test.sh \
 	./flag-test.sh \
 	./tokenizer-test.sh \
 	./io-test.sh \

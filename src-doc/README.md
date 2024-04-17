@@ -44,5 +44,3 @@
 
 * [fatal-error.md](fatal-error.md)
 
-* [command-line-parser.md](command-line-parser.md)
-

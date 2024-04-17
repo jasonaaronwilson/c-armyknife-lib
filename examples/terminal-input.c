@@ -4,9 +4,9 @@
  * A little interactive test program for input from the terminal.
  */
 
+#include <ctype.h>
 #include <stdlib.h>
 #include <time.h>
-#include <ctype.h>
 
 #define C_ARMYKNIFE_LIB_IMPL
 #include "../c-armyknife-lib.h"
@@ -42,24 +42,24 @@ int main(int argc, char** argv) {
 
     if (buffer_length(buffer) > 0) {
       for (uint64_t i = 0; i < buffer_length(buffer); i++) {
-	uint8_t byte = buffer_get(buffer, i);
-	fprintf(stdout, "%d ", byte);
+        uint8_t byte = buffer_get(buffer, i);
+        fprintf(stdout, "%d ", byte);
       }
       fprintf(stdout, "\n");
       fflush(stdout);
       for (uint64_t i = 0; i < buffer_length(buffer); i++) {
-	uint8_t byte = buffer_get(buffer, i);
-	if (isprint(byte)) {
-	  fprintf(stdout, "'%c' ", byte);
-	} else {
-	  fprintf(stdout, "'-' ");
-	}
+        uint8_t byte = buffer_get(buffer, i);
+        if (isprint(byte)) {
+          fprintf(stdout, "'%c' ", byte);
+        } else {
+          fprintf(stdout, "'-' ");
+        }
       }
       fprintf(stdout, "\n");
       fprintf(stdout, "\n");
       fflush(stdout);
     }
-    
+
     usleep(1000);
   }
 

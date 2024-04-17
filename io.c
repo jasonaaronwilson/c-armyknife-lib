@@ -182,11 +182,11 @@ __attribute__((warn_unused_result)) extern buffer_t*
       // size_t bytes_read = fread(read_buffer, 1, 1, input);
       int bytes_read = read(file_number, read_buffer, sizeof(read_buffer));
       for (int i = 0; i < bytes_read; i++) {
-	buffer = buffer_append_byte(buffer, (uint8_t) read_buffer[i]);
-	bytes_remaining--;
+        buffer = buffer_append_byte(buffer, (uint8_t) read_buffer[i]);
+        bytes_remaining--;
       }
       if (bytes_read > 0) {
-	break;
+        break;
       }
       // log_trace("buffer_length = %d", buffer_length(buffer));
     } else {

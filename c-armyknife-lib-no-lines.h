@@ -3551,7 +3551,11 @@ buffer_t* buffer_read_until(buffer_t* buffer, FILE* input, char end_of_line) {
  */
 __attribute__((warn_unused_result)) extern buffer_t*
     buffer_read_ready_bytes(buffer_t* buffer, FILE* input, uint64_t max_bytes) {
+  int file_number = fileno(input);
+  fcntl(file_number, F_SETFL, fcntl(file_number, F_GETFL) | O_NONBLOCK);
+
   uint64_t bytes_remaining = max_bytes - buffer_length(buffer);
+  char read_buffer[1024];
 
   // Loop until either blocking would occur or max_bytes have been added
   while (bytes_remaining > 0) {
@@ -3577,16 +3581,17 @@ __attribute__((warn_unused_result)) extern buffer_t*
       fatal_error(ERROR_ILLEGAL_STATE);
     } else if (retval) {
       // Data available to be read
-      // log_trace("data available");
-      int byte = fgetc(input);
-      if (byte == EOF) {
-        log_warn("byte == EOF so returning nothing");
-        // End of file
-        return buffer;
+      // // sizeof(read_buffer)
+      // size_t bytes_read = fread(read_buffer, 1, 1, input);
+      int bytes_read = read(file_number, read_buffer, sizeof(read_buffer));
+      for (int i = 0; i < bytes_read; i++) {
+	buffer = buffer_append_byte(buffer, (uint8_t) read_buffer[i]);
+	bytes_remaining--;
       }
-      buffer = buffer_append_byte(buffer, (uint8_t) byte);
+      if (bytes_read > 0) {
+	break;
+      }
       // log_trace("buffer_length = %d", buffer_length(buffer));
-      bytes_remaining--;
     } else {
       // No data available without blocking.
       break;

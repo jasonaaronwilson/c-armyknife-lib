@@ -12,6 +12,17 @@ support and handle other terminals differently in the future
 
 https://github.com/termstandard/colors
  
+## @struct box_drawing_t
+
+A structure to hold unicode code-points for each part of a box to
+draw in the terminal.
+ 
+## @struct term_keypress_t
+
+Represents a keypress from the terminal. Either one of code_point
+or key_code will be non-zero if n_bytes_consumed is greater than
+zero.
+ 
 ## @function term_bold
 
 Append a terminal escape sequence to a buffer that turns on "bold"

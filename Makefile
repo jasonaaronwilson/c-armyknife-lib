@@ -21,6 +21,7 @@ SRC_C = allocate.c \
 	test.c \
 	tokenizer.c \
 	uint64.c \
+	utf8-decoder.c \
 	value.c \
 	value-alist.c \
 	value-array.c \
@@ -36,6 +37,7 @@ ORDERED_H = \
 	uint64.h \
 	string-util.h \
 	logger.h \
+	utf8-decoder.h \
 	buffer.h \
 	value-array.h \
 	value-alist.h \

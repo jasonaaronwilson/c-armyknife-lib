@@ -384,16 +384,6 @@ extern int uint64_highest_bit_set(uint64_t n);
 
 #include <stdint.h>
 
-struct utf8_decode_result_S {
-  uint32_t code_point;
-  uint8_t num_bytes;
-  boolean_t error;
-};
-
-typedef struct utf8_decode_result_S utf8_decode_result_t;
-
-extern utf8_decode_result_t utf8_decode(const uint8_t* utf8_bytes);
-
 extern int string_is_null_or_empty(const char* str1);
 extern int string_equal(const char* str1, const char* str2);
 extern int string_starts_with(const char* str1, const char* str2);
@@ -569,6 +559,30 @@ static inline boolean_t should_log_info() {
   } while (0)
 
 #endif /* _LOGGER_H_ */
+// SSCF generated file from: utf8-decoder.c
+
+#line 7 "utf8-decoder.c"
+#ifndef _UTF8_DECODER_H_
+#define _UTF8_DECODER_H_
+
+#include <stdint.h>
+
+/**
+ * @struct utf8_decode_result_t
+ *
+ * Holds the result of utf8_decode.
+ */
+struct utf8_decode_result_S {
+  uint32_t code_point;
+  uint8_t num_bytes;
+  boolean_t error;
+};
+
+typedef struct utf8_decode_result_S utf8_decode_result_t;
+
+extern utf8_decode_result_t utf8_decode(const uint8_t* utf8_bytes);
+
+#endif /* _UTF8_DECODER_H_ */
 // SSCF generated file from: buffer.c
 
 #line 2 "buffer.c"
@@ -1286,109 +1300,109 @@ struct term_keypress_S {
 
 // Names and descriptions are from ncurses but the values are
 // different.
-#define KEY_DOWN	1		/* down-arrow key */
-#define KEY_UP		2		/* up-arrow key */
-#define KEY_LEFT	3		/* left-arrow key */
-#define KEY_RIGHT	4		/* right-arrow key */
-#define KEY_HOME	5		/* home key */
-#define KEY_BACKSPACE	6		/* backspace key */
-#define KEY_F0		7		/* Function keys */
-#define KEY_F1          8
-#define KEY_F2          9
-#define KEY_F3          10
-#define KEY_F4          11
-#define KEY_F5          12
-#define KEY_F6          13
-#define KEY_F7          14
-#define KEY_F8          15
-#define KEY_F9          16
-#define KEY_F10         17
-#define KEY_F11         18
-#define KEY_F12         19
-#define KEY_F13         20
-#define KEY_F14         21
-#define KEY_F15         22
-#define KEY_DL		23		/* delete-line key */
-#define KEY_IL		24		/* insert-line key */
-#define KEY_DC		25		/* delete-character key */
-#define KEY_IC		26		/* insert-character key */
-#define KEY_EIC		27		/* sent by rmir or smir in insert mode */
-#define KEY_CLEAR	28		/* clear-screen or erase key */
-#define KEY_EOS		29		/* clear-to-end-of-screen key */
-#define KEY_EOL		30		/* clear-to-end-of-line key */
-#define KEY_SF		31		/* scroll-forward key */
-#define KEY_SR		32		/* scroll-backward key */
-#define KEY_NPAGE	33		/* next-page key */
-#define KEY_PPAGE	34		/* previous-page key */
-#define KEY_STAB	35		/* set-tab key */
-#define KEY_CTAB	36		/* clear-tab key */
-#define KEY_CATAB	37		/* clear-all-tabs key */
-#define KEY_ENTER	38		/* enter/send key */
-#define KEY_PRINT	39		/* print key */
-#define KEY_LL		40		/* lower-left key (home down) */
-#define KEY_A1		41		/* upper left of keypad */
-#define KEY_A3		42		/* upper right of keypad */
-#define KEY_B2		43		/* center of keypad */
-#define KEY_C1		44		/* lower left of keypad */
-#define KEY_C3		45		/* lower right of keypad */
-#define KEY_BTAB	46		/* back-tab key */
-#define KEY_BEG		47		/* begin key */
-#define KEY_CANCEL	48		/* cancel key */
-#define KEY_CLOSE	49		/* close key */
-#define KEY_COMMAND	50		/* command key */
-#define KEY_COPY	51		/* copy key */
-#define KEY_CREATE	52		/* create key */
-#define KEY_END		53		/* end key */
-#define KEY_EXIT	54		/* exit key */
-#define KEY_FIND	55		/* find key */
-#define KEY_HELP	56		/* help key */
-#define KEY_MARK	57		/* mark key */
-#define KEY_MESSAGE	58		/* message key */
-#define KEY_MOVE	59		/* move key */
-#define KEY_NEXT	60		/* next key */
-#define KEY_OPEN	61		/* open key */
-#define KEY_OPTIONS	62		/* options key */
-#define KEY_PREVIOUS	63		/* previous key */
-#define KEY_REDO	64		/* redo key */
-#define KEY_REFERENCE	65		/* reference key */
-#define KEY_REFRESH	66		/* refresh key */
-#define KEY_REPLACE	67		/* replace key */
-#define KEY_RESTART	68		/* restart key */
-#define KEY_RESUME	69		/* resume key */
-#define KEY_SAVE	70		/* save key */
-#define KEY_SBEG	71		/* shifted begin key */
-#define KEY_SCANCEL	72		/* shifted cancel key */
-#define KEY_SCOMMAND	73		/* shifted command key */
-#define KEY_SCOPY	74		/* shifted copy key */
-#define KEY_SCREATE	75		/* shifted create key */
-#define KEY_SDC		76		/* shifted delete-character key */
-#define KEY_SDL		77		/* shifted delete-line key */
-#define KEY_SELECT	78		/* select key */
-#define KEY_SEND	79		/* shifted end key */
-#define KEY_SEOL	80		/* shifted clear-to-end-of-line key */
-#define KEY_SEXIT	81		/* shifted exit key */
-#define KEY_SFIND	82		/* shifted find key */
-#define KEY_SHELP	83		/* shifted help key */
-#define KEY_SHOME	84		/* shifted home key */
-#define KEY_SIC		85		/* shifted insert-character key */
-#define KEY_SLEFT	86		/* shifted left-arrow key */
-#define KEY_SMESSAGE	87		/* shifted message key */
-#define KEY_SMOVE	88		/* shifted move key */
-#define KEY_SNEXT	89		/* shifted next key */
-#define KEY_SOPTIONS	90		/* shifted options key */
-#define KEY_SPREVIOUS	91		/* shifted previous key */
-#define KEY_SPRINT	92		/* shifted print key */
-#define KEY_SREDO	93		/* shifted redo key */
-#define KEY_SREPLACE	94		/* shifted replace key */
-#define KEY_SRIGHT	95		/* shifted right-arrow key */
-#define KEY_SRSUME	96		/* shifted resume key */
-#define KEY_SSAVE	97		/* shifted save key */
-#define KEY_SSUSPEND	98		/* shifted suspend key */
-#define KEY_SUNDO	99		/* shifted undo key */
-#define KEY_SUSPEND	100		/* suspend key */
-#define KEY_UNDO	101		/* undo key */
-#define KEY_MOUSE	102		/* Mouse event has occurred */
-#define KEY_RESIZE	103		/* Terminal resize event */
+#define KEY_DOWN 1      /* down-arrow key */
+#define KEY_UP 2        /* up-arrow key */
+#define KEY_LEFT 3      /* left-arrow key */
+#define KEY_RIGHT 4     /* right-arrow key */
+#define KEY_HOME 5      /* home key */
+#define KEY_BACKSPACE 6 /* backspace key */
+#define KEY_F0 7        /* Function keys */
+#define KEY_F1 8
+#define KEY_F2 9
+#define KEY_F3 10
+#define KEY_F4 11
+#define KEY_F5 12
+#define KEY_F6 13
+#define KEY_F7 14
+#define KEY_F8 15
+#define KEY_F9 16
+#define KEY_F10 17
+#define KEY_F11 18
+#define KEY_F12 19
+#define KEY_F13 20
+#define KEY_F14 21
+#define KEY_F15 22
+#define KEY_DL 23        /* delete-line key */
+#define KEY_IL 24        /* insert-line key */
+#define KEY_DC 25        /* delete-character key */
+#define KEY_IC 26        /* insert-character key */
+#define KEY_EIC 27       /* sent by rmir or smir in insert mode */
+#define KEY_CLEAR 28     /* clear-screen or erase key */
+#define KEY_EOS 29       /* clear-to-end-of-screen key */
+#define KEY_EOL 30       /* clear-to-end-of-line key */
+#define KEY_SF 31        /* scroll-forward key */
+#define KEY_SR 32        /* scroll-backward key */
+#define KEY_NPAGE 33     /* next-page key */
+#define KEY_PPAGE 34     /* previous-page key */
+#define KEY_STAB 35      /* set-tab key */
+#define KEY_CTAB 36      /* clear-tab key */
+#define KEY_CATAB 37     /* clear-all-tabs key */
+#define KEY_ENTER 38     /* enter/send key */
+#define KEY_PRINT 39     /* print key */
+#define KEY_LL 40        /* lower-left key (home down) */
+#define KEY_A1 41        /* upper left of keypad */
+#define KEY_A3 42        /* upper right of keypad */
+#define KEY_B2 43        /* center of keypad */
+#define KEY_C1 44        /* lower left of keypad */
+#define KEY_C3 45        /* lower right of keypad */
+#define KEY_BTAB 46      /* back-tab key */
+#define KEY_BEG 47       /* begin key */
+#define KEY_CANCEL 48    /* cancel key */
+#define KEY_CLOSE 49     /* close key */
+#define KEY_COMMAND 50   /* command key */
+#define KEY_COPY 51      /* copy key */
+#define KEY_CREATE 52    /* create key */
+#define KEY_END 53       /* end key */
+#define KEY_EXIT 54      /* exit key */
+#define KEY_FIND 55      /* find key */
+#define KEY_HELP 56      /* help key */
+#define KEY_MARK 57      /* mark key */
+#define KEY_MESSAGE 58   /* message key */
+#define KEY_MOVE 59      /* move key */
+#define KEY_NEXT 60      /* next key */
+#define KEY_OPEN 61      /* open key */
+#define KEY_OPTIONS 62   /* options key */
+#define KEY_PREVIOUS 63  /* previous key */
+#define KEY_REDO 64      /* redo key */
+#define KEY_REFERENCE 65 /* reference key */
+#define KEY_REFRESH 66   /* refresh key */
+#define KEY_REPLACE 67   /* replace key */
+#define KEY_RESTART 68   /* restart key */
+#define KEY_RESUME 69    /* resume key */
+#define KEY_SAVE 70      /* save key */
+#define KEY_SBEG 71      /* shifted begin key */
+#define KEY_SCANCEL 72   /* shifted cancel key */
+#define KEY_SCOMMAND 73  /* shifted command key */
+#define KEY_SCOPY 74     /* shifted copy key */
+#define KEY_SCREATE 75   /* shifted create key */
+#define KEY_SDC 76       /* shifted delete-character key */
+#define KEY_SDL 77       /* shifted delete-line key */
+#define KEY_SELECT 78    /* select key */
+#define KEY_SEND 79      /* shifted end key */
+#define KEY_SEOL 80      /* shifted clear-to-end-of-line key */
+#define KEY_SEXIT 81     /* shifted exit key */
+#define KEY_SFIND 82     /* shifted find key */
+#define KEY_SHELP 83     /* shifted help key */
+#define KEY_SHOME 84     /* shifted home key */
+#define KEY_SIC 85       /* shifted insert-character key */
+#define KEY_SLEFT 86     /* shifted left-arrow key */
+#define KEY_SMESSAGE 87  /* shifted message key */
+#define KEY_SMOVE 88     /* shifted move key */
+#define KEY_SNEXT 89     /* shifted next key */
+#define KEY_SOPTIONS 90  /* shifted options key */
+#define KEY_SPREVIOUS 91 /* shifted previous key */
+#define KEY_SPRINT 92    /* shifted print key */
+#define KEY_SREDO 93     /* shifted redo key */
+#define KEY_SREPLACE 94  /* shifted replace key */
+#define KEY_SRIGHT 95    /* shifted right-arrow key */
+#define KEY_SRSUME 96    /* shifted resume key */
+#define KEY_SSAVE 97     /* shifted save key */
+#define KEY_SSUSPEND 98  /* shifted suspend key */
+#define KEY_SUNDO 99     /* shifted undo key */
+#define KEY_SUSPEND 100  /* suspend key */
+#define KEY_UNDO 101     /* undo key */
+#define KEY_MOUSE 102    /* Mouse event has occurred */
+#define KEY_RESIZE 103   /* Terminal resize event */
 
 typedef struct term_keypress_S term_keypress_t;
 
@@ -3306,11 +3320,11 @@ __attribute__((warn_unused_result)) extern buffer_t*
       // size_t bytes_read = fread(read_buffer, 1, 1, input);
       int bytes_read = read(file_number, read_buffer, sizeof(read_buffer));
       for (int i = 0; i < bytes_read; i++) {
-	buffer = buffer_append_byte(buffer, (uint8_t) read_buffer[i]);
-	bytes_remaining--;
+        buffer = buffer_append_byte(buffer, (uint8_t) read_buffer[i]);
+        bytes_remaining--;
       }
       if (bytes_read > 0) {
-	break;
+        break;
       }
       // log_trace("buffer_length = %d", buffer_length(buffer));
     } else {
@@ -4147,16 +4161,6 @@ __attribute__((warn_unused_result)) static inline string_tree_t*
 
 #include <stdint.h>
 
-struct utf8_decode_result_S {
-  uint32_t code_point;
-  uint8_t num_bytes;
-  boolean_t error;
-};
-
-typedef struct utf8_decode_result_S utf8_decode_result_t;
-
-extern utf8_decode_result_t utf8_decode(const uint8_t* utf8_bytes);
-
 extern int string_is_null_or_empty(const char* str1);
 extern int string_equal(const char* str1, const char* str2);
 extern int string_starts_with(const char* str1, const char* str2);
@@ -4206,35 +4210,6 @@ int string_equal(const char* str1, const char* str2) {
     return string_is_null_or_empty(str2);
   }
   return strcmp(str1, str2) == 0;
-}
-
-/**
- * @function utf8_decode
- *
- * Decodes the next code-point from a uint8_t* pointer.
- */
-utf8_decode_result_t utf8_decode(const uint8_t* array) {
-  uint8_t firstByte = array[0];
-  if ((firstByte & 0x80) == 0) {
-    return (utf8_decode_result_t){.code_point = firstByte, .num_bytes = 1};
-  } else if ((firstByte & 0xE0) == 0xC0) {
-    // Two byte character
-    return (utf8_decode_result_t){.code_point = ((firstByte & 0x1F) << 6)
-                                                | (array[1] & 0x3F),
-                                  .num_bytes = 2};
-  } else if ((firstByte & 0xF0) == 0xE0) {
-    return (utf8_decode_result_t){.code_point = ((firstByte & 0x0F) << 12)
-                                                | ((array[1] & 0x3F) << 6)
-                                                | (array[2] & 0x3F),
-                                  .num_bytes = 3};
-  } else if ((firstByte & 0xF8) == 0xF0) {
-    return (utf8_decode_result_t){
-        .code_point = ((firstByte & 0x07) << 18) | ((array[1] & 0x3F) << 12)
-                      | ((array[2] & 0x3F) << 6) | (array[3] & 0x3F),
-        .num_bytes = 4};
-  } else {
-    return (utf8_decode_result_t){.error = true};
-  }
 }
 
 /**
@@ -4761,109 +4736,109 @@ struct term_keypress_S {
 
 // Names and descriptions are from ncurses but the values are
 // different.
-#define KEY_DOWN	1		/* down-arrow key */
-#define KEY_UP		2		/* up-arrow key */
-#define KEY_LEFT	3		/* left-arrow key */
-#define KEY_RIGHT	4		/* right-arrow key */
-#define KEY_HOME	5		/* home key */
-#define KEY_BACKSPACE	6		/* backspace key */
-#define KEY_F0		7		/* Function keys */
-#define KEY_F1          8
-#define KEY_F2          9
-#define KEY_F3          10
-#define KEY_F4          11
-#define KEY_F5          12
-#define KEY_F6          13
-#define KEY_F7          14
-#define KEY_F8          15
-#define KEY_F9          16
-#define KEY_F10         17
-#define KEY_F11         18
-#define KEY_F12         19
-#define KEY_F13         20
-#define KEY_F14         21
-#define KEY_F15         22
-#define KEY_DL		23		/* delete-line key */
-#define KEY_IL		24		/* insert-line key */
-#define KEY_DC		25		/* delete-character key */
-#define KEY_IC		26		/* insert-character key */
-#define KEY_EIC		27		/* sent by rmir or smir in insert mode */
-#define KEY_CLEAR	28		/* clear-screen or erase key */
-#define KEY_EOS		29		/* clear-to-end-of-screen key */
-#define KEY_EOL		30		/* clear-to-end-of-line key */
-#define KEY_SF		31		/* scroll-forward key */
-#define KEY_SR		32		/* scroll-backward key */
-#define KEY_NPAGE	33		/* next-page key */
-#define KEY_PPAGE	34		/* previous-page key */
-#define KEY_STAB	35		/* set-tab key */
-#define KEY_CTAB	36		/* clear-tab key */
-#define KEY_CATAB	37		/* clear-all-tabs key */
-#define KEY_ENTER	38		/* enter/send key */
-#define KEY_PRINT	39		/* print key */
-#define KEY_LL		40		/* lower-left key (home down) */
-#define KEY_A1		41		/* upper left of keypad */
-#define KEY_A3		42		/* upper right of keypad */
-#define KEY_B2		43		/* center of keypad */
-#define KEY_C1		44		/* lower left of keypad */
-#define KEY_C3		45		/* lower right of keypad */
-#define KEY_BTAB	46		/* back-tab key */
-#define KEY_BEG		47		/* begin key */
-#define KEY_CANCEL	48		/* cancel key */
-#define KEY_CLOSE	49		/* close key */
-#define KEY_COMMAND	50		/* command key */
-#define KEY_COPY	51		/* copy key */
-#define KEY_CREATE	52		/* create key */
-#define KEY_END		53		/* end key */
-#define KEY_EXIT	54		/* exit key */
-#define KEY_FIND	55		/* find key */
-#define KEY_HELP	56		/* help key */
-#define KEY_MARK	57		/* mark key */
-#define KEY_MESSAGE	58		/* message key */
-#define KEY_MOVE	59		/* move key */
-#define KEY_NEXT	60		/* next key */
-#define KEY_OPEN	61		/* open key */
-#define KEY_OPTIONS	62		/* options key */
-#define KEY_PREVIOUS	63		/* previous key */
-#define KEY_REDO	64		/* redo key */
-#define KEY_REFERENCE	65		/* reference key */
-#define KEY_REFRESH	66		/* refresh key */
-#define KEY_REPLACE	67		/* replace key */
-#define KEY_RESTART	68		/* restart key */
-#define KEY_RESUME	69		/* resume key */
-#define KEY_SAVE	70		/* save key */
-#define KEY_SBEG	71		/* shifted begin key */
-#define KEY_SCANCEL	72		/* shifted cancel key */
-#define KEY_SCOMMAND	73		/* shifted command key */
-#define KEY_SCOPY	74		/* shifted copy key */
-#define KEY_SCREATE	75		/* shifted create key */
-#define KEY_SDC		76		/* shifted delete-character key */
-#define KEY_SDL		77		/* shifted delete-line key */
-#define KEY_SELECT	78		/* select key */
-#define KEY_SEND	79		/* shifted end key */
-#define KEY_SEOL	80		/* shifted clear-to-end-of-line key */
-#define KEY_SEXIT	81		/* shifted exit key */
-#define KEY_SFIND	82		/* shifted find key */
-#define KEY_SHELP	83		/* shifted help key */
-#define KEY_SHOME	84		/* shifted home key */
-#define KEY_SIC		85		/* shifted insert-character key */
-#define KEY_SLEFT	86		/* shifted left-arrow key */
-#define KEY_SMESSAGE	87		/* shifted message key */
-#define KEY_SMOVE	88		/* shifted move key */
-#define KEY_SNEXT	89		/* shifted next key */
-#define KEY_SOPTIONS	90		/* shifted options key */
-#define KEY_SPREVIOUS	91		/* shifted previous key */
-#define KEY_SPRINT	92		/* shifted print key */
-#define KEY_SREDO	93		/* shifted redo key */
-#define KEY_SREPLACE	94		/* shifted replace key */
-#define KEY_SRIGHT	95		/* shifted right-arrow key */
-#define KEY_SRSUME	96		/* shifted resume key */
-#define KEY_SSAVE	97		/* shifted save key */
-#define KEY_SSUSPEND	98		/* shifted suspend key */
-#define KEY_SUNDO	99		/* shifted undo key */
-#define KEY_SUSPEND	100		/* suspend key */
-#define KEY_UNDO	101		/* undo key */
-#define KEY_MOUSE	102		/* Mouse event has occurred */
-#define KEY_RESIZE	103		/* Terminal resize event */
+#define KEY_DOWN 1      /* down-arrow key */
+#define KEY_UP 2        /* up-arrow key */
+#define KEY_LEFT 3      /* left-arrow key */
+#define KEY_RIGHT 4     /* right-arrow key */
+#define KEY_HOME 5      /* home key */
+#define KEY_BACKSPACE 6 /* backspace key */
+#define KEY_F0 7        /* Function keys */
+#define KEY_F1 8
+#define KEY_F2 9
+#define KEY_F3 10
+#define KEY_F4 11
+#define KEY_F5 12
+#define KEY_F6 13
+#define KEY_F7 14
+#define KEY_F8 15
+#define KEY_F9 16
+#define KEY_F10 17
+#define KEY_F11 18
+#define KEY_F12 19
+#define KEY_F13 20
+#define KEY_F14 21
+#define KEY_F15 22
+#define KEY_DL 23        /* delete-line key */
+#define KEY_IL 24        /* insert-line key */
+#define KEY_DC 25        /* delete-character key */
+#define KEY_IC 26        /* insert-character key */
+#define KEY_EIC 27       /* sent by rmir or smir in insert mode */
+#define KEY_CLEAR 28     /* clear-screen or erase key */
+#define KEY_EOS 29       /* clear-to-end-of-screen key */
+#define KEY_EOL 30       /* clear-to-end-of-line key */
+#define KEY_SF 31        /* scroll-forward key */
+#define KEY_SR 32        /* scroll-backward key */
+#define KEY_NPAGE 33     /* next-page key */
+#define KEY_PPAGE 34     /* previous-page key */
+#define KEY_STAB 35      /* set-tab key */
+#define KEY_CTAB 36      /* clear-tab key */
+#define KEY_CATAB 37     /* clear-all-tabs key */
+#define KEY_ENTER 38     /* enter/send key */
+#define KEY_PRINT 39     /* print key */
+#define KEY_LL 40        /* lower-left key (home down) */
+#define KEY_A1 41        /* upper left of keypad */
+#define KEY_A3 42        /* upper right of keypad */
+#define KEY_B2 43        /* center of keypad */
+#define KEY_C1 44        /* lower left of keypad */
+#define KEY_C3 45        /* lower right of keypad */
+#define KEY_BTAB 46      /* back-tab key */
+#define KEY_BEG 47       /* begin key */
+#define KEY_CANCEL 48    /* cancel key */
+#define KEY_CLOSE 49     /* close key */
+#define KEY_COMMAND 50   /* command key */
+#define KEY_COPY 51      /* copy key */
+#define KEY_CREATE 52    /* create key */
+#define KEY_END 53       /* end key */
+#define KEY_EXIT 54      /* exit key */
+#define KEY_FIND 55      /* find key */
+#define KEY_HELP 56      /* help key */
+#define KEY_MARK 57      /* mark key */
+#define KEY_MESSAGE 58   /* message key */
+#define KEY_MOVE 59      /* move key */
+#define KEY_NEXT 60      /* next key */
+#define KEY_OPEN 61      /* open key */
+#define KEY_OPTIONS 62   /* options key */
+#define KEY_PREVIOUS 63  /* previous key */
+#define KEY_REDO 64      /* redo key */
+#define KEY_REFERENCE 65 /* reference key */
+#define KEY_REFRESH 66   /* refresh key */
+#define KEY_REPLACE 67   /* replace key */
+#define KEY_RESTART 68   /* restart key */
+#define KEY_RESUME 69    /* resume key */
+#define KEY_SAVE 70      /* save key */
+#define KEY_SBEG 71      /* shifted begin key */
+#define KEY_SCANCEL 72   /* shifted cancel key */
+#define KEY_SCOMMAND 73  /* shifted command key */
+#define KEY_SCOPY 74     /* shifted copy key */
+#define KEY_SCREATE 75   /* shifted create key */
+#define KEY_SDC 76       /* shifted delete-character key */
+#define KEY_SDL 77       /* shifted delete-line key */
+#define KEY_SELECT 78    /* select key */
+#define KEY_SEND 79      /* shifted end key */
+#define KEY_SEOL 80      /* shifted clear-to-end-of-line key */
+#define KEY_SEXIT 81     /* shifted exit key */
+#define KEY_SFIND 82     /* shifted find key */
+#define KEY_SHELP 83     /* shifted help key */
+#define KEY_SHOME 84     /* shifted home key */
+#define KEY_SIC 85       /* shifted insert-character key */
+#define KEY_SLEFT 86     /* shifted left-arrow key */
+#define KEY_SMESSAGE 87  /* shifted message key */
+#define KEY_SMOVE 88     /* shifted move key */
+#define KEY_SNEXT 89     /* shifted next key */
+#define KEY_SOPTIONS 90  /* shifted options key */
+#define KEY_SPREVIOUS 91 /* shifted previous key */
+#define KEY_SPRINT 92    /* shifted print key */
+#define KEY_SREDO 93     /* shifted redo key */
+#define KEY_SREPLACE 94  /* shifted replace key */
+#define KEY_SRIGHT 95    /* shifted right-arrow key */
+#define KEY_SRSUME 96    /* shifted resume key */
+#define KEY_SSAVE 97     /* shifted save key */
+#define KEY_SSUSPEND 98  /* shifted suspend key */
+#define KEY_SUNDO 99     /* shifted undo key */
+#define KEY_SUSPEND 100  /* suspend key */
+#define KEY_UNDO 101     /* undo key */
+#define KEY_MOUSE 102    /* Mouse event has occurred */
+#define KEY_RESIZE 103   /* Terminal resize event */
 
 typedef struct term_keypress_S term_keypress_t;
 
@@ -5352,6 +5327,62 @@ int uint64_highest_bit_set(uint64_t n) {
     return uint64_highest_bit_set(n >> 1) + 1;
   } else {
     return 0;
+  }
+}
+#line 2 "utf8-decoder.c"
+/**
+ * @file utf8-decoder.c
+ *
+ * A very basic UTF-8 decoder.
+ */
+#ifndef _UTF8_DECODER_H_
+#define _UTF8_DECODER_H_
+
+#include <stdint.h>
+
+/**
+ * @struct utf8_decode_result_t
+ *
+ * Holds the result of utf8_decode.
+ */
+struct utf8_decode_result_S {
+  uint32_t code_point;
+  uint8_t num_bytes;
+  boolean_t error;
+};
+
+typedef struct utf8_decode_result_S utf8_decode_result_t;
+
+extern utf8_decode_result_t utf8_decode(const uint8_t* utf8_bytes);
+
+#endif /* _UTF8_DECODER_H_ */
+
+/**
+ * @function utf8_decode
+ *
+ * Decodes the next code-point from a uint8_t* pointer.
+ */
+utf8_decode_result_t utf8_decode(const uint8_t* array) {
+  uint8_t firstByte = array[0];
+  if ((firstByte & 0x80) == 0) {
+    return (utf8_decode_result_t){.code_point = firstByte, .num_bytes = 1};
+  } else if ((firstByte & 0xE0) == 0xC0) {
+    // Two byte character
+    return (utf8_decode_result_t){.code_point = ((firstByte & 0x1F) << 6)
+                                                | (array[1] & 0x3F),
+                                  .num_bytes = 2};
+  } else if ((firstByte & 0xF0) == 0xE0) {
+    return (utf8_decode_result_t){.code_point = ((firstByte & 0x0F) << 12)
+                                                | ((array[1] & 0x3F) << 6)
+                                                | (array[2] & 0x3F),
+                                  .num_bytes = 3};
+  } else if ((firstByte & 0xF8) == 0xF0) {
+    return (utf8_decode_result_t){
+        .code_point = ((firstByte & 0x07) << 18) | ((array[1] & 0x3F) << 12)
+                      | ((array[2] & 0x3F) << 6) | (array[3] & 0x3F),
+        .num_bytes = 4};
+  } else {
+    return (utf8_decode_result_t){.error = true};
   }
 }
 #line 2 "value.c"

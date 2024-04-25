@@ -71,6 +71,8 @@ __attribute__((format(printf, 2, 3))) extern buffer_t*
 __attribute__((warn_unused_result)) extern buffer_t*
     buffer_append_repeated_byte(buffer_t* buffer, uint8_t byte, int count);
 
+utf8_decode_result_t buffer_utf8_decode(buffer_t* buffer, uint64_t position);
+
 __attribute__((warn_unused_result)) extern buffer_t*
     buffer_append_code_point(buffer_t* buffer, uint32_t code_point);
 
@@ -282,6 +284,26 @@ __attribute__((warn_unused_result)) extern buffer_t*
     buffer = buffer_append_byte(buffer, byte);
   }
   return buffer;
+}
+
+/**
+ * @function buffer_utf8_decode
+ *
+ * Similar to utf8_decode but operating on a buffer_t. (This routine
+ * adds bounds checking beyound utf8_decode).
+ */
+utf8_decode_result_t buffer_utf8_decode(buffer_t* buffer, uint64_t position) {
+  if (position >= buffer->length) {
+    return (utf8_decode_result_t){.error = true};
+  }
+  utf8_decode_result_t result = utf8_decode(&buffer->elements[position]);
+  if (result.error) {
+    return result;
+  }
+  if ((position + result.num_bytes) > buffer->length) {
+    return (utf8_decode_result_t){.error = true};
+  }
+  return result;
 }
 
 /**

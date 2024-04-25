@@ -36,7 +36,6 @@ utf8_decode_result_t utf8_decode(const uint8_t* array) {
   if ((firstByte & 0x80) == 0) {
     return (utf8_decode_result_t){.code_point = firstByte, .num_bytes = 1};
   } else if ((firstByte & 0xE0) == 0xC0) {
-    // Two byte character
     return (utf8_decode_result_t){.code_point = ((firstByte & 0x1F) << 6)
                                                 | (array[1] & 0x3F),
                                   .num_bytes = 2};

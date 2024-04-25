@@ -92,6 +92,24 @@ void test_buffer_string_printf(void) {
   free_bytes(buffer);
 }
 
+void test_buffer_utf8_decode(void) {
+  buffer_t* buffer = make_buffer(1);
+  buffer = buffer_printf(buffer, "AB");
+
+  utf8_decode_result_t decode_result_0 = buffer_utf8_decode(buffer, 0);
+  test_assert(decode_result_0.code_point == 'A');
+  test_assert(decode_result_0.num_bytes == 1);
+  test_assert(!decode_result_0.error);
+
+  utf8_decode_result_t decode_result_1 = buffer_utf8_decode(buffer, 1);
+  test_assert(decode_result_1.code_point == 'B');
+  test_assert(decode_result_1.num_bytes == 1);
+  test_assert(!decode_result_1.error);
+
+  utf8_decode_result_t decode_result_2 = buffer_utf8_decode(buffer, 2);
+  test_assert(decode_result_2.error);
+}
+
 int main(int argc, char** argv) {
   test_buffer_c_substring();
   test_append_byte();
@@ -100,5 +118,6 @@ int main(int argc, char** argv) {
   test_buffer_large_printf();
   test_buffer_medium_printf();
   test_buffer_string_printf();
+  test_buffer_utf8_decode();
   exit(0);
 }

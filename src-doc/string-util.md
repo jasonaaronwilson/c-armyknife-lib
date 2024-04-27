@@ -91,10 +91,6 @@ longer. This behavior is likely to change in a future version.
 
 Convert a uint64_t number to a string.
  
-## @function utf8_decode
-
-Decodes the next code-point from a uint8_t* pointer.
- 
 ## Parse a sequence of characters "0123456789abcdef" to an uint64_t. A
 prefix like 0x should be striped before calling this routine.
 

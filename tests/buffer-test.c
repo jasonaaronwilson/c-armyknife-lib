@@ -110,6 +110,17 @@ void test_buffer_utf8_decode(void) {
   test_assert(decode_result_2.error);
 }
 
+void test_buffer_match_string_at(void) {
+  buffer_t* buffer = make_buffer(1);
+  buffer = buffer_printf(buffer, "ABCDEF");
+  test_assert(buffer_match_string_at(buffer, 0, "ABC"));
+  test_assert(!buffer_match_string_at(buffer, 0, "BC"));
+  test_assert(buffer_match_string_at(buffer, 1, "BC"));
+  test_assert(!buffer_match_string_at(buffer, 1, "ABCDEF"));
+  test_assert(buffer_match_string_at(buffer, 0, "ABCDEF"));
+  test_assert(buffer_match_string_at(buffer, 1, ""));
+}
+
 int main(int argc, char** argv) {
   test_buffer_c_substring();
   test_append_byte();
@@ -119,5 +130,6 @@ int main(int argc, char** argv) {
   test_buffer_medium_printf();
   test_buffer_string_printf();
   test_buffer_utf8_decode();
+  test_buffer_match_string_at();
   exit(0);
 }

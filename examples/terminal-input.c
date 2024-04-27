@@ -55,6 +55,18 @@ int main(int argc, char** argv) {
           fprintf(stdout, "'-' ");
         }
       }
+
+      // This is already seeming like an adhoc tool, so let's have a
+      // bit of fun with it. Let's classify just the first byte
+      // according to some functions in ctype.
+
+      if (buffer_length(buffer) > 0) {
+        uint8_t byte = buffer_get(buffer, 0);
+        fprintf(stdout, "\n  isspace=%d", isspace(byte));
+        fprintf(stdout, "\n  isalpha=%d", isalpha(byte));
+        // TODO(jawilson): etc.
+      }
+
       fprintf(stdout, "\n");
       fprintf(stdout, "\n");
       fflush(stdout);

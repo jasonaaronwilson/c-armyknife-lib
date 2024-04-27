@@ -69,6 +69,10 @@ Clear a buffer without resizing it.
 
 Return the number of bytes that have been added to this byte array.
  
+## @function buffer_match_string_at
+
+Determine if the buffer contains "str" at start_position.
+ 
 ## @function buffer_printf
 
 Format like printf but append the result to the passed in buffer
@@ -78,6 +82,11 @@ Format like printf but append the result to the passed in buffer
 
 Extract a newly allocated string that contain all of the bytes in the byte
 buffer as a NUL (zero byte) terminated C string.
+ 
+## @function buffer_utf8_decode
+
+Similar to utf8_decode but operating on a buffer_t. (This routine
+adds bounds checking beyound utf8_decode).
  
 ## @function make_buffer
 

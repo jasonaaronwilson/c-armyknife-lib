@@ -16,6 +16,8 @@
 
 * [value-array.md](value-array.md)
 
+* [utf8-decoder.md](utf8-decoder.md)
+
 * [test.md](test.md)
 
 * [value-hashtable.md](value-hashtable.md)

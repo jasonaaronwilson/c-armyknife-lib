@@ -663,6 +663,8 @@ utf8_decode_result_t buffer_utf8_decode(buffer_t* buffer, uint64_t position);
 __attribute__((warn_unused_result)) extern buffer_t*
     buffer_append_code_point(buffer_t* buffer, uint32_t code_point);
 
+boolean_t buffer_match_string_at(buffer_t* buffer, uint64_t start_position, char* str);
+
 #endif /* _BUFFER_H_ */
 // SSCF generated file from: value-array.c
 
@@ -2026,6 +2028,8 @@ utf8_decode_result_t buffer_utf8_decode(buffer_t* buffer, uint64_t position);
 __attribute__((warn_unused_result)) extern buffer_t*
     buffer_append_code_point(buffer_t* buffer, uint32_t code_point);
 
+boolean_t buffer_match_string_at(buffer_t* buffer, uint64_t start_position, char* str);
+
 #endif /* _BUFFER_H_ */
 
 // ======================================================================
@@ -2238,6 +2242,9 @@ __attribute__((warn_unused_result)) extern buffer_t*
 
 /**
  * @function buffer_utf8_decode
+ *
+ * Similar to utf8_decode but operating on a buffer_t. (This routine
+ * adds bounds checking beyound utf8_decode).
  */
 utf8_decode_result_t buffer_utf8_decode(buffer_t* buffer, uint64_t position) {
   if (position >= buffer->length) {
@@ -2294,6 +2301,28 @@ __attribute__((warn_unused_result)) extern buffer_t*
     fatal_error(ERROR_ILLEGAL_UTF_8_CODE_POINT);
     return 0; // Not Reached.
   }
+}
+/**
+ * @function buffer_match_string_at
+ *
+ * Determine if the buffer contains "str" at start_position.
+ */
+boolean_t buffer_match_string_at(buffer_t* buffer, uint64_t start_position, char* str) {
+  for (uint64_t pos = start_position; true; pos++) {
+    uint8_t byte_str = cast(uint8_t*, str)[pos-start_position];
+    if (byte_str == 0) {
+      return true;
+    }
+    if (pos >= buffer_length(buffer)) {
+      return false;
+    }
+    uint8_t byte_buf = buffer_get(buffer, pos);
+    if (byte_str != byte_buf) {
+      return false;
+    }
+  }
+  /* NOT REACHED */
+  return false;
 }
 #line 2 "flag.c"
 /**

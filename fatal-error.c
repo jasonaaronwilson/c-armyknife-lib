@@ -125,6 +125,8 @@ void _Noreturn fatal_error_impl(char* file, int line, int error_code) {
       fprintf(stderr, "  gdb -tui %s %d\n", get_program_path(), getpid());
       sleep(sleep_time.u64);
     }
+  } else {
+    fprintf(stderr, "(ARMYKNIFE_FATAL_ERROR_SLEEP_SECONDS is not set)\n");
   }
   fprintf(stderr, "Necessaria Morte Mori...\n");
   exit(-(error_code + 100));

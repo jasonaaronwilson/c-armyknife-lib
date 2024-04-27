@@ -663,7 +663,8 @@ utf8_decode_result_t buffer_utf8_decode(buffer_t* buffer, uint64_t position);
 __attribute__((warn_unused_result)) extern buffer_t*
     buffer_append_code_point(buffer_t* buffer, uint32_t code_point);
 
-boolean_t buffer_match_string_at(buffer_t* buffer, uint64_t start_position, char* str);
+boolean_t buffer_match_string_at(buffer_t* buffer, uint64_t start_position,
+                                 char* str);
 
 #endif /* _BUFFER_H_ */
 // SSCF generated file from: value-array.c
@@ -2028,7 +2029,8 @@ utf8_decode_result_t buffer_utf8_decode(buffer_t* buffer, uint64_t position);
 __attribute__((warn_unused_result)) extern buffer_t*
     buffer_append_code_point(buffer_t* buffer, uint32_t code_point);
 
-boolean_t buffer_match_string_at(buffer_t* buffer, uint64_t start_position, char* str);
+boolean_t buffer_match_string_at(buffer_t* buffer, uint64_t start_position,
+                                 char* str);
 
 #endif /* _BUFFER_H_ */
 
@@ -2307,9 +2309,10 @@ __attribute__((warn_unused_result)) extern buffer_t*
  *
  * Determine if the buffer contains "str" at start_position.
  */
-boolean_t buffer_match_string_at(buffer_t* buffer, uint64_t start_position, char* str) {
+boolean_t buffer_match_string_at(buffer_t* buffer, uint64_t start_position,
+                                 char* str) {
   for (uint64_t pos = start_position; true; pos++) {
-    uint8_t byte_str = cast(uint8_t*, str)[pos-start_position];
+    uint8_t byte_str = cast(uint8_t*, str)[pos - start_position];
     if (byte_str == 0) {
       return true;
     }
@@ -3118,6 +3121,8 @@ void _Noreturn fatal_error_impl(char* file, int line, int error_code) {
       fprintf(stderr, "  gdb -tui %s %d\n", get_program_path(), getpid());
       sleep(sleep_time.u64);
     }
+  } else {
+    fprintf(stderr, "(ARMYKNIFE_FATAL_ERROR_SLEEP_SECONDS is not set)\n");
   }
   fprintf(stderr, "Necessaria Morte Mori...\n");
   exit(-(error_code + 100));

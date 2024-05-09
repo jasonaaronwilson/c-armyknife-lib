@@ -45,6 +45,14 @@ void test_append_string() {
   free_bytes(buffer);
 }
 
+void test_buffer_from_string(void) {
+  buffer_t* buffer = buffer_from_string("Hello World.");
+  char* contents = buffer_to_c_string(buffer);
+  test_assert(string_equal("Hello World.", contents));
+  free_bytes(contents);
+  free_bytes(buffer);
+}
+
 void test_buffer_c_substring() {
   buffer_t* buffer = make_buffer(3);
   buffer = buffer_append_string(buffer, "abcdefghijklmnop");
@@ -125,6 +133,7 @@ int main(int argc, char** argv) {
   test_buffer_c_substring();
   test_append_byte();
   test_append_string();
+  test_buffer_from_string();
   test_buffer_small_printf();
   test_buffer_large_printf();
   test_buffer_medium_printf();

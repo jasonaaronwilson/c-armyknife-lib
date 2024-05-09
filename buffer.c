@@ -79,6 +79,8 @@ __attribute__((warn_unused_result)) extern buffer_t*
 boolean_t buffer_match_string_at(buffer_t* buffer, uint64_t start_position,
                                  char* str);
 
+__attribute__((warn_unused_result)) buffer_t* buffer_from_string(char* string);
+
 #endif /* _BUFFER_H_ */
 
 // ======================================================================
@@ -373,4 +375,17 @@ boolean_t buffer_match_string_at(buffer_t* buffer, uint64_t start_position,
   }
   /* NOT REACHED */
   return false;
+}
+
+/**
+ * @function buffer_from_string
+ *
+ * Return a buffer initialized with the contents of a particular
+ * string. The trailing NUL byte C string terminator byte is not
+ * included in the buffer.
+ */
+__attribute__((warn_unused_result)) buffer_t* buffer_from_string(char* string) {
+  buffer_t* result = make_buffer(strlen(string));
+  result = buffer_append_string(result, string);
+  return result;
 }

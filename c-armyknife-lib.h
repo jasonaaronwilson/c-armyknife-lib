@@ -603,10 +603,6 @@ extern utf8_decode_result_t utf8_decode(const uint8_t* utf8_bytes);
 #include <stdint.h>
 #include <string.h>
 
-// struct buffer_range_S {
-//
-// };
-
 struct buffer_S {
   uint32_t length;
   uint32_t capacity;
@@ -667,6 +663,10 @@ boolean_t buffer_match_string_at(buffer_t* buffer, uint64_t start_position,
                                  char* str);
 
 __attribute__((warn_unused_result)) buffer_t* buffer_from_string(char* string);
+
+__attribute__((warn_unused_result)) buffer_t*
+    buffer_adjust_region(buffer_t* buffer, uint64_t original_start,
+                         uint64_t original_end, uint64_t new_width);
 
 #endif /* _BUFFER_H_ */
 // SSCF generated file from: value-array.c
@@ -1971,10 +1971,6 @@ typedef bool boolean_t;
 #include <stdint.h>
 #include <string.h>
 
-// struct buffer_range_S {
-//
-// };
-
 struct buffer_S {
   uint32_t length;
   uint32_t capacity;
@@ -2035,6 +2031,10 @@ boolean_t buffer_match_string_at(buffer_t* buffer, uint64_t start_position,
                                  char* str);
 
 __attribute__((warn_unused_result)) buffer_t* buffer_from_string(char* string);
+
+__attribute__((warn_unused_result)) buffer_t*
+    buffer_adjust_region(buffer_t* buffer, uint64_t original_start,
+                         uint64_t original_end, uint64_t new_width);
 
 #endif /* _BUFFER_H_ */
 
@@ -2343,6 +2343,43 @@ __attribute__((warn_unused_result)) buffer_t* buffer_from_string(char* string) {
   buffer_t* result = make_buffer(strlen(string));
   result = buffer_append_string(result, string);
   return result;
+}
+
+/**
+ * @function buffer_adjust_region
+ *
+ * This is primarily used as a helper for buffer_replace_all though it
+ * can also be used to efficiently delete a region or simply "open up"
+ * space within a buffer.
+ */
+__attribute__((warn_unused_result)) buffer_t*
+    buffer_adjust_region(buffer_t* buffer, uint64_t start, uint64_t end,
+                         uint64_t new_width) {
+  // TODO(jawilson): more range testing.
+  uint64_t len = buffer->length;
+  if (start > end) {
+    fatal_error(ERROR_ILLEGAL_RANGE);
+  }
+  uint64_t original_width = end - start;
+  if (original_width > new_width) {
+    // Copy the tail of the buffer downwards and then decrease the
+    // length
+    uint64_t difference = original_width - new_width;
+    uint64_t tail_length = buffer->length - end;
+    memmove(&buffer->elements[end - difference], &buffer->elements[end],
+            tail_length);
+    buffer->length -= difference;
+  } else if (original_width < new_width) {
+    // Increase the capacity of the buffer if necessary and then copy
+    // the tail of the buffer upwards and finally increase the length
+    uint64_t difference = new_width - original_width;
+    uint64_t tail_length = buffer->length - end;
+    buffer = buffer_increase_capacity(buffer, buffer->length + difference);
+    memmove(&buffer->elements[end + difference], &buffer->elements[end],
+            tail_length);
+    buffer->length += difference;
+  }
+  return buffer;
 }
 #line 2 "flag.c"
 /**

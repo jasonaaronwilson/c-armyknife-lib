@@ -129,6 +129,38 @@ void test_buffer_match_string_at(void) {
   test_assert(buffer_match_string_at(buffer, 1, ""));
 }
 
+void test_buffer_adjust_region(void) {
+  buffer_t* buffer = make_buffer(1);
+
+  // No change
+  buffer = make_buffer(1);
+  buffer = buffer_printf(buffer, "012345");
+  buffer = buffer_adjust_region(buffer, 1, 3, 2);
+  test_assert_string_equal("012345", buffer_to_c_string(buffer));
+
+  // Full deletion
+  buffer = make_buffer(1);
+  buffer = buffer_printf(buffer, "012345");
+  buffer = buffer_adjust_region(buffer, 1, 3, 0);
+  test_assert_string_equal("0345", buffer_to_c_string(buffer));
+
+  // Partial deletion
+  buffer = make_buffer(1);
+  buffer = buffer_printf(buffer, "012345");
+  buffer = buffer_adjust_region(buffer, 1, 3, 1);
+  test_assert_string_equal("01345", buffer_to_c_string(buffer));
+
+  // "Insertion"
+  buffer = make_buffer(1);
+  // POS 012345
+  //      **
+  //      *****
+  // ASC 012345345
+  buffer = buffer_printf(buffer, "012345");
+  buffer = buffer_adjust_region(buffer, 1, 3, 5);
+  test_assert_string_equal("012345345", buffer_to_c_string(buffer));
+}
+
 int main(int argc, char** argv) {
   test_buffer_c_substring();
   test_append_byte();
@@ -140,5 +172,6 @@ int main(int argc, char** argv) {
   test_buffer_string_printf();
   test_buffer_utf8_decode();
   test_buffer_match_string_at();
+  test_buffer_adjust_region();
   exit(0);
 }

@@ -669,7 +669,16 @@ __attribute__((warn_unused_result)) buffer_t*
                          uint64_t original_end, uint64_t new_width);
 
 __attribute__((warn_unused_result)) buffer_t*
-buffer_replace_all(buffer_t* buffer, char* original_text, char* replacement_text);
+    buffer_replace_all(buffer_t* buffer, char* original_text,
+                       char* replacement_text);
+
+typedef struct line_and_column_S {
+  uint64_t line;
+  uint64_t column;
+} line_and_column_t;
+
+line_and_column_t buffer_position_to_line_and_column(buffer_t* buffer,
+                                                     uint64_t position);
 
 #endif /* _BUFFER_H_ */
 // SSCF generated file from: value-array.c
@@ -2040,7 +2049,16 @@ __attribute__((warn_unused_result)) buffer_t*
                          uint64_t original_end, uint64_t new_width);
 
 __attribute__((warn_unused_result)) buffer_t*
-buffer_replace_all(buffer_t* buffer, char* original_text, char* replacement_text);
+    buffer_replace_all(buffer_t* buffer, char* original_text,
+                       char* replacement_text);
+
+typedef struct line_and_column_S {
+  uint64_t line;
+  uint64_t column;
+} line_and_column_t;
+
+line_and_column_t buffer_position_to_line_and_column(buffer_t* buffer,
+                                                     uint64_t position);
 
 #endif /* _BUFFER_H_ */
 
@@ -2395,22 +2413,45 @@ __attribute__((warn_unused_result)) buffer_t*
  * replacement_text.
  */
 __attribute__((warn_unused_result)) buffer_t*
-buffer_replace_all(buffer_t* buffer, char* original_text, char* replacement_text) {
+    buffer_replace_all(buffer_t* buffer, char* original_text,
+                       char* replacement_text) {
   int len_original = strlen(original_text);
   int len_replacement = strlen(replacement_text);
   if (len_original < buffer->length) {
     uint64_t pos = 0;
     while (pos <= (buffer->length - len_original)) {
       if (buffer_match_string_at(buffer, pos, original_text)) {
-	buffer = buffer_adjust_region(buffer, pos, pos + len_original, len_replacement);
-	memmove(&buffer->elements[pos], replacement_text, len_replacement);
-	pos += len_replacement;
+        buffer = buffer_adjust_region(buffer, pos, pos + len_original,
+                                      len_replacement);
+        memmove(&buffer->elements[pos], replacement_text, len_replacement);
+        pos += len_replacement;
       } else {
-	pos++;
+        pos++;
       }
     }
   }
   return buffer;
+}
+
+line_and_column_t buffer_position_to_line_and_column(buffer_t* buffer,
+                                                     uint64_t position) {
+  uint64_t line = 1;
+  uint64_t column = 1;
+
+  // TODO(jawilson): process as code points
+  for (uint64_t pos = 0; pos < position; pos++) {
+    uint8_t ch = buffer_get(buffer, pos);
+    if (ch == '\n') {
+      line++;
+      column = 1;
+    } else {
+      column++;
+    }
+  }
+  return (line_and_column_t){
+      .line = line,
+      .column = column,
+  };
 }
 #line 2 "flag.c"
 /**

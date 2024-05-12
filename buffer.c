@@ -85,6 +85,14 @@ __attribute__((warn_unused_result)) buffer_t*
     buffer_replace_all(buffer_t* buffer, char* original_text,
                        char* replacement_text);
 
+typedef struct line_and_column_S {
+  uint64_t line;
+  uint64_t column;
+} line_and_column_t;
+
+line_and_column_t buffer_position_to_line_and_column(buffer_t* buffer,
+                                                     uint64_t position);
+
 #endif /* _BUFFER_H_ */
 
 // ======================================================================
@@ -456,4 +464,26 @@ __attribute__((warn_unused_result)) buffer_t*
     }
   }
   return buffer;
+}
+
+line_and_column_t buffer_position_to_line_and_column(buffer_t* buffer,
+                                                     uint64_t position) {
+  uint64_t line = 1;
+  uint64_t column = 1;
+
+  // TODO(jawilson): process as code points
+  // TODO(jawilson): write unit test
+  for (uint64_t pos = 0; pos < position; pos++) {
+    uint8_t ch = buffer_get(buffer, pos);
+    if (ch == '\n') {
+      line++;
+      column = 1;
+    } else {
+      column++;
+    }
+  }
+  return (line_and_column_t){
+      .line = line,
+      .column = column,
+  };
 }

@@ -161,6 +161,30 @@ void test_buffer_adjust_region(void) {
   test_assert_string_equal("012345345", buffer_to_c_string(buffer));
 }
 
+void test_buffer_replace_all(void) {
+  buffer_t* buffer = make_buffer(1);
+
+  buffer = make_buffer(1);
+  buffer = buffer_printf(buffer, "012345");
+  buffer = buffer_replace_all(buffer, "0", "000");
+  test_assert_string_equal("00012345", buffer_to_c_string(buffer));
+
+  buffer = make_buffer(1);
+  buffer = buffer_printf(buffer, "0123405");
+  buffer = buffer_replace_all(buffer, "0", "000");
+  test_assert_string_equal("00012340005", buffer_to_c_string(buffer));
+
+  buffer = make_buffer(1);
+  buffer = buffer_printf(buffer, "0123450");
+  buffer = buffer_replace_all(buffer, "0", "000");
+  test_assert_string_equal("00012345000", buffer_to_c_string(buffer));
+
+  buffer = make_buffer(1);
+  buffer = buffer_replace_all(buffer, "0", "000");
+  test_assert_string_equal("", buffer_to_c_string(buffer));
+}
+
+
 int main(int argc, char** argv) {
   test_buffer_c_substring();
   test_append_byte();
@@ -173,5 +197,6 @@ int main(int argc, char** argv) {
   test_buffer_utf8_decode();
   test_buffer_match_string_at();
   test_buffer_adjust_region();
+  test_buffer_replace_all();
   exit(0);
 }

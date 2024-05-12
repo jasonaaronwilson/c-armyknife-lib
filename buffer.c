@@ -81,6 +81,10 @@ __attribute__((warn_unused_result)) buffer_t*
     buffer_adjust_region(buffer_t* buffer, uint64_t original_start,
                          uint64_t original_end, uint64_t new_width);
 
+__attribute__((warn_unused_result)) buffer_t*
+    buffer_replace_all(buffer_t* buffer, char* original_text,
+                       char* replacement_text);
+
 #endif /* _BUFFER_H_ */
 
 // ======================================================================
@@ -423,6 +427,33 @@ __attribute__((warn_unused_result)) buffer_t*
     memmove(&buffer->elements[end + difference], &buffer->elements[end],
             tail_length);
     buffer->length += difference;
+  }
+  return buffer;
+}
+
+/**
+ * @function buffer_replace_all
+ *
+ * Find all occurences of original_text and replace them with
+ * replacement_text.
+ */
+__attribute__((warn_unused_result)) buffer_t*
+    buffer_replace_all(buffer_t* buffer, char* original_text,
+                       char* replacement_text) {
+  int len_original = strlen(original_text);
+  int len_replacement = strlen(replacement_text);
+  if (len_original < buffer->length) {
+    uint64_t pos = 0;
+    while (pos <= (buffer->length - len_original)) {
+      if (buffer_match_string_at(buffer, pos, original_text)) {
+        buffer = buffer_adjust_region(buffer, pos, pos + len_original,
+                                      len_replacement);
+        memmove(&buffer->elements[pos], replacement_text, len_replacement);
+        pos += len_replacement;
+      } else {
+        pos++;
+      }
+    }
   }
   return buffer;
 }

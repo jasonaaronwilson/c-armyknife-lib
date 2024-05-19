@@ -70,6 +70,14 @@ format:
 clean:
 	rm -rf *~ docs/*~ tests/*~ examples/*~ TAGS doxygen-docs *.o ${ORDERED_H} tests/build/* examples/build/*
 
+# These are generated files that I happen to check-in to make it
+# easier for people to use this as a "single source file" but seem to
+# diverge a bit which should be investigated (maybe as simple as I
+# started using lazygit and I didn't include them like git add --all
+# would do?)
+very-clean: clean
+	git checkout c-armyknife-lib-no-lines.h c-armyknife-lib.h	
+
 diff: clean
 	git difftool HEAD
 

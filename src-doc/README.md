@@ -1,5 +1,7 @@
 # Source Documentation Index
 
+* [compress.md](compress.md)
+
 * [min-max.md](min-max.md)
 
 * [allocate.md](allocate.md)
@@ -16,11 +18,11 @@
 
 * [value-array.md](value-array.md)
 
+* [value-hashtable.md](value-hashtable.md)
+
 * [utf8-decoder.md](utf8-decoder.md)
 
 * [test.md](test.md)
-
-* [value-hashtable.md](value-hashtable.md)
 
 * [string-alist.md](string-alist.md)
 
@@ -41,6 +43,10 @@
 * [terminal.md](terminal.md)
 
 * [io.md](io.md)
+
+* [byte-source.md](byte-source.md)
+
+* [leb128.md](leb128.md)
 
 * [buffer.md](buffer.md)
 

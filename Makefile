@@ -10,6 +10,7 @@ SRC_C = allocate.c \
 	flag.c \
 	fatal-error.c \
 	io.c \
+	leb128.c \
 	logger.c \
 	min-max.c \
 	random.c \
@@ -31,6 +32,7 @@ SRC_C = allocate.c \
 ORDERED_H = \
 	min-max.h \
 	boolean.h \
+	leb128.h \
 	fatal-error.h \
 	value.h \
 	allocate.h \

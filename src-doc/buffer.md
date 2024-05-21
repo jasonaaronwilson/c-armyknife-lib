@@ -18,6 +18,12 @@ the buffer will never grow again).
 While buffers may seem scary, used properly from a single thread,
 they are actually quite predictable.
  
+## @function buffer_adjust_region
+
+This is primarily used as a helper for buffer_replace_all though it
+can also be used to efficiently delete a region or simply "open up"
+space within a buffer.
+ 
 ## @function buffer_append_byte
 
 Append a single byte to the byte array.
@@ -53,6 +59,12 @@ char).
 Extract a newly allocated string that contains the bytes from start
 to end (appending a zero byte to make sure it's a legal C string).
  
+## @function buffer_from_string
+
+Return a buffer initialized with the contents of a particular
+string. The trailing NUL byte C string terminator byte is not
+included in the buffer.
+ 
 ## @function buffer_get
 
 Get a single byte from a byte array.
@@ -77,6 +89,11 @@ Determine if the buffer contains "str" at start_position.
 
 Format like printf but append the result to the passed in buffer
 (returning a new buffer in case the buffer exceeded it's capacity).
+ 
+## @function buffer_replace_all
+
+Find all occurences of original_text and replace them with
+replacement_text.
  
 ## @function buffer_to_c_string
 

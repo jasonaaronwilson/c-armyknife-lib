@@ -720,7 +720,8 @@ __attribute__((warn_unused_result)) buffer_t*
     buffer_replace_all(buffer_t* buffer, char* original_text,
                        char* replacement_text);
 
-boolean_t buffer_region_contains(buffer_t* buffer, char* text);
+boolean_t buffer_region_contains(buffer_t* buffer, uint64_t start, uint64_t end,
+                                 char* text);
 
 typedef struct line_and_column_S {
   uint64_t line;
@@ -2086,7 +2087,8 @@ __attribute__((warn_unused_result)) buffer_t*
     buffer_replace_all(buffer_t* buffer, char* original_text,
                        char* replacement_text);
 
-boolean_t buffer_region_contains(buffer_t* buffer, char* text);
+boolean_t buffer_region_contains(buffer_t* buffer, uint64_t start, uint64_t end,
+                                 char* text);
 
 typedef struct line_and_column_S {
   uint64_t line;

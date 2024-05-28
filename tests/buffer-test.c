@@ -184,6 +184,15 @@ void test_buffer_replace_all(void) {
   test_assert_string_equal("", buffer_to_c_string(buffer));
 }
 
+void test_buffer_region_contains(void) {
+  buffer_t* buffer = make_buffer(1);
+
+  buffer = make_buffer(1);
+  buffer = buffer_printf(buffer, "012345");
+  test_assert(buffer_region_contains(buffer, 0, 6, "23"));
+  test_assert(!buffer_region_contains(buffer, 0, 6, "89"));
+  test_assert(!buffer_region_contains(buffer, 0, 2, "23"));
+}
 
 int main(int argc, char** argv) {
   test_buffer_c_substring();
@@ -198,5 +207,6 @@ int main(int argc, char** argv) {
   test_buffer_match_string_at();
   test_buffer_adjust_region();
   test_buffer_replace_all();
+  test_buffer_region_contains();
   exit(0);
 }

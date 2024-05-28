@@ -85,6 +85,8 @@ __attribute__((warn_unused_result)) buffer_t*
     buffer_replace_all(buffer_t* buffer, char* original_text,
                        char* replacement_text);
 
+boolean_t buffer_region_contains(buffer_t* buffer, char* text);
+
 typedef struct line_and_column_S {
   uint64_t line;
   uint64_t column;
@@ -486,4 +488,19 @@ line_and_column_t buffer_position_to_line_and_column(buffer_t* buffer,
       .line = line,
       .column = column,
   };
+}
+
+/**
+ * @function buffer_region_contains
+ *
+ * Determine if a buffer contains the specified text within a region.
+ */
+boolean_t buffer_region_contains(buffer_t* buffer, uint64_t start, uint64_t end,
+                                 char* text) {
+  for (int i = start; i < end; i++) {
+    if (buffer_match_string_at(buffer, i, text)) {
+      return true;
+    }
+  }
+  return false;
 }

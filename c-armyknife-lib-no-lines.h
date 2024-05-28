@@ -122,10 +122,12 @@ typedef struct {
   int size;
 } signed_decode_result;
 
-extern unsigned encode_sleb_128(int64_t Value, uint8_t *p);
-extern unsigned encode_uleb_128(uint64_t Value, uint8_t *p);
-extern unsigned_decode_result decode_uleb_128(const uint8_t *p, const uint8_t *end);
-extern signed_decode_result decode_sleb_128(const uint8_t *p, const uint8_t *end);
+extern unsigned encode_sleb_128(int64_t Value, uint8_t* p);
+extern unsigned encode_uleb_128(uint64_t Value, uint8_t* p);
+extern unsigned_decode_result decode_uleb_128(const uint8_t* p,
+                                              const uint8_t* end);
+extern signed_decode_result decode_sleb_128(const uint8_t* p,
+                                            const uint8_t* end);
 
 #endif /* _LEB128_H_ */
 // SSCF generated file from: fatal-error.c
@@ -717,6 +719,8 @@ __attribute__((warn_unused_result)) buffer_t*
 __attribute__((warn_unused_result)) buffer_t*
     buffer_replace_all(buffer_t* buffer, char* original_text,
                        char* replacement_text);
+
+boolean_t buffer_region_contains(buffer_t* buffer, char* text);
 
 typedef struct line_and_column_S {
   uint64_t line;
@@ -2082,6 +2086,8 @@ __attribute__((warn_unused_result)) buffer_t*
     buffer_replace_all(buffer_t* buffer, char* original_text,
                        char* replacement_text);
 
+boolean_t buffer_region_contains(buffer_t* buffer, char* text);
+
 typedef struct line_and_column_S {
   uint64_t line;
   uint64_t column;
@@ -2483,6 +2489,21 @@ line_and_column_t buffer_position_to_line_and_column(buffer_t* buffer,
       .line = line,
       .column = column,
   };
+}
+
+/**
+ * @function buffer_region_contains
+ *
+ * Determine if a buffer contains the specified text within a region.
+ */
+boolean_t buffer_region_contains(buffer_t* buffer, uint64_t start, uint64_t end,
+                                 char* text) {
+  for (int i = start; i < end; i++) {
+    if (buffer_match_string_at(buffer, i, text)) {
+      return true;
+    }
+  }
+  return false;
 }
 /**
  * @file flag.c
@@ -3683,10 +3704,12 @@ typedef struct {
   int size;
 } signed_decode_result;
 
-extern unsigned encode_sleb_128(int64_t Value, uint8_t *p);
-extern unsigned encode_uleb_128(uint64_t Value, uint8_t *p);
-extern unsigned_decode_result decode_uleb_128(const uint8_t *p, const uint8_t *end);
-extern signed_decode_result decode_sleb_128(const uint8_t *p, const uint8_t *end);
+extern unsigned encode_sleb_128(int64_t Value, uint8_t* p);
+extern unsigned encode_uleb_128(uint64_t Value, uint8_t* p);
+extern unsigned_decode_result decode_uleb_128(const uint8_t* p,
+                                              const uint8_t* end);
+extern signed_decode_result decode_sleb_128(const uint8_t* p,
+                                            const uint8_t* end);
 
 #endif /* _LEB128_H_ */
 
@@ -3710,32 +3733,32 @@ extern signed_decode_result decode_sleb_128(const uint8_t *p, const uint8_t *end
  * buffer. Returns the length in bytes of the encoded value. 10 bytes
  * should be enough to hold the 64bit number after encoding.
  */
-unsigned encode_sleb_128(int64_t Value, uint8_t *p) {
-  uint8_t *orig_p = p;
+unsigned encode_sleb_128(int64_t Value, uint8_t* p) {
+  uint8_t* orig_p = p;
   int More;
   do {
     uint8_t Byte = Value & 0x7f;
     // NOTE: this assumes that this signed shift is an arithmetic right shift.
     Value >>= 7;
-    More = !((((Value == 0 ) && ((Byte & 0x40) == 0)) ||
-              ((Value == -1) && ((Byte & 0x40) != 0))));
+    More = !((((Value == 0) && ((Byte & 0x40) == 0))
+              || ((Value == -1) && ((Byte & 0x40) != 0))));
     if (More)
       Byte |= 0x80; // Mark this byte to show that more bytes will follow.
     *p++ = Byte;
   } while (More);
-  
-  return (unsigned)(p - orig_p);
+
+  return (unsigned) (p - orig_p);
 }
- 
+
 /**
- * @function 
+ * @function
  *
  * Utility function to encode a ULEB128 value to a raw byte
  * buffer. Returns the length in bytes of the encoded value. 10 bytes
  * should be enough to hold the 64bit number after encoding.
  */
-unsigned encode_uleb_128(uint64_t Value, uint8_t *p) {
-  uint8_t *orig_p = p;
+unsigned encode_uleb_128(uint64_t Value, uint8_t* p) {
+  uint8_t* orig_p = p;
   do {
     uint8_t Byte = Value & 0x7f;
     Value >>= 7;
@@ -3743,58 +3766,58 @@ unsigned encode_uleb_128(uint64_t Value, uint8_t *p) {
       Byte |= 0x80; // Mark this byte to show that more bytes will follow.
     *p++ = Byte;
   } while (Value != 0);
- 
-  return (unsigned)(p - orig_p);
+
+  return (unsigned) (p - orig_p);
 }
- 
+
 /**
  * @function decode_uleb_128
  *
  * Decode a ULEB-128 value (up to 64bits).
  */
-unsigned_decode_result decode_uleb_128(const uint8_t *p, const uint8_t *end) {
-  const uint8_t *orig_p = p;
+unsigned_decode_result decode_uleb_128(const uint8_t* p, const uint8_t* end) {
+  const uint8_t* orig_p = p;
   uint64_t Value = 0;
   unsigned Shift = 0;
   do {
     if (p == end) {
-      unsigned_decode_result result = { 0, ERROR_INSUFFICIENT_INPUT };
+      unsigned_decode_result result = {0, ERROR_INSUFFICIENT_INPUT};
       return result;
     }
     uint64_t Slice = *p & 0x7f;
     if ((Shift >= 64 && Slice != 0) || Slice << Shift >> Shift != Slice) {
-      unsigned_decode_result result = { 0, ERROR_TOO_BIG };
+      unsigned_decode_result result = {0, ERROR_TOO_BIG};
       return result;
     }
     Value += Slice << Shift;
     Shift += 7;
   } while (*p++ >= 128);
-  unsigned_decode_result result = { Value, (unsigned)(p - orig_p) };
+  unsigned_decode_result result = {Value, (unsigned) (p - orig_p)};
   return result;
 }
- 
+
 /**
  * @function decode_sleb_128
  *
  * Decode a SLEB128 value (up to 64bits)
  */
-signed_decode_result decode_sleb_128(const uint8_t *p, const uint8_t *end) {
-  const uint8_t *orig_p = p;
+signed_decode_result decode_sleb_128(const uint8_t* p, const uint8_t* end) {
+  const uint8_t* orig_p = p;
   int64_t Value = 0;
   unsigned Shift = 0;
   uint8_t Byte;
   do {
     if (p == end) {
-      signed_decode_result result = { 0, ERROR_INSUFFICIENT_INPUT };
+      signed_decode_result result = {0, ERROR_INSUFFICIENT_INPUT};
       return result;
     }
     Byte = *p;
     uint64_t Slice = Byte & 0x7f;
     // This handles decoding padded numbers, otherwise we might be
     // able to test very easily at the end of the loop.
-    if ((Shift >= 64 && Slice != (Value < 0 ? 0x7f : 0x00)) ||
-        (Shift == 63 && Slice != 0 && Slice != 0x7f)) {
-      signed_decode_result result = { 0, ERROR_TOO_BIG };
+    if ((Shift >= 64 && Slice != (Value < 0 ? 0x7f : 0x00))
+        || (Shift == 63 && Slice != 0 && Slice != 0x7f)) {
+      signed_decode_result result = {0, ERROR_TOO_BIG};
       return result;
     }
     Value |= Slice << Shift;
@@ -3804,7 +3827,7 @@ signed_decode_result decode_sleb_128(const uint8_t *p, const uint8_t *end) {
   // Sign extend negative numbers if needed.
   if (Shift < 64 && (Byte & 0x40))
     Value |= (-1ULL) << Shift;
-  signed_decode_result result = { Value, (p - orig_p) };
+  signed_decode_result result = {Value, (p - orig_p)};
   return result;
 }
 

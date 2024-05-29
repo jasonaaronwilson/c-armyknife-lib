@@ -671,7 +671,7 @@ struct buffer_S {
  */
 typedef struct buffer_S buffer_t;
 
-extern buffer_t* make_buffer(uint32_t initial_capacity);
+extern buffer_t* make_buffer(uint64_t initial_capacity);
 
 extern uint64_t buffer_length(buffer_t* buffer);
 
@@ -751,7 +751,7 @@ struct value_array_S {
  */
 typedef struct value_array_S value_array_t;
 
-extern value_array_t* make_value_array(uint32_t initial_capacity);
+extern value_array_t* make_value_array(uint64_t initial_capacity);
 extern value_t value_array_get(value_array_t* array, uint32_t index);
 extern void value_array_replace(value_array_t* array, uint32_t index,
                                 value_t element);
@@ -2038,7 +2038,7 @@ struct buffer_S {
  */
 typedef struct buffer_S buffer_t;
 
-extern buffer_t* make_buffer(uint32_t initial_capacity);
+extern buffer_t* make_buffer(uint64_t initial_capacity);
 
 extern uint64_t buffer_length(buffer_t* buffer);
 
@@ -2109,14 +2109,12 @@ line_and_column_t buffer_position_to_line_and_column(buffer_t* buffer,
  *
  * Make an empty byte array with the given initial capacity.
  */
-buffer_t* make_buffer(uint32_t initial_capacity) {
-
-  if (initial_capacity < 1) {
-    fatal_error(ERROR_ILLEGAL_INITIAL_CAPACITY);
+buffer_t* make_buffer(uint64_t initial_capacity) {
+  if (initial_capacity == 0) {
+    initial_capacity = 1;
   }
-
   buffer_t* result
-      = (buffer_t*) (malloc_bytes(initial_capacity + sizeof(buffer_t)));
+      = (buffer_t*) (malloc_bytes(sizeof(buffer_t) + initial_capacity));
   result->capacity = initial_capacity;
   return result;
 }
@@ -6124,7 +6122,7 @@ struct value_array_S {
  */
 typedef struct value_array_S value_array_t;
 
-extern value_array_t* make_value_array(uint32_t initial_capacity);
+extern value_array_t* make_value_array(uint64_t initial_capacity);
 extern value_t value_array_get(value_array_t* array, uint32_t index);
 extern void value_array_replace(value_array_t* array, uint32_t index,
                                 value_t element);
@@ -6140,16 +6138,24 @@ extern value_t value_array_delete_at(value_array_t* array, uint32_t position);
 /**
  * @function make_value_array
  *
- * Make a value array with the given initial capacity (which must be >
- * 0). When the array runs out of capacity because of calls to add,
- * push, etc., then the backing array is automatically increased.
+ * Make a value array with the given initial capacity.
  *
- * If either the initial_capacity is zero or if `malloc()` can't
- * allocate then a fata _error occurs.
+ * An initial capacity of zero is automatically converted to a
+ * capacity of at least 1 or more since this makes the "growth" code a
+ * bit simpler.
+ *
+ * When the array runs out of capacity because of calls to add, push,
+ * etc., then the backing array is automatically increased *based on
+ * the current capacity* which generally leads to better big-O
+ * properties.
+ *
+ * If the initial or later increases in capacity are not fulfillable,
+ * then a fatal_error occurs since these are generally not recoverable
+ * anyways.
  */
-value_array_t* make_value_array(uint32_t initial_capacity) {
+value_array_t* make_value_array(uint64_t initial_capacity) {
   if (initial_capacity == 0) {
-    fatal_error(ERROR_ILLEGAL_INITIAL_CAPACITY);
+    initial_capacity = 1;
   }
 
   value_array_t* result = malloc_struct(value_array_t);
@@ -6409,13 +6415,13 @@ static inline uint64_t value_ht_num_entries(value_hashtable_t* ht) {
  *
  * Create a hashtable with the given number of buckets.
  *
- * The minimum number of buckets is currently 2 to make it less likely
- * we run into some resize loop depending on the values of
- * ARMYKNIFE_HT_LOAD_FACTOR and AK_HT_UPSCALE_MULTIPLIER).
+ * When the initial number of buckets is less than a small integer
+ * (currently 2), then we automatically increase the initial number of
+ * buckets to that number of make the growth algorithm work.
  */
 value_hashtable_t* make_value_hashtable(uint64_t n_buckets) {
   if (n_buckets < 2) {
-    fatal_error(ERROR_ILLEGAL_INITIAL_CAPACITY);
+    n_buckets = 2;
   }
   value_hashtable_t* result = (value_hashtable_t*) (malloc_bytes(
       sizeof(value_hashtable_t) + sizeof(value_alist_t*) * n_buckets));

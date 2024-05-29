@@ -94,13 +94,14 @@ static inline uint64_t value_ht_num_entries(value_hashtable_t* ht) {
  *
  * Create a hashtable with the given number of buckets.
  *
- * The minimum number of buckets is currently 2 to make it less likely
- * we run into some resize loop depending on the values of
- * ARMYKNIFE_HT_LOAD_FACTOR and AK_HT_UPSCALE_MULTIPLIER).
+ * When the initial number of buckets is less than a small integer
+ * (currently 2), then we automatically increase the initial number of
+ * buckets to that number to make the fractional growth algorithm work
+ * and maintain big-O properties.
  */
 value_hashtable_t* make_value_hashtable(uint64_t n_buckets) {
   if (n_buckets < 2) {
-    fatal_error(ERROR_ILLEGAL_INITIAL_CAPACITY);
+    n_buckets = 2;
   }
   value_hashtable_t* result = (value_hashtable_t*) (malloc_bytes(
       sizeof(value_hashtable_t) + sizeof(value_alist_t*) * n_buckets));

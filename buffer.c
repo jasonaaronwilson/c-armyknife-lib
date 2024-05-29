@@ -36,7 +36,7 @@ struct buffer_S {
  */
 typedef struct buffer_S buffer_t;
 
-extern buffer_t* make_buffer(uint32_t initial_capacity);
+extern buffer_t* make_buffer(uint64_t initial_capacity);
 
 extern uint64_t buffer_length(buffer_t* buffer);
 
@@ -107,14 +107,12 @@ line_and_column_t buffer_position_to_line_and_column(buffer_t* buffer,
  *
  * Make an empty byte array with the given initial capacity.
  */
-buffer_t* make_buffer(uint32_t initial_capacity) {
-
-  if (initial_capacity < 1) {
-    fatal_error(ERROR_ILLEGAL_INITIAL_CAPACITY);
+buffer_t* make_buffer(uint64_t initial_capacity) {
+  if (initial_capacity == 0) {
+    initial_capacity = 1;
   }
-
   buffer_t* result
-      = (buffer_t*) (malloc_bytes(initial_capacity + sizeof(buffer_t)));
+      = (buffer_t*) (malloc_bytes(sizeof(buffer_t) + initial_capacity));
   result->capacity = initial_capacity;
   return result;
 }

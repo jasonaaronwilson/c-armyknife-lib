@@ -14,9 +14,10 @@ order.
 
 Create a hashtable with the given number of buckets.
 
-The minimum number of buckets is currently 2 to make it less likely
-we run into some resize loop depending on the values of
-ARMYKNIFE_HT_LOAD_FACTOR and AK_HT_UPSCALE_MULTIPLIER).
+When the initial number of buckets is less than a small integer
+(currently 2), then we automatically increase the initial number of
+buckets to that number to make the fractional growth algorithm work
+and maintain big-O properties.
  
 ## @function value_hashtable_upsize_internal
 

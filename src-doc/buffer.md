@@ -90,6 +90,10 @@ Determine if the buffer contains "str" at start_position.
 Format like printf but append the result to the passed in buffer
 (returning a new buffer in case the buffer exceeded it's capacity).
  
+## @function buffer_region_contains
+
+Determine if a buffer contains the specified text within a region.
+ 
 ## @function buffer_replace_all
 
 Find all occurences of original_text and replace them with

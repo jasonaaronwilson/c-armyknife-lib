@@ -29,7 +29,7 @@ struct value_array_S {
  */
 typedef struct value_array_S value_array_t;
 
-extern value_array_t* make_value_array(uint32_t initial_capacity);
+extern value_array_t* make_value_array(uint64_t initial_capacity);
 extern value_t value_array_get(value_array_t* array, uint32_t index);
 extern void value_array_replace(value_array_t* array, uint32_t index,
                                 value_t element);
@@ -45,16 +45,24 @@ extern value_t value_array_delete_at(value_array_t* array, uint32_t position);
 /**
  * @function make_value_array
  *
- * Make a value array with the given initial capacity (which must be >
- * 0). When the array runs out of capacity because of calls to add,
- * push, etc., then the backing array is automatically increased.
+ * Make a value array with the given initial capacity.
  *
- * If either the initial_capacity is zero or if `malloc()` can't
- * allocate then a fata _error occurs.
+ * An initial capacity of zero is automatically converted to a
+ * capacity of at least 1 or more since this makes the "growth" code a
+ * bit simpler.
+ *
+ * When the array runs out of capacity because of calls to add, push,
+ * etc., then the backing array is automatically increased *based on
+ * the current capacity* which generally leads to better big-O
+ * properties.
+ *
+ * If the initial or later increases in capacity are not fulfillable,
+ * then a fatal_error occurs since these are generally not recoverable
+ * anyways.
  */
-value_array_t* make_value_array(uint32_t initial_capacity) {
+value_array_t* make_value_array(uint64_t initial_capacity) {
   if (initial_capacity == 0) {
-    fatal_error(ERROR_ILLEGAL_INITIAL_CAPACITY);
+    initial_capacity = 1;
   }
 
   value_array_t* result = malloc_struct(value_array_t);

@@ -6417,7 +6417,8 @@ static inline uint64_t value_ht_num_entries(value_hashtable_t* ht) {
  *
  * When the initial number of buckets is less than a small integer
  * (currently 2), then we automatically increase the initial number of
- * buckets to that number of make the growth algorithm work.
+ * buckets to that number to make the fractional growth algorithm work
+ * and maintain big-O properties.
  */
 value_hashtable_t* make_value_hashtable(uint64_t n_buckets) {
   if (n_buckets < 2) {

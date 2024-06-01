@@ -88,6 +88,10 @@ __attribute__((warn_unused_result)) buffer_t*
 boolean_t buffer_region_contains(buffer_t* buffer, uint64_t start, uint64_t end,
                                  char* text);
 
+uint64_t buffer_beginning_of_line(buffer_t* buffer, uint64_t start);
+
+uint64_t buffer_end_of_line(buffer_t* buffer, uint64_t start);
+
 typedef struct line_and_column_S {
   uint64_t line;
   uint64_t column;
@@ -502,4 +506,38 @@ boolean_t buffer_region_contains(buffer_t* buffer, uint64_t start, uint64_t end,
     }
   }
   return false;
+}
+
+/**
+ * @function buffer_beginning_of_line
+ *
+ * Look backwards starting at the start position until we reach a
+ * position where the previous character is a newline or the beginning
+ * of the buffer.
+ */
+uint64_t buffer_beginning_of_line(buffer_t* buffer, uint64_t start) {
+  uint64_t position = start;
+  while (position > 0) {
+    position--;
+    if (buffer_get(buffer, position) == '\n') {
+      return position + 1;
+    }
+  }
+  return position;
+}
+
+/**
+ * @function buffer_end_of_line
+ *
+ * Look forwards starting at the start position until we reach the
+ * position of the first newline. If we reach the end of the buffer
+ * without encountering a newline, simply return the length of the
+ * buffer.
+ */
+uint64_t buffer_end_of_line(buffer_t* buffer, uint64_t start) {
+  uint64_t position = start;
+  while (position < buffer->length && buffer_get(buffer, position) != '\n') {
+    position++;
+  }
+  return position;
 }

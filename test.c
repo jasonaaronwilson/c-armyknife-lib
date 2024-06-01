@@ -49,6 +49,27 @@
   } while (0)
 
 /**
+ * @macro test_assert_uint64_equal
+ *
+ * Assert that two values are the same by casting both of them to
+ * uint64_t and seeing if they are "==".
+ *
+ * Except that we lose the "location" information, this would be
+ * better as an inline function rather than a macro.
+ */
+#define test_assert_integer_equal(a, b)                                        \
+  do {                                                                         \
+    uint64_t casted_a = (uint64_t) a;                                          \
+    uint64_t casted_b = (uint64_t) b;                                          \
+    if (a != b) {                                                              \
+      test_fail(                                                               \
+          "An integer comparision failed\n  Expected:\n    ⟦%llu⟧\n  "     \
+          "But was:\n    ⟦%llu⟧\n",                                            \
+          a, b);                                                               \
+    }                                                                          \
+  } while (0)
+
+/**
  * @macro test_assert_string_equal
  *
  * Assert that two c strings are the same.

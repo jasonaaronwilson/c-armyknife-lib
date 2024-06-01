@@ -734,6 +734,10 @@ __attribute__((warn_unused_result)) buffer_t*
 boolean_t buffer_region_contains(buffer_t* buffer, uint64_t start, uint64_t end,
                                  char* text);
 
+uint64_t buffer_beginning_of_line(buffer_t* buffer, uint64_t start);
+
+uint64_t buffer_end_of_line(buffer_t* buffer, uint64_t start);
+
 typedef struct line_and_column_S {
   uint64_t line;
   uint64_t column;
@@ -1601,6 +1605,27 @@ extern uint64_t random_next_uint64_below(random_state_t* state,
   } while (0)
 
 /**
+ * @macro test_assert_uint64_equal
+ *
+ * Assert that two values are the same by casting both of them to
+ * uint64_t and seeing if they are "==".
+ *
+ * Except that we lose the "location" information, this would be
+ * better as an inline function rather than a macro.
+ */
+#define test_assert_integer_equal(a, b)                                         \
+  do {                                                                          \
+    uint64_t casted_a = (uint64_t) a;                                           \
+    uint64_t casted_b = (uint64_t) b;                                           \
+    if (a != b) {                                                               \
+      test_fail(                                                                \
+          "An integer comparision failed\n  Expected:\n    ⟦%llu⟧\n  "          \
+          "But was:\n    ⟦%llu⟧\n",                                             \
+          a, b);								\
+    }                                                                           \
+  } while (0)
+
+/**
  * @macro test_assert_string_equal
  *
  * Assert that two c strings are the same.
@@ -2117,6 +2142,10 @@ __attribute__((warn_unused_result)) buffer_t*
 boolean_t buffer_region_contains(buffer_t* buffer, uint64_t start, uint64_t end,
                                  char* text);
 
+uint64_t buffer_beginning_of_line(buffer_t* buffer, uint64_t start);
+
+uint64_t buffer_end_of_line(buffer_t* buffer, uint64_t start);
+
 typedef struct line_and_column_S {
   uint64_t line;
   uint64_t column;
@@ -2531,6 +2560,40 @@ boolean_t buffer_region_contains(buffer_t* buffer, uint64_t start, uint64_t end,
     }
   }
   return false;
+}
+
+/**
+ * @function buffer_beginning_of_line
+ *
+ * Look backwards starting at the start position until we reach a
+ * position where the previous character is a newline or the beginning
+ * of the buffer.
+ */
+uint64_t buffer_beginning_of_line(buffer_t* buffer, uint64_t start) {
+  uint64_t position = start;
+  while (position > 0) {
+    position--;
+    if (buffer_get(buffer, position) == '\n') {
+      return position + 1;
+    }
+  }
+  return position;
+}
+
+/**
+ * @function buffer_end_of_line
+ *
+ * Look forwards starting at the start position until we reach the
+ * position of the first newline. If we reach the end of the buffer
+ * without encountering a newline, simply return the length of the
+ * buffer.
+ */
+uint64_t buffer_end_of_line(buffer_t* buffer, uint64_t start) {
+  uint64_t position = start;
+  while (position < buffer->length && buffer_get(buffer, position) != '\n') {
+    position++;
+  }
+  return position;
 }
 #line 2 "flag.c"
 /**
@@ -5597,6 +5660,27 @@ extern void term_echo_restore(struct termios oldt) {
     if (!(condition))                                                          \
       test_fail("A test assertion failed. Condition expression was: %s",       \
                 #condition);                                                   \
+  } while (0)
+
+/**
+ * @macro test_assert_uint64_equal
+ *
+ * Assert that two values are the same by casting both of them to
+ * uint64_t and seeing if they are "==".
+ *
+ * Except that we lose the "location" information, this would be
+ * better as an inline function rather than a macro.
+ */
+#define test_assert_integer_equal(a, b)                                         \
+  do {                                                                          \
+    uint64_t casted_a = (uint64_t) a;                                           \
+    uint64_t casted_b = (uint64_t) b;                                           \
+    if (a != b) {                                                               \
+      test_fail(                                                                \
+          "An integer comparision failed\n  Expected:\n    ⟦%llu⟧\n  "          \
+          "But was:\n    ⟦%llu⟧\n",                                             \
+          a, b);								\
+    }                                                                           \
   } while (0)
 
 /**

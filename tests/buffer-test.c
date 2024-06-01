@@ -194,6 +194,40 @@ void test_buffer_region_contains(void) {
   test_assert(!buffer_region_contains(buffer, 0, 2, "23"));
 }
 
+void test_buffer_beginning_of_line(void) {
+  buffer_t* buffer = make_buffer(20);
+  buffer = buffer_append_string(buffer, "Line 1\nLine 2\n");
+
+  // Test beginning of first line
+  test_assert_integer_equal(0, buffer_beginning_of_line(buffer, 0));
+
+  // Test middle of first line
+  test_assert_integer_equal(0, buffer_beginning_of_line(buffer, 3));
+
+  // Test start of second line
+  test_assert_integer_equal(7, buffer_beginning_of_line(buffer, 7));
+
+  // Test middle of second line
+  test_assert_integer_equal(7, buffer_beginning_of_line(buffer, 10));
+}
+
+void test_buffer_end_of_line(void) {
+  buffer_t* buffer = make_buffer(20);
+  buffer = buffer_append_string(buffer, "Line 1\nLine 2\n");
+
+  // Test end of first line
+  test_assert(buffer_end_of_line(buffer, 0) == 6);
+
+  // Test middle of first line
+  test_assert(buffer_end_of_line(buffer, 3) == 6);
+
+  // Test start of second line
+  test_assert(buffer_end_of_line(buffer, 7) == 13);
+
+  // Test end of buffer (no newline)
+  test_assert(buffer_end_of_line(buffer, 14) == 14);
+}
+
 int main(int argc, char** argv) {
   test_buffer_c_substring();
   test_append_byte();
@@ -208,5 +242,7 @@ int main(int argc, char** argv) {
   test_buffer_adjust_region();
   test_buffer_replace_all();
   test_buffer_region_contains();
+  test_buffer_beginning_of_line();
+  test_buffer_end_of_line();
   exit(0);
 }

@@ -1613,16 +1613,16 @@ extern uint64_t random_next_uint64_below(random_state_t* state,
  * Except that we lose the "location" information, this would be
  * better as an inline function rather than a macro.
  */
-#define test_assert_integer_equal(a, b)                                         \
-  do {                                                                          \
-    uint64_t casted_a = (uint64_t) a;                                           \
-    uint64_t casted_b = (uint64_t) b;                                           \
-    if (a != b) {                                                               \
-      test_fail(                                                                \
-          "An integer comparision failed\n  Expected:\n    ⟦%llu⟧\n  "          \
-          "But was:\n    ⟦%llu⟧\n",                                             \
-          a, b);								\
-    }                                                                           \
+#define test_assert_integer_equal(a, b)                                        \
+  do {                                                                         \
+    uint64_t casted_a = (uint64_t) a;                                          \
+    uint64_t casted_b = (uint64_t) b;                                          \
+    if (a != b) {                                                              \
+      test_fail(                                                               \
+          "An integer comparision failed\n  Expected:\n    ⟦%llu⟧\n  "     \
+          "But was:\n    ⟦%llu⟧\n",                                            \
+          a, b);                                                               \
+    }                                                                          \
   } while (0)
 
 /**
@@ -5671,16 +5671,16 @@ extern void term_echo_restore(struct termios oldt) {
  * Except that we lose the "location" information, this would be
  * better as an inline function rather than a macro.
  */
-#define test_assert_integer_equal(a, b)                                         \
-  do {                                                                          \
-    uint64_t casted_a = (uint64_t) a;                                           \
-    uint64_t casted_b = (uint64_t) b;                                           \
-    if (a != b) {                                                               \
-      test_fail(                                                                \
-          "An integer comparision failed\n  Expected:\n    ⟦%llu⟧\n  "          \
-          "But was:\n    ⟦%llu⟧\n",                                             \
-          a, b);								\
-    }                                                                           \
+#define test_assert_integer_equal(a, b)                                        \
+  do {                                                                         \
+    uint64_t casted_a = (uint64_t) a;                                          \
+    uint64_t casted_b = (uint64_t) b;                                          \
+    if (a != b) {                                                              \
+      test_fail(                                                               \
+          "An integer comparision failed\n  Expected:\n    ⟦%llu⟧\n  "     \
+          "But was:\n    ⟦%llu⟧\n",                                            \
+          a, b);                                                               \
+    }                                                                          \
   } while (0)
 
 /**

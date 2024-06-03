@@ -59,13 +59,13 @@
  */
 #define test_assert_integer_equal(a, b)                                        \
   do {                                                                         \
-    uint64_t casted_a = (uint64_t) a;                                          \
-    uint64_t casted_b = (uint64_t) b;                                          \
+    uint64_t casted_a = (uint64_t)(a);					       \
+    uint64_t casted_b = (uint64_t)(b);					       \
     if (a != b) {                                                              \
       test_fail(                                                               \
-          "An integer comparision failed\n  Expected:\n    ⟦%llu⟧\n  "     \
+          "An integer comparision failed\n  Expected:\n    ⟦%llu⟧\n  "         \
           "But was:\n    ⟦%llu⟧\n",                                            \
-          a, b);                                                               \
+          casted_a, casted_b);                                                 \
     }                                                                          \
   } while (0)
 
@@ -78,13 +78,13 @@
   do {                                                                          \
     if (!b) {                                                                   \
       test_fail(                                                                \
-          "A test string equal assertion failed\n  Expected:\n    ⟦%s⟧\n  " \
+          "A test string equal assertion failed\n  Expected:\n    ⟦%s⟧\n  "     \
           "But was:\n    nullptr\n",                                            \
           a);                                                                   \
     }                                                                           \
     if (!string_equal(a, b)) {                                                  \
       test_fail(                                                                \
-          "A test string equal assertion failed\n  Expected:\n    ⟦%s⟧\n  " \
+          "A test string equal assertion failed\n  Expected:\n    ⟦%s⟧\n  "     \
           "But was:\n    ⟦%s⟧\n",                                               \
           a, b);                                                                \
     }                                                                           \

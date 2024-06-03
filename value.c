@@ -114,10 +114,10 @@ typedef enum {
 typedef struct {
   union {
     uint64_t u64;
-    uint64_t i64;
+    int64_t i64;
+    double dbl;
     char* str;
     void* ptr;
-    void* dbl;
     value_t val;
   };
   // TODO(jawilson): change the name of the field after checking if

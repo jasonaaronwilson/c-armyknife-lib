@@ -1,0 +1,221 @@
+# Travel
+
+This is a partial record of my interaction with an LLM as well as my
+comments about how it did, etc.
+
+# The Initial Prompts
+
+```
+For fun let's write a small program in C in order to organize a
+schedule of events (namely people arriving and departing on different
+dates and different airlines). We need to take in the input
+information in a controlled menu driven format and then save this
+information to a file so we can add to it later. The important part is
+to display this information in a calendar oriented format in HTML. We
+can bold out important dates and maybe use subscripts to have
+something like footnotes where we can see details like the flight
+number, arrival or departure time, etc. We need to fit two months at
+the top of the screen. It does not need to be interactive since we
+simply plan to print everything out. If your default desire is to use
+Python or Javascript, remember that we want to do this in the true
+linuga franca, C, and have it run properly in any Posix platform. This
+is how I learn which is fun!
+```
+
+("in" should have be "on" -- a type like this hopefully wouldn't
+matter, how would we know?)
+
+Reasonable code was generated at first though it broke it down into
+four steps for me which made it harder to copy/paste.
+
+One of those "steps" was definitely doing more HTML stuff than the
+first version it gave me in one go (and compiled and sort of worked
+the first time I ran it):
+
+```
+
+;;; Not the version I'm checking in!
+
+void generate_html(const char *filename) {
+    FILE *file = fopen(filename, "w");
+    if (!file) {
+        perror("Could not open file");
+        return;
+    }
+
+    fprintf(file, "<!DOCTYPE html>\n<html>\n<head>\n<title>Event Calendar</title>\n<style>\n");
+    fprintf(file, "table { width: 100%%; border-collapse: collapse; }\n");
+    fprintf(file, "th, td { border: 1px solid black; padding: 10px; text-align: left; }\n");
+    fprintf(file, ".important { font-weight: bold; }\n");
+    fprintf(file, "sub { font-size: smaller; }\n");
+    fprintf(file, "</style>\n</head>\n<body>\n");
+    fprintf(file, "<h1>Event Calendar</h1>\n<table>\n<tr>\n<th>Date</th>\n<th>Event</th>\n</tr>\n");
+
+    for (int i = 0; i < event_count; i++) {
+        Event e = events[i];
+        fprintf(file, "<tr>\n<td>%s</td>\n<td class=\"important\">%s<sub>%s, %s, %s, %s</sub></td>\n</tr>\n", 
+                e.date, e.name, e.airline, e.flight_number, e.time, e.is_arrival ? "Arrival" : "Departure");
+    }
+
+    fprintf(file, "</table>\n</body>\n</html>\n");
+
+    fclose(file);
+}
+```
+
+Below, I might have gone backwards to go forwards, we can possibly
+check that out later...
+
+It is clear that an LLM can write code WAY faster than I can skim it
+and I have a great deal of experience.
+
+```
+This appears to be a great start. We are missing the calendar
+view. There used to be this program common on Unix platforms that
+would render calendars is ASCII. A calendar is usually Sunday through
+Saturday because we are all beat down by the man to accept the five
+day workweek (definitely not us, am I right?)
+```
+
+Looks like I accidentally over steered it towards ASCII instead of
+HTML output. I'm OK with that actually (except we won't get subscripts
+and highlighting without something else...)
+
+Again I didn't test it's output and maybe scanned it even more quickly
+than the last time.
+
+```
+Let me put this into a file an testing. I can't read code as fast
+as you can write it though my initial scan confuses me a bit because I
+don't see how you figure out how a particular date would correspond to
+a Tuesday vs a Friday.
+```
+
+Another typo "an testing" was meant to be "for testing". I'm kind of
+trying to speed-run this task.
+
+At this point it schooled me a bit about what I was doing but THEN
+gave me a full version which I copy-pasted into travel.c, ran, and you
+can see some interactions with it below. (I don't think it is
+correct...)
+
+```
+jawilson@beelink:~/src/c-armyknife-lib/examples$ build/travel 
+Could not open file: No such file or directory
+1. Add Event
+2. Display Events
+3. Save Events
+4. Generate HTML
+5. Print Two Months Calendar
+6. Exit
+Enter your choice: 1
+Enter name: Dan & Nancy
+Enter airline: Enter flight number: Enter date (YYYY-MM-DD): 2024-06-19
+Enter time (HH:MM): 10:38
+Is this an arrival (1 for yes, 0 for no): 1
+1. Add Event
+2. Display Events
+3. Save Events
+4. Generate HTML
+5. Print Two Months Calendar
+6. Exit
+Enter your choice: 2
+Event 1:
+Name: Dan
+Airline: &
+Flight Number: Nancy
+Date: 2024-06-19
+Time: 10:38
+Type: Arrival
+
+1. Add Event
+2. Display Events
+3. Save Events
+4. Generate HTML
+5. Print Two Months Calendar
+6. Exit
+Enter your choice: 5
+Enter first month and year (MM YYYY): 06 2024
+Enter second month and year (MM YYYY): 07 2024
+     June 2024                                       
+Su Mo Tu We Th Fr Sa
+                   1 
+ 2  3  4  5  6  7  8 
+ 9 10 11 12 13 14 15 
+16 17 18 19 20 21 22 
+23 24 25 26 27 28 29 
+30 
+
+
+     July 2024
+Su Mo Tu We Th Fr Sa
+    1  2  3  4  5  6 
+ 7  8  9 10 11 12 13 
+14 15 16 17 18 19 20 
+21 22 23 24 25 26 27 
+28 29 30 31 
+
+1. Add Event
+2. Display Events
+3. Save Events
+4. Generate HTML
+5. Print Two Months Calendar
+6. Exit
+Enter your choice: 6
+```
+
+There is no option to load previous events even though it looks like
+it actually generated such code.
+
+It did create a file named events.txt that looks like this:
+
+```
+Dan & Nancy 2024-06-19 10:38 1
+```
+
+June 2024 and July 2024 seems to start on the correct date. To me it
+was obvious that it could use two consecutive months so I was
+surprised it asked me for the second month.
+
+Since I asked it to write in C, we have stuff like this:
+
+```
+#define MAX_EVENTS 100
+#define MAX_STR_LEN 100
+```
+
+which may be security holes waiting to be exploited but this is kind
+of par for the course without a widely accepted safe(r) and more
+standard way of dealing dynamic strings in a language like C.
+
+I thought our next step would be a load function but it loads stuff
+it's "database" when the program is rerun:
+
+```
+jawilson@beelink:~/src/c-armyknife-lib/examples$ ./build/travel 
+1. Add Event
+2. Display Events
+3. Save Events
+4. Generate HTML
+5. Print Two Months Calendar
+6. Exit
+Enter your choice: 2
+Event 1:
+Name: Dan
+Airline: &
+Flight Number: Nancy
+Date: 2024-06-19
+Time: 10:38
+Type: Arrival
+
+1. Add Event
+2. Display Events
+3. Save Events
+4. Generate HTML
+5. Print Two Months Calendar
+6. Exit
+Enter your choice: 
+```
+
+It's possible by prompting it to save in TSV format it will work
+slightly better...

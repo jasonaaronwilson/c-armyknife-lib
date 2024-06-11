@@ -1,4 +1,4 @@
-all: examples manual-smoke-test
+gall: examples manual-smoke-test
 
 examples:
 	mkdir -p build/
@@ -8,6 +8,7 @@ examples:
 	gcc -g -rdynamic -o build/unique-line-generator unique-line-generator.c
 	gcc -g -rdynamic -o build/code-points code-points.c
 	gcc -g -rdynamic -o build/terminal-input terminal-input.c
+	gcc -g -rdynamic -o build/travel travel.c
 
 manual-smoke-test: examples
 	@echo "================================================================="

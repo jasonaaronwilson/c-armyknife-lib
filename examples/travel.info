@@ -631,3 +631,40 @@ void add_event() {
 ```
 
 Obviously I should git checkin before actually trying this out now.
+
+Done. Copy pasted, and then tried to run:
+
+```
+jawilson@beelink:~/src/c-armyknife-lib/examples$ build/travel 
+Why No prompt?
+
+  C-c C-c
+```
+
+It's possible if I enter 100 characters it will do something. Let's
+try that. No I was wrong, removing rm *.tsv was helpful, let's try it
+again:
+
+```
+jawilson@beelink:~/src/c-armyknife-lib/examples$ build/travel 
+Could not open file: No such file or directory
+1. Add Event
+2. Display Events
+3. Save Events
+4. Generate HTML
+5. Print Two Months Calendar
+6. Exit
+Enter your choice: 1
+Enter name: Enter airline: Enter flight number: Enter date (YYYY-MM-DD): Enter time (HH:MM): Is this an arrival (1 for yes, 0 for no):   C-c C-c
+```
+
+Hmmmm. No one really knows what it means to have been downgraded back
+to Chat GPT 3.5. We are working on FOSS. Do you want to pay my bills?
+
+Let's call this a fail and try Gemini Advanced. I own Google stock and
+currently have a Gemni Advanced paid subscription I pay for myself.
+
+======================================================================
+
+(I predict I will not be getting replaced by an LLM this week so I
+have some breathing room.)

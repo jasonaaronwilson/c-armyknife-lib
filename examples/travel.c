@@ -95,28 +95,17 @@ void add_event() {
     Event e;
 
     printf("Enter name: ");
-    fgets(e.name, sizeof(e.name), stdin);
-    e.name[strcspn(e.name, "\n")] = 0; // Remove the trailing newline character
-
+    scanf("%99[^\n]%*c", e.name); // Read up to 99 characters until newline, then discard newline
     printf("Enter airline: ");
-    fgets(e.airline, sizeof(e.airline), stdin);
-    e.airline[strcspn(e.airline, "\n")] = 0; // Remove the trailing newline character
-
+    scanf("%99[^\n]%*c", e.airline);
     printf("Enter flight number: ");
-    fgets(e.flight_number, sizeof(e.flight_number), stdin);
-    e.flight_number[strcspn(e.flight_number, "\n")] = 0; // Remove the trailing newline character
-
+    scanf("%99[^\n]%*c", e.flight_number);
     printf("Enter date (YYYY-MM-DD): ");
-    fgets(e.date, sizeof(e.date), stdin);
-    e.date[strcspn(e.date, "\n")] = 0; // Remove the trailing newline character
-
+    scanf("%99[^\n]%*c", e.date);
     printf("Enter time (HH:MM): ");
-    fgets(e.time, sizeof(e.time), stdin);
-    e.time[strcspn(e.time, "\n")] = 0; // Remove the trailing newline character
-
+    scanf("%99[^\n]%*c", e.time);
     printf("Is this an arrival (1 for yes, 0 for no): ");
-    scanf("%d", &e.is_arrival);
-    getchar(); // Consume the newline character left by scanf
+    scanf("%d%*c", &e.is_arrival);
 
     events[event_count++] = e;
 }

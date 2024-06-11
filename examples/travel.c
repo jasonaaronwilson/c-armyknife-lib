@@ -11,6 +11,9 @@
  * around the time of this commit. Then we can "c-armyknife-lib"
  * enhance it so that it has fewer fixed limitations, security holes,
  * etc. 
+ *
+ * This is now the second version. I prompted to use TSV and removed
+ * the old events.txt file that was created.
  */
 
 #include <stdio.h>
@@ -129,7 +132,7 @@ void save_events_to_file(const char *filename) {
 
     for (int i = 0; i < event_count; i++) {
         Event e = events[i];
-        fprintf(file, "%s %s %s %s %s %d\n", e.name, e.airline, e.flight_number, e.date, e.time, e.is_arrival);
+        fprintf(file, "%s\t%s\t%s\t%s\t%s\t%d\n", e.name, e.airline, e.flight_number, e.date, e.time, e.is_arrival);
     }
 
     fclose(file);
@@ -143,7 +146,7 @@ void load_events_from_file(const char *filename) {
     }
 
     event_count = 0;
-    while (fscanf(file, "%s %s %s %s %s %d", events[event_count].name, events[event_count].airline, 
+    while (fscanf(file, "%[^\t]\t%[^\t]\t%[^\t]\t%[^\t]\t%[^\t]\t%d\n", events[event_count].name, events[event_count].airline, 
                   events[event_count].flight_number, events[event_count].date, events[event_count].time, 
                   &events[event_count].is_arrival) != EOF) {
         event_count++;
@@ -180,7 +183,7 @@ void generate_html(const char *filename) {
 
 int main() {
     int choice;
-    const char *filename = "events.txt";
+    const char *filename = "events.tsv";
     const char *html_filename = "calendar.html";
 
     load_events_from_file(filename);

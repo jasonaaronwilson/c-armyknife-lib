@@ -219,3 +219,156 @@ Enter your choice:
 
 It's possible by prompting it to save in TSV format it will work
 slightly better...
+
+## Round Two
+
+```
+I really like most of this! My feedback is that we should use TSV
+for reading and writing events. Can you spit out the same solution but
+using TSV instead of spaces? During testing, it got mixed up when I
+used spaces which are super common (tabs, not so much).
+```
+
+Again, this code just compiled via gcc on linux.
+
+The output file is TSVish:
+
+```
+DnA	AA	5786	2024-06-19	10:38	1
+Jason	Wilson	Air	Not	Crashalot	0
+```
+
+```
+Here was the interaction with the compiled program:
+
+jawilson@beelink:~/src/c-armyknife-lib/examples$ ./build/travel 
+Could not open file: No such file or directory
+1. Add Event
+2. Display Events
+3. Save Events
+4. Generate HTML
+5. Print Two Months Calendar
+6. Exit
+Enter your choice: 1
+Enter name: DnA
+Enter airline: AA
+Enter flight number: 5786
+Enter date (YYYY-MM-DD): 2024-06-19
+Enter time (HH:MM): 10:38
+Is this an arrival (1 for yes, 0 for no): 1
+1. Add Event
+2. Display Events
+3. Save Events
+4. Generate HTML
+5. Print Two Months Calendar
+6. Exit
+Enter your choice: 2
+Event 1:
+Name: DnA
+Airline: AA
+Flight Number: 5786
+Date: 2024-06-19
+Time: 10:38
+Type: Arrival
+
+1. Add Event
+2. Display Events
+3. Save Events
+4. Generate HTML
+5. Print Two Months Calendar
+6. Exit
+Enter your choice: 4
+HTML file generated: calendar.html
+1. Add Event
+2. Display Events
+3. Save Events
+4. Generate HTML
+5. Print Two Months Calendar
+6. Exit
+Enter your choice: 2
+Event 1:
+Name: DnA
+Airline: AA
+Flight Number: 5786
+Date: 2024-06-19
+Time: 10:38
+Type: Arrival
+
+1. Add Event
+2. Display Events
+3. Save Events
+4. Generate HTML
+5. Print Two Months Calendar
+6. Exit
+Enter your choice: 5
+Enter first month and year (MM YYYY): 06 2024
+Enter second month and year (MM YYYY): 07 2024
+     June 2024
+Su Mo Tu We Th Fr Sa
+                   1 
+ 2  3  4  5  6  7  8 
+ 9 10 11 12 13 14 15 
+16 17 18 19 20 21 22 
+23 24 25 26 27 28 29 
+30 
+
+
+     July 2024
+Su Mo Tu We Th Fr Sa
+    1  2  3  4  5  6 
+ 7  8  9 10 11 12 13 
+14 15 16 17 18 19 20 
+21 22 23 24 25 26 27 
+28 29 30 31 
+
+1. Add Event
+2. Display Events
+3. Save Events
+4. Generate HTML
+5. Print Two Months Calendar
+6. Exit
+Enter your choice: 1
+Enter name: Jason Wilson
+Enter airline: Enter flight number: Air Not Crashalot
+Enter date (YYYY-MM-DD): Enter time (HH:MM): Is this an arrival (1 for yes, 0 for no): 0
+1. Add Event
+2. Display Events
+3. Save Events
+4. Generate HTML
+5. Print Two Months Calendar
+6. Exit
+Enter your choice: 6
+```
+
+From the TSV file (it was smart enough to rename the file for
+consistency, that was a nice touch), there is still an "input" problem
+I would guess having something to do with "spaces" (which a programmer
+might fix up quickly by analyzing the 233 generated lines of source
+code).
+
+And the diff is pretty small. That is very convenient but might
+ultimately lock us into "hill-climbing". TBD and that's probably not
+going to be an issue for this problem: hill-climbing seems like it
+might work for a problem where we are already close and I've seen LLMs
+bop over to another hill in the past (or at least I think they did
+that...)
+
+AFAIK, no one in their right mind would ever use fscanf (if it seems
+like if it can do what I think it might be able to do - I've really
+not ever used it).
+
+Though printf is probably also a glaring security hole, vsnprintf,
+which I make trivially easy to use via buffer_printf() in
+c-armyknife-lib, might be more likely to accidentlly *leak*
+information rather than by itself provide a turing complete avenue to
+do a full exploit though I hardly consider myself an expert on
+security.
+
+I think for the next round, I will examine the generated code a bit
+more to determine the actual bug which may ultimately change how I
+make the next prompt.
+
+
+
+
+

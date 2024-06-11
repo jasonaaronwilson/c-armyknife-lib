@@ -45,5 +45,5 @@ manual-smoke-test: examples
 	build/unique-line-generator --help || true
 	build/code-points --help || true
 
-
-
+clean:
+	rm -rf build

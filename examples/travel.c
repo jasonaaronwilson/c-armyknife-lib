@@ -93,18 +93,30 @@ void add_event() {
     }
     
     Event e;
+
     printf("Enter name: ");
-    scanf("%s", e.name);
+    fgets(e.name, sizeof(e.name), stdin);
+    e.name[strcspn(e.name, "\n")] = 0; // Remove the trailing newline character
+
     printf("Enter airline: ");
-    scanf("%s", e.airline);
+    fgets(e.airline, sizeof(e.airline), stdin);
+    e.airline[strcspn(e.airline, "\n")] = 0; // Remove the trailing newline character
+
     printf("Enter flight number: ");
-    scanf("%s", e.flight_number);
+    fgets(e.flight_number, sizeof(e.flight_number), stdin);
+    e.flight_number[strcspn(e.flight_number, "\n")] = 0; // Remove the trailing newline character
+
     printf("Enter date (YYYY-MM-DD): ");
-    scanf("%s", e.date);
+    fgets(e.date, sizeof(e.date), stdin);
+    e.date[strcspn(e.date, "\n")] = 0; // Remove the trailing newline character
+
     printf("Enter time (HH:MM): ");
-    scanf("%s", e.time);
+    fgets(e.time, sizeof(e.time), stdin);
+    e.time[strcspn(e.time, "\n")] = 0; // Remove the trailing newline character
+
     printf("Is this an arrival (1 for yes, 0 for no): ");
     scanf("%d", &e.is_arrival);
+    getchar(); // Consume the newline character left by scanf
 
     events[event_count++] = e;
 }

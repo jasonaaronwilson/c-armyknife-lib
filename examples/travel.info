@@ -368,7 +368,266 @@ I think for the next round, I will examine the generated code a bit
 more to determine the actual bug which may ultimately change how I
 make the next prompt.
 
+## Round Three
 
+Since it was only 233 lines of code, I just looked at it all and
+honestly didn't realize where the user input was coming from. Since
+the code isn't crazy, looking at "main" very quickly got me to this
+routine where the input it read:
 
+```
+void add_event() {
+    if (event_count >= MAX_EVENTS) {
+        printf("Event list is full!\n");
+        return;
+    }
+    
+    Event e;
+    printf("Enter name: ");
+    scanf("%s", e.name);
+    printf("Enter airline: ");
+    scanf("%s", e.airline);
+    printf("Enter flight number: ");
+    scanf("%s", e.flight_number);
+    printf("Enter date (YYYY-MM-DD): ");
+    scanf("%s", e.date);
+    printf("Enter time (HH:MM): ");
+    scanf("%s", e.time);
+    printf("Is this an arrival (1 for yes, 0 for no): ");
+    scanf("%d", &e.is_arrival);
 
+    events[event_count++] = e;
+}
+```
 
+I can write code in any C like language but I've never really used
+scanf. I think it is time to RTFM and then "gdb".
+
+(Before I do that, we can see that add_event() checks that we have
+less than MAX_EVENTS. Essentially a win though using global variables
+like "events" and "event_count" is not the right move for large
+programs...)
+
+Since I don't know where the actualy Fing manual is, of course I just
+used the same LLM (in this case ChatGPT4o), and it says this about %s:
+
+```
+   %s: Reads a string (terminated by whitespace).
+```
+
+So "Jason Wilson\n" by this definition is not the same as
+"JasonWilson\n" and that's why things probably got wonky.
+
+I could proabably now give a very directed prompt to the LLM -
+something like 
+
+```
+use GNU readline" in the function add_event() instead of scanf()
+```
+
+And we'd probably be off to the races.
+
+Or maybe say use fgets which I'm being told in a new "chat" in a new
+browser window with the same LLM, is "the safest and most commonly
+recommended way to read a line of text from stdin."
+
+Also "scanf("%99[^\n]", buffer)" apparently.
+
+And getline (POSIX) with NULL as the first argument (so I guess it
+uses malloc -- passing in an allocator would be nicer...)
+
+In terms of using an LLM, what I would really like to do right now is
+to *NOT* choose a particular prompt: instead I'd like to SPLIT the
+"converstation" so that I can pursue all three paths at my convenience
+without "polluting" a particular path - maybe over the course of weeks
+or months or years though I see why that's negotiable.
+
+I've not delved deep enough into LLMs to estimate the exact amount of
+data required to be saved to store this split point (which might also
+be called a check-point), we already know that OpenAI et. al love with
+all of their heart saving as much as our input as possible (which the
+very cynical version of me believes is the only reason they actually
+provide access to past chats because that makes saving that same data
+comply with GDPR), and will happily *attempt* to get back to the same
+"save point" (which could take a while and many tokens aka $$$ though
+I don't fully understand the cost model when you aren't using a flat
+fee) but it could require a bit more work, explanation, etc. We know
+this can be done even though it might mean loading up an "ancient"
+model -- perhaps more costly than "replaying" the converstation if the
+converstation is short).
+
+There isn't a single GPU waiting with bated breath for my next query
+so they have already figured this shit out (sadly none of the LocalLLM
+folks seem to be jumping on this). From a UI stand-point, an average
+user would not be able to use this feature but... (if I was an AI, I
+would exploit this shit but someone explain WHY this is dangerous
+instead of denying us this powerful capability). Did I mention getting
+this right could use less power and hence is actually very green?
+
+Anyways, let's just try getline.
+
+```
+Could you please rewrite add_event() to allow a full line instead of
+using scanf?
+```
+
+Really, this is kind or terrible:
+
+```
+void add_event() {
+    if (event_count >= MAX_EVENTS) {
+        printf("Event list is full!\n");
+        return;
+    }
+    
+    Event e;
+    char line[MAX_STR_LEN * 5]; // Assuming max length for all fields combined
+    printf("Enter event details (name airline flight_number date time is_arrival) separated by tabs: \n");
+    fgets(line, sizeof(line), stdin);
+    
+    // Parse the line into the event structure
+    sscanf(line, "%[^\t]\t%[^\t]\t%[^\t]\t%[^\t]\t%[^\t]\t%d",
+           e.name, e.airline, e.flight_number, e.date, e.time, &e.is_arrival);
+
+    events[event_count++] = e;
+}
+```
+
+It's just not wanting to do this:
+
+```
+This may seem like a crazy, crazy idea: but what if you prompted for
+just some of the information, like the flight number and each piece of
+information was collected as a single input line?
+```
+
+The response was:
+
+```
+void add_event() {
+    if (event_count >= MAX_EVENTS) {
+        printf("Event list is full!\n");
+        return;
+    }
+    
+    Event e;
+
+    printf("Enter name: ");
+    fgets(e.name, sizeof(e.name), stdin);
+    e.name[strcspn(e.name, "\n")] = 0; // Remove the trailing newline character
+
+    printf("Enter airline: ");
+    fgets(e.airline, sizeof(e.airline), stdin);
+    e.airline[strcspn(e.airline, "\n")] = 0; // Remove the trailing newline character
+
+    printf("Enter flight number: ");
+    fgets(e.flight_number, sizeof(e.flight_number), stdin);
+    e.flight_number[strcspn(e.flight_number, "\n")] = 0; // Remove the trailing newline character
+
+    printf("Enter date (YYYY-MM-DD): ");
+    fgets(e.date, sizeof(e.date), stdin);
+    e.date[strcspn(e.date, "\n")] = 0; // Remove the trailing newline character
+
+    printf("Enter time (HH:MM): ");
+    fgets(e.time, sizeof(e.time), stdin);
+    e.time[strcspn(e.time, "\n")] = 0; // Remove the trailing newline character
+
+    printf("Is this an arrival (1 for yes, 0 for no): ");
+    scanf("%d", &e.is_arrival);
+    getchar(); // Consume the newline character left by scanf
+
+    events[event_count++] = e;
+}
+```
+
+We have to try this out, right?
+
+```
+jawilson@beelink:~/src/c-armyknife-lib/examples$ rm *.tsv
+jawilson@beelink:~/src/c-armyknife-lib/examples$ build/travel 
+Could not open file: No such file or directory
+1. Add Event
+2. Display Events
+3. Save Events
+4. Generate HTML
+5. Print Two Months Calendar
+6. Exit
+Enter your choice: 1
+Enter name: Enter airline: Doors Stay On The Plane Airlines
+Enter flight number: DSO-9982
+Enter date (YYYY-MM-DD): 2024-06-01
+Enter time (HH:MM): 14:00
+Is this an arrival (1 for yes, 0 for no): 1
+1. Add Event
+2. Display Events
+3. Save Events
+4. Generate HTML
+5. Print Two Months Calendar
+6. Exit
+Enter your choice: 2
+Event 1:
+Name: 
+Airline: Doors Stay On The Plane Airlines
+Flight Number: DSO-9982
+Date: 2024-06-01
+Time: 14:00
+Type: Arrival
+
+1. Add Event
+2. Display Events
+3. Save Events
+4. Generate HTML
+5. Print Two Months Calendar
+6. Exit
+Enter your choice: 6
+jawilson@beelink:~/src/c-armyknife-lib/examples$ build/travel 
+  C-c C-c
+```
+
+What's weird about the above is "Enter name: Enter airline:" appears
+as one line!
+
+Let's just feed that back in and see what happens:
+
+```
+What's weird about the above is "Enter name: Enter airline:" appears
+as one line!
+```
+
+BTW, apparently I am now past my free GPT-4o limit. I actually can't
+say when that occurred...
+
+```
+What's weird about the above is "Enter name: Enter airline:" appears
+as one line!
+```
+
+Response:
+
+```
+void add_event() {
+    if (event_count >= MAX_EVENTS) {
+        printf("Event list is full!\n");
+        return;
+    }
+    
+    Event e;
+
+    printf("Enter name: ");
+    scanf("%99[^\n]%*c", e.name); // Read up to 99 characters until newline, then discard newline
+    printf("Enter airline: ");
+    scanf("%99[^\n]%*c", e.airline);
+    printf("Enter flight number: ");
+    scanf("%99[^\n]%*c", e.flight_number);
+    printf("Enter date (YYYY-MM-DD): ");
+    scanf("%99[^\n]%*c", e.date);
+    printf("Enter time (HH:MM): ");
+    scanf("%99[^\n]%*c", e.time);
+    printf("Is this an arrival (1 for yes, 0 for no): ");
+    scanf("%d%*c", &e.is_arrival);
+
+    events[event_count++] = e;
+}
+```
+
+Obviously I should git checkin before actually trying this out now.

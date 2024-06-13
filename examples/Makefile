@@ -8,7 +8,9 @@ examples:
 	gcc -g -rdynamic -o build/unique-line-generator unique-line-generator.c
 	gcc -g -rdynamic -o build/code-points code-points.c
 	gcc -g -rdynamic -o build/terminal-input terminal-input.c
-	gcc -g -rdynamic -o build/travel travel.c
+	#gcc -g -rdynamic -o build/travel travel.c
+	#gcc -g -rdynamic -o build/travel-gemini travel-gemini.c
+	#gcc -g -rdynamic -o build/travel-mixed travel-mixed.c
 
 manual-smoke-test: examples
 	@echo "================================================================="
@@ -46,4 +48,5 @@ manual-smoke-test: examples
 	build/code-points --help || true
 
 clean:
-	rm -rf build
+	rm -rf build *~
+

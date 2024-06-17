@@ -693,6 +693,10 @@ __attribute__((warn_unused_result)) extern buffer_t*
     buffer_append_bytes(buffer_t* buffer, uint8_t* bytes, uint64_t n_bytes);
 
 __attribute__((warn_unused_result)) extern buffer_t*
+    buffer_append_sub_buffer(buffer_t* buffer, uint64_t start_position,
+                             uint64_t end_position, buffer_t* src_buffer);
+
+__attribute__((warn_unused_result)) extern buffer_t*
     buffer_append_string(buffer_t* buffer, const char* str);
 
 __attribute__((warn_unused_result))
@@ -1591,11 +1595,11 @@ extern uint64_t random_next_uint64_below(random_state_t* state,
  */
 #define test_assert_integer_equal(a, b)                                        \
   do {                                                                         \
-    uint64_t casted_a = (uint64_t)(a);					       \
-    uint64_t casted_b = (uint64_t)(b);					       \
+    uint64_t casted_a = (uint64_t) (a);                                        \
+    uint64_t casted_b = (uint64_t) (b);                                        \
     if (a != b) {                                                              \
       test_fail(                                                               \
-          "An integer comparision failed\n  Expected:\n    ⟦%llu⟧\n  "         \
+          "An integer comparision failed\n  Expected:\n    ⟦%llu⟧\n  "     \
           "But was:\n    ⟦%llu⟧\n",                                            \
           casted_a, casted_b);                                                 \
     }                                                                          \
@@ -1610,13 +1614,13 @@ extern uint64_t random_next_uint64_below(random_state_t* state,
   do {                                                                          \
     if (!b) {                                                                   \
       test_fail(                                                                \
-          "A test string equal assertion failed\n  Expected:\n    ⟦%s⟧\n  "     \
+          "A test string equal assertion failed\n  Expected:\n    ⟦%s⟧\n  " \
           "But was:\n    nullptr\n",                                            \
           a);                                                                   \
     }                                                                           \
     if (!string_equal(a, b)) {                                                  \
       test_fail(                                                                \
-          "A test string equal assertion failed\n  Expected:\n    ⟦%s⟧\n  "     \
+          "A test string equal assertion failed\n  Expected:\n    ⟦%s⟧\n  " \
           "But was:\n    ⟦%s⟧\n",                                               \
           a, b);                                                                \
     }                                                                           \
@@ -2083,6 +2087,10 @@ __attribute__((warn_unused_result)) extern buffer_t*
 
 __attribute__((warn_unused_result)) extern buffer_t*
     buffer_append_bytes(buffer_t* buffer, uint8_t* bytes, uint64_t n_bytes);
+
+__attribute__((warn_unused_result)) extern buffer_t*
+    buffer_append_sub_buffer(buffer_t* buffer, uint64_t start_position,
+                             uint64_t end_position, buffer_t* src_buffer);
 
 __attribute__((warn_unused_result)) extern buffer_t*
     buffer_append_string(buffer_t* buffer, const char* str);
@@ -2567,6 +2575,24 @@ uint64_t buffer_end_of_line(buffer_t* buffer, uint64_t start) {
     position++;
   }
   return position;
+}
+
+/**
+ * @function buffer_append_sub_buffer
+ *
+ * Append all of the bytes between src_buffer[start_position,
+ * end_position) to the dst_buffer. We allow appending parts of a
+ * sub-buffer to itself even if that part of the buffer doesn't exist
+ * yet!
+ */
+__attribute__((warn_unused_result)) extern buffer_t*
+    buffer_append_sub_buffer(buffer_t* buffer, uint64_t start_position,
+                             uint64_t end_position, buffer_t* src_buffer) {
+  for (uint64_t position = start_position; position < end_position;
+       position++) {
+    buffer = buffer_append_byte(buffer, buffer_get(src_buffer, position));
+  }
+  return buffer;
 }
 /**
  * @file flag.c
@@ -5633,11 +5659,11 @@ extern void term_echo_restore(struct termios oldt) {
  */
 #define test_assert_integer_equal(a, b)                                        \
   do {                                                                         \
-    uint64_t casted_a = (uint64_t)(a);					       \
-    uint64_t casted_b = (uint64_t)(b);					       \
+    uint64_t casted_a = (uint64_t) (a);                                        \
+    uint64_t casted_b = (uint64_t) (b);                                        \
     if (a != b) {                                                              \
       test_fail(                                                               \
-          "An integer comparision failed\n  Expected:\n    ⟦%llu⟧\n  "         \
+          "An integer comparision failed\n  Expected:\n    ⟦%llu⟧\n  "     \
           "But was:\n    ⟦%llu⟧\n",                                            \
           casted_a, casted_b);                                                 \
     }                                                                          \
@@ -5652,13 +5678,13 @@ extern void term_echo_restore(struct termios oldt) {
   do {                                                                          \
     if (!b) {                                                                   \
       test_fail(                                                                \
-          "A test string equal assertion failed\n  Expected:\n    ⟦%s⟧\n  "     \
+          "A test string equal assertion failed\n  Expected:\n    ⟦%s⟧\n  " \
           "But was:\n    nullptr\n",                                            \
           a);                                                                   \
     }                                                                           \
     if (!string_equal(a, b)) {                                                  \
       test_fail(                                                                \
-          "A test string equal assertion failed\n  Expected:\n    ⟦%s⟧\n  "     \
+          "A test string equal assertion failed\n  Expected:\n    ⟦%s⟧\n  " \
           "But was:\n    ⟦%s⟧\n",                                               \
           a, b);                                                                \
     }                                                                           \

@@ -2,6 +2,8 @@
 
 * [compress.md](compress.md)
 
+* [arena.md](arena.md)
+
 * [min-max.md](min-max.md)
 
 * [allocate.md](allocate.md)
@@ -51,4 +53,6 @@
 * [buffer.md](buffer.md)
 
 * [fatal-error.md](fatal-error.md)
+
+* [dynamic-value.md](dynamic-value.md)
 

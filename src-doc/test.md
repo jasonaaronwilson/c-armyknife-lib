@@ -11,6 +11,14 @@ Evaluate the condition and fail the test if the result is false.
 
 Assert that two c strings are the same.
  
+## @macro test_assert_uint64_equal
+
+Assert that two values are the same by casting both of them to
+uint64_t and seeing if they are "==".
+
+Except that we lose the "location" information, this would be
+better as an inline function rather than a macro.
+ 
 ## @macro test_fail
 
 Immediately fail a test after printing a message (supplied the same

@@ -104,7 +104,7 @@ __attribute__((warn_unused_result)) extern buffer_t*
  */
 void buffer_write_file(buffer_t* bytes, char* file_name) {
   FILE* file = fopen(file_name, "w");
-  fwrite(&bytes->elements, 1, bytes->length, file);
+  fwrite(bytes->elements, 1, bytes->length, file);
   fclose(file);
 }
 

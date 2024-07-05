@@ -19,7 +19,7 @@
 struct buffer_S {
   uint32_t length;
   uint32_t capacity;
-  uint8_t elements[0];
+  uint8_t* elements;
 };
 
 /**
@@ -116,12 +116,14 @@ line_and_column_t buffer_position_to_line_and_column(buffer_t* buffer,
  * Make an empty byte array with the given initial capacity.
  */
 buffer_t* make_buffer(uint64_t initial_capacity) {
-  if (initial_capacity == 0) {
-    initial_capacity = 1;
+  buffer_t* result = malloc_struct(buffer_t);
+  if (initial_capacity < 16) {
+    initial_capacity = 16;
   }
-  buffer_t* result
-      = (buffer_t*) (malloc_bytes(sizeof(buffer_t) + initial_capacity));
-  result->capacity = initial_capacity;
+  if (initial_capacity > 0) {
+    result->capacity = initial_capacity;
+    result->elements = malloc_bytes(initial_capacity);
+  }
   return result;
 }
 
@@ -244,12 +246,11 @@ __attribute__((warn_unused_result)) buffer_t*
 __attribute__((warn_unused_result)) extern buffer_t*
     buffer_increase_capacity(buffer_t* buffer, uint64_t capacity) {
   if (buffer->capacity < capacity) {
-    buffer_t* result = make_buffer(capacity);
-    for (int i = 0; i < buffer->length; i++) {
-      result = buffer_append_byte(result, buffer_get(buffer, i));
-    }
-    free_bytes(buffer);
-    return result;
+    uint8_t* new_elements = malloc_bytes(capacity);
+    memcpy(new_elements, buffer->elements, buffer->length);
+    free_bytes(buffer->elements);
+    buffer->elements = new_elements;
+    buffer->capacity = capacity;
   }
   return buffer;
 }

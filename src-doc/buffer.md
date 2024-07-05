@@ -54,10 +54,30 @@ say '-', '=', or '*').
 Append all of the bytes from a C string (except the ending NUL
 char).
  
+## @function buffer_append_sub_buffer
+
+Append all of the bytes between src_buffer[start_position,
+end_position) to the dst_buffer. It is illegal to append parts of a
+buffer to itself because of how buffer's are implemented which we
+are considering changing for this and other reasons.
+ 
+## @function buffer_beginning_of_line
+
+Look backwards starting at the start position until we reach a
+position where the previous character is a newline or the beginning
+of the buffer.
+ 
 ## @function buffer_c_substring
 
 Extract a newly allocated string that contains the bytes from start
 to end (appending a zero byte to make sure it's a legal C string).
+ 
+## @function buffer_end_of_line
+
+Look forwards starting at the start position until we reach the
+position of the first newline. If we reach the end of the buffer
+without encountering a newline, simply return the length of the
+buffer.
  
 ## @function buffer_from_string
 

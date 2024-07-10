@@ -427,6 +427,7 @@ extern void check_memory_hashtable_padding();
 #ifndef _ARENA_H_
 #define _ARENA_H_
 
+#include <stddef.h>
 #include <stdint.h>
 
 #ifdef C_ARMYKNIFE_LIB_USE_ARENAS
@@ -443,7 +444,7 @@ extern void check_memory_hashtable_padding();
  * are initialized in such as way that you don't end up with
  * additional segments very often so we will collect enough data to
  * help you figure that out when you need to.
- * 
+ *
  * The general idea is going to be to put a arena_t* into a
  * thread-local variable initialized from main. For now we will just
  * use a simple "global" variable (the_current_arena) instead since
@@ -512,10 +513,8 @@ extern void arena_close();
 
 extern uint8_t* arena_checked_malloc(char* file, int line, uint64_t amount);
 
-extern uint8_t* arena_checked_malloc_copy_of(char* file, 
-					     int line, 
-					     uint8_t* source, 
-					     uint64_t amount);
+extern uint8_t* arena_checked_malloc_copy_of(char* file, int line,
+                                             uint8_t* source, uint64_t amount);
 
 extern void arena_checked_free(char* file, int line, void* pointer);
 
@@ -550,7 +549,8 @@ extern void arena_checked_free(char* file, int line, void* pointer);
  * and the result automatically casted to a pointer to the given type.
  */
 #define malloc_struct(struct_name)                                             \
-  ((struct_name*) (arena_checked_malloc(__FILE__, __LINE__, sizeof(struct_name))))
+  ((struct_name*) (arena_checked_malloc(__FILE__, __LINE__,                    \
+                                        sizeof(struct_name))))
 
 /**
  * @macro malloc_copy_of
@@ -1770,6 +1770,18 @@ extern uint64_t random_next_uint64_below(random_state_t* state,
     }                                                                           \
   } while (0)
 
+static inline void open_arena_for_test(void) {
+#ifdef C_ARMYKNIFE_LIB_USE_ARENAS
+  arena_open(4096 * 256);
+#endif
+}
+
+static inline void close_arena_for_test(void) {
+#ifdef C_ARMYKNIFE_LIB_USE_ARENAS
+  arena_close();
+#endif
+}
+
 #endif /* _TEST_H_ */
 #ifdef C_ARMYKNIFE_LIB_IMPL
 
@@ -2192,6 +2204,7 @@ void checked_free(char* file, int line, void* pointer) {
 #ifndef _ARENA_H_
 #define _ARENA_H_
 
+#include <stddef.h>
 #include <stdint.h>
 
 #ifdef C_ARMYKNIFE_LIB_USE_ARENAS
@@ -2208,7 +2221,7 @@ void checked_free(char* file, int line, void* pointer) {
  * are initialized in such as way that you don't end up with
  * additional segments very often so we will collect enough data to
  * help you figure that out when you need to.
- * 
+ *
  * The general idea is going to be to put a arena_t* into a
  * thread-local variable initialized from main. For now we will just
  * use a simple "global" variable (the_current_arena) instead since
@@ -2277,10 +2290,8 @@ extern void arena_close();
 
 extern uint8_t* arena_checked_malloc(char* file, int line, uint64_t amount);
 
-extern uint8_t* arena_checked_malloc_copy_of(char* file, 
-					     int line, 
-					     uint8_t* source, 
-					     uint64_t amount);
+extern uint8_t* arena_checked_malloc_copy_of(char* file, int line,
+                                             uint8_t* source, uint64_t amount);
 
 extern void arena_checked_free(char* file, int line, void* pointer);
 
@@ -2315,7 +2326,8 @@ extern void arena_checked_free(char* file, int line, void* pointer);
  * and the result automatically casted to a pointer to the given type.
  */
 #define malloc_struct(struct_name)                                             \
-  ((struct_name*) (arena_checked_malloc(__FILE__, __LINE__, sizeof(struct_name))))
+  ((struct_name*) (arena_checked_malloc(__FILE__, __LINE__,                    \
+                                        sizeof(struct_name))))
 
 /**
  * @macro malloc_copy_of
@@ -2349,11 +2361,12 @@ uint64_t number_of_bytes_allocated = 0;
 uint64_t number_of_malloc_calls = 0;
 uint64_t number_of_free_calls = 0;
 
-arena_t* arena_allocate(uint64_t segment_size, uint64_t default_segment_size, arena_t* previous_segments) {
+arena_t* arena_allocate(uint64_t segment_size, uint64_t default_segment_size,
+                        arena_t* previous_segments) {
   if (segment_size < 4096 || default_segment_size < 4096) {
     fatal_error(ERROR_ILLEGAL_STATE);
   }
-  
+
   arena_t* result = (arena_t*) malloc(sizeof(arena_t));
   if (result == NULL) {
     fatal_error(ERROR_ILLEGAL_STATE);
@@ -2362,7 +2375,7 @@ arena_t* arena_allocate(uint64_t segment_size, uint64_t default_segment_size, ar
   result->default_segment_size = default_segment_size;
 
   // Finally allocate the space for the allocations themselves
-  result->start = (uint64_t)(malloc(segment_size));
+  result->start = (uint64_t) (malloc(segment_size));
   memset((uint8_t*) result->start, 0, segment_size);
   result->current = (result->start + 0xf) & ~0xf;
   result->end = (result->start + segment_size) & ~0xf;
@@ -2376,14 +2389,16 @@ arena_t* arena_allocate(uint64_t segment_size, uint64_t default_segment_size, ar
 void arena_deallocate(arena_t* arena) {
   while (arena != NULL) {
     arena_t* next = arena->previous_segments;
-    free((uint8_t*)(arena->start));
+    free((uint8_t*) (arena->start));
     free(arena);
     arena = next;
   }
 }
 
 extern arena_t* arena_open(uint64_t default_segment_size) {
-  return arena_allocate(default_segment_size, default_segment_size, NULL);
+  the_current_arena
+      = arena_allocate(default_segment_size, default_segment_size, NULL);
+  return the_current_arena;
 }
 
 extern void arena_close() {
@@ -2402,6 +2417,10 @@ extern void arena_close() {
  * checked_malloc.
  */
 uint8_t* arena_checked_malloc(char* file, int line, uint64_t amount) {
+  if (the_current_arena == NULL) {
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+
   if (amount == 0 || amount > ARMYKNIFE_MEMORY_ALLOCATION_MAXIMUM_AMOUNT) {
     fatal_error(ERROR_BAD_ALLOCATION_SIZE);
   }
@@ -2430,7 +2449,7 @@ uint8_t* arena_checked_malloc(char* file, int line, uint64_t amount) {
  * bytes from source.
  */
 uint8_t* arena_checked_malloc_copy_of(char* file, int line, uint8_t* source,
-				      uint64_t amount) {
+                                      uint64_t amount) {
   uint8_t* result = arena_checked_malloc(file, line, amount);
   memcpy(result, source, amount);
   return result;
@@ -6134,6 +6153,18 @@ extern void term_echo_restore(struct termios oldt) {
           a, b);                                                                \
     }                                                                           \
   } while (0)
+
+static inline void open_arena_for_test(void) {
+#ifdef C_ARMYKNIFE_LIB_USE_ARENAS
+  arena_open(4096 * 256);
+#endif
+}
+
+static inline void close_arena_for_test(void) {
+#ifdef C_ARMYKNIFE_LIB_USE_ARENAS
+  arena_close();
+#endif
+}
 
 #endif /* _TEST_H_ */
 

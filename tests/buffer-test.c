@@ -241,6 +241,8 @@ void test_buffer_append_sub_buffer(void) {
 }
 
 int main(int argc, char** argv) {
+  open_arena_for_test();
+
   test_buffer_c_substring();
   test_append_byte();
   test_append_string();
@@ -257,5 +259,7 @@ int main(int argc, char** argv) {
   test_buffer_beginning_of_line();
   test_buffer_end_of_line();
   test_buffer_append_sub_buffer();
+
+  close_arena_for_test();
   exit(0);
 }

@@ -41,6 +41,7 @@
 #ifndef _ARENA_H_
 #define _ARENA_H_
 
+#include <stddef.h>
 #include <stdint.h>
 
 #ifdef C_ARMYKNIFE_LIB_USE_ARENAS
@@ -232,7 +233,9 @@ void arena_deallocate(arena_t* arena) {
 }
 
 extern arena_t* arena_open(uint64_t default_segment_size) {
-  return arena_allocate(default_segment_size, default_segment_size, NULL);
+  the_current_arena
+      = arena_allocate(default_segment_size, default_segment_size, NULL);
+  return the_current_arena;
 }
 
 extern void arena_close() {
@@ -251,6 +254,10 @@ extern void arena_close() {
  * checked_malloc.
  */
 uint8_t* arena_checked_malloc(char* file, int line, uint64_t amount) {
+  if (the_current_arena == NULL) {
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+
   if (amount == 0 || amount > ARMYKNIFE_MEMORY_ALLOCATION_MAXIMUM_AMOUNT) {
     fatal_error(ERROR_BAD_ALLOCATION_SIZE);
   }

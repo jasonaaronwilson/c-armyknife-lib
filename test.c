@@ -90,6 +90,18 @@
     }                                                                           \
   } while (0)
 
+static inline void open_arena_for_test(void) {
+#ifdef C_ARMYKNIFE_LIB_USE_ARENAS
+  arena_open(4096 * 256);
+#endif
+}
+
+static inline void close_arena_for_test(void) {
+#ifdef C_ARMYKNIFE_LIB_USE_ARENAS
+  arena_close();
+#endif
+}
+
 #endif /* _TEST_H_ */
 
 /**

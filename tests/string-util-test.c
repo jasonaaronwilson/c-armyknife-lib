@@ -213,6 +213,8 @@ void test_string_truncate() {
 }
 
 int main(int argc, char** argv) {
+  open_arena_for_test();
+
   test_is_null_or_empty();
 
   test_utf8_decode_ascii();
@@ -235,7 +237,9 @@ int main(int argc, char** argv) {
     test_fail("string_substring");
   }
 
+#ifndef C_ARMYKNIFE_LIB_USE_ARENAS
   check_memory_hashtable_padding();
+#endif
 
   test_assert(string_equal("The quick brown fox",
                            string_duplicate("The quick brown fox")));
@@ -244,6 +248,8 @@ int main(int argc, char** argv) {
   test_string_right_pad();
 
   test_string_printf();
+
+  close_arena_for_test();
 
   exit(0);
 }

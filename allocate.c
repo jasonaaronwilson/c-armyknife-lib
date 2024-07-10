@@ -29,6 +29,8 @@
 #ifndef _ALLOCATE_H_
 #define _ALLOCATE_H_
 
+#ifndef C_ARMYKNIFE_LIB_USE_ARENAS
+
 #include <stdint.h>
 
 extern uint8_t* checked_malloc(char* file, int line, uint64_t amount);
@@ -78,9 +80,13 @@ extern void check_memory_hashtable_padding();
 
 // TODO(jawilson): malloc_copy_of_struct
 
+#endif /* C_ARMYKNIFE_LIB_USE_ARENAS */
+
 #endif /* _ALLOCATE_H_ */
 
 // ======================================================================
+
+#ifndef C_ARMYKNIFE_LIB_USE_ARENAS
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -369,3 +375,5 @@ void checked_free(char* file, int line, void* pointer) {
   number_of_free_calls++;
   free(malloc_pointer);
 }
+
+#endif /* C_ARMYKNIFE_LIB_USE_ARENAS */

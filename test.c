@@ -59,8 +59,8 @@
  */
 #define test_assert_integer_equal(a, b)                                        \
   do {                                                                         \
-    uint64_t casted_a = (uint64_t) (a);                                        \
-    uint64_t casted_b = (uint64_t) (b);                                        \
+    unsigned long long casted_a = (unsigned long long) (a);                    \
+    unsigned long long casted_b = (unsigned long long) (b);                    \
     if (a != b) {                                                              \
       test_fail(                                                               \
           "An integer comparision failed\n  Expected:\n    ⟦%llu⟧\n  "     \

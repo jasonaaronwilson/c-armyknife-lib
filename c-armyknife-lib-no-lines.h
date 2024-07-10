@@ -683,46 +683,41 @@ extern char* buffer_to_c_string(buffer_t* buffer);
 
 extern void buffer_clear(buffer_t* buffer);
 
-__attribute__((warn_unused_result)) extern buffer_t*
-    buffer_increase_capacity(buffer_t* buffer, uint64_t capacity);
+extern buffer_t* buffer_increase_capacity(buffer_t* buffer, uint64_t capacity);
 
-__attribute__((warn_unused_result)) extern buffer_t*
-    buffer_append_byte(buffer_t* buffer, uint8_t byte);
+extern buffer_t* buffer_append_byte(buffer_t* buffer, uint8_t byte);
 
-__attribute__((warn_unused_result)) extern buffer_t*
-    buffer_append_bytes(buffer_t* buffer, uint8_t* bytes, uint64_t n_bytes);
+extern buffer_t* buffer_append_bytes(buffer_t* buffer, uint8_t* bytes,
+                                     uint64_t n_bytes);
 
-__attribute__((warn_unused_result)) extern buffer_t*
-    buffer_append_sub_buffer(buffer_t* buffer, uint64_t start_position,
-                             uint64_t end_position, buffer_t* src_buffer);
+extern buffer_t* buffer_append_sub_buffer(buffer_t* buffer,
+                                          uint64_t start_position,
+                                          uint64_t end_position,
+                                          buffer_t* src_buffer);
 
-__attribute__((warn_unused_result)) extern buffer_t*
-    buffer_append_string(buffer_t* buffer, const char* str);
+extern buffer_t* buffer_append_string(buffer_t* buffer, const char* str);
 
-__attribute__((warn_unused_result))
 __attribute__((format(printf, 2, 3))) extern buffer_t*
     buffer_printf(buffer_t* buffer, char* format, ...);
 
-__attribute__((warn_unused_result)) extern buffer_t*
-    buffer_append_repeated_byte(buffer_t* buffer, uint8_t byte, int count);
+extern buffer_t* buffer_append_repeated_byte(buffer_t* buffer, uint8_t byte,
+                                             int count);
 
 utf8_decode_result_t buffer_utf8_decode(buffer_t* buffer, uint64_t position);
 
-__attribute__((warn_unused_result)) extern buffer_t*
-    buffer_append_code_point(buffer_t* buffer, uint32_t code_point);
+extern buffer_t* buffer_append_code_point(buffer_t* buffer,
+                                          uint32_t code_point);
 
 boolean_t buffer_match_string_at(buffer_t* buffer, uint64_t start_position,
                                  char* str);
 
-__attribute__((warn_unused_result)) buffer_t* buffer_from_string(char* string);
+buffer_t* buffer_from_string(char* string);
 
-__attribute__((warn_unused_result)) buffer_t*
-    buffer_adjust_region(buffer_t* buffer, uint64_t original_start,
-                         uint64_t original_end, uint64_t new_width);
+buffer_t* buffer_adjust_region(buffer_t* buffer, uint64_t original_start,
+                               uint64_t original_end, uint64_t new_width);
 
-__attribute__((warn_unused_result)) buffer_t*
-    buffer_replace_all(buffer_t* buffer, char* original_text,
-                       char* replacement_text);
+buffer_t* buffer_replace_all(buffer_t* buffer, char* original_text,
+                             char* replacement_text);
 
 boolean_t buffer_region_contains(buffer_t* buffer, uint64_t start, uint64_t end,
                                  char* text);
@@ -1595,8 +1590,8 @@ extern uint64_t random_next_uint64_below(random_state_t* state,
  */
 #define test_assert_integer_equal(a, b)                                        \
   do {                                                                         \
-    uint64_t casted_a = (uint64_t) (a);                                        \
-    uint64_t casted_b = (uint64_t) (b);                                        \
+    unsigned long long casted_a = (unsigned long long) (a);                    \
+    unsigned long long casted_b = (unsigned long long) (b);                    \
     if (a != b) {                                                              \
       test_fail(                                                               \
           "An integer comparision failed\n  Expected:\n    ⟦%llu⟧\n  "     \
@@ -2079,46 +2074,41 @@ extern char* buffer_to_c_string(buffer_t* buffer);
 
 extern void buffer_clear(buffer_t* buffer);
 
-__attribute__((warn_unused_result)) extern buffer_t*
-    buffer_increase_capacity(buffer_t* buffer, uint64_t capacity);
+extern buffer_t* buffer_increase_capacity(buffer_t* buffer, uint64_t capacity);
 
-__attribute__((warn_unused_result)) extern buffer_t*
-    buffer_append_byte(buffer_t* buffer, uint8_t byte);
+extern buffer_t* buffer_append_byte(buffer_t* buffer, uint8_t byte);
 
-__attribute__((warn_unused_result)) extern buffer_t*
-    buffer_append_bytes(buffer_t* buffer, uint8_t* bytes, uint64_t n_bytes);
+extern buffer_t* buffer_append_bytes(buffer_t* buffer, uint8_t* bytes,
+                                     uint64_t n_bytes);
 
-__attribute__((warn_unused_result)) extern buffer_t*
-    buffer_append_sub_buffer(buffer_t* buffer, uint64_t start_position,
-                             uint64_t end_position, buffer_t* src_buffer);
+extern buffer_t* buffer_append_sub_buffer(buffer_t* buffer,
+                                          uint64_t start_position,
+                                          uint64_t end_position,
+                                          buffer_t* src_buffer);
 
-__attribute__((warn_unused_result)) extern buffer_t*
-    buffer_append_string(buffer_t* buffer, const char* str);
+extern buffer_t* buffer_append_string(buffer_t* buffer, const char* str);
 
-__attribute__((warn_unused_result))
 __attribute__((format(printf, 2, 3))) extern buffer_t*
     buffer_printf(buffer_t* buffer, char* format, ...);
 
-__attribute__((warn_unused_result)) extern buffer_t*
-    buffer_append_repeated_byte(buffer_t* buffer, uint8_t byte, int count);
+extern buffer_t* buffer_append_repeated_byte(buffer_t* buffer, uint8_t byte,
+                                             int count);
 
 utf8_decode_result_t buffer_utf8_decode(buffer_t* buffer, uint64_t position);
 
-__attribute__((warn_unused_result)) extern buffer_t*
-    buffer_append_code_point(buffer_t* buffer, uint32_t code_point);
+extern buffer_t* buffer_append_code_point(buffer_t* buffer,
+                                          uint32_t code_point);
 
 boolean_t buffer_match_string_at(buffer_t* buffer, uint64_t start_position,
                                  char* str);
 
-__attribute__((warn_unused_result)) buffer_t* buffer_from_string(char* string);
+buffer_t* buffer_from_string(char* string);
 
-__attribute__((warn_unused_result)) buffer_t*
-    buffer_adjust_region(buffer_t* buffer, uint64_t original_start,
-                         uint64_t original_end, uint64_t new_width);
+buffer_t* buffer_adjust_region(buffer_t* buffer, uint64_t original_start,
+                               uint64_t original_end, uint64_t new_width);
 
-__attribute__((warn_unused_result)) buffer_t*
-    buffer_replace_all(buffer_t* buffer, char* original_text,
-                       char* replacement_text);
+buffer_t* buffer_replace_all(buffer_t* buffer, char* original_text,
+                             char* replacement_text);
 
 boolean_t buffer_region_contains(buffer_t* buffer, uint64_t start, uint64_t end,
                                  char* text);
@@ -2233,7 +2223,7 @@ char* buffer_to_c_string(buffer_t* buffer) {
  *
  * Append a single byte to the byte array.
  */
-__attribute__((warn_unused_result)) buffer_t*
+buffer_t*
     buffer_append_byte(buffer_t* buffer, uint8_t element) {
   if (buffer->length < buffer->capacity) {
     buffer->elements[buffer->length] = element;
@@ -2249,7 +2239,7 @@ __attribute__((warn_unused_result)) buffer_t*
  *
  * Append multiple bytes to the byte array.
  */
-__attribute__((warn_unused_result)) buffer_t*
+buffer_t*
     buffer_append_bytes(buffer_t* buffer, uint8_t* bytes, uint64_t n_bytes) {
   // Obviously this can be optimized...
   for (int i = 0; i < n_bytes; i++) {
@@ -2264,7 +2254,7 @@ __attribute__((warn_unused_result)) buffer_t*
  * Append all of the bytes from a C string (except the ending NUL
  * char).
  */
-__attribute__((warn_unused_result)) buffer_t*
+buffer_t*
     buffer_append_string(buffer_t* buffer, const char* str) {
   return buffer_append_bytes(buffer, (uint8_t*) str, strlen(str));
 }
@@ -2272,9 +2262,12 @@ __attribute__((warn_unused_result)) buffer_t*
 /**
  * @function buffer_increase_capacity
  *
- * As an optimization, the capacity of a buffer can be increased.
+ * Allow the capacity of a buffer to be increased (or return if the
+ * buffer already exceeds the given capacity). Generally this is not
+ * necessary to properly use a buffer (and occasionally could actually
+ * hurt performance if done incorrectly).
  */
-__attribute__((warn_unused_result)) extern buffer_t*
+extern buffer_t*
     buffer_increase_capacity(buffer_t* buffer, uint64_t capacity) {
   if (buffer->capacity < capacity) {
     uint8_t* new_elements = malloc_bytes(capacity);
@@ -2296,7 +2289,7 @@ __attribute__((warn_unused_result)) extern buffer_t*
  * Format like printf but append the result to the passed in buffer
  * (returning a new buffer in case the buffer exceeded it's capacity).
  */
-__attribute__((warn_unused_result)) __attribute__((format(printf, 2, 3)))
+__attribute__((format(printf, 2, 3)))
 buffer_t*
     buffer_printf(buffer_t* buffer, char* format, ...) {
   char cbuffer[BUFFER_PRINTF_INITIAL_BUFFER_SIZE];
@@ -2336,7 +2329,7 @@ buffer_t*
  * used for things like indentation or horizontal rules (composed from
  * say '-', '=', or '*').
  */
-__attribute__((warn_unused_result)) extern buffer_t*
+extern buffer_t*
     buffer_append_repeated_byte(buffer_t* buffer, uint8_t byte, int count) {
   for (int i = 0; i < count; i++) {
     buffer = buffer_append_byte(buffer, byte);
@@ -2376,7 +2369,7 @@ utf8_decode_result_t buffer_utf8_decode(buffer_t* buffer, uint64_t position) {
  *
  * @see utf8_decode(const uint8_t* utf8_bytes).
  */
-__attribute__((warn_unused_result)) extern buffer_t*
+extern buffer_t*
     buffer_append_code_point(buffer_t* buffer, uint32_t code_point) {
   if (code_point < 0x80) {
     // 1-byte sequence for code points in the range 0-127
@@ -2437,7 +2430,7 @@ boolean_t buffer_match_string_at(buffer_t* buffer, uint64_t start_position,
  * string. The trailing NUL byte C string terminator byte is not
  * included in the buffer.
  */
-__attribute__((warn_unused_result)) buffer_t* buffer_from_string(char* string) {
+buffer_t* buffer_from_string(char* string) {
   buffer_t* result = make_buffer(strlen(string));
   result = buffer_append_string(result, string);
   return result;
@@ -2450,7 +2443,7 @@ __attribute__((warn_unused_result)) buffer_t* buffer_from_string(char* string) {
  * can also be used to efficiently delete a region or simply "open up"
  * space within a buffer.
  */
-__attribute__((warn_unused_result)) buffer_t*
+buffer_t*
     buffer_adjust_region(buffer_t* buffer, uint64_t start, uint64_t end,
                          uint64_t new_width) {
   // TODO(jawilson): more range testing.
@@ -2486,7 +2479,7 @@ __attribute__((warn_unused_result)) buffer_t*
  * Find all occurences of original_text and replace them with
  * replacement_text.
  */
-__attribute__((warn_unused_result)) buffer_t*
+buffer_t*
     buffer_replace_all(buffer_t* buffer, char* original_text,
                        char* replacement_text) {
   int len_original = strlen(original_text);
@@ -2586,7 +2579,7 @@ uint64_t buffer_end_of_line(buffer_t* buffer, uint64_t start) {
  * buffer to itself because of how buffer's are implemented which we
  * are considering changing for this and other reasons.
  */
-__attribute__((warn_unused_result)) extern buffer_t*
+extern buffer_t*
     buffer_append_sub_buffer(buffer_t* buffer, uint64_t start_position,
                              uint64_t end_position, buffer_t* src_buffer) {
   if (buffer == src_buffer) {
@@ -5663,8 +5656,8 @@ extern void term_echo_restore(struct termios oldt) {
  */
 #define test_assert_integer_equal(a, b)                                        \
   do {                                                                         \
-    uint64_t casted_a = (uint64_t) (a);                                        \
-    uint64_t casted_b = (uint64_t) (b);                                        \
+    unsigned long long casted_a = (unsigned long long) (a);                    \
+    unsigned long long casted_b = (unsigned long long) (b);                    \
     if (a != b) {                                                              \
       test_fail(                                                               \
           "An integer comparision failed\n  Expected:\n    ⟦%llu⟧\n  "     \

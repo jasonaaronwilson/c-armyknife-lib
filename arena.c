@@ -134,11 +134,13 @@ typedef struct arena_free_lists_S {
  * and everyone will just write Python or something.
  */
 typedef struct arena_S {
-  // This is essentially a bump pointer. Although I saw at least one
-  // argument for growing arena's backwards, the current
-  // implementation will grow upwards for now. The general allocation
-  // interface doesn't specify the direction of growth but we are
-  // keeping it simple and predictable by growing from lower to 
+  // This is essentially a bump pointer and is always kept 16 byte
+  // aligned (the default alignment of all allocations). Although I
+  // saw at least one argument for growing arena's backwards, the
+  // current implementation will grow upwards for now. The general
+  // allocation interface doesn't specify the direction of growth but
+  // we are keeping it simple and predictable by growing from lower to
+  // higher.
   //
   // When current > end, this means that this arena (segment) and all
   // of it's sibling segments have been closed (deallocated). It's
@@ -204,13 +206,50 @@ typedef struct arena_S {
 
 #include <stdint.h>
 
+extern arena_t* arena_open(arena_free_lists_t* free_lists, 
+			   uint64_t segment_size, 
+			   uint64_t minimum_free_size);
+
 extern uint8_t* arena_checked_malloc(char* file, int line, uint64_t amount);
-extern uint8_t* arena_checked_malloc_copy_of(char* file, int line, uint8_t* source, uint64_t amount);
+
+extern uint8_t* arena_checked_malloc_copy_of(char* file, 
+					     int line, 
+					     uint8_t* source, 
+					     uint64_t amount);
+
 extern void arena_checked_free(char* file, int line, void* pointer);
+
+extern arena_t* arena_open(arena_free_lists_t* free_lists, 
+			   uint64_t segment_size, 
+			   uint64_t minimum_free_size) {
+  // TODO(jawilson): check segment_size and minimum_free_size for
+  // "reasonable" values
+
+  arena_t* result = (arena_t*) malloc(sizeof(arena_t));
+  if (result == NULL) {
+    // TODO(jawilson):     fatal_error
+  }
+  memset(result, 0, sizeof(arena_t));
+  result->segment_size = segment_size;
+  result->minimum_free_size = minimum_free_size;
+
+  // Allocate a free lists if we aren't sharing one already.
+  if (free_lists == NULL) {
+    free_lists = (arena_free_lists_t*) malloc(sizeof(arena_free_lists_t));
+    memset(free_lists, 0, sizeof(arena_free_lists_t));
+  }
+
+  // Finally allocate the space for the allocations themselves
+  result->start = malloc(segment_size);
+  memset(result->start, 0, segment_size);
+  result->current = (result->start + 0xf) & ~0xf;
+  result->end = (result->start + segment_size) & ~0xf;
+
+  return result;
+}
 
 // TODO(jawilson):
 //
-// arena_open();
 // arena_close();
 // get_current_arena(); ?
 // statistics, logging, and debugging ?
@@ -257,7 +296,7 @@ extern void arena_checked_free(char* file, int line, void* pointer);
 
 #endif /* C_ARMYKNIFE_LIB_USE_ARENAS */
 
-#endif /* _ALLOCATE_H_ */
+#endif /* _ARENA_H_ */
 
 // ======================================================================
 
@@ -270,6 +309,10 @@ extern void arena_checked_free(char* file, int line, void* pointer);
 boolean_t is_initialized = false;
 boolean_t should_log_value = false;
 
+// TODO(jawilson): make thread local when we finally support threads
+
+arena_t* the_arena = NULL;
+
 uint64_t number_of_bytes_allocated = 0;
 uint64_t number_of_malloc_calls = 0;
 uint64_t number_of_free_calls = 0;
@@ -278,184 +321,17 @@ static inline boolean_t should_log_memory_allocation() {
   if (is_initialized) {
     return should_log_value;
   }
+
+  // 32MB segments, don't try to reuse memory for anything less than
+  // 1K.
+  the_arena = arena_open(NULL, 1024 * 1024 * 32, 1024);
+
   char* var = getenv("ARMYKNIFE_LOG_MEMORY_ALLOCATION");
   is_initialized = true;
   if (var != NULL && strcmp(var, "true") == 0) {
     should_log_value = true;
   }
   return should_log_value;
-}
-
-/**
- * @debug_compiliation_option ARMYKNIFE_MEMORY_ALLOCATION_START_PADDING
- *
- * The amount of padding to place in front of each allocation. We have
- * several ways to then check that no one overwrites this padding
- * though we won't catch every case.
- *
- * This should be a multiple of 8 or else the expected alignment
- * (which malloc doesn't make that explicit...) will be broken.
- */
-#ifndef ARMYKNIFE_MEMORY_ALLOCATION_START_PADDING
-#define ARMYKNIFE_MEMORY_ALLOCATION_START_PADDING 8
-#endif
-
-/**
- * @debug_compiliation_option ARMYKNIFE_MEMORY_ALLOCATION_END_PADDING
- *
- * The amount of padding to place at the back of each allocation. We
- * have several ways to then check that no one overwrites this padding
- * though we won't catch every case.
- *
- * Unlike start padding, this does not effect alignment and so values
- * as small as 1 make perfect sense though I still recommend 4 or 8
- * bytes especially on 64bit big-endian architectures.
- */
-#ifndef ARMYKNIFE_MEMORY_ALLOCATION_END_PADDING
-#define ARMYKNIFE_MEMORY_ALLOCATION_END_PADDING 8
-#endif
-
-/**
- * @debug_compiliation_option ARMYKNIFE_MEMORY_ALLOCATION_HASHTABLE_SIZE
- *
- * This determine how big the lossy hashtable is. On every allocation
- * or deallocation the *entire* lossy hashtable is scanned to see if
- * the padding bytes have been perturbed which makes it possible to
- * find some memory overwrite errors earlier than waiting for the free
- * call (or potentially even if the memory isn't ever freed).
- *
- * It makes no sense to set this unless either
- * ARMYKNIFE_MEMORY_ALLOCATION_START_PADDING or
- * ARMYKNIFE_MEMORY_ALLOCATION_END_PADDING is non-zero.
- */
-#ifndef ARMYKNIFE_MEMORY_ALLOCATION_HASHTABLE_SIZE
-#define ARMYKNIFE_MEMORY_ALLOCATION_HASHTABLE_SIZE 16
-#endif
-
-/**
- * @debug_compiliation_option ARMYKNIFE_MEMORY_ALLOCATION_MAXIMUM_AMOUNT
- *
- * This is just a fail-safe to catch extremely dumb allocation amounts
- * (at least as of 2023). If you know you will have a fixed size
- * amount of memory, you could set this lower and potentially get a
- * slightly nicer error message.
- */
-#ifndef ARMYKNIFE_MEMORY_ALLOCATION_MAXIMUM_AMOUNT
-#define ARMYKNIFE_MEMORY_ALLOCATION_MAXIMUM_AMOUNT (1L << 48)
-#endif
-
-#define START_PADDING_BYTE (170 & 0xff)
-#define END_PADDING_BYTE ((~START_PADDING_BYTE) & 0xff)
-
-struct memory_hashtable_bucket_S {
-  // malloc will never allocated at address 0 so if this field is
-  // zero, then this spot in the hashtable is occupied.
-  uint64_t malloc_address;
-  uint64_t malloc_size;
-  char* allocation_filename;
-  uint64_t allocation_line_number;
-};
-
-typedef struct memory_hashtable_bucket_S memory_hashtable_bucket_t;
-
-memory_hashtable_bucket_t memory_ht[ARMYKNIFE_MEMORY_ALLOCATION_HASHTABLE_SIZE];
-
-void check_start_padding(uint8_t* address) {
-  for (int i = 0; i < ARMYKNIFE_MEMORY_ALLOCATION_START_PADDING; i++) {
-    if (address[i] != START_PADDING_BYTE) {
-      fatal_error(ERROR_MEMORY_START_PADDING_ERROR);
-    }
-  }
-}
-
-void check_end_padding(uint8_t* address, char* filename, uint64_t line) {
-  for (int i = 0; i < ARMYKNIFE_MEMORY_ALLOCATION_END_PADDING; i++) {
-    if (address[i] != END_PADDING_BYTE) {
-      fprintf(stderr,
-              "FATAL: someone clobbered past an allocation %lu. (allocated "
-              "here: %s:%lu)\n",
-              ((uint64_t) address), filename, line);
-      fatal_error(ERROR_MEMORY_END_PADDING_ERROR);
-    }
-  }
-}
-
-void check_memory_hashtable_padding() {
-  for (int i = 0; i < ARMYKNIFE_MEMORY_ALLOCATION_HASHTABLE_SIZE; i++) {
-    if (memory_ht[i].malloc_address != 0) {
-      uint64_t malloc_start_address = memory_ht[i].malloc_address;
-      uint64_t malloc_size = memory_ht[i].malloc_size;
-      check_start_padding((uint8_t*) malloc_start_address);
-      check_end_padding((uint8_t*) (malloc_start_address
-                                    + ARMYKNIFE_MEMORY_ALLOCATION_START_PADDING
-                                    + malloc_size),
-                        memory_ht[i].allocation_filename,
-                        memory_ht[i].allocation_line_number);
-    }
-  }
-}
-
-// I got this from a blog post by Daniel Lemire (who was actually
-// pushing a different scheme...) A terrible hash function will sink
-// our scheme but anything that isn't terrible just gets us closer to
-// some ideal.
-uint64_t mumurhash64_mix(uint64_t h) {
-  h *= h >> 33;
-  h *= 0xff51afd7ed558ccdL;
-  h *= h >> 33;
-  h *= 0xc4ceb9fe1a85ec53L;
-  h *= h >> 33;
-  return h;
-}
-
-// Start tracking padding for a given allocated address. This includes
-// setting the padding to particular values and of course putting the
-// address into the tracking table.
-void track_padding(char* file, int line, uint8_t* address, uint64_t amount) {
-  // First set the padding to predicatable values
-  for (int i = 0; i < ARMYKNIFE_MEMORY_ALLOCATION_START_PADDING; i++) {
-    address[i] = START_PADDING_BYTE;
-  }
-  uint8_t* end_padding_address
-      = address + amount + ARMYKNIFE_MEMORY_ALLOCATION_START_PADDING;
-  for (int i = 0; i < ARMYKNIFE_MEMORY_ALLOCATION_END_PADDING; i++) {
-    end_padding_address[i] = END_PADDING_BYTE;
-  }
-
-  if (ARMYKNIFE_MEMORY_ALLOCATION_HASHTABLE_SIZE > 0) {
-    // Now replace whatever entry we might already have there. This is
-    // why we have more LRU semantics. We could use another signal to
-    // probalistically delay updating the hashtable when the bucket is
-    // already occupied but I think LRU might work well most of the
-    // time. (Mostly a hunch I will admit.).
-    int bucket = mumurhash64_mix((uint64_t) address)
-                 % ARMYKNIFE_MEMORY_ALLOCATION_HASHTABLE_SIZE;
-    memory_ht[bucket].malloc_address = (uint64_t) address;
-    memory_ht[bucket].malloc_size = amount;
-    memory_ht[bucket].allocation_filename = file;
-    memory_ht[bucket].allocation_line_number = line;
-  }
-}
-
-void untrack_padding(uint8_t* malloc_address) {
-  check_start_padding(malloc_address);
-  // Unfortunately, since we don't know the size of the allocation, we
-  // can't actually check the end padding! When there is enough start
-  // padding (say at least 64bits), then we could potentially store
-  // say 48bits worth of an allocation amount in it.
-  //
-  // On the other hand, we do check the end padding if it is still
-  // tracked in the lossy memory hashtable.
-
-  if (ARMYKNIFE_MEMORY_ALLOCATION_HASHTABLE_SIZE > 0) {
-    // Now finally zero-out the memory hashtable.
-    int bucket = mumurhash64_mix((uint64_t) malloc_address)
-                 % ARMYKNIFE_MEMORY_ALLOCATION_HASHTABLE_SIZE;
-    memory_ht[bucket].malloc_address = 0;
-    memory_ht[bucket].malloc_size = 0;
-    memory_ht[bucket].allocation_filename = 0;
-    memory_ht[bucket].allocation_line_number = 0;
-  }
 }
 
 /**
@@ -481,28 +357,20 @@ uint8_t* arena_checked_malloc(char* file, int line, uint64_t amount) {
             number_of_malloc_calls);
   }
 
-  check_memory_hashtable_padding();
+  amount = (amount + 0xf) & 0xf;
 
-  uint64_t amount_with_padding = ARMYKNIFE_MEMORY_ALLOCATION_START_PADDING
-                                 + amount
-                                 + ARMYKNIFE_MEMORY_ALLOCATION_END_PADDING;
-  uint8_t* result = malloc(amount_with_padding);
-  if (result == NULL) {
-    fatal_error_impl(file, line, ERROR_MEMORY_ALLOCATION);
+  if (the_arena->current + amount < the_arena->end) {
+    uint8_t* result = the_arena->current;
+    the_arena->current += amount;
+    return result;
+  } else {
+    // TODO(jawilson): maybe push the tail of this segment onto the
+    // free list. Allocate a new segment, at least large enough to
+    // hold this allocation though.
+    fatal_error(ERROR_ILLEGAL_STATE);
   }
-
-  if (should_log_memory_allocation()) {
-    fprintf(stderr, "ALLOCATE %s:%d -- %lu -- ptr=%lu\n", file, line, amount,
-            (unsigned long) result);
-  }
-
-  memset(result, 0, amount_with_padding);
-  track_padding(file, line, result, amount);
-
-  number_of_bytes_allocated += amount;
-  number_of_malloc_calls++;
-
-  return result + ARMYKNIFE_MEMORY_ALLOCATION_START_PADDING;
+  // This should be reached.
+  return 0;
 }
 
 /**
@@ -513,7 +381,7 @@ uint8_t* arena_checked_malloc(char* file, int line, uint64_t amount) {
  */
 uint8_t* arena_checked_malloc_copy_of(char* file, int line, uint8_t* source,
 				      uint64_t amount) {
-  uint8_t* result = checked_malloc(file, line, amount);
+  uint8_t* result = arena_checked_malloc(file, line, amount);
   memcpy(result, source, amount);
   return result;
 }
@@ -537,18 +405,9 @@ void arena_checked_free(char* file, int line, void* pointer) {
     fatal_error_impl(file, line, ERROR_MEMORY_FREE_NULL);
   }
 
-  // Check all of the padding we know about
-  check_memory_hashtable_padding();
-
-  uint8_t* malloc_pointer
-      = ((uint8_t*) pointer) - ARMYKNIFE_MEMORY_ALLOCATION_START_PADDING;
-
-  // Check this entries padding (in case it got lossed from the global
-  // hashtable), and also remove it from the hashtable if it was
-  // found.
-  untrack_padding(malloc_pointer);
-  number_of_free_calls++;
-  free(malloc_pointer);
+  // TODO(jawilson): we actually need the size to do this properly
+  // otherwise we need to always prefix an allocation with the
+  // allocation size...
 }
 
 #endif /* C_ARMYKNIFE_LIB_USE_ARENAS */

@@ -2223,8 +2223,7 @@ char* buffer_to_c_string(buffer_t* buffer) {
  *
  * Append a single byte to the byte array.
  */
-buffer_t*
-    buffer_append_byte(buffer_t* buffer, uint8_t element) {
+buffer_t* buffer_append_byte(buffer_t* buffer, uint8_t element) {
   if (buffer->length < buffer->capacity) {
     buffer->elements[buffer->length] = element;
     buffer->length++;
@@ -2239,8 +2238,8 @@ buffer_t*
  *
  * Append multiple bytes to the byte array.
  */
-buffer_t*
-    buffer_append_bytes(buffer_t* buffer, uint8_t* bytes, uint64_t n_bytes) {
+buffer_t* buffer_append_bytes(buffer_t* buffer, uint8_t* bytes,
+                              uint64_t n_bytes) {
   // Obviously this can be optimized...
   for (int i = 0; i < n_bytes; i++) {
     buffer = buffer_append_byte(buffer, bytes[i]);
@@ -2254,8 +2253,7 @@ buffer_t*
  * Append all of the bytes from a C string (except the ending NUL
  * char).
  */
-buffer_t*
-    buffer_append_string(buffer_t* buffer, const char* str) {
+buffer_t* buffer_append_string(buffer_t* buffer, const char* str) {
   return buffer_append_bytes(buffer, (uint8_t*) str, strlen(str));
 }
 
@@ -2267,8 +2265,7 @@ buffer_t*
  * necessary to properly use a buffer (and occasionally could actually
  * hurt performance if done incorrectly).
  */
-extern buffer_t*
-    buffer_increase_capacity(buffer_t* buffer, uint64_t capacity) {
+extern buffer_t* buffer_increase_capacity(buffer_t* buffer, uint64_t capacity) {
   if (buffer->capacity < capacity) {
     uint8_t* new_elements = malloc_bytes(capacity);
     memcpy(new_elements, buffer->elements, buffer->length);
@@ -2289,8 +2286,7 @@ extern buffer_t*
  * Format like printf but append the result to the passed in buffer
  * (returning a new buffer in case the buffer exceeded it's capacity).
  */
-__attribute__((format(printf, 2, 3)))
-buffer_t*
+__attribute__((format(printf, 2, 3))) buffer_t*
     buffer_printf(buffer_t* buffer, char* format, ...) {
   char cbuffer[BUFFER_PRINTF_INITIAL_BUFFER_SIZE];
   int n_bytes = 0;
@@ -2329,8 +2325,8 @@ buffer_t*
  * used for things like indentation or horizontal rules (composed from
  * say '-', '=', or '*').
  */
-extern buffer_t*
-    buffer_append_repeated_byte(buffer_t* buffer, uint8_t byte, int count) {
+extern buffer_t* buffer_append_repeated_byte(buffer_t* buffer, uint8_t byte,
+                                             int count) {
   for (int i = 0; i < count; i++) {
     buffer = buffer_append_byte(buffer, byte);
   }
@@ -2369,8 +2365,8 @@ utf8_decode_result_t buffer_utf8_decode(buffer_t* buffer, uint64_t position) {
  *
  * @see utf8_decode(const uint8_t* utf8_bytes).
  */
-extern buffer_t*
-    buffer_append_code_point(buffer_t* buffer, uint32_t code_point) {
+extern buffer_t* buffer_append_code_point(buffer_t* buffer,
+                                          uint32_t code_point) {
   if (code_point < 0x80) {
     // 1-byte sequence for code points in the range 0-127
     buffer = buffer_append_byte(buffer, code_point);
@@ -2443,9 +2439,8 @@ buffer_t* buffer_from_string(char* string) {
  * can also be used to efficiently delete a region or simply "open up"
  * space within a buffer.
  */
-buffer_t*
-    buffer_adjust_region(buffer_t* buffer, uint64_t start, uint64_t end,
-                         uint64_t new_width) {
+buffer_t* buffer_adjust_region(buffer_t* buffer, uint64_t start, uint64_t end,
+                               uint64_t new_width) {
   // TODO(jawilson): more range testing.
   uint64_t len = buffer->length;
   if (start > end) {
@@ -2479,9 +2474,8 @@ buffer_t*
  * Find all occurences of original_text and replace them with
  * replacement_text.
  */
-buffer_t*
-    buffer_replace_all(buffer_t* buffer, char* original_text,
-                       char* replacement_text) {
+buffer_t* buffer_replace_all(buffer_t* buffer, char* original_text,
+                             char* replacement_text) {
   int len_original = strlen(original_text);
   int len_replacement = strlen(replacement_text);
   if (len_original < buffer->length) {
@@ -2579,9 +2573,10 @@ uint64_t buffer_end_of_line(buffer_t* buffer, uint64_t start) {
  * buffer to itself because of how buffer's are implemented which we
  * are considering changing for this and other reasons.
  */
-extern buffer_t*
-    buffer_append_sub_buffer(buffer_t* buffer, uint64_t start_position,
-                             uint64_t end_position, buffer_t* src_buffer) {
+extern buffer_t* buffer_append_sub_buffer(buffer_t* buffer,
+                                          uint64_t start_position,
+                                          uint64_t end_position,
+                                          buffer_t* src_buffer) {
   if (buffer == src_buffer) {
     fatal_error(ERROR_ILLEGAL_STATE);
   }

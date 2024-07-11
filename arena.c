@@ -1,4 +1,5 @@
-#line 2 "arena.c"
+#ifdef C_ARMYKNIFE_LIB_USE_ARENAS
+#line 3 "arena.c"
 
 /**
  * @file arena.c
@@ -43,8 +44,9 @@
 
 #include <stddef.h>
 #include <stdint.h>
-
-#ifdef C_ARMYKNIFE_LIB_USE_ARENAS
+// #include <stdio.h>
+// #include <stdlib.h>
+// #include <string.h>
 
 #ifndef ARMYKNIFE_MEMORY_ALLOCATION_MAXIMUM_AMOUNT
 #define ARMYKNIFE_MEMORY_ALLOCATION_MAXIMUM_AMOUNT (1L << 48)
@@ -116,8 +118,6 @@ typedef struct arena_S {
   struct arena_S* previous_segments;
 } arena_t;
 
-#include <stdint.h>
-
 // TODO(jawilson): make thread local when we finally support threads
 arena_t* the_current_arena = NULL;
 
@@ -178,17 +178,9 @@ extern void arena_checked_free(char* file, int line, void* pointer);
 #define malloc_copy_of(source, number_of_bytes)                                \
   (arena_checked_malloc_copy_of(__FILE__, __LINE__, source, number_of_bytes))
 
-#endif /* C_ARMYKNIFE_LIB_USE_ARENAS */
-
 #endif /* _ARENA_H_ */
 
 // ======================================================================
-
-#ifdef C_ARMYKNIFE_LIB_USE_ARENAS
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 
 uint64_t number_of_segments_allocated = 0;
 uint64_t number_of_segments_deallocated = 0;
@@ -213,6 +205,9 @@ arena_t* arena_allocate(uint64_t segment_size, uint64_t default_segment_size,
 
   // Finally allocate the space for the allocations themselves
   result->start = (uint64_t) (malloc(segment_size));
+  if (result->start == 0) {
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
   memset((uint8_t*) result->start, 0, segment_size);
   result->current = (result->start + 0xf) & ~0xf;
   result->end = (result->start + segment_size) & ~0xf;
@@ -266,8 +261,11 @@ uint8_t* arena_checked_malloc(char* file, int line, uint64_t amount) {
   amount = (amount + 0xf) & 0xf;
 
   if (the_current_arena->current + amount < the_current_arena->end) {
+    // memset is not required here because we do memset after
+    // alocating the segment (or later will use mmap to get zero
+    // filled pages).
     number_of_bytes_allocated += amount;
-    uint8_t* result = (uint8_t*) the_current_arena->current;
+    uint8_t* result = (uint8_t*) (the_current_arena->current);
     the_current_arena->current += amount;
     return result;
   } else {

@@ -8,7 +8,7 @@ shift
 echo ${C_FILE}
 
 CC_FLAGS="-g -rdynamic"
-# CC_FLAGS="-g -rdynamic -DC_ARMYKNIFE_LIB_USE_ARENAS"
+
 AT_LEAST_ONE_COMPILER=0
 
 # tcc doesn't understand "no return" and gives spurious warnings

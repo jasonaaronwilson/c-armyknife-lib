@@ -5,7 +5,6 @@ install: c-armyknife-lib
 	sudo install -m 755 c-armyknife-lib-no-lines.h /usr/local/include/
 
 SRC_C = allocate.c \
-	arena.c \
 	boolean.c \
 	buffer.c \
 	flag.c \
@@ -37,7 +36,6 @@ ORDERED_H = \
 	fatal-error.h \
 	value.h \
 	allocate.h \
-	arena.h \
 	uint64.h \
 	string-util.h \
 	logger.h \

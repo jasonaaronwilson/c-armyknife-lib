@@ -661,6 +661,7 @@ extern utf8_decode_result_t utf8_decode(const uint8_t* utf8_bytes);
 
 #include <stdint.h>
 #include <string.h>
+#include <ctype.h>
 
 struct buffer_S {
   uint32_t length;
@@ -736,6 +737,10 @@ boolean_t buffer_region_contains(buffer_t* buffer, uint64_t start, uint64_t end,
 uint64_t buffer_beginning_of_line(buffer_t* buffer, uint64_t start);
 
 uint64_t buffer_end_of_line(buffer_t* buffer, uint64_t start);
+
+buffer_t* buffer_to_uppercase(buffer_t* buffer);
+
+buffer_t* buffer_to_lowercase(buffer_t* buffer);
 
 typedef struct line_and_column_S {
   uint64_t line;
@@ -2080,6 +2085,7 @@ typedef bool boolean_t;
 
 #include <stdint.h>
 #include <string.h>
+#include <ctype.h>
 
 struct buffer_S {
   uint32_t length;
@@ -2155,6 +2161,10 @@ boolean_t buffer_region_contains(buffer_t* buffer, uint64_t start, uint64_t end,
 uint64_t buffer_beginning_of_line(buffer_t* buffer, uint64_t start);
 
 uint64_t buffer_end_of_line(buffer_t* buffer, uint64_t start);
+
+buffer_t* buffer_to_uppercase(buffer_t* buffer);
+
+buffer_t* buffer_to_lowercase(buffer_t* buffer);
 
 typedef struct line_and_column_S {
   uint64_t line;
@@ -2622,6 +2632,38 @@ extern buffer_t* buffer_append_sub_buffer(buffer_t* buffer,
   for (uint64_t position = start_position; position < end_position;
        position++) {
     buffer = buffer_append_byte(buffer, buffer_get(src_buffer, position));
+  }
+  return buffer;
+}
+
+/**
+ * @function buffer_to_uppercase
+ *
+ * Call toupper on each character in the buffer.
+ *
+ * TODO(jawilson): make sure this process full unicode even if it can
+ * only uppercase ASCII latin characters.
+ */
+
+buffer_t* buffer_to_uppercase(buffer_t* buffer) {
+  for (uint64_t i = 0; i < buffer->length; i++) {
+    buffer->elements[i] = toupper(buffer->elements[i]);
+  }
+  return buffer;
+}
+
+/**
+ * @function buffer_to_lowercase
+ *
+ * Call tolower on each character in the buffer.
+ *
+ * TODO(jawilson): make sure this process full unicode even if it can
+ * only uppercase ASCII latin characters.
+ */
+
+buffer_t* buffer_to_lowercase(buffer_t* buffer) {
+  for (uint64_t i = 0; i < buffer->length; i++) {
+    buffer->elements[i] = tolower(buffer->elements[i]);
   }
   return buffer;
 }

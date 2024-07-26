@@ -240,6 +240,18 @@ void test_buffer_append_sub_buffer(void) {
                            buffer_to_c_string(buffer1));
 }
 
+void test_buffer_to_uppercase(void) {
+  buffer_t* buffer = buffer_append_string(make_buffer(5), "hello");
+  buffer_to_uppercase(buffer);
+  test_assert_string_equal("HELLO", buffer_to_c_string(buffer));
+}
+
+void test_buffer_to_lowercase(void) {
+  buffer_t* buffer = buffer_append_string(make_buffer(5), "HELLO");
+  buffer_to_lowercase(buffer);
+  test_assert_string_equal("hello", buffer_to_c_string(buffer));
+}
+
 int main(int argc, char** argv) {
   open_arena_for_test();
 
@@ -259,6 +271,8 @@ int main(int argc, char** argv) {
   test_buffer_beginning_of_line();
   test_buffer_end_of_line();
   test_buffer_append_sub_buffer();
+  test_buffer_to_uppercase();
+  test_buffer_to_lowercase();
 
   close_arena_for_test();
   exit(0);

@@ -13,9 +13,9 @@
  * (or inserted into) them reducing large classes of errors.
  */
 
+#include <ctype.h>
 #include <stdint.h>
 #include <string.h>
-#include <ctype.h>
 
 struct buffer_S {
   uint32_t length;

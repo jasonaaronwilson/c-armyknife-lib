@@ -40,6 +40,9 @@ extern void value_array_insert_at(value_array_t* array, uint32_t position,
                                   value_t element);
 extern value_t value_array_delete_at(value_array_t* array, uint32_t position);
 
+#define value_array_get_ptr(array, index_expression, cast_type)                \
+  (cast(cast_type, value_array_get(array, index_expression).ptr))
+
 #endif /* _VALUE_ARRAY_H_ */
 
 /**

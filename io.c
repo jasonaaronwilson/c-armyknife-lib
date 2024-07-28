@@ -65,7 +65,10 @@ __attribute__((warn_unused_result)) buffer_t*
   // This is optional
   {
     struct stat st;
-    stat(file_name, &st);
+    if (stat(file_name, &st) < 0) {
+      log_fatal("file does not exist: %s", file_name);
+      fatal_error(ERROR_ILLEGAL_STATE);
+    }
     capacity = st.st_size;
   }
 

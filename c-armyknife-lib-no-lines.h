@@ -648,9 +648,9 @@ extern utf8_decode_result_t utf8_decode(const uint8_t* utf8_bytes);
  * (or inserted into) them reducing large classes of errors.
  */
 
+#include <ctype.h>
 #include <stdint.h>
 #include <string.h>
-#include <ctype.h>
 
 struct buffer_S {
   uint32_t length;
@@ -770,7 +770,7 @@ extern void value_array_insert_at(value_array_t* array, uint32_t position,
                                   value_t element);
 extern value_t value_array_delete_at(value_array_t* array, uint32_t position);
 
-#define value_array_get_ptr(array, index_expression, cast_type) \
+#define value_array_get_ptr(array, index_expression, cast_type)                \
   (cast(cast_type, value_array_get(array, index_expression).ptr))
 
 #endif /* _VALUE_ARRAY_H_ */
@@ -2059,9 +2059,9 @@ typedef bool boolean_t;
  * (or inserted into) them reducing large classes of errors.
  */
 
+#include <ctype.h>
 #include <stdint.h>
 #include <string.h>
-#include <ctype.h>
 
 struct buffer_S {
   uint32_t length;
@@ -3571,7 +3571,10 @@ __attribute__((warn_unused_result)) buffer_t*
   // This is optional
   {
     struct stat st;
-    stat(file_name, &st);
+    if (stat(file_name, &st) < 0) {
+      log_fatal("file does not exist: %s", file_name);
+      fatal_error(ERROR_ILLEGAL_STATE);
+    }
     capacity = st.st_size;
   }
 
@@ -6304,7 +6307,7 @@ extern void value_array_insert_at(value_array_t* array, uint32_t position,
                                   value_t element);
 extern value_t value_array_delete_at(value_array_t* array, uint32_t position);
 
-#define value_array_get_ptr(array, index_expression, cast_type) \
+#define value_array_get_ptr(array, index_expression, cast_type)                \
   (cast(cast_type, value_array_get(array, index_expression).ptr))
 
 #endif /* _VALUE_ARRAY_H_ */

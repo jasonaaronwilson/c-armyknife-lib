@@ -18,6 +18,9 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <errno.h> 
+#include <sys/select.h>
+#include <sys/time.h>
 
 __attribute__((warn_unused_result)) extern buffer_t*
     buffer_append_file_contents(buffer_t* bytes, char* file_name);
@@ -107,8 +110,22 @@ __attribute__((warn_unused_result)) extern buffer_t*
  */
 void buffer_write_file(buffer_t* bytes, char* file_name) {
   FILE* file = fopen(file_name, "w");
-  fwrite(bytes->elements, 1, bytes->length, file);
-  fclose(file);
+  if (file == NULL) {
+    log_fatal("Failed to open file for writing: %s", file_name);
+    log_fatal("strerror(errno) = %s", strerror(errno));
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+  size_t bytes_written = fwrite(bytes->elements, 1, bytes->length, file);
+  if (bytes_written != bytes->length) {
+    log_fatal("Failed to write %d bytes to %s", bytes->length, file_name);
+    log_fatal("strerror(errno) = %s", strerror(errno));
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+  if (fclose(file) != 0) {
+    log_fatal("Failed to close file: %s", file_name);
+    log_fatal("strerror(errno) = %s", strerror(errno));
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
 }
 
 /**

@@ -100,6 +100,11 @@ void print_fatal_error_banner();
 void print_backtrace();
 void print_error_code_name(int error_code);
 
+char* get_command_line() {
+  buffer_t* buffer = buffer_append_file_contents(make_buffer(1), "/proc/self/cmdline");
+  return "";
+}
+
 char* get_program_path() {
   char buf[4096];
   int n = readlink("/proc/self/exe", buf, sizeof(buf));
@@ -122,6 +127,7 @@ void _Noreturn fatal_error_impl(char* file, int line, int error_code) {
       fprintf(stderr,
               "Sleeping for %lu seconds so you can attach a debugger.\n",
               sleep_time.u64);
+      fprintf(stderr, "  gdb -tui %s %d\n", get_program_path(), getpid());
       fprintf(stderr, "  gdb -tui %s %d\n", get_program_path(), getpid());
       sleep(sleep_time.u64);
     }

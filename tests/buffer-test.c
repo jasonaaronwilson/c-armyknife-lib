@@ -252,6 +252,13 @@ void test_buffer_to_lowercase(void) {
   test_assert_string_equal("hello", buffer_to_c_string(buffer));
 }
 
+void test_buffer_replace_matching_byte(void) {
+  buffer_t* buffer = buffer_append_string(make_buffer(5), "HELLO");
+  buffer = buffer_replace_matching_byte(buffer,  'L', '_');
+  test_assert_string_equal("HE__O", buffer_to_c_string(buffer));
+}
+
+
 int main(int argc, char** argv) {
   open_arena_for_test();
 
@@ -273,6 +280,7 @@ int main(int argc, char** argv) {
   test_buffer_append_sub_buffer();
   test_buffer_to_uppercase();
   test_buffer_to_lowercase();
+  test_buffer_replace_matching_byte();
 
   close_arena_for_test();
   exit(0);

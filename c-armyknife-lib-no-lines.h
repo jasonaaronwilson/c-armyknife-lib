@@ -720,6 +720,8 @@ buffer_t* buffer_adjust_region(buffer_t* buffer, uint64_t original_start,
 buffer_t* buffer_replace_all(buffer_t* buffer, char* original_text,
                              char* replacement_text);
 
+buffer_t* buffer_replace_matching_byte(buffer_t* buffer, uint8_t original, uint8_t replacement);
+
 boolean_t buffer_region_contains(buffer_t* buffer, uint64_t start, uint64_t end,
                                  char* text);
 
@@ -2134,6 +2136,8 @@ buffer_t* buffer_adjust_region(buffer_t* buffer, uint64_t original_start,
 buffer_t* buffer_replace_all(buffer_t* buffer, char* original_text,
                              char* replacement_text);
 
+buffer_t* buffer_replace_matching_byte(buffer_t* buffer, uint8_t original, uint8_t replacement);
+
 boolean_t buffer_region_contains(buffer_t* buffer, uint64_t start, uint64_t end,
                                  char* text);
 
@@ -2557,6 +2561,23 @@ boolean_t buffer_region_contains(buffer_t* buffer, uint64_t start, uint64_t end,
     }
   }
   return false;
+}
+
+/**
+ * @function buffer_replace_matching_byte
+ *
+ * Replace all occurences of the original byte value with the
+ * replacement value. This is useful for example to turn NUL bytes
+ * into something more useful like a space character so the buffer can
+ * be turned into a C string without getting truncated.
+ */
+buffer_t* buffer_replace_matching_byte(buffer_t* buffer, uint8_t original, uint8_t replacement) {
+  for (int i = 0; i < buffer->length; i++) {
+    if (buffer->elements[i] == original) {
+      buffer->elements[i] = replacement;
+    }
+  }
+  return buffer;
 }
 
 /**
@@ -3413,6 +3434,11 @@ void print_fatal_error_banner();
 void print_backtrace();
 void print_error_code_name(int error_code);
 
+char* get_command_line() {
+  buffer_t* buffer = buffer_append_file_contents(make_buffer(1), "/proc/self/cmdline");
+  return "";
+}
+
 char* get_program_path() {
   char buf[4096];
   int n = readlink("/proc/self/exe", buf, sizeof(buf));
@@ -3435,6 +3461,7 @@ void _Noreturn fatal_error_impl(char* file, int line, int error_code) {
       fprintf(stderr,
               "Sleeping for %lu seconds so you can attach a debugger.\n",
               sleep_time.u64);
+      fprintf(stderr, "  gdb -tui %s %d\n", get_program_path(), getpid());
       fprintf(stderr, "  gdb -tui %s %d\n", get_program_path(), getpid());
       sleep(sleep_time.u64);
     }

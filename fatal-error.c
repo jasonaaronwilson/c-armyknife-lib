@@ -102,7 +102,8 @@ void print_error_code_name(int error_code);
 
 char* get_command_line() {
   buffer_t* buffer = buffer_append_file_contents(make_buffer(1), "/proc/self/cmdline");
-  return "";
+  buffer_replace_matching_byte(buffer, 0, ' ');
+  return buffer_to_c_string(buffer);
 }
 
 char* get_program_path() {
@@ -120,6 +121,7 @@ void _Noreturn fatal_error_impl(char* file, int line, int error_code) {
   print_backtrace();
   fprintf(stderr, "%s:%d: FATAL ERROR %d", file, line, error_code);
   print_error_code_name(error_code);
+  fprintf(stderr, "\nCommand line: %s\n\n", get_command_line());
   char* sleep_str = getenv("ARMYKNIFE_FATAL_ERROR_SLEEP_SECONDS");
   if (sleep_str != NULL) {
     value_result_t sleep_time = string_parse_uint64(sleep_str);
@@ -127,7 +129,6 @@ void _Noreturn fatal_error_impl(char* file, int line, int error_code) {
       fprintf(stderr,
               "Sleeping for %lu seconds so you can attach a debugger.\n",
               sleep_time.u64);
-      fprintf(stderr, "  gdb -tui %s %d\n", get_program_path(), getpid());
       fprintf(stderr, "  gdb -tui %s %d\n", get_program_path(), getpid());
       sleep(sleep_time.u64);
     }

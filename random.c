@@ -30,6 +30,8 @@ extern uint64_t random_next_uint64_below(random_state_t* state,
 
 #endif /* _RANDOM_H_ */
 
+#include <time.h>
+
 /**
  * @function random_state_for_test
  *
@@ -38,6 +40,24 @@ extern uint64_t random_next_uint64_below(random_state_t* state,
 random_state_t random_state_for_test(void) {
   return (random_state_t){.a = 0x1E1D43C2CA44B1F5, .b = 0x4FDD267452CEDBAC};
 }
+
+/**
+ * @function random_state
+ *
+ * Return a shared random state. If the random state has not been
+ * initialized yet, it is initialized based off the timestamp.
+ */
+random_state_t* random_state(void) {
+  static random_state_t shared_random_state = {0};
+
+  if (shared_random_state.a == 0) {
+    shared_random_state.a = 0x1E1D43C2CA44B1F5 ^ ((uint64_t) time(NULL));
+    shared_random_state.b = 0x4FDD267452CEDBAC ^ ((uint64_t) time(NULL));
+  }
+  
+  return &shared_random_state;
+}
+
 
 static inline uint64_t rotl(uint64_t x, int k) {
   return (x << k) | (x >> (64 - k));

@@ -3465,7 +3465,8 @@ void print_error_code_name(int error_code);
 
 char* get_command_line() {
   buffer_t* buffer = buffer_append_file_contents(make_buffer(1), "/proc/self/cmdline");
-  return "";
+  buffer_replace_matching_byte(buffer, 0, ' ');
+  return buffer_to_c_string(buffer);
 }
 
 char* get_program_path() {
@@ -3483,6 +3484,7 @@ void _Noreturn fatal_error_impl(char* file, int line, int error_code) {
   print_backtrace();
   fprintf(stderr, "%s:%d: FATAL ERROR %d", file, line, error_code);
   print_error_code_name(error_code);
+  fprintf(stderr, "\nCommand line: %s\n\n", get_command_line());
   char* sleep_str = getenv("ARMYKNIFE_FATAL_ERROR_SLEEP_SECONDS");
   if (sleep_str != NULL) {
     value_result_t sleep_time = string_parse_uint64(sleep_str);
@@ -3490,7 +3492,6 @@ void _Noreturn fatal_error_impl(char* file, int line, int error_code) {
       fprintf(stderr,
               "Sleeping for %lu seconds so you can attach a debugger.\n",
               sleep_time.u64);
-      fprintf(stderr, "  gdb -tui %s %d\n", get_program_path(), getpid());
       fprintf(stderr, "  gdb -tui %s %d\n", get_program_path(), getpid());
       sleep(sleep_time.u64);
     }
@@ -4457,6 +4458,8 @@ extern uint64_t random_next_uint64_below(random_state_t* state,
 
 #endif /* _RANDOM_H_ */
 
+#include <time.h>
+
 /**
  * @function random_state_for_test
  *
@@ -4465,6 +4468,24 @@ extern uint64_t random_next_uint64_below(random_state_t* state,
 random_state_t random_state_for_test(void) {
   return (random_state_t){.a = 0x1E1D43C2CA44B1F5, .b = 0x4FDD267452CEDBAC};
 }
+
+/**
+ * @function random_state
+ *
+ * Return a shared random state. If the random state has not been
+ * initialized yet, it is initialized based off the timestamp.
+ */
+random_state_t* random_state(void) {
+  static random_state_t shared_random_state = {0};
+
+  if (shared_random_state.a == 0) {
+    shared_random_state.a = 0x1E1D43C2CA44B1F5 ^ ((uint64_t) time(NULL));
+    shared_random_state.b = 0x4FDD267452CEDBAC ^ ((uint64_t) time(NULL));
+  }
+  
+  return &shared_random_state;
+}
+
 
 static inline uint64_t rotl(uint64_t x, int k) {
   return (x << k) | (x >> (64 - k));

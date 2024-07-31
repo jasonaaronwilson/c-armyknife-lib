@@ -91,7 +91,10 @@ Get a single byte from a byte array.
  
 ## @function buffer_increase_capacity
 
-As an optimization, the capacity of a buffer can be increased.
+Allow the capacity of a buffer to be increased (or return if the
+buffer already exceeds the given capacity). Generally this is not
+necessary to properly use a buffer (and occasionally could actually
+hurt performance if done incorrectly).
  
 ## @function buffer_length
 
@@ -119,10 +122,31 @@ Determine if a buffer contains the specified text within a region.
 Find all occurences of original_text and replace them with
 replacement_text.
  
+## @function buffer_replace_matching_byte
+
+Replace all occurences of the original byte value with the
+replacement value. This is useful for example to turn NUL bytes
+into something more useful like a space character so the buffer can
+be turned into a C string without getting truncated.
+ 
 ## @function buffer_to_c_string
 
 Extract a newly allocated string that contain all of the bytes in the byte
 buffer as a NUL (zero byte) terminated C string.
+ 
+## @function buffer_to_lowercase
+
+Call tolower on each character in the buffer.
+
+TODO(jawilson): make sure this process full unicode even if it can
+only uppercase ASCII latin characters.
+ 
+## @function buffer_to_uppercase
+
+Call toupper on each character in the buffer.
+
+TODO(jawilson): make sure this process full unicode even if it can
+only uppercase ASCII latin characters.
  
 ## @function buffer_utf8_decode
 

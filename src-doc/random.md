@@ -20,6 +20,11 @@ Return a random `uint64_t` that is below some maximum. As much as
 the underlying random number generartor allows, this should be
 uniform.
  
+## @function random_state
+
+Return a shared random state. If the random state has not been
+initialized yet, it is initialized based off the timestamp.
+ 
 ## @function random_state_for_test
 
 Return a consistent initial random state for tests.

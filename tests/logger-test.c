@@ -10,7 +10,7 @@
 void test_logger() {
   // You probably wouldn't use this form yourself but the macros are a
   // bit tricky to get right...
-  logger_impl(__FILE__, __LINE__, LOGGER_TRACE, "Hello World!");
+  logger_impl(__FILE__, __LINE__, "FOO", LOGGER_TRACE, "Hello World!");
 
   // clang-format off
   //

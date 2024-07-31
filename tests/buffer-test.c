@@ -254,7 +254,7 @@ void test_buffer_to_lowercase(void) {
 
 void test_buffer_replace_matching_byte(void) {
   buffer_t* buffer = buffer_append_string(make_buffer(5), "HELLO");
-  buffer = buffer_replace_matching_byte(buffer,  'L', '_');
+  buffer = buffer_replace_matching_byte(buffer, 'L', '_');
   test_assert_string_equal("HE__O", buffer_to_c_string(buffer));
 }
 

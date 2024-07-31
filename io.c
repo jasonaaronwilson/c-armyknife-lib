@@ -13,14 +13,14 @@
 #ifndef _IO_H_
 #define _IO_H_
 
+#include <errno.h>
 #include <fcntl.h>
 #include <limits.h>
 #include <stdint.h>
 #include <stdio.h>
-#include <unistd.h>
-#include <errno.h> 
 #include <sys/select.h>
 #include <sys/time.h>
+#include <unistd.h>
 
 __attribute__((warn_unused_result)) extern buffer_t*
     buffer_append_file_contents(buffer_t* bytes, char* file_name);

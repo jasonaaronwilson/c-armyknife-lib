@@ -101,7 +101,8 @@ void print_backtrace();
 void print_error_code_name(int error_code);
 
 char* get_command_line() {
-  buffer_t* buffer = buffer_append_file_contents(make_buffer(1), "/proc/self/cmdline");
+  buffer_t* buffer
+      = buffer_append_file_contents(make_buffer(1), "/proc/self/cmdline");
   buffer_replace_matching_byte(buffer, 0, ' ');
   return buffer_to_c_string(buffer);
 }

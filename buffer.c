@@ -85,7 +85,8 @@ buffer_t* buffer_adjust_region(buffer_t* buffer, uint64_t original_start,
 buffer_t* buffer_replace_all(buffer_t* buffer, char* original_text,
                              char* replacement_text);
 
-buffer_t* buffer_replace_matching_byte(buffer_t* buffer, uint8_t original, uint8_t replacement);
+buffer_t* buffer_replace_matching_byte(buffer_t* buffer, uint8_t original,
+                                       uint8_t replacement);
 
 boolean_t buffer_region_contains(buffer_t* buffer, uint64_t start, uint64_t end,
                                  char* text);
@@ -520,7 +521,8 @@ boolean_t buffer_region_contains(buffer_t* buffer, uint64_t start, uint64_t end,
  * into something more useful like a space character so the buffer can
  * be turned into a C string without getting truncated.
  */
-buffer_t* buffer_replace_matching_byte(buffer_t* buffer, uint8_t original, uint8_t replacement) {
+buffer_t* buffer_replace_matching_byte(buffer_t* buffer, uint8_t original,
+                                       uint8_t replacement) {
   for (int i = 0; i < buffer->length; i++) {
     if (buffer->elements[i] == original) {
       buffer->elements[i] = replacement;

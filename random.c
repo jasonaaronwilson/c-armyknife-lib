@@ -54,7 +54,7 @@ random_state_t* random_state(void) {
     shared_random_state.a = 0x1E1D43C2CA44B1F5 ^ ((uint64_t) time(NULL));
     shared_random_state.b = 0x4FDD267452CEDBAC ^ ((uint64_t) time(NULL));
   }
-  
+
   return &shared_random_state;
 }
 

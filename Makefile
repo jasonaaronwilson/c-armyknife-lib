@@ -66,6 +66,11 @@ c-armyknife-lib: ${SRC_C} generate-header-files
 	echo '#endif /* C_ARMYKNIFE_LIB_IMPL */' >>c-armyknife-lib.h
 	cat c-armyknife-lib.h | grep -v "#line" >c-armyknife-lib-no-lines.h
 
+# This doesn't work yet but this is the goal 
+c-armyknife-lib-omni-c:
+	../omni-c/src/omni-c generate-library --output-file=c-armyknife-lib-omni-c.c ${SRC_C}
+	../omni-c/src/omni-c generate-header-file --output-file=c-armyknife-lib-omni-c.h ${SRC_C}
+
 format:
 	clang-format -i ${SRC_C} ${SRC_H} tests/*.c examples/*.c
 

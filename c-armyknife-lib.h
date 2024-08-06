@@ -500,7 +500,8 @@ extern logger_state_t global_logger_state;
 extern void logger_init(void);
 
 __attribute__((format(printf, 5, 6))) extern void
-logger_impl(char* file, int line_number, const char* function, int level, char* format, ...);
+    logger_impl(char* file, int line_number, const char* function, int level,
+                char* format, ...);
 
 /**
  * @macro log_none
@@ -530,7 +531,8 @@ logger_impl(char* file, int line_number, const char* function, int level, char* 
 #define log_off(format, ...)                                                   \
   do {                                                                         \
     if (0) {                                                                   \
-      logger_impl(__FILE__, __LINE__, __FUNCTION__, LOGGER_TRACE, format, ##__VA_ARGS__); \
+      logger_impl(__FILE__, __LINE__, __FUNCTION__, LOGGER_TRACE, format,      \
+                  ##__VA_ARGS__);                                              \
     }                                                                          \
   } while (0)
 
@@ -542,7 +544,8 @@ logger_impl(char* file, int line_number, const char* function, int level, char* 
 #define log_trace(format, ...)                                                 \
   do {                                                                         \
     if (global_logger_state.level <= LOGGER_TRACE) {                           \
-      logger_impl(__FILE__, __LINE__, __FUNCTION__, LOGGER_TRACE, format, ##__VA_ARGS__); \
+      logger_impl(__FILE__, __LINE__, __FUNCTION__, LOGGER_TRACE, format,      \
+                  ##__VA_ARGS__);                                              \
     }                                                                          \
   } while (0)
 
@@ -554,7 +557,8 @@ logger_impl(char* file, int line_number, const char* function, int level, char* 
 #define log_debug(format, ...)                                                 \
   do {                                                                         \
     if (global_logger_state.level <= LOGGER_DEBUG) {                           \
-      logger_impl(__FILE__, __LINE__, __FUNCTION__, LOGGER_DEBUG, format, ##__VA_ARGS__); \
+      logger_impl(__FILE__, __LINE__, __FUNCTION__, LOGGER_DEBUG, format,      \
+                  ##__VA_ARGS__);                                              \
     }                                                                          \
   } while (0)
 
@@ -566,7 +570,8 @@ logger_impl(char* file, int line_number, const char* function, int level, char* 
 #define log_info(format, ...)                                                  \
   do {                                                                         \
     if (global_logger_state.level <= LOGGER_INFO) {                            \
-      logger_impl(__FILE__, __LINE__, __FUNCTION__, LOGGER_INFO, format, ##__VA_ARGS__);	\
+      logger_impl(__FILE__, __LINE__, __FUNCTION__, LOGGER_INFO, format,       \
+                  ##__VA_ARGS__);                                              \
     }                                                                          \
   } while (0)
 
@@ -585,7 +590,8 @@ static inline boolean_t should_log_info() {
 #define log_warn(format, ...)                                                  \
   do {                                                                         \
     if (global_logger_state.level <= LOGGER_WARN) {                            \
-      logger_impl(__FILE__, __LINE__, __FUNCTION__, LOGGER_WARN, format, ##__VA_ARGS__);	\
+      logger_impl(__FILE__, __LINE__, __FUNCTION__, LOGGER_WARN, format,       \
+                  ##__VA_ARGS__);                                              \
     }                                                                          \
   } while (0)
 
@@ -600,7 +606,8 @@ static inline boolean_t should_log_info() {
 #define log_fatal(format, ...)                                                 \
   do {                                                                         \
     if (global_logger_state.level <= LOGGER_FATAL) {                           \
-      logger_impl(__FILE__, __LINE__, __FUNCTION__, LOGGER_FATAL, format, ##__VA_ARGS__);    \
+      logger_impl(__FILE__, __LINE__, __FUNCTION__, LOGGER_FATAL, format,      \
+                  ##__VA_ARGS__);                                              \
     }                                                                          \
   } while (0)
 
@@ -614,7 +621,8 @@ static inline boolean_t should_log_info() {
  */
 #define log_test(format, ...)                                                  \
   do {                                                                         \
-    logger_impl(__FILE__, __LINE__, __FUNCTION__, LOGGER_TEST, format, ##__VA_ARGS__); \
+    logger_impl(__FILE__, __LINE__, __FUNCTION__, LOGGER_TEST, format,         \
+                ##__VA_ARGS__);                                                \
   } while (0)
 
 #endif /* _LOGGER_H_ */
@@ -702,6 +710,8 @@ extern buffer_t* buffer_append_byte(buffer_t* buffer, uint8_t byte);
 extern buffer_t* buffer_append_bytes(buffer_t* buffer, uint8_t* bytes,
                                      uint64_t n_bytes);
 
+extern buffer_t* buffer_append_buffer(buffer_t* buffer, buffer_t* src_buffer);
+
 extern buffer_t* buffer_append_sub_buffer(buffer_t* buffer,
                                           uint64_t start_position,
                                           uint64_t end_position,
@@ -731,7 +741,8 @@ buffer_t* buffer_adjust_region(buffer_t* buffer, uint64_t original_start,
 buffer_t* buffer_replace_all(buffer_t* buffer, char* original_text,
                              char* replacement_text);
 
-buffer_t* buffer_replace_matching_byte(buffer_t* buffer, uint8_t original, uint8_t replacement);
+buffer_t* buffer_replace_matching_byte(buffer_t* buffer, uint8_t original,
+                                       uint8_t replacement);
 
 boolean_t buffer_region_contains(buffer_t* buffer, uint64_t start, uint64_t end,
                                  char* text);
@@ -1301,14 +1312,14 @@ extern void flag_print_help(FILE* out, char* error);
 #ifndef _IO_H_
 #define _IO_H_
 
+#include <errno.h>
 #include <fcntl.h>
 #include <limits.h>
 #include <stdint.h>
 #include <stdio.h>
-#include <unistd.h>
-#include <errno.h> 
 #include <sys/select.h>
 #include <sys/time.h>
+#include <unistd.h>
 
 __attribute__((warn_unused_result)) extern buffer_t*
     buffer_append_file_contents(buffer_t* bytes, char* file_name);
@@ -2134,6 +2145,8 @@ extern buffer_t* buffer_append_byte(buffer_t* buffer, uint8_t byte);
 extern buffer_t* buffer_append_bytes(buffer_t* buffer, uint8_t* bytes,
                                      uint64_t n_bytes);
 
+extern buffer_t* buffer_append_buffer(buffer_t* buffer, buffer_t* src_buffer);
+
 extern buffer_t* buffer_append_sub_buffer(buffer_t* buffer,
                                           uint64_t start_position,
                                           uint64_t end_position,
@@ -2163,7 +2176,8 @@ buffer_t* buffer_adjust_region(buffer_t* buffer, uint64_t original_start,
 buffer_t* buffer_replace_all(buffer_t* buffer, char* original_text,
                              char* replacement_text);
 
-buffer_t* buffer_replace_matching_byte(buffer_t* buffer, uint8_t original, uint8_t replacement);
+buffer_t* buffer_replace_matching_byte(buffer_t* buffer, uint8_t original,
+                                       uint8_t replacement);
 
 boolean_t buffer_region_contains(buffer_t* buffer, uint64_t start, uint64_t end,
                                  char* text);
@@ -2598,7 +2612,8 @@ boolean_t buffer_region_contains(buffer_t* buffer, uint64_t start, uint64_t end,
  * into something more useful like a space character so the buffer can
  * be turned into a C string without getting truncated.
  */
-buffer_t* buffer_replace_matching_byte(buffer_t* buffer, uint8_t original, uint8_t replacement) {
+buffer_t* buffer_replace_matching_byte(buffer_t* buffer, uint8_t original,
+                                       uint8_t replacement) {
   for (int i = 0; i < buffer->length; i++) {
     if (buffer->elements[i] == original) {
       buffer->elements[i] = replacement;
@@ -2639,6 +2654,17 @@ uint64_t buffer_end_of_line(buffer_t* buffer, uint64_t start) {
     position++;
   }
   return position;
+}
+
+/**
+ * @function buffer_append_sub_buffer
+ *
+ * Append all of the bytes of the src_buffer to a buffer.
+ *
+ * It is currently illegal to append parts of a buffer to itself.
+ */
+extern buffer_t* buffer_append_buffer(buffer_t* buffer, buffer_t* src_buffer) {
+  return buffer_append_sub_buffer(buffer, 0, src_buffer->length, src_buffer);
 }
 
 /**
@@ -3464,7 +3490,8 @@ void print_backtrace();
 void print_error_code_name(int error_code);
 
 char* get_command_line() {
-  buffer_t* buffer = buffer_append_file_contents(make_buffer(1), "/proc/self/cmdline");
+  buffer_t* buffer
+      = buffer_append_file_contents(make_buffer(1), "/proc/self/cmdline");
   buffer_replace_matching_byte(buffer, 0, ' ');
   return buffer_to_c_string(buffer);
 }
@@ -3580,14 +3607,14 @@ void print_error_code_name(int error_code) {
 #ifndef _IO_H_
 #define _IO_H_
 
+#include <errno.h>
 #include <fcntl.h>
 #include <limits.h>
 #include <stdint.h>
 #include <stdio.h>
-#include <unistd.h>
-#include <errno.h> 
 #include <sys/select.h>
 #include <sys/time.h>
+#include <unistd.h>
 
 __attribute__((warn_unused_result)) extern buffer_t*
     buffer_append_file_contents(buffer_t* bytes, char* file_name);
@@ -4147,7 +4174,8 @@ extern logger_state_t global_logger_state;
 extern void logger_init(void);
 
 __attribute__((format(printf, 5, 6))) extern void
-logger_impl(char* file, int line_number, const char* function, int level, char* format, ...);
+    logger_impl(char* file, int line_number, const char* function, int level,
+                char* format, ...);
 
 /**
  * @macro log_none
@@ -4177,7 +4205,8 @@ logger_impl(char* file, int line_number, const char* function, int level, char* 
 #define log_off(format, ...)                                                   \
   do {                                                                         \
     if (0) {                                                                   \
-      logger_impl(__FILE__, __LINE__, __FUNCTION__, LOGGER_TRACE, format, ##__VA_ARGS__); \
+      logger_impl(__FILE__, __LINE__, __FUNCTION__, LOGGER_TRACE, format,      \
+                  ##__VA_ARGS__);                                              \
     }                                                                          \
   } while (0)
 
@@ -4189,7 +4218,8 @@ logger_impl(char* file, int line_number, const char* function, int level, char* 
 #define log_trace(format, ...)                                                 \
   do {                                                                         \
     if (global_logger_state.level <= LOGGER_TRACE) {                           \
-      logger_impl(__FILE__, __LINE__, __FUNCTION__, LOGGER_TRACE, format, ##__VA_ARGS__); \
+      logger_impl(__FILE__, __LINE__, __FUNCTION__, LOGGER_TRACE, format,      \
+                  ##__VA_ARGS__);                                              \
     }                                                                          \
   } while (0)
 
@@ -4201,7 +4231,8 @@ logger_impl(char* file, int line_number, const char* function, int level, char* 
 #define log_debug(format, ...)                                                 \
   do {                                                                         \
     if (global_logger_state.level <= LOGGER_DEBUG) {                           \
-      logger_impl(__FILE__, __LINE__, __FUNCTION__, LOGGER_DEBUG, format, ##__VA_ARGS__); \
+      logger_impl(__FILE__, __LINE__, __FUNCTION__, LOGGER_DEBUG, format,      \
+                  ##__VA_ARGS__);                                              \
     }                                                                          \
   } while (0)
 
@@ -4213,7 +4244,8 @@ logger_impl(char* file, int line_number, const char* function, int level, char* 
 #define log_info(format, ...)                                                  \
   do {                                                                         \
     if (global_logger_state.level <= LOGGER_INFO) {                            \
-      logger_impl(__FILE__, __LINE__, __FUNCTION__, LOGGER_INFO, format, ##__VA_ARGS__);	\
+      logger_impl(__FILE__, __LINE__, __FUNCTION__, LOGGER_INFO, format,       \
+                  ##__VA_ARGS__);                                              \
     }                                                                          \
   } while (0)
 
@@ -4232,7 +4264,8 @@ static inline boolean_t should_log_info() {
 #define log_warn(format, ...)                                                  \
   do {                                                                         \
     if (global_logger_state.level <= LOGGER_WARN) {                            \
-      logger_impl(__FILE__, __LINE__, __FUNCTION__, LOGGER_WARN, format, ##__VA_ARGS__);	\
+      logger_impl(__FILE__, __LINE__, __FUNCTION__, LOGGER_WARN, format,       \
+                  ##__VA_ARGS__);                                              \
     }                                                                          \
   } while (0)
 
@@ -4247,7 +4280,8 @@ static inline boolean_t should_log_info() {
 #define log_fatal(format, ...)                                                 \
   do {                                                                         \
     if (global_logger_state.level <= LOGGER_FATAL) {                           \
-      logger_impl(__FILE__, __LINE__, __FUNCTION__, LOGGER_FATAL, format, ##__VA_ARGS__);    \
+      logger_impl(__FILE__, __LINE__, __FUNCTION__, LOGGER_FATAL, format,      \
+                  ##__VA_ARGS__);                                              \
     }                                                                          \
   } while (0)
 
@@ -4261,7 +4295,8 @@ static inline boolean_t should_log_info() {
  */
 #define log_test(format, ...)                                                  \
   do {                                                                         \
-    logger_impl(__FILE__, __LINE__, __FUNCTION__, LOGGER_TEST, format, ##__VA_ARGS__); \
+    logger_impl(__FILE__, __LINE__, __FUNCTION__, LOGGER_TEST, format,         \
+                ##__VA_ARGS__);                                                \
   } while (0)
 
 #endif /* _LOGGER_H_ */
@@ -4375,7 +4410,8 @@ char* logger_level_to_string(int level) {
  * macro versions.
  */
 __attribute__((format(printf, 5, 6))) void
-logger_impl(char* file, int line_number, const char* function, int level, char* format, ...) {
+    logger_impl(char* file, int line_number, const char* function, int level,
+                char* format, ...) {
 
   FILE* output = global_logger_state.output;
 
@@ -4484,7 +4520,7 @@ random_state_t* random_state(void) {
     shared_random_state.a = 0x1E1D43C2CA44B1F5 ^ ((uint64_t) time(NULL));
     shared_random_state.b = 0x4FDD267452CEDBAC ^ ((uint64_t) time(NULL));
   }
-  
+
   return &shared_random_state;
 }
 

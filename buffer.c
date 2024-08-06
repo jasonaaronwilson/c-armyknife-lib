@@ -56,6 +56,8 @@ extern buffer_t* buffer_append_byte(buffer_t* buffer, uint8_t byte);
 extern buffer_t* buffer_append_bytes(buffer_t* buffer, uint8_t* bytes,
                                      uint64_t n_bytes);
 
+extern buffer_t* buffer_append_buffer(buffer_t* buffer, buffer_t* src_buffer);
+
 extern buffer_t* buffer_append_sub_buffer(buffer_t* buffer,
                                           uint64_t start_position,
                                           uint64_t end_position,
@@ -563,6 +565,17 @@ uint64_t buffer_end_of_line(buffer_t* buffer, uint64_t start) {
     position++;
   }
   return position;
+}
+
+/**
+ * @function buffer_append_sub_buffer
+ *
+ * Append all of the bytes of the src_buffer to a buffer.
+ *
+ * It is currently illegal to append parts of a buffer to itself.
+ */
+extern buffer_t* buffer_append_buffer(buffer_t* buffer, buffer_t* src_buffer) {
+  return buffer_append_sub_buffer(buffer, 0, src_buffer->length, src_buffer);
 }
 
 /**

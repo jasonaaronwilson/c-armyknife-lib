@@ -228,6 +228,18 @@ void test_buffer_end_of_line(void) {
   test_assert(buffer_end_of_line(buffer, 14) == 14);
 }
 
+void test_buffer_append_buffer(void) {
+  buffer_t* buffer1 = make_buffer(20);
+  buffer1 = buffer_append_string(buffer1, "Line 1\nLine 2\n");
+
+  buffer_t* buffer2 = make_buffer(20);
+  buffer2 = buffer_append_string(buffer2, "Line 3\nLine 4\n");
+
+  buffer1 = buffer_append_buffer(buffer1, buffer2);
+  test_assert_string_equal("Line 1\nLine 2\nLine 3\nLine 4\n",
+                           buffer_to_c_string(buffer1));
+}
+
 void test_buffer_append_sub_buffer(void) {
   buffer_t* buffer1 = make_buffer(20);
   buffer1 = buffer_append_string(buffer1, "Line 1\nLine 2\n");
@@ -277,6 +289,7 @@ int main(int argc, char** argv) {
   test_buffer_region_contains();
   test_buffer_beginning_of_line();
   test_buffer_end_of_line();
+  test_buffer_append_buffer();
   test_buffer_append_sub_buffer();
   test_buffer_to_uppercase();
   test_buffer_to_lowercase();

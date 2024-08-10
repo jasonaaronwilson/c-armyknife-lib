@@ -117,7 +117,7 @@ char* get_program_path() {
   }
 }
 
-void _Noreturn fatal_error_impl(char* file, int line, int error_code) {
+_Noreturn void fatal_error_impl(char* file, int line, int error_code) {
   print_fatal_error_banner();
   print_backtrace();
   fprintf(stderr, "%s:%d: FATAL ERROR %d", file, line, error_code);

@@ -125,6 +125,9 @@ typedef struct {
   non_fatal_error_code_t nf_error;
 } value_result_t;
 
+// TODO(jawilson): we can use _Generic for this and just use
+// to_value()
+
 #define boolean_to_value(x) ((value_t){.u64 = x})
 #define u64_to_value(x) ((value_t){.u64 = x})
 #define i64_to_value(x) ((value_t){.i64 = x})

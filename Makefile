@@ -7,6 +7,7 @@ install: c-armyknife-lib
 SRC_C = allocate.c \
 	boolean.c \
 	buffer.c \
+	cdl-printer.c \
 	flag.c \
 	fatal-error.c \
 	io.c \
@@ -53,6 +54,7 @@ ORDERED_H = \
 	terminal.h \
 	tokenizer.h \
 	random.h \
+	cdl-printer.h \
 	test.h
 
 generate-header-files: ${SRC_C}
@@ -113,7 +115,8 @@ TESTS= \
 	./value-tree-test.sh \
 	./string-tree-test.sh \
 	./logger-test.sh \
-	./terminal-test.sh
+	./terminal-test.sh \
+	./cdl-printer-test.sh
 
 test:
 	(cd tests && mkdir -p build && ../run-tests.sh ${TESTS})

@@ -38,6 +38,8 @@ void test_cdl_printer() {
   cdl_start_table(printer);
   cdl_key(printer, "foo");
   cdl_boolean(printer, true);
+  cdl_key(printer, "bar");
+  cdl_string(printer, "hello_world");
   cdl_end_table(printer);
   cdl_end_table(printer);
   fprintf(stdout, "%s", buffer_to_c_string(printer->buffer));

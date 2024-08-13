@@ -2823,7 +2823,7 @@ boolean_t is_symbol(char* string) {
         return false;
       }
     } else {
-      if (!isalnum(string[i])) {
+      if (!(isalnum(string[i]) || string[i] == '_')) {
         return false;
       }
     }

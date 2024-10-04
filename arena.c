@@ -196,7 +196,7 @@ arena_t* arena_allocate(uint64_t segment_size, uint64_t default_segment_size,
     fatal_error(ERROR_ILLEGAL_STATE);
   }
 
-  arena_t* result = (arena_t*) malloc(sizeof(arena_t));
+  arena_t* result = cast(arena_t*, malloc(sizeof(arena_t)));
   if (result == NULL) {
     fatal_error(ERROR_ILLEGAL_STATE);
   }
@@ -204,11 +204,11 @@ arena_t* arena_allocate(uint64_t segment_size, uint64_t default_segment_size,
   result->default_segment_size = default_segment_size;
 
   // Finally allocate the space for the allocations themselves
-  result->start = (uint64_t) (malloc(segment_size));
+  result->start = cast(uint64_t, malloc(segment_size));
   if (result->start == 0) {
     fatal_error(ERROR_ILLEGAL_STATE);
   }
-  memset((uint8_t*) result->start, 0, segment_size);
+  memset(cast(uint8_t*, result->start), 0, segment_size);
   result->current = (result->start + 0xf) & ~0xf;
   result->end = (result->start + segment_size) & ~0xf;
 
@@ -221,7 +221,7 @@ arena_t* arena_allocate(uint64_t segment_size, uint64_t default_segment_size,
 void arena_deallocate(arena_t* arena) {
   while (arena != NULL) {
     arena_t* next = arena->previous_segments;
-    free((uint8_t*) (arena->start));
+    free(cast(uint8_t*, arena->start));
     free(arena);
     arena = next;
   }
@@ -265,7 +265,7 @@ uint8_t* arena_checked_malloc(char* file, int line, uint64_t amount) {
     // alocating the segment (or later will use mmap to get zero
     // filled pages).
     number_of_bytes_allocated += amount;
-    uint8_t* result = (uint8_t*) (the_current_arena->current);
+    uint8_t* result = cast(uint8_t*, (the_current_arena->current));
     the_current_arena->current += amount;
     return result;
   } else {

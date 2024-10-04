@@ -80,8 +80,7 @@ typedef bool boolean_t;
 #ifndef _COMPOUND_LITERAL_H_
 #define _COMPOUND_LITERAL_H_
 
-#define compound_literal(type, initializer) \
-  ((type) initializer)
+#define compound_literal(type, initializer) ((type) initializer)
 
 #endif /* _COMPOUND_LITERAL_H_ */
 // SSCF generated file from: leb128.c
@@ -1931,11 +1930,12 @@ void check_memory_hashtable_padding() {
       uint64_t malloc_start_address = memory_ht[i].malloc_address;
       uint64_t malloc_size = memory_ht[i].malloc_size;
       check_start_padding(cast(uint8_t*, malloc_start_address));
-      check_end_padding(cast(uint8_t*, (malloc_start_address
-                                    + ARMYKNIFE_MEMORY_ALLOCATION_START_PADDING
-					+ malloc_size)),
-                        memory_ht[i].allocation_filename,
-                        memory_ht[i].allocation_line_number);
+      check_end_padding(
+          cast(uint8_t*,
+               (malloc_start_address + ARMYKNIFE_MEMORY_ALLOCATION_START_PADDING
+                + malloc_size)),
+          memory_ht[i].allocation_filename,
+          memory_ht[i].allocation_line_number);
     }
   }
 }
@@ -2086,7 +2086,7 @@ void checked_free(char* file, int line, void* pointer) {
   check_memory_hashtable_padding();
 
   uint8_t* malloc_pointer
-    = cast(uint8_t*, pointer) - ARMYKNIFE_MEMORY_ALLOCATION_START_PADDING;
+      = cast(uint8_t*, pointer) - ARMYKNIFE_MEMORY_ALLOCATION_START_PADDING;
 
   // Check this entries padding (in case it got lossed from the global
   // hashtable), and also remove it from the hashtable if it was
@@ -2314,7 +2314,7 @@ char* buffer_c_substring(buffer_t* buffer, uint64_t start, uint64_t end) {
   }
 
   uint64_t copy_length = (end - start);
-  char* result = (char*) (malloc_bytes(copy_length + 1));
+  char* result = cast(char*, malloc_bytes(copy_length + 1));
   if (copy_length > 0) {
     memcpy(result, &buffer->elements[start], copy_length);
   }
@@ -2368,7 +2368,7 @@ buffer_t* buffer_append_bytes(buffer_t* buffer, uint8_t* bytes,
  * char).
  */
 buffer_t* buffer_append_string(buffer_t* buffer, const char* str) {
-  return buffer_append_bytes(buffer, (uint8_t*) str, strlen(str));
+  return buffer_append_bytes(buffer, cast(uint8_t*, str), strlen(str));
 }
 
 /**
@@ -2418,7 +2418,7 @@ __attribute__((format(printf, 2, 3))) buffer_t*
     // Be lazy for now and just copy the code from string_printf for
     // this case but we should be able to do ensure capacity and just
     // put the bytes directly at the end of the buffer...
-    char* result = (char*) malloc_bytes(n_bytes + 1);
+    char* result = cast(char*, malloc_bytes(n_bytes + 1));
     va_list args;
     va_start(args, format);
     int n_bytes_second = vsnprintf(result, n_bytes + 1, format, args);
@@ -2914,8 +2914,7 @@ void cdl_end_table(cdl_printer_t* printer) {
 #ifndef _COMPOUND_LITERAL_H_
 #define _COMPOUND_LITERAL_H_
 
-#define compound_literal(type, initializer) \
-  ((type) initializer)
+#define compound_literal(type, initializer) ((type) initializer)
 
 #endif /* _COMPOUND_LITERAL_H_ */
 #line 2 "flag.c"

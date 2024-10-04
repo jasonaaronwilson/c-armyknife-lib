@@ -8,6 +8,7 @@ SRC_C = allocate.c \
 	boolean.c \
 	buffer.c \
 	cdl-printer.c \
+	compound-literal.c \
 	flag.c \
 	fatal-error.c \
 	io.c \
@@ -33,6 +34,7 @@ SRC_C = allocate.c \
 ORDERED_H = \
 	min-max.h \
 	boolean.h \
+	compound-literal.h \
 	leb128.h \
 	fatal-error.h \
 	value.h \

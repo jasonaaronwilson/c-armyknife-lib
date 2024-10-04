@@ -193,7 +193,7 @@ void check_end_padding(uint8_t* address, char* filename, uint64_t line) {
       fprintf(stderr,
               "FATAL: someone clobbered past an allocation %lu. (allocated "
               "here: %s:%lu)\n",
-              ((uint64_t) address), filename, line);
+              cast(uint64_t, address), filename, line);
       fatal_error(ERROR_MEMORY_END_PADDING_ERROR);
     }
   }
@@ -204,12 +204,13 @@ void check_memory_hashtable_padding() {
     if (memory_ht[i].malloc_address != 0) {
       uint64_t malloc_start_address = memory_ht[i].malloc_address;
       uint64_t malloc_size = memory_ht[i].malloc_size;
-      check_start_padding((uint8_t*) malloc_start_address);
-      check_end_padding((uint8_t*) (malloc_start_address
-                                    + ARMYKNIFE_MEMORY_ALLOCATION_START_PADDING
-                                    + malloc_size),
-                        memory_ht[i].allocation_filename,
-                        memory_ht[i].allocation_line_number);
+      check_start_padding(cast(uint8_t*, malloc_start_address));
+      check_end_padding(
+          cast(uint8_t*,
+               (malloc_start_address + ARMYKNIFE_MEMORY_ALLOCATION_START_PADDING
+                + malloc_size)),
+          memory_ht[i].allocation_filename,
+          memory_ht[i].allocation_line_number);
     }
   }
 }
@@ -247,7 +248,7 @@ void track_padding(char* file, int line, uint8_t* address, uint64_t amount) {
     // probalistically delay updating the hashtable when the bucket is
     // already occupied but I think LRU might work well most of the
     // time. (Mostly a hunch I will admit.).
-    int bucket = mumurhash64_mix((uint64_t) address)
+    int bucket = mumurhash64_mix(cast(uint64_t, address))
                  % ARMYKNIFE_MEMORY_ALLOCATION_HASHTABLE_SIZE;
     memory_ht[bucket].malloc_address = (uint64_t) address;
     memory_ht[bucket].malloc_size = amount;
@@ -268,7 +269,7 @@ void untrack_padding(uint8_t* malloc_address) {
 
   if (ARMYKNIFE_MEMORY_ALLOCATION_HASHTABLE_SIZE > 0) {
     // Now finally zero-out the memory hashtable.
-    int bucket = mumurhash64_mix((uint64_t) malloc_address)
+    int bucket = mumurhash64_mix(cast(uint64_t, malloc_address))
                  % ARMYKNIFE_MEMORY_ALLOCATION_HASHTABLE_SIZE;
     memory_ht[bucket].malloc_address = 0;
     memory_ht[bucket].malloc_size = 0;
@@ -312,7 +313,7 @@ uint8_t* checked_malloc(char* file, int line, uint64_t amount) {
 
   if (should_log_memory_allocation()) {
     fprintf(stderr, "ALLOCATE %s:%d -- %lu -- ptr=%lu\n", file, line, amount,
-            (unsigned long) result);
+            cast(unsigned long, result));
   }
 
   memset(result, 0, amount_with_padding);
@@ -360,7 +361,7 @@ void checked_free(char* file, int line, void* pointer) {
   check_memory_hashtable_padding();
 
   uint8_t* malloc_pointer
-      = ((uint8_t*) pointer) - ARMYKNIFE_MEMORY_ALLOCATION_START_PADDING;
+      = cast(uint8_t*, pointer) - ARMYKNIFE_MEMORY_ALLOCATION_START_PADDING;
 
   // Check this entries padding (in case it got lossed from the global
   // hashtable), and also remove it from the hashtable if it was

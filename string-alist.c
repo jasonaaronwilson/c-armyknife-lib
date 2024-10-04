@@ -22,7 +22,7 @@ typedef struct string_alist_S string_alist_t;
  * actually found).
  */
 static inline value_result_t alist_find(string_alist_t* list, char* key) {
-  return value_alist_find((value_alist_t*) list, cmp_string_values,
+  return value_alist_find(cast(value_alist_t*, list), cmp_string_values,
                           str_to_value(key));
 }
 
@@ -33,8 +33,9 @@ static inline value_result_t alist_find(string_alist_t* list, char* key) {
  */
 __attribute__((warn_unused_result)) static inline string_alist_t*
     alist_insert(string_alist_t* list, char* key, value_t value) {
-  return (string_alist_t*) value_alist_insert(
-      (value_alist_t*) list, cmp_string_values, str_to_value(key), value);
+  return cast(string_alist_t*,
+              value_alist_insert(cast(value_alist_t*, list), cmp_string_values,
+                                 str_to_value(key), value));
 }
 
 /**
@@ -46,8 +47,9 @@ __attribute__((warn_unused_result)) static inline string_alist_t*
  */
 __attribute__((warn_unused_result)) static inline string_alist_t*
     alist_delete(string_alist_t* list, char* key) {
-  return (string_alist_t*) value_alist_delete(
-      (value_alist_t*) list, cmp_string_values, str_to_value(key));
+  return cast(string_alist_t*,
+              value_alist_delete(cast(value_alist_t*, list), cmp_string_values,
+                                 str_to_value(key)));
 }
 
 /**
@@ -59,7 +61,7 @@ __attribute__((warn_unused_result)) static inline string_alist_t*
  */
 __attribute__((warn_unused_result)) static inline uint64_t
     alist_length(string_alist_t* list) {
-  return value_alist_length((value_alist_t*) list);
+  return value_alist_length(cast(value_alist_t*, list));
 }
 
 /**
@@ -70,10 +72,11 @@ __attribute__((warn_unused_result)) static inline uint64_t
  */
 #define string_alist_foreach(alist, key_var, value_var, statements)            \
   do {                                                                         \
-    value_alist_foreach((value_alist_t*) alist, key_var##_value, value_var, {  \
-      char* key_var = (key_var##_value).str;                                   \
-      statements;                                                              \
-    });                                                                        \
+    value_alist_foreach(cast(value_alist_t*, alist), key_var##_value,          \
+                        value_var, {                                           \
+                          char* key_var = (key_var##_value).str;               \
+                          statements;                                          \
+                        });                                                    \
   } while (0)
 
 #endif /* _STRING_ALIST_H_ */

@@ -16,6 +16,6 @@
 #ifndef _COMPOUND_LITERAL_H_
 #define _COMPOUND_LITERAL_H_
 
-#define compound_literal(type, initializer) ((type) initializer)
+#define compound_literal(type, ...) ((type) __VA_ARGS__)
 
 #endif /* _COMPOUND_LITERAL_H_ */

@@ -472,7 +472,7 @@ command_descriptor_t* flag_find_command_descriptor(char* name) {
   value_result_t command_value
       = string_tree_find(current_program->commands, name);
   if (is_ok(command_value)) {
-    return ((command_descriptor_t*) (command_value.ptr));
+    return cast(command_descriptor_t*, command_value.ptr);
   } else {
     return NULL;
   }
@@ -527,9 +527,9 @@ flag_key_value_t flag_split_argument(char* arg) {
     // the next argument. So --foo and --foo=, will *not* be treeated
     // the same way.
     char* value = string_substring(arg, equal_sign_index + 1, strlen(arg));
-    return (flag_key_value_t){.key = key, .value = value};
+    return compound_literal(flag_key_value_t, {.key = key, .value = value});
   }
-  return (flag_key_value_t){.key = arg, .value = NULL};
+  return compound_literal(flag_key_value_t, {.key = arg, .value = NULL});
 }
 
 // Figure out what parser to use for the value, parse it, and then use

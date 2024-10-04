@@ -76,11 +76,11 @@ typedef bool boolean_t;
 #endif /* _BOOLEAN_H_ */
 // SSCF generated file from: compound-literal.c
 
-#line 16 "compound-literal.c"
+#line 35 "compound-literal.c"
 #ifndef _COMPOUND_LITERAL_H_
 #define _COMPOUND_LITERAL_H_
 
-#define compound_literal(type, ...) ((type) __VA_ARGS__ )
+#define compound_literal(type, ...) ((type) __VA_ARGS__)
 
 #endif /* _COMPOUND_LITERAL_H_ */
 // SSCF generated file from: leb128.c
@@ -2902,9 +2902,28 @@ void cdl_end_table(cdl_printer_t* printer) {
  *
  * This file exists solely for interfacing with early versions of the
  * omni-c compiler where it is temporarily more convenient to have a
- * keyword. This is similar to usage of cast() macro (though in the
- * case of cast, sometimes it's a lot easier to read because of all
- * the parens in the cast syntax and following expression).
+ * keyword to denote compound literals (the ones that look like
+ * casts).
+ *
+ * We don't need it when the literal looks like this:
+ *
+ * ```
+ * point_t a = { 10, 20 };
+ * int foo[5] = { 0 };
+ * ```
+ *
+ * But we do need it when the the literal looks like this:
+ *
+ * ```
+ * (point_t) { .x = 10, .y = 20 }
+`* ```
+ *
+ * This is somewhat similar to usage of cast() macro though in the
+ * case of cast, sometimes it actually becomes easier to read.
+ *
+ * ```
+ * (int) (a - b) -----> cast(int, a - b)
+ * ```
  */
 
 // ======================================================================
@@ -2914,7 +2933,7 @@ void cdl_end_table(cdl_printer_t* printer) {
 #ifndef _COMPOUND_LITERAL_H_
 #define _COMPOUND_LITERAL_H_
 
-#define compound_literal(type, ...) ((type) __VA_ARGS__ )
+#define compound_literal(type, ...) ((type) __VA_ARGS__)
 
 #endif /* _COMPOUND_LITERAL_H_ */
 #line 2 "flag.c"
@@ -3993,7 +4012,7 @@ __attribute__((warn_unused_result)) extern buffer_t*
       // size_t bytes_read = fread(read_buffer, 1, 1, input);
       int bytes_read = read(file_number, read_buffer, sizeof(read_buffer));
       for (int i = 0; i < bytes_read; i++) {
-        buffer = buffer_append_byte(buffer, (uint8_t) read_buffer[i]);
+        buffer = buffer_append_byte(buffer, cast(uint8_t, read_buffer[i]));
         bytes_remaining--;
       }
       if (bytes_read > 0) {
@@ -4191,7 +4210,7 @@ unsigned encode_sleb_128(int64_t Value, uint8_t* p) {
     *p++ = Byte;
   } while (More);
 
-  return (unsigned) (p - orig_p);
+  return cast(unsigned, p - orig_p);
 }
 
 /**
@@ -4211,7 +4230,7 @@ unsigned encode_uleb_128(uint64_t Value, uint8_t* p) {
     *p++ = Byte;
   } while (Value != 0);
 
-  return (unsigned) (p - orig_p);
+  return cast(unsigned, (p - orig_p));
 }
 
 /**
@@ -4236,7 +4255,7 @@ unsigned_decode_result decode_uleb_128(const uint8_t* p, const uint8_t* end) {
     Value += Slice << Shift;
     Shift += 7;
   } while (*p++ >= 128);
-  unsigned_decode_result result = {Value, (unsigned) (p - orig_p)};
+  unsigned_decode_result result = {Value, cast(unsigned, p - orig_p)};
   return result;
 }
 

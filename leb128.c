@@ -91,7 +91,7 @@ unsigned encode_sleb_128(int64_t Value, uint8_t* p) {
     *p++ = Byte;
   } while (More);
 
-  return (unsigned) (p - orig_p);
+  return cast(unsigned, p - orig_p);
 }
 
 /**
@@ -111,7 +111,7 @@ unsigned encode_uleb_128(uint64_t Value, uint8_t* p) {
     *p++ = Byte;
   } while (Value != 0);
 
-  return (unsigned) (p - orig_p);
+  return cast(unsigned, (p - orig_p));
 }
 
 /**
@@ -136,7 +136,7 @@ unsigned_decode_result decode_uleb_128(const uint8_t* p, const uint8_t* end) {
     Value += Slice << Shift;
     Shift += 7;
   } while (*p++ >= 128);
-  unsigned_decode_result result = {Value, (unsigned) (p - orig_p)};
+  unsigned_decode_result result = {Value, cast(unsigned, p - orig_p)};
   return result;
 }
 

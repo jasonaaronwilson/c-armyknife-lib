@@ -128,12 +128,12 @@ typedef struct {
 // TODO(jawilson): we can use _Generic for this and just use
 // to_value()
 
-#define boolean_to_value(x) ((value_t){.u64 = x})
-#define u64_to_value(x) ((value_t){.u64 = x})
-#define i64_to_value(x) ((value_t){.i64 = x})
-#define str_to_value(x) ((value_t){.str = x})
-#define ptr_to_value(x) ((value_t){.ptr = x})
-#define dbl_to_value(x) ((value_t){.dbl = x})
+#define boolean_to_value(x) compound_literal(value_t, {.u64 = x})
+#define u64_to_value(x) compound_literal(value_t, {.u64 = x})
+#define i64_to_value(x) compound_literal(value_t, {.i64 = x})
+#define str_to_value(x) compound_literal(value_t, {.str = x})
+#define ptr_to_value(x) compound_literal(value_t, {.ptr = x})
+#define dbl_to_value(x) compound_literal(value_t, {.dbl = x})
 
 /**
  * @function is_ok

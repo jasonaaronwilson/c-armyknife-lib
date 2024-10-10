@@ -15,7 +15,7 @@ struct string_hashtable_S {};
 typedef struct string_hashtable_S string_hashtable_t;
 
 static inline value_hashtable_t* to_value_hashtable(string_hashtable_t* ht) {
-  return (value_hashtable_t*) ht;
+  return cast(value_hashtable_t*, ht);
 }
 
 /**
@@ -28,7 +28,7 @@ static inline value_hashtable_t* to_value_hashtable(string_hashtable_t* ht) {
  * ARMYKNIFE_HT_LOAD_FACTOR and AK_HT_UPSCALE_MULTIPLIER).
  */
 static inline string_hashtable_t* make_string_hashtable(uint64_t n_buckets) {
-  return (string_hashtable_t*) make_value_hashtable(n_buckets);
+  return cast(string_hashtable_t*, make_value_hashtable(n_buckets));
 }
 
 /**
@@ -38,9 +38,9 @@ static inline string_hashtable_t* make_string_hashtable(uint64_t n_buckets) {
  */
 __attribute__((warn_unused_result)) static inline string_hashtable_t*
     string_ht_insert(string_hashtable_t* ht, char* key, value_t value) {
-  return (string_hashtable_t*) value_ht_insert(
-      to_value_hashtable(ht), hash_string_value, cmp_string_values,
-      str_to_value(key), value);
+  return cast(string_hashtable_t*,
+              value_ht_insert(to_value_hashtable(ht), hash_string_value,
+                              cmp_string_values, str_to_value(key), value));
 }
 
 /**
@@ -51,9 +51,9 @@ __attribute__((warn_unused_result)) static inline string_hashtable_t*
  */
 __attribute__((warn_unused_result)) static inline string_hashtable_t*
     string_ht_delete(string_hashtable_t* ht, char* key) {
-  return (string_hashtable_t*) value_ht_delete(
-      to_value_hashtable(ht), hash_string_value, cmp_string_values,
-      str_to_value(key));
+  return cast(string_hashtable_t*,
+              value_ht_delete(to_value_hashtable(ht), hash_string_value,
+                              cmp_string_values, str_to_value(key)));
 }
 
 /**

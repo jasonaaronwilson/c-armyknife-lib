@@ -32,7 +32,7 @@ void add_duplicate(value_array_t* token_array, const char* data);
  * it does not mean a delimiter can be multiple characters.
  */
 value_array_t* string_tokenize(const char* str, const char* delimiters) {
-  return tokenize_memory_range((uint8_t*) str, strlen(str), delimiters);
+  return tokenize_memory_range(cast(uint8_t*, str), strlen(str), delimiters);
 }
 
 /**

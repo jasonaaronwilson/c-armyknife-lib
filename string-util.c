@@ -144,7 +144,7 @@ char* string_substring(const char* str, int start, int end) {
     fatal_error(ERROR_ILLEGAL_ARGUMENT);
   }
   int result_size = end - start + 1;
-  char* result = (char*) (malloc_bytes(result_size));
+  char* result = cast(char*, malloc_bytes(result_size));
   for (int i = start; (i < end); i++) {
     result[i - start] = str[i];
   }
@@ -184,21 +184,22 @@ value_result_t string_parse_uint64_bin(const char* string) {
   uint64_t integer = 0;
 
   if (len == 0) {
-    return (value_result_t){.u64 = 0,
-                            .nf_error = NF_ERROR_NOT_PARSED_AS_NUMBER};
+    return compound_literal(
+        value_result_t, {.u64 = 0, .nf_error = NF_ERROR_NOT_PARSED_AS_NUMBER});
   }
 
   for (int i = 0; i < len; i++) {
     char ch = string[i];
     if (ch < '0' || ch > '1') {
-      return (value_result_t){.u64 = 0,
-                              .nf_error = NF_ERROR_NOT_PARSED_AS_NUMBER};
+      return compound_literal(
+          value_result_t,
+          {.u64 = 0, .nf_error = NF_ERROR_NOT_PARSED_AS_NUMBER});
     }
     uint64_t digit = string[i] - '0';
     integer = integer << 1 | digit;
   }
 
-  return (value_result_t){.u64 = integer, .nf_error = NF_OK};
+  return compound_literal(value_result_t, {.u64 = integer, .nf_error = NF_OK});
 }
 
 static inline boolean_t is_hex_digit(char ch) {
@@ -223,21 +224,22 @@ value_result_t string_parse_uint64_hex(const char* string) {
   uint64_t integer = 0;
 
   if (len == 0) {
-    return (value_result_t){.u64 = 0,
-                            .nf_error = NF_ERROR_NOT_PARSED_AS_NUMBER};
+    return compound_literal(
+        value_result_t, {.u64 = 0, .nf_error = NF_ERROR_NOT_PARSED_AS_NUMBER});
   }
 
   for (int i = 0; i < len; i++) {
     char ch = string[i];
     if (!is_hex_digit(ch)) {
-      return (value_result_t){.u64 = 0,
-                              .nf_error = NF_ERROR_NOT_PARSED_AS_NUMBER};
+      return compound_literal(
+          value_result_t,
+          {.u64 = 0, .nf_error = NF_ERROR_NOT_PARSED_AS_NUMBER});
     }
     uint64_t digit = hex_digit_to_value(ch);
     integer = integer << 4 | digit;
   }
 
-  return (value_result_t){.u64 = integer, .nf_error = NF_OK};
+  return compound_literal(value_result_t, {.u64 = integer, .nf_error = NF_OK});
 }
 
 /**
@@ -277,7 +279,7 @@ char* string_duplicate(const char* src) {
     return NULL;
   }
   int len = strlen(src) + 1;
-  char* result = (char*) malloc_bytes(len);
+  char* result = cast(char*, malloc_bytes(len));
   memcpy(result, src, len);
 
   return result;
@@ -294,7 +296,7 @@ char* string_append(const char* a, const char* b) {
     fatal_error(ERROR_ILLEGAL_NULL_ARGUMENT);
   }
   int total_length = strlen(a) + strlen(b) + 1;
-  char* result = (char*) (malloc_bytes(total_length));
+  char* result = cast(char*, malloc_bytes(total_length));
   strcat(result, a);
   strcat(result, b);
   return result;
@@ -435,11 +437,11 @@ __attribute__((format(printf, 1, 2))) char* string_printf(char* format, ...) {
   } while (0);
 
   if (n_bytes < STRING_PRINTF_INITIAL_BUFFER_SIZE) {
-    char* result = (char*) malloc_bytes(n_bytes + 1);
+    char* result = cast(char*, malloc_bytes(n_bytes + 1));
     strcat(result, buffer);
     return result;
   } else {
-    char* result = (char*) malloc_bytes(n_bytes + 1);
+    char* result = cast(char*, malloc_bytes(n_bytes + 1));
     va_list args;
     va_start(args, format);
     int n_bytes_second = vsnprintf(result, n_bytes + 1, format, args);
@@ -493,7 +495,7 @@ static inline uint64_t mix(uint64_t h) {
 // reverse of mix. objsize: 0-1fd: 509
 uint64_t fasthash64(const void* buf, size_t len, uint64_t seed) {
   const uint64_t m = 0x880355f21e6d1965ULL;
-  const uint64_t* pos = (const uint64_t*) buf;
+  const uint64_t* pos = cast(const uint64_t*, buf);
   const uint64_t* end = pos + (len / 8);
   const unsigned char* pos2;
   uint64_t h = seed ^ (len * m);
@@ -505,7 +507,7 @@ uint64_t fasthash64(const void* buf, size_t len, uint64_t seed) {
     h *= m;
   }
 
-  pos2 = (const unsigned char*) pos;
+  pos2 = cast(const unsigned char*, pos);
   v = 0;
 
   switch (len & 7) {

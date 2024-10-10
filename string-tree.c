@@ -32,8 +32,9 @@ static inline value_result_t string_tree_find(string_tree_t* t, char* key) {
  */
 __attribute__((warn_unused_result)) static inline string_tree_t*
     string_tree_insert(string_tree_t* t, char* key, value_t value) {
-  return (string_tree_t*) (value_tree_insert(
-      cast(value_tree_t*, t), cmp_string_values, str_to_value(key), value));
+  return cast(string_tree_t*,
+              value_tree_insert(cast(value_tree_t*, t), cmp_string_values,
+                                str_to_value(key), value));
 }
 
 /**
@@ -44,8 +45,9 @@ __attribute__((warn_unused_result)) static inline string_tree_t*
  */
 __attribute__((warn_unused_result)) static inline string_tree_t*
     string_tree_delete(string_tree_t* t, char* key) {
-  return (string_tree_t*) (value_tree_delete(
-      cast(value_tree_t*, t), cmp_string_values, str_to_value(key)));
+  return cast(string_tree_t*,
+              value_tree_delete(cast(value_tree_t*, t), cmp_string_values,
+                                str_to_value(key)));
 }
 
 /**

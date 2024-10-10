@@ -57,7 +57,7 @@ __attribute__((warn_unused_result)) extern uint64_t
 value_alist_t* value_alist_insert(value_alist_t* list,
                                   value_comparison_fn cmp_fn, value_t key,
                                   value_t value) {
-  value_alist_t* result = (malloc_struct(value_alist_t));
+  value_alist_t* result = malloc_struct(value_alist_t);
   result->next = value_alist_delete(list, cmp_fn, key);
   result->key = key;
   result->value = value;
@@ -98,11 +98,11 @@ value_result_t value_alist_find(value_alist_t* list, value_comparison_fn cmp_fn,
                                 value_t key) {
   while (list) {
     if (cmp_fn(key, list->key) == 0) {
-      return (value_result_t){.val = list->value};
+      return compound_literal(value_result_t, {.val = list->value});
     }
     list = list->next;
   }
-  return (value_result_t){.nf_error = NF_ERROR_NOT_FOUND};
+  return compound_literal(value_result_t, {.nf_error = NF_ERROR_NOT_FOUND});
 }
 
 /**

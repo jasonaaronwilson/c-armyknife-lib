@@ -103,8 +103,9 @@ value_hashtable_t* make_value_hashtable(uint64_t n_buckets) {
   if (n_buckets < 2) {
     n_buckets = 2;
   }
-  value_hashtable_t* result = (value_hashtable_t*) (malloc_bytes(
-      sizeof(value_hashtable_t) + sizeof(value_alist_t*) * n_buckets));
+  value_hashtable_t* result = cast(
+      value_hashtable_t*, malloc_bytes(sizeof(value_hashtable_t)
+                                       + sizeof(value_alist_t*) * n_buckets));
   result->n_buckets = n_buckets;
   return result;
 }

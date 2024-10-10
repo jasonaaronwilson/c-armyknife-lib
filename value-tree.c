@@ -91,7 +91,7 @@ __attribute__((warn_unused_result)) extern value_tree_t*
 value_result_t value_tree_find(value_tree_t* t, value_comparison_fn cmp_fn,
                                value_t key) {
   if (t == NULL) {
-    return (value_result_t){.nf_error = NF_ERROR_NOT_FOUND};
+    return compound_literal(value_result_t, {.nf_error = NF_ERROR_NOT_FOUND});
   }
 
   int cmp_result = cmp_fn(key, t->key);
@@ -100,9 +100,9 @@ value_result_t value_tree_find(value_tree_t* t, value_comparison_fn cmp_fn,
   } else if (cmp_result > 0) {
     return value_tree_find(t->right, cmp_fn, key);
   } else {
-    return (value_result_t){
-        .val = t->value,
-    };
+    return compound_literal(value_result_t, {
+                                                .val = t->value,
+                                            });
   }
 }
 

@@ -71,7 +71,7 @@ value_array_t* make_value_array(uint64_t initial_capacity) {
   value_array_t* result = malloc_struct(value_array_t);
   result->capacity = initial_capacity;
   result->elements
-      = (value_t*) malloc_bytes(sizeof(value_t) * initial_capacity);
+      = cast(value_t*, malloc_bytes(sizeof(value_t) * initial_capacity));
 
   return result;
 }
@@ -84,7 +84,7 @@ void value_array_ensure_capacity(value_array_t* array,
       new_capacity = required_capacity;
     }
     value_t* new_elements
-        = (value_t*) (malloc_bytes(sizeof(value_t) * new_capacity));
+        = cast(value_t*, malloc_bytes(sizeof(value_t) * new_capacity));
     for (int i = 0; i < array->length; i++) {
       new_elements[i] = array->elements[i];
     }

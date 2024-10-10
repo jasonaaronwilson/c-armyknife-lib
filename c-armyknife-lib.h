@@ -330,12 +330,12 @@ typedef struct {
 // TODO(jawilson): we can use _Generic for this and just use
 // to_value()
 
-#define boolean_to_value(x) ((value_t){.u64 = x})
-#define u64_to_value(x) ((value_t){.u64 = x})
-#define i64_to_value(x) ((value_t){.i64 = x})
-#define str_to_value(x) ((value_t){.str = x})
-#define ptr_to_value(x) ((value_t){.ptr = x})
-#define dbl_to_value(x) ((value_t){.dbl = x})
+#define boolean_to_value(x) compound_literal(value_t, {.u64 = x})
+#define u64_to_value(x) compound_literal(value_t, {.u64 = x})
+#define i64_to_value(x) compound_literal(value_t, {.i64 = x})
+#define str_to_value(x) compound_literal(value_t, {.str = x})
+#define ptr_to_value(x) compound_literal(value_t, {.ptr = x})
+#define dbl_to_value(x) compound_literal(value_t, {.dbl = x})
 
 /**
  * @function is_ok
@@ -1027,7 +1027,7 @@ struct string_hashtable_S {};
 typedef struct string_hashtable_S string_hashtable_t;
 
 static inline value_hashtable_t* to_value_hashtable(string_hashtable_t* ht) {
-  return (value_hashtable_t*) ht;
+  return cast(value_hashtable_t*, ht);
 }
 
 /**
@@ -1040,7 +1040,7 @@ static inline value_hashtable_t* to_value_hashtable(string_hashtable_t* ht) {
  * ARMYKNIFE_HT_LOAD_FACTOR and AK_HT_UPSCALE_MULTIPLIER).
  */
 static inline string_hashtable_t* make_string_hashtable(uint64_t n_buckets) {
-  return (string_hashtable_t*) make_value_hashtable(n_buckets);
+  return cast(string_hashtable_t*, make_value_hashtable(n_buckets));
 }
 
 /**
@@ -1050,9 +1050,9 @@ static inline string_hashtable_t* make_string_hashtable(uint64_t n_buckets) {
  */
 __attribute__((warn_unused_result)) static inline string_hashtable_t*
     string_ht_insert(string_hashtable_t* ht, char* key, value_t value) {
-  return (string_hashtable_t*) value_ht_insert(
-      to_value_hashtable(ht), hash_string_value, cmp_string_values,
-      str_to_value(key), value);
+  return cast(string_hashtable_t*,
+              value_ht_insert(to_value_hashtable(ht), hash_string_value,
+                              cmp_string_values, str_to_value(key), value));
 }
 
 /**
@@ -1063,9 +1063,9 @@ __attribute__((warn_unused_result)) static inline string_hashtable_t*
  */
 __attribute__((warn_unused_result)) static inline string_hashtable_t*
     string_ht_delete(string_hashtable_t* ht, char* key) {
-  return (string_hashtable_t*) value_ht_delete(
-      to_value_hashtable(ht), hash_string_value, cmp_string_values,
-      str_to_value(key));
+  return cast(string_hashtable_t*,
+              value_ht_delete(to_value_hashtable(ht), hash_string_value,
+                              cmp_string_values, str_to_value(key)));
 }
 
 /**
@@ -1198,8 +1198,9 @@ static inline value_result_t string_tree_find(string_tree_t* t, char* key) {
  */
 __attribute__((warn_unused_result)) static inline string_tree_t*
     string_tree_insert(string_tree_t* t, char* key, value_t value) {
-  return (string_tree_t*) (value_tree_insert(
-      cast(value_tree_t*, t), cmp_string_values, str_to_value(key), value));
+  return cast(string_tree_t*,
+              value_tree_insert(cast(value_tree_t*, t), cmp_string_values,
+                                str_to_value(key), value));
 }
 
 /**
@@ -1210,8 +1211,9 @@ __attribute__((warn_unused_result)) static inline string_tree_t*
  */
 __attribute__((warn_unused_result)) static inline string_tree_t*
     string_tree_delete(string_tree_t* t, char* key) {
-  return (string_tree_t*) (value_tree_delete(
-      cast(value_tree_t*, t), cmp_string_values, str_to_value(key)));
+  return cast(string_tree_t*,
+              value_tree_delete(cast(value_tree_t*, t), cmp_string_values,
+                                str_to_value(key)));
 }
 
 /**
@@ -4891,7 +4893,7 @@ struct string_hashtable_S {};
 typedef struct string_hashtable_S string_hashtable_t;
 
 static inline value_hashtable_t* to_value_hashtable(string_hashtable_t* ht) {
-  return (value_hashtable_t*) ht;
+  return cast(value_hashtable_t*, ht);
 }
 
 /**
@@ -4904,7 +4906,7 @@ static inline value_hashtable_t* to_value_hashtable(string_hashtable_t* ht) {
  * ARMYKNIFE_HT_LOAD_FACTOR and AK_HT_UPSCALE_MULTIPLIER).
  */
 static inline string_hashtable_t* make_string_hashtable(uint64_t n_buckets) {
-  return (string_hashtable_t*) make_value_hashtable(n_buckets);
+  return cast(string_hashtable_t*, make_value_hashtable(n_buckets));
 }
 
 /**
@@ -4914,9 +4916,9 @@ static inline string_hashtable_t* make_string_hashtable(uint64_t n_buckets) {
  */
 __attribute__((warn_unused_result)) static inline string_hashtable_t*
     string_ht_insert(string_hashtable_t* ht, char* key, value_t value) {
-  return (string_hashtable_t*) value_ht_insert(
-      to_value_hashtable(ht), hash_string_value, cmp_string_values,
-      str_to_value(key), value);
+  return cast(string_hashtable_t*,
+              value_ht_insert(to_value_hashtable(ht), hash_string_value,
+                              cmp_string_values, str_to_value(key), value));
 }
 
 /**
@@ -4927,9 +4929,9 @@ __attribute__((warn_unused_result)) static inline string_hashtable_t*
  */
 __attribute__((warn_unused_result)) static inline string_hashtable_t*
     string_ht_delete(string_hashtable_t* ht, char* key) {
-  return (string_hashtable_t*) value_ht_delete(
-      to_value_hashtable(ht), hash_string_value, cmp_string_values,
-      str_to_value(key));
+  return cast(string_hashtable_t*,
+              value_ht_delete(to_value_hashtable(ht), hash_string_value,
+                              cmp_string_values, str_to_value(key)));
 }
 
 /**
@@ -5000,8 +5002,9 @@ static inline value_result_t string_tree_find(string_tree_t* t, char* key) {
  */
 __attribute__((warn_unused_result)) static inline string_tree_t*
     string_tree_insert(string_tree_t* t, char* key, value_t value) {
-  return (string_tree_t*) (value_tree_insert(
-      cast(value_tree_t*, t), cmp_string_values, str_to_value(key), value));
+  return cast(string_tree_t*,
+              value_tree_insert(cast(value_tree_t*, t), cmp_string_values,
+                                str_to_value(key), value));
 }
 
 /**
@@ -5012,8 +5015,9 @@ __attribute__((warn_unused_result)) static inline string_tree_t*
  */
 __attribute__((warn_unused_result)) static inline string_tree_t*
     string_tree_delete(string_tree_t* t, char* key) {
-  return (string_tree_t*) (value_tree_delete(
-      cast(value_tree_t*, t), cmp_string_values, str_to_value(key)));
+  return cast(string_tree_t*,
+              value_tree_delete(cast(value_tree_t*, t), cmp_string_values,
+                                str_to_value(key)));
 }
 
 /**
@@ -5195,7 +5199,7 @@ char* string_substring(const char* str, int start, int end) {
     fatal_error(ERROR_ILLEGAL_ARGUMENT);
   }
   int result_size = end - start + 1;
-  char* result = (char*) (malloc_bytes(result_size));
+  char* result = cast(char*, malloc_bytes(result_size));
   for (int i = start; (i < end); i++) {
     result[i - start] = str[i];
   }
@@ -5235,21 +5239,22 @@ value_result_t string_parse_uint64_bin(const char* string) {
   uint64_t integer = 0;
 
   if (len == 0) {
-    return (value_result_t){.u64 = 0,
-                            .nf_error = NF_ERROR_NOT_PARSED_AS_NUMBER};
+    return compound_literal(
+        value_result_t, {.u64 = 0, .nf_error = NF_ERROR_NOT_PARSED_AS_NUMBER});
   }
 
   for (int i = 0; i < len; i++) {
     char ch = string[i];
     if (ch < '0' || ch > '1') {
-      return (value_result_t){.u64 = 0,
-                              .nf_error = NF_ERROR_NOT_PARSED_AS_NUMBER};
+      return compound_literal(
+          value_result_t,
+          {.u64 = 0, .nf_error = NF_ERROR_NOT_PARSED_AS_NUMBER});
     }
     uint64_t digit = string[i] - '0';
     integer = integer << 1 | digit;
   }
 
-  return (value_result_t){.u64 = integer, .nf_error = NF_OK};
+  return compound_literal(value_result_t, {.u64 = integer, .nf_error = NF_OK});
 }
 
 static inline boolean_t is_hex_digit(char ch) {
@@ -5274,21 +5279,22 @@ value_result_t string_parse_uint64_hex(const char* string) {
   uint64_t integer = 0;
 
   if (len == 0) {
-    return (value_result_t){.u64 = 0,
-                            .nf_error = NF_ERROR_NOT_PARSED_AS_NUMBER};
+    return compound_literal(
+        value_result_t, {.u64 = 0, .nf_error = NF_ERROR_NOT_PARSED_AS_NUMBER});
   }
 
   for (int i = 0; i < len; i++) {
     char ch = string[i];
     if (!is_hex_digit(ch)) {
-      return (value_result_t){.u64 = 0,
-                              .nf_error = NF_ERROR_NOT_PARSED_AS_NUMBER};
+      return compound_literal(
+          value_result_t,
+          {.u64 = 0, .nf_error = NF_ERROR_NOT_PARSED_AS_NUMBER});
     }
     uint64_t digit = hex_digit_to_value(ch);
     integer = integer << 4 | digit;
   }
 
-  return (value_result_t){.u64 = integer, .nf_error = NF_OK};
+  return compound_literal(value_result_t, {.u64 = integer, .nf_error = NF_OK});
 }
 
 /**
@@ -5328,7 +5334,7 @@ char* string_duplicate(const char* src) {
     return NULL;
   }
   int len = strlen(src) + 1;
-  char* result = (char*) malloc_bytes(len);
+  char* result = cast(char*, malloc_bytes(len));
   memcpy(result, src, len);
 
   return result;
@@ -5345,7 +5351,7 @@ char* string_append(const char* a, const char* b) {
     fatal_error(ERROR_ILLEGAL_NULL_ARGUMENT);
   }
   int total_length = strlen(a) + strlen(b) + 1;
-  char* result = (char*) (malloc_bytes(total_length));
+  char* result = cast(char*, malloc_bytes(total_length));
   strcat(result, a);
   strcat(result, b);
   return result;
@@ -5486,11 +5492,11 @@ __attribute__((format(printf, 1, 2))) char* string_printf(char* format, ...) {
   } while (0);
 
   if (n_bytes < STRING_PRINTF_INITIAL_BUFFER_SIZE) {
-    char* result = (char*) malloc_bytes(n_bytes + 1);
+    char* result = cast(char*, malloc_bytes(n_bytes + 1));
     strcat(result, buffer);
     return result;
   } else {
-    char* result = (char*) malloc_bytes(n_bytes + 1);
+    char* result = cast(char*, malloc_bytes(n_bytes + 1));
     va_list args;
     va_start(args, format);
     int n_bytes_second = vsnprintf(result, n_bytes + 1, format, args);
@@ -5544,7 +5550,7 @@ static inline uint64_t mix(uint64_t h) {
 // reverse of mix. objsize: 0-1fd: 509
 uint64_t fasthash64(const void* buf, size_t len, uint64_t seed) {
   const uint64_t m = 0x880355f21e6d1965ULL;
-  const uint64_t* pos = (const uint64_t*) buf;
+  const uint64_t* pos = cast(const uint64_t*, buf);
   const uint64_t* end = pos + (len / 8);
   const unsigned char* pos2;
   uint64_t h = seed ^ (len * m);
@@ -5556,7 +5562,7 @@ uint64_t fasthash64(const void* buf, size_t len, uint64_t seed) {
     h *= m;
   }
 
-  pos2 = (const unsigned char*) pos;
+  pos2 = cast(const unsigned char*, pos);
   v = 0;
 
   switch (len & 7) {
@@ -6174,7 +6180,7 @@ void add_duplicate(value_array_t* token_array, const char* data);
  * it does not mean a delimiter can be multiple characters.
  */
 value_array_t* string_tokenize(const char* str, const char* delimiters) {
-  return tokenize_memory_range((uint8_t*) str, strlen(str), delimiters);
+  return tokenize_memory_range(cast(uint8_t*, str), strlen(str), delimiters);
 }
 
 /**
@@ -6303,23 +6309,27 @@ extern utf8_decode_result_t utf8_decode(const uint8_t* utf8_bytes);
 utf8_decode_result_t utf8_decode(const uint8_t* array) {
   uint8_t firstByte = array[0];
   if ((firstByte & 0x80) == 0) {
-    return (utf8_decode_result_t){.code_point = firstByte, .num_bytes = 1};
+    return compound_literal(utf8_decode_result_t,
+                            {.code_point = firstByte, .num_bytes = 1});
   } else if ((firstByte & 0xE0) == 0xC0) {
-    return (utf8_decode_result_t){.code_point = ((firstByte & 0x1F) << 6)
-                                                | (array[1] & 0x3F),
-                                  .num_bytes = 2};
+    return compound_literal(
+        utf8_decode_result_t,
+        {.code_point = ((firstByte & 0x1F) << 6) | (array[1] & 0x3F),
+         .num_bytes = 2});
   } else if ((firstByte & 0xF0) == 0xE0) {
-    return (utf8_decode_result_t){.code_point = ((firstByte & 0x0F) << 12)
-                                                | ((array[1] & 0x3F) << 6)
-                                                | (array[2] & 0x3F),
-                                  .num_bytes = 3};
+    return compound_literal(utf8_decode_result_t,
+                            {.code_point = ((firstByte & 0x0F) << 12)
+                                           | ((array[1] & 0x3F) << 6)
+                                           | (array[2] & 0x3F),
+                             .num_bytes = 3});
   } else if ((firstByte & 0xF8) == 0xF0) {
-    return (utf8_decode_result_t){
-        .code_point = ((firstByte & 0x07) << 18) | ((array[1] & 0x3F) << 12)
-                      | ((array[2] & 0x3F) << 6) | (array[3] & 0x3F),
-        .num_bytes = 4};
+    return compound_literal(
+        utf8_decode_result_t,
+        {.code_point = ((firstByte & 0x07) << 18) | ((array[1] & 0x3F) << 12)
+                       | ((array[2] & 0x3F) << 6) | (array[3] & 0x3F),
+         .num_bytes = 4});
   } else {
-    return (utf8_decode_result_t){.error = true};
+    return compound_literal(utf8_decode_result_t, {.error = true});
   }
 }
 #line 2 "value.c"
@@ -6452,12 +6462,12 @@ typedef struct {
 // TODO(jawilson): we can use _Generic for this and just use
 // to_value()
 
-#define boolean_to_value(x) ((value_t){.u64 = x})
-#define u64_to_value(x) ((value_t){.u64 = x})
-#define i64_to_value(x) ((value_t){.i64 = x})
-#define str_to_value(x) ((value_t){.str = x})
-#define ptr_to_value(x) ((value_t){.ptr = x})
-#define dbl_to_value(x) ((value_t){.dbl = x})
+#define boolean_to_value(x) compound_literal(value_t, {.u64 = x})
+#define u64_to_value(x) compound_literal(value_t, {.u64 = x})
+#define i64_to_value(x) compound_literal(value_t, {.i64 = x})
+#define str_to_value(x) compound_literal(value_t, {.str = x})
+#define ptr_to_value(x) compound_literal(value_t, {.ptr = x})
+#define dbl_to_value(x) compound_literal(value_t, {.dbl = x})
 
 /**
  * @function is_ok
@@ -6578,7 +6588,7 @@ __attribute__((warn_unused_result)) extern uint64_t
 value_alist_t* value_alist_insert(value_alist_t* list,
                                   value_comparison_fn cmp_fn, value_t key,
                                   value_t value) {
-  value_alist_t* result = (malloc_struct(value_alist_t));
+  value_alist_t* result = malloc_struct(value_alist_t);
   result->next = value_alist_delete(list, cmp_fn, key);
   result->key = key;
   result->value = value;
@@ -6619,11 +6629,11 @@ value_result_t value_alist_find(value_alist_t* list, value_comparison_fn cmp_fn,
                                 value_t key) {
   while (list) {
     if (cmp_fn(key, list->key) == 0) {
-      return (value_result_t){.val = list->value};
+      return compound_literal(value_result_t, {.val = list->value});
     }
     list = list->next;
   }
-  return (value_result_t){.nf_error = NF_ERROR_NOT_FOUND};
+  return compound_literal(value_result_t, {.nf_error = NF_ERROR_NOT_FOUND});
 }
 
 /**
@@ -6715,7 +6725,7 @@ value_array_t* make_value_array(uint64_t initial_capacity) {
   value_array_t* result = malloc_struct(value_array_t);
   result->capacity = initial_capacity;
   result->elements
-      = (value_t*) malloc_bytes(sizeof(value_t) * initial_capacity);
+      = cast(value_t*, malloc_bytes(sizeof(value_t) * initial_capacity));
 
   return result;
 }
@@ -6728,7 +6738,7 @@ void value_array_ensure_capacity(value_array_t* array,
       new_capacity = required_capacity;
     }
     value_t* new_elements
-        = (value_t*) (malloc_bytes(sizeof(value_t) * new_capacity));
+        = cast(value_t*, malloc_bytes(sizeof(value_t) * new_capacity));
     for (int i = 0; i < array->length; i++) {
       new_elements[i] = array->elements[i];
     }
@@ -6979,8 +6989,9 @@ value_hashtable_t* make_value_hashtable(uint64_t n_buckets) {
   if (n_buckets < 2) {
     n_buckets = 2;
   }
-  value_hashtable_t* result = (value_hashtable_t*) (malloc_bytes(
-      sizeof(value_hashtable_t) + sizeof(value_alist_t*) * n_buckets));
+  value_hashtable_t* result = cast(
+      value_hashtable_t*, malloc_bytes(sizeof(value_hashtable_t)
+                                       + sizeof(value_alist_t*) * n_buckets));
   result->n_buckets = n_buckets;
   return result;
 }
@@ -7177,7 +7188,7 @@ __attribute__((warn_unused_result)) extern value_tree_t*
 value_result_t value_tree_find(value_tree_t* t, value_comparison_fn cmp_fn,
                                value_t key) {
   if (t == NULL) {
-    return (value_result_t){.nf_error = NF_ERROR_NOT_FOUND};
+    return compound_literal(value_result_t, {.nf_error = NF_ERROR_NOT_FOUND});
   }
 
   int cmp_result = cmp_fn(key, t->key);
@@ -7186,9 +7197,9 @@ value_result_t value_tree_find(value_tree_t* t, value_comparison_fn cmp_fn,
   } else if (cmp_result > 0) {
     return value_tree_find(t->right, cmp_fn, key);
   } else {
-    return (value_result_t){
-        .val = t->value,
-    };
+    return compound_literal(value_result_t, {
+                                                .val = t->value,
+                                            });
   }
 }
 

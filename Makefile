@@ -74,8 +74,9 @@ SRC_C_FILTERED := $(filter-out logger.c value.c value-hashtable.c, $(SRC_C))
 
 # This doesn't work yet but this is the goal 
 c-armyknife-lib-omni-c:
-	../omni-c/src/omni-c generate-library --output-file=c-armyknife-lib-omni-c.c ${SRC_C_FILTERED}
-	../omni-c/src/omni-c generate-header-file --output-file=c-armyknife-lib-omni-c.h ${SRC_C_FILTERED}
+	../omni-c/src/build/bin/omni-c generate-library --output-file=c-armyknife-lib-omni-c.c ${SRC_C_FILTERED}
+	../omni-c/src/build/bin/omni-c generate-header-file --output-file=c-armyknife-lib-omni-c.h ${SRC_C_FILTERED}
+	gcc -o /tmp/armyknife-lib c-armyknife-lib-omni-c.c
 
 format:
 	clang-format -i ${SRC_C} ${SRC_H} tests/*.c examples/*.c

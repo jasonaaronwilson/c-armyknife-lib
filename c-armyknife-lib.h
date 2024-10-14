@@ -83,6 +83,60 @@ typedef bool boolean_t;
 #define compound_literal(type, ...) ((type) __VA_ARGS__)
 
 #endif /* _COMPOUND_LITERAL_H_ */
+// SSCF generated file from: fn.c
+
+#line 3 "fn.c"
+#ifndef _FN_H_
+#define _FN_H_
+
+/**
+ * @file fn.c
+ *
+ * C's declarator syntax and the spiral rule are sometimes very hard
+ * to read and write so fn_t enters the room.
+ *
+ * Before:
+ *
+ * ```
+ * typedef uint64_t (*value_hash_fn)(value_t value);
+ * ```
+ *
+ * After:
+ * ```
+ * typedef fn_t(uint64_t, value_t value) value_hash_fn;
+ * ```
+ *
+ * Notice how the name of the type now appears all the way to the
+ * right.
+ * 
+ * (Omni C will eventually allow "=" for typedefs so:
+ *
+ * ```
+ * typedef value_hash_fn = fn_t(uint64_t, value_t value);
+ * ```
+ *
+ * I asked an LLM to help make my point and it suggested this
+ * function prototype as a confusing case:
+ *
+ * ```
+ * void (*signal(int sig, void (*func)(int)))(int);
+ * ```
+ *
+ * This really is exteremely difficult to read. It's a function that
+ * both accepts and returns a signal handler where a signal handler is
+ * a function that takes an int and return's void. Even with that
+ * clue, the above is pretty hard to read, while this is hopefully not
+ * that difficult to read.
+ *
+ * ```
+ * fn_t(void, int) signal(int sig, fn_t(void, int) handler);
+`* ```
+ */
+
+#define fn_t(return_type, ...) \
+    typeof(return_type (*)(__VA_ARGS__))
+
+#endif /* _FN_H_ */
 // SSCF generated file from: leb128.c
 
 #line 3 "leb128.c"
@@ -357,6 +411,15 @@ static inline boolean_t is_not_ok(value_result_t value) {
   return value.nf_error != NF_OK;
 }
 
+/**
+ * @macro cast
+ *
+ * Perform an unsafe cast of expr to the given type. This is much
+ * easier for the omni-c compiler to handle because we know to parse a
+ * type as the first argument even if we don't know what all the types
+ * are yet. While omni-c uses this macro, if you are using plain C,
+ * you don't have to use it.
+ */
 #define cast(type, expr) ((type) (expr))
 
 /**
@@ -366,15 +429,18 @@ static inline boolean_t is_not_ok(value_result_t value) {
  * returning -1 when value1 < value2, 0 when value1 == value2, and 1
  * when value1 > value2.
  */
-typedef int (*value_comparison_fn)(value_t value1, value_t value2);
+// typedef int (*value_comparison_fn)(value_t value1, value_t value2);
+typedef fn_t(int, value_t value1, value_t value2) value_comparison_fn;
 
 /**
  * @typedef value_hash_fn
  *
- * A type for a function pointer which will hash it's value_t* to a
+ * A type for a function pointer which will hash it's value_t to a
  * uint64_t.
  */
-typedef uint64_t (*value_hash_fn)(value_t value1);
+// typedef uint64_t (*value_hash_fn)(value_t value1);
+typedef fn_t(uint64_t, value_t value1) value_hash_fn;
+
 
 int cmp_string_values(value_t value1, value_t value2);
 uint64_t hash_string_value(value_t value1);
@@ -2941,6 +3007,59 @@ void cdl_end_table(cdl_printer_t* printer) {
 #define compound_literal(type, ...) ((type) __VA_ARGS__)
 
 #endif /* _COMPOUND_LITERAL_H_ */
+#line 2 "fn.c"
+
+#ifndef _FN_H_
+#define _FN_H_
+
+/**
+ * @file fn.c
+ *
+ * C's declarator syntax and the spiral rule are sometimes very hard
+ * to read and write so fn_t enters the room.
+ *
+ * Before:
+ *
+ * ```
+ * typedef uint64_t (*value_hash_fn)(value_t value);
+ * ```
+ *
+ * After:
+ * ```
+ * typedef fn_t(uint64_t, value_t value) value_hash_fn;
+ * ```
+ *
+ * Notice how the name of the type now appears all the way to the
+ * right.
+ * 
+ * (Omni C will eventually allow "=" for typedefs so:
+ *
+ * ```
+ * typedef value_hash_fn = fn_t(uint64_t, value_t value);
+ * ```
+ *
+ * I asked an LLM to help make my point and it suggested this
+ * function prototype as a confusing case:
+ *
+ * ```
+ * void (*signal(int sig, void (*func)(int)))(int);
+ * ```
+ *
+ * This really is exteremely difficult to read. It's a function that
+ * both accepts and returns a signal handler where a signal handler is
+ * a function that takes an int and return's void. Even with that
+ * clue, the above is pretty hard to read, while this is hopefully not
+ * that difficult to read.
+ *
+ * ```
+ * fn_t(void, int) signal(int sig, fn_t(void, int) handler);
+`* ```
+ */
+
+#define fn_t(return_type, ...) \
+    typeof(return_type (*)(__VA_ARGS__))
+
+#endif /* _FN_H_ */
 #line 2 "flag.c"
 /**
  * @file flag.c
@@ -6489,6 +6608,15 @@ static inline boolean_t is_not_ok(value_result_t value) {
   return value.nf_error != NF_OK;
 }
 
+/**
+ * @macro cast
+ *
+ * Perform an unsafe cast of expr to the given type. This is much
+ * easier for the omni-c compiler to handle because we know to parse a
+ * type as the first argument even if we don't know what all the types
+ * are yet. While omni-c uses this macro, if you are using plain C,
+ * you don't have to use it.
+ */
 #define cast(type, expr) ((type) (expr))
 
 /**
@@ -6498,15 +6626,18 @@ static inline boolean_t is_not_ok(value_result_t value) {
  * returning -1 when value1 < value2, 0 when value1 == value2, and 1
  * when value1 > value2.
  */
-typedef int (*value_comparison_fn)(value_t value1, value_t value2);
+// typedef int (*value_comparison_fn)(value_t value1, value_t value2);
+typedef fn_t(int, value_t value1, value_t value2) value_comparison_fn;
 
 /**
  * @typedef value_hash_fn
  *
- * A type for a function pointer which will hash it's value_t* to a
+ * A type for a function pointer which will hash it's value_t to a
  * uint64_t.
  */
-typedef uint64_t (*value_hash_fn)(value_t value1);
+// typedef uint64_t (*value_hash_fn)(value_t value1);
+typedef fn_t(uint64_t, value_t value1) value_hash_fn;
+
 
 int cmp_string_values(value_t value1, value_t value2);
 uint64_t hash_string_value(value_t value1);

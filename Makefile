@@ -9,6 +9,7 @@ SRC_C = allocate.c \
 	buffer.c \
 	cdl-printer.c \
 	compound-literal.c \
+	fn.c \
 	flag.c \
 	fatal-error.c \
 	io.c \
@@ -35,6 +36,7 @@ ORDERED_H = \
 	min-max.h \
 	boolean.h \
 	compound-literal.h \
+	fn.h \
 	leb128.h \
 	fatal-error.h \
 	value.h \
@@ -70,7 +72,8 @@ c-armyknife-lib: ${SRC_C} generate-header-files
 	echo '#endif /* C_ARMYKNIFE_LIB_IMPL */' >>c-armyknife-lib.h
 	cat c-armyknife-lib.h | grep -v "#line" >c-armyknife-lib-no-lines.h
 
-SRC_C_FILTERED := $(filter-out logger.c value.c value-hashtable.c, $(SRC_C))
+# value.c 
+SRC_C_FILTERED := $(filter-out logger.c value-hashtable.c, $(SRC_C))
 
 # This doesn't work yet but this is the goal 
 c-armyknife-lib-omni-c:

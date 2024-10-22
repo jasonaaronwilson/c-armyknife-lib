@@ -4,62 +4,37 @@ install: c-armyknife-lib
 	sudo install -m 755 c-armyknife-lib.h /usr/local/include/
 	sudo install -m 755 c-armyknife-lib-no-lines.h /usr/local/include/
 
-SRC_C = allocate.c \
+# Define the ordered list of source files
+SRC_C = \
+	min-max.c \
 	boolean.c \
-	buffer.c \
-	cdl-printer.c \
 	compound-literal.c \
 	fn.c \
-	flag.c \
-	fatal-error.c \
-	io.c \
 	leb128.c \
-	logger.c \
-	min-max.c \
-	random.c \
-	string-alist.c \
-	string-hashtable.c \
-	string-tree.c \
-	string-util.c \
-	terminal.c \
-	test.c \
-	tokenizer.c \
-	uint64.c \
-	utf8-decoder.c \
+	fatal-error.c \
 	value.c \
-	value-alist.c \
+	allocate.c \
+	uint64.c \
+	string-util.c \
+	logger.c \
+	utf8-decoder.c \
+	buffer.c \
 	value-array.c \
+	value-alist.c \
+	string-alist.c \
 	value-hashtable.c \
-	value-tree.c
+	string-hashtable.c \
+	value-tree.c \
+	string-tree.c \
+	flag.c \
+	io.c \
+	terminal.c \
+	tokenizer.c \
+	random.c \
+	cdl-printer.c \
+	test.c
 
-ORDERED_H = \
-	min-max.h \
-	boolean.h \
-	compound-literal.h \
-	fn.h \
-	leb128.h \
-	fatal-error.h \
-	value.h \
-	allocate.h \
-	uint64.h \
-	string-util.h \
-	logger.h \
-	utf8-decoder.h \
-	buffer.h \
-	value-array.h \
-	value-alist.h \
-	string-alist.h \
-	value-hashtable.h \
-	string-hashtable.h \
-	value-tree.h \
-	string-tree.h \
-	flag.h \
-	io.h \
-	terminal.h \
-	tokenizer.h \
-	random.h \
-	cdl-printer.h \
-	test.h
+ORDERED_H = $(SRC_C:.c=.h)
 
 generate-header-files: ${SRC_C}
 	/usr/local/bin/generate-header-file ${SRC_C}
@@ -73,7 +48,8 @@ c-armyknife-lib: ${SRC_C} generate-header-files
 	cat c-armyknife-lib.h | grep -v "#line" >c-armyknife-lib-no-lines.h
 
 # value.c 
-SRC_C_FILTERED := $(filter-out logger.c, $(SRC_C))
+SRC_C_FILTERED := $(SRC_C)
+# SRC_C_FILTERED := $(filter-out logger.c, $(SRC_C))
 
 # This doesn't work yet but this is the goal 
 c-armyknife-lib-omni-c:

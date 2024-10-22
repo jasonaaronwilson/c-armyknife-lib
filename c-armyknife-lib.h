@@ -1794,6 +1794,752 @@ static inline void close_arena_for_test(void) {
 
 #endif /* _TEST_H_ */
 #ifdef C_ARMYKNIFE_LIB_IMPL
+#line 2 "min-max.c"
+/**
+ * @file min-max.c
+ *
+ * Macros version of min and max functions.
+ */
+
+#ifndef _MIN_MAX_H_
+#define _MIN_MAX_H_
+
+/**
+ * @macro min
+ *
+ * Produce the minimum of a and b. Prior to C23, we evalutate one of
+ * the arguments twice but we eventually hope to evaluate each
+ * argument only once and use the "auto" argument so that the macro
+ * works for any type that can be compared with <.
+ */
+#define min(a, b) ((a) < (b) ? (a) : (b))
+
+/**
+ * @macro max
+ *
+ * Produce the maximum of a and b. Prior to C23, we evalutate one of
+ * the arguments twice but we eventually hope to evaluate each
+ * argument only once and use the "auto" argument so that the macro
+ * works for any type that can be compared with >.
+ */
+#define max(a, b) ((a) > (b) ? (a) : (b))
+
+#endif /* _MIN_MAX_H_ */
+#line 2 "boolean.c"
+/**
+ * @file boolean.c
+ *
+ * Make sure that at least true/false from <stdbool.h> are available
+ * and and a new typedef named boolean_t because bool seems ugly. (Use
+ * what you prefer!)
+ */
+
+// ======================================================================
+// This section is extraced to boolean.h
+// ======================================================================
+
+#ifndef _BOOLEAN_H_
+#define _BOOLEAN_H_
+
+#include <stdbool.h>
+
+/**
+ * @type boolean_t
+ *
+ * This is a simple typedef for "bool" (or _Bool from C99) which is
+ * available from "stdbool.h" as bool and true and false constants are
+ * also defined. We use it for more consistency in primitive types
+ * (where only char* is commonly used in this library despite not
+ * following the typically naming convention).
+ */
+typedef bool boolean_t;
+
+// #define true ((boolean_t) 1)
+// #define false ((boolean_t) 0)
+
+#endif /* _BOOLEAN_H_ */
+#line 2 "compound-literal.c"
+/**
+ * @file compound-literal.c
+ *
+ * This file exists solely for interfacing with early versions of the
+ * omni-c compiler where it is temporarily more convenient to have a
+ * keyword to denote compound literals (the ones that look like
+ * casts).
+ *
+ * We don't need it when the literal looks like this:
+ *
+ * ```
+ * point_t a = { 10, 20 };
+ * int foo[5] = { 0 };
+ * ```
+ *
+ * But we do need it when the the literal looks like this:
+ *
+ * ```
+ * (point_t) { .x = 10, .y = 20 }
+`* ```
+ *
+ * This is somewhat similar to usage of cast() macro though in the
+ * case of cast, sometimes it actually becomes easier to read.
+ *
+ * ```
+ * (int) (a - b) -----> cast(int, a - b)
+ * ```
+ */
+
+// ======================================================================
+// This section is extraced to compound-literal.h
+// ======================================================================
+
+#ifndef _COMPOUND_LITERAL_H_
+#define _COMPOUND_LITERAL_H_
+
+#define compound_literal(type, ...) ((type) __VA_ARGS__)
+
+#endif /* _COMPOUND_LITERAL_H_ */
+#line 2 "fn.c"
+
+#ifndef _FN_H_
+#define _FN_H_
+
+/**
+ * @file fn.c
+ *
+ * C's declarator syntax and the spiral rule are sometimes very hard
+ * to read and write so fn_t enters the room.
+ *
+ * Before:
+ *
+ * ```
+ * typedef uint64_t (*value_hash_fn)(value_t value);
+ * ```
+ *
+ * After:
+ * ```
+ * typedef fn_t(uint64_t, value_t value) value_hash_fn;
+ * ```
+ *
+ * Notice how the name of the type now appears all the way to the
+ * right.
+ *
+ * (Omni C will eventually allow "=" for typedefs so:
+ *
+ * ```
+ * typedef value_hash_fn = fn_t(uint64_t, value_t value);
+ * ```
+ *
+ * I asked an LLM to help make my point and it suggested this
+ * function prototype as a confusing case:
+ *
+ * ```
+ * void (*signal(int sig, void (*func)(int)))(int);
+ * ```
+ *
+ * This really is exteremely difficult to read. It's a function that
+ * both accepts and returns a signal handler where a signal handler is
+ * a function that takes an int and return's void. Even with that
+ * clue, the above is pretty hard to read, while this is hopefully not
+ * that difficult to read.
+ *
+ * ```
+ * fn_t(void, int) signal(int sig, fn_t(void, int) handler);
+`* ```
+ */
+
+#define fn_t(return_type, ...) typeof(return_type(*)(__VA_ARGS__))
+
+#endif /* _FN_H_ */
+#line 2 "leb128.c"
+
+#ifndef _LEB128_H_
+#define _LEB128_H_
+
+/**
+ * @file leb128.c
+ *
+ * ULEB-128 (unsigned) and SLEB-128 (signed, aka, possibly negative
+ * integers) are variable length encodings for possibly "very large"
+ * numbers. I first came across LEB while working with "DWARF2" in in
+ * the 1990s. Google uses the same encoding for unsigned integers but
+ * uses "zig-zag" for signed numbers (the sign bit is stored in the
+ * lowest bit instead of the more complicated technique SLEB-128
+ * uses).
+ *
+ * Essentially the 8th bit of each byte says whether to continue
+ * adding bits from the next byte or if the number is now "complete"
+ * (so 7-bits per byte are the real data and 1-bit is
+ * "overhead"). Since many numbers we deal with are actually small,
+ * LEB encoding tend to be an efficient encoding of integers and grow
+ * "gracefully" to accomodate larger numbers. In fact the "128" in
+ * ULEB-128 is a misnomer -- you could in theory encode more than 128
+ * bits. This implementation only reads 64bit numbers, not the full
+ * 128 bits.
+ *
+ * This implementation originally comes from LLVM although I have
+ * changed it to a C file, renamed the functions, got rid of camel
+ * case, removed the C++ namespace, removed the inline directive,
+ * removed the pad to argument and changed how results and errors are
+ * returned.
+ */
+
+#include <stdint.h>
+
+#define ERROR_INSUFFICIENT_INPUT -1
+#define ERROR_TOO_BIG -2
+
+typedef struct {
+  uint64_t number;
+  // Negative values mean an error occurred.
+  int size;
+} unsigned_decode_result;
+
+typedef struct {
+  uint64_t number;
+  // Negative values mean an error occurred.
+  int size;
+} signed_decode_result;
+
+extern unsigned encode_sleb_128(int64_t Value, uint8_t* p);
+extern unsigned encode_uleb_128(uint64_t Value, uint8_t* p);
+extern unsigned_decode_result decode_uleb_128(const uint8_t* p,
+                                              const uint8_t* end);
+extern signed_decode_result decode_sleb_128(const uint8_t* p,
+                                            const uint8_t* end);
+
+#endif /* _LEB128_H_ */
+
+//===- llvm/Support/LEB128.h - [SU]LEB128 utility functions -----*- C++ -*-===//
+//
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+//
+//===----------------------------------------------------------------------===//
+//
+// This file declares some utility functions for encoding SLEB128 and
+// ULEB128 values.
+//
+//===----------------------------------------------------------------------===//
+
+/**
+ * @function encode_sleb_128
+ *
+ * Utility function to encode a SLEB128 value to a raw byte
+ * buffer. Returns the length in bytes of the encoded value. 10 bytes
+ * should be enough to hold the 64bit number after encoding.
+ */
+unsigned encode_sleb_128(int64_t Value, uint8_t* p) {
+  uint8_t* orig_p = p;
+  int More;
+  do {
+    uint8_t Byte = Value & 0x7f;
+    // NOTE: this assumes that this signed shift is an arithmetic right shift.
+    Value >>= 7;
+    More = !((((Value == 0) && ((Byte & 0x40) == 0))
+              || ((Value == -1) && ((Byte & 0x40) != 0))));
+    if (More)
+      Byte |= 0x80; // Mark this byte to show that more bytes will follow.
+    *p++ = Byte;
+  } while (More);
+
+  return cast(unsigned, p - orig_p);
+}
+
+/**
+ * @function
+ *
+ * Utility function to encode a ULEB128 value to a raw byte
+ * buffer. Returns the length in bytes of the encoded value. 10 bytes
+ * should be enough to hold the 64bit number after encoding.
+ */
+unsigned encode_uleb_128(uint64_t Value, uint8_t* p) {
+  uint8_t* orig_p = p;
+  do {
+    uint8_t Byte = Value & 0x7f;
+    Value >>= 7;
+    if (Value != 0)
+      Byte |= 0x80; // Mark this byte to show that more bytes will follow.
+    *p++ = Byte;
+  } while (Value != 0);
+
+  return cast(unsigned, (p - orig_p));
+}
+
+/**
+ * @function decode_uleb_128
+ *
+ * Decode a ULEB-128 value (up to 64bits).
+ */
+unsigned_decode_result decode_uleb_128(const uint8_t* p, const uint8_t* end) {
+  const uint8_t* orig_p = p;
+  uint64_t Value = 0;
+  unsigned Shift = 0;
+  do {
+    if (p == end) {
+      unsigned_decode_result result = {0, ERROR_INSUFFICIENT_INPUT};
+      return result;
+    }
+    uint64_t Slice = *p & 0x7f;
+    if ((Shift >= 64 && Slice != 0) || Slice << Shift >> Shift != Slice) {
+      unsigned_decode_result result = {0, ERROR_TOO_BIG};
+      return result;
+    }
+    Value += Slice << Shift;
+    Shift += 7;
+  } while (*p++ >= 128);
+  unsigned_decode_result result = {Value, cast(unsigned, p - orig_p)};
+  return result;
+}
+
+/**
+ * @function decode_sleb_128
+ *
+ * Decode a SLEB128 value (up to 64bits)
+ */
+signed_decode_result decode_sleb_128(const uint8_t* p, const uint8_t* end) {
+  const uint8_t* orig_p = p;
+  int64_t Value = 0;
+  unsigned Shift = 0;
+  uint8_t Byte;
+  do {
+    if (p == end) {
+      signed_decode_result result = {0, ERROR_INSUFFICIENT_INPUT};
+      return result;
+    }
+    Byte = *p;
+    uint64_t Slice = Byte & 0x7f;
+    // This handles decoding padded numbers, otherwise we might be
+    // able to test very easily at the end of the loop.
+    if ((Shift >= 64 && Slice != (Value < 0 ? 0x7f : 0x00))
+        || (Shift == 63 && Slice != 0 && Slice != 0x7f)) {
+      signed_decode_result result = {0, ERROR_TOO_BIG};
+      return result;
+    }
+    Value |= Slice << Shift;
+    Shift += 7;
+    ++p;
+  } while (Byte >= 128);
+  // Sign extend negative numbers if needed.
+  if (Shift < 64 && (Byte & 0x40))
+    Value |= (-1ULL) << Shift;
+  signed_decode_result result = {Value, (p - orig_p)};
+  return result;
+}
+#line 2 "fatal-error.c"
+/**
+ * @file fatal-error.c
+ *
+ * The intent is that everything but a normal program exit will end up
+ * here. (To catch SIGSIGV errors you may call
+ * configure_fatal_errors() first with catch_sigsegv set.)
+ *
+ * Note that you can use fatal_error's to your advantage by setting
+ * the environment variable ARMYKNIFE_FATAL_ERROR_SLEEP_SECONDS to
+ * some value to give yourself enough time to attach a debugger.
+ *
+ * In this case C's macros are paying off as the file and line number
+ * are easy to obtain.
+ *
+ * TODO(jawilson): environment variable to be quieter...
+ */
+
+// ======================================================================
+// This is block is extraced to fatal-error.h
+// ======================================================================
+
+#ifndef _FATAL_ERROR_H_
+#define _FATAL_ERROR_H_
+
+struct fatal_error_config_S {
+  boolean_t catch_sigsegv;
+};
+
+typedef struct fatal_error_config_S fatal_error_config_t;
+
+/**
+ * @constants error_code_t
+ */
+typedef enum {
+  ERROR_UKNOWN,
+  ERROR_SIGSEGV,
+  ERROR_ACCESS_OUT_OF_BOUNDS,
+  ERROR_BAD_COMMAND_LINE,
+  ERROR_DYNAMICALLY_SIZED_TYPE_ILLEGAL_IN_CONTAINER,
+  ERROR_ILLEGAL_ENUM_VALUE,
+  ERROR_ILLEGAL_INITIAL_CAPACITY,
+  ERROR_ILLEGAL_NULL_ARGUMENT,
+  ERROR_ILLEGAL_ZERO_HASHCODE_VALUE,
+  ERROR_ILLEGAL_RANGE,
+  ERROR_MEMORY_ALLOCATION,
+  ERROR_MEMORY_FREE_NULL,
+  ERROR_NOT_REACHED,
+  ERROR_REFERENCE_NOT_EXPECTED_TYPE,
+  ERROR_UNIMPLEMENTED,
+  ERROR_OPEN_LOG_FILE,
+  ERROR_TEST,
+  ERROR_INTERNAL_ASSERTION_FAILURE,
+  ERROR_BAD_ALLOCATION_SIZE,
+  ERROR_ILLEGAL_ARGUMENT,
+  ERROR_MEMORY_START_PADDING_ERROR,
+  ERROR_MEMORY_END_PADDING_ERROR,
+  ERROR_FATAL,
+  ERROR_ILLEGAL_STATE,
+  ERROR_ILLEGAL_INPUT,
+  ERROR_ILLEGAL_UTF_8_CODE_POINT,
+  ERROR_ILLEGAL_TERMINAL_COORDINATES,
+} error_code_t;
+
+extern _Noreturn void fatal_error_impl(char* file, int line, int error_code);
+extern const char* fatal_error_code_to_string(int error_code);
+extern void configure_fatal_errors(fatal_error_config_t config);
+
+/**
+ * @macro fatal_error
+ *
+ * Terminates the program with a fatal error.
+ */
+#define fatal_error(code) fatal_error_impl(__FILE__, __LINE__, code)
+
+#endif /* _FATAL_ERROR_H_ */
+
+// ======================================================================
+
+#include <execinfo.h>
+#include <signal.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+
+fatal_error_config_t fatal_error_config = {0};
+
+void segmentation_fault_handler(int signal_number) {
+  fatal_error(ERROR_SIGSEGV);
+}
+
+void configure_fatal_errors(fatal_error_config_t config) {
+  fatal_error_config = config;
+  if (config.catch_sigsegv) {
+    signal(SIGSEGV, segmentation_fault_handler);
+  }
+}
+
+void print_fatal_error_banner();
+void print_backtrace();
+void print_error_code_name(int error_code);
+
+char* get_command_line() {
+  buffer_t* buffer
+      = buffer_append_file_contents(make_buffer(1), "/proc/self/cmdline");
+  buffer_replace_matching_byte(buffer, 0, ' ');
+  return buffer_to_c_string(buffer);
+}
+
+char* get_program_path() {
+  char buf[4096];
+  int n = readlink("/proc/self/exe", buf, sizeof(buf));
+  if (n > 0) {
+    return string_duplicate(buf);
+  } else {
+    return "<program-path-unknown>";
+  }
+}
+
+_Noreturn void fatal_error_impl(char* file, int line, int error_code) {
+  print_fatal_error_banner();
+  print_backtrace();
+  fprintf(stderr, "%s:%d: FATAL ERROR %d", file, line, error_code);
+  print_error_code_name(error_code);
+  fprintf(stderr, "\nCommand line: %s\n\n", get_command_line());
+  char* sleep_str = getenv("ARMYKNIFE_FATAL_ERROR_SLEEP_SECONDS");
+  if (sleep_str != NULL) {
+    value_result_t sleep_time = string_parse_uint64(sleep_str);
+    if (is_ok(sleep_time)) {
+      fprintf(stderr,
+              "Sleeping for %lu seconds so you can attach a debugger.\n",
+              sleep_time.u64);
+      fprintf(stderr, "  gdb -tui %s %d\n", get_program_path(), getpid());
+      sleep(sleep_time.u64);
+    }
+  } else {
+    fprintf(stderr, "(ARMYKNIFE_FATAL_ERROR_SLEEP_SECONDS is not set)\n");
+  }
+  fprintf(stderr, "Necessaria Morte Mori...\n");
+  exit(-(error_code + 100));
+}
+
+void print_fatal_error_banner() {
+  // As the first thing we print, also responsible for at least one
+  // newline to start a new line if we may not be at one.
+  fprintf(stderr, "\n========== FATAL_ERROR ==========\n");
+}
+
+void print_backtrace() {
+#ifndef NO_VM_BACKTRACE_ON_FATAL_ERROR
+  do {
+    void* array[10];
+    int size = backtrace(array, 10);
+    char** strings = backtrace_symbols(array, size);
+
+    // Print the backtrace
+    for (int i = 0; i < size; i++) {
+      printf("#%d %s\n", i, strings[i]);
+    }
+  } while (0);
+#endif /* NO_VM_BACKTRACE_ON_FATAL_ERROR */
+}
+
+const char* fatal_error_code_to_string(int error_code) {
+  switch (error_code) {
+  case ERROR_UKNOWN:
+    return "ERROR_UKNOWN";
+  case ERROR_MEMORY_ALLOCATION:
+    return "ERROR_MEMORY_ALLOCATION";
+  case ERROR_MEMORY_FREE_NULL:
+    return "ERROR_MEMORY_FREE_NULL";
+  case ERROR_REFERENCE_NOT_EXPECTED_TYPE:
+    return "ERROR_REFERENCE_NOT_EXPECTED_TYPE";
+  case ERROR_ILLEGAL_INITIAL_CAPACITY:
+    return "ERROR_ILLEGAL_INITIAL_CAPACITY";
+  case ERROR_DYNAMICALLY_SIZED_TYPE_ILLEGAL_IN_CONTAINER:
+    return "ERROR_DYNAMICALLY_SIZED_TYPE_ILLEGAL_IN_CONTAINER";
+  case ERROR_ACCESS_OUT_OF_BOUNDS:
+    return "ERROR_ACCESS_OUT_OF_BOUNDS";
+  case ERROR_NOT_REACHED:
+    return "ERROR_NOT_REACHED";
+  case ERROR_ILLEGAL_ZERO_HASHCODE_VALUE:
+    return "ERROR_ILLEGAL_ZERO_HASHCODE_VALUE";
+  case ERROR_UNIMPLEMENTED:
+    return "ERROR_UNIMPLEMENTED";
+  case ERROR_ILLEGAL_NULL_ARGUMENT:
+    return "ERROR_ILLEGAL_NULL_ARGUMENT";
+  case ERROR_ILLEGAL_ARGUMENT:
+    return "ERROR_ILLEGAL_ARGUMENT";
+  case ERROR_MEMORY_START_PADDING_ERROR:
+    return "ERROR_MEMORY_START_PADDING_ERROR";
+  case ERROR_MEMORY_END_PADDING_ERROR:
+    return "ERROR_MEMORY_END_PADDING_ERROR";
+
+  default:
+    return "error";
+  }
+}
+
+void print_error_code_name(int error_code) {
+  fprintf(stderr, " ");
+  fprintf(stderr, "*** ");
+  fprintf(stderr, "%s", fatal_error_code_to_string(error_code));
+  fprintf(stderr, " ***\n");
+}
+#line 2 "value.c"
+
+#ifndef _VALUE_H_
+#define _VALUE_H_
+
+#include <stdint.h>
+
+/**
+ * @file value.c
+ *
+ * A major part of the armyknife library is giving basic "collection"
+ * capabilities to C.
+ *
+ * In an ideal world, C would allow structures to be parameterized so
+ * that a field holding a "key" or a "value" could change size (based
+ * on its static parameters).
+ *
+ * Since that capability doesn't currently exist, instead we take an
+ * approach where keys and values are always the same size (64
+ * bits). While this doesn't allow storing *anything* as a key or
+ * value, it does allow storing a *pointer to anything* as a key or
+ * value. This is actually very similar to how Java collections work
+ * except we can store primitive values like integers and doubles
+ * without "boxing".
+ *
+ * When "searching" a collection for a key, we want to be able to
+ * return "not found" (and potentially other "non-fatal" error
+ * conditions). For this reason we also have the value_result_t
+ * structure, which is a pair of a value_t and a
+ * non_fatal_error_code_t. (It's actually slightly more complicated
+ * because `tcc` treats anonymous unions a little differently than
+ * `gcc` and `clang` so we work around that by repeating the fields of
+ * a value to make value_result_t a bit more convenient to work with).
+ *
+ * Sometimes value_result_t is also used by non collection based
+ * functions, such as parsing an integer, so that other non-fatal
+ * errors can be communicated back to the caller.
+ *
+ * The contract with returning a non-fatal errors is that the state of
+ * the system is in a good state to continue processing (or they get
+ * to decide if the error should be fatal). Users will thus expect
+ * that when a non-fatal error is returned that no global state
+ * modification has ocurred.
+ *
+ * value_t's are typically only passed into functions while
+ * optional_value_result_t's are typically returned from functions.
+ *
+ * When a value_result_t is returned you must always check for an
+ * error code before using the value component of the result. `is_ok`
+ * and `is_not_ok` make this slightly easier and easier to read.
+ *
+ * value_t's and value_result_t's carry no type information that can
+ * be queried at runtime and by their nature C compilers are going to
+ * do a very incomplete job of statically type checking these. For
+ * example you can easily put a double into a collection and
+ * successfully get back this value and use it as a very suspicious
+ * pointer and the compiler will not warn you about this. So
+ * collections aren't as safe as in other languages at either compile
+ * or run-time. (Java's collections (when generic types are *not*
+ * used), are not "safe" at compile time but are still dynamically
+ * safe.)
+ *
+ * On the positive side, the lack of dynamic typing means you haven't
+ * paid a price to maintain these and in theory your code can run
+ * faster.
+ *
+ * If C had a richer type-system, namely generic types, we could catch
+ * all all potential type errors at compile time and potentially even
+ * allow storing "values" larger than 64bits "inline" with a little
+ * more magic.
+ *
+ * The most common things to use as keys are strings, integers, and
+ * pointers (while common association values are strings, integers,
+ * pointers and booleans).
+ *
+ * Our primary goal is to make collections convenient. Using typedef
+ * and inline functions you can also make these safer at compile time.
+ */
+
+/**
+ * @typedef value_t
+ *
+ * An un-typed union of integers, doubles, and pointers.
+ */
+typedef union {
+  uint64_t u64;
+  uint64_t i64;
+  char* str;
+  void* ptr;
+  void* dbl;
+} value_t;
+
+/**
+ * @enum non_fatal_error_code_t
+ *
+ * These are user recoverable errors and when a non-recoverable error
+ * is returned, the state of the system should be left in a
+ * recoverable state.
+ */
+typedef enum {
+  NF_OK,
+  NF_ERROR_NOT_FOUND,
+  NF_ERROR_NOT_PARSED_AS_NUMBER,
+  NF_ERROR_NOT_PARSED_AS_EXPECTED_ENUM,
+} non_fatal_error_code_t;
+
+/**
+ * @typedef value_result_t
+ *
+ * A pair of a value_t and a non-fatal error code. When the error code
+ * is set, the value_t should never be looked at (most likely will be
+ * "zero" or a "nullptr" but you shouldn't trust that).
+ */
+typedef struct {
+  union {
+    uint64_t u64;
+    int64_t i64;
+    double dbl;
+    char* str;
+    void* ptr;
+    value_t val;
+  };
+  // TODO(jawilson): change the name of the field after checking if
+  // the compiler helps at all here!
+  non_fatal_error_code_t nf_error;
+} value_result_t;
+
+// TODO(jawilson): we can use _Generic for this and just use
+// to_value()
+
+#define boolean_to_value(x) compound_literal(value_t, {.u64 = x})
+#define u64_to_value(x) compound_literal(value_t, {.u64 = x})
+#define i64_to_value(x) compound_literal(value_t, {.i64 = x})
+#define str_to_value(x) compound_literal(value_t, {.str = x})
+#define ptr_to_value(x) compound_literal(value_t, {.ptr = x})
+#define dbl_to_value(x) compound_literal(value_t, {.dbl = x})
+
+/**
+ * @function is_ok
+ *
+ * Return true if the given value_result_t contains a legal value
+ * instead of an error condition.
+ */
+static inline boolean_t is_ok(value_result_t value) {
+  return value.nf_error == NF_OK;
+}
+
+/**
+ * @function is_not_ok
+ *
+ * Return true if the given value_result_t contains an error, such as
+ * NF_ERROR_NOT_FOUND.
+ */
+static inline boolean_t is_not_ok(value_result_t value) {
+  return value.nf_error != NF_OK;
+}
+
+/**
+ * @macro cast
+ *
+ * Perform an unsafe cast of expr to the given type. This is much
+ * easier for the omni-c compiler to handle because we know to parse a
+ * type as the first argument even if we don't know what all the types
+ * are yet. While omni-c uses this macro, if you are using plain C,
+ * you don't have to use it.
+ */
+#define cast(type, expr) ((type) (expr))
+
+/**
+ * @typedef value_comparison_fn
+ *
+ * A type for a function pointer which will compare two values,
+ * returning -1 when value1 < value2, 0 when value1 == value2, and 1
+ * when value1 > value2.
+ */
+// typedef int (*value_comparison_fn)(value_t value1, value_t value2);
+typedef fn_t(int, value_t value1, value_t value2) value_comparison_fn;
+
+/**
+ * @typedef value_hash_fn
+ *
+ * A type for a function pointer which will hash it's value_t to a
+ * uint64_t.
+ */
+// typedef uint64_t (*value_hash_fn)(value_t value1);
+typedef fn_t(uint64_t, value_t value1) value_hash_fn;
+
+
+int cmp_string_values(value_t value1, value_t value2);
+uint64_t hash_string_value(value_t value1);
+
+#endif /* _VALUE_H_ */
+
+/**
+ * @function cmp_string_values
+ *
+ * Assumes value1 and value2 are char* (aka strings or C strings) and
+ * does the equivalent of strcmp on them.
+ */
+int cmp_string_values(value_t value1, value_t value2) {
+  return strcmp(value1.str, value2.str);
+}
+
+/**
+ * @function string_hash
+ *
+ * Assumes value1 is char* and performs a string hash on it.
+ */
+uint64_t hash_string_value(value_t value1) { return string_hash(value1.str); }
 #line 2 "allocate.c"
 
 /**
@@ -2166,39 +2912,992 @@ void checked_free(char* file, int line, void* pointer) {
   number_of_free_calls++;
   free(malloc_pointer);
 }
-#line 2 "boolean.c"
+#line 2 "uint64.c"
 /**
- * @file boolean.c
+ * @file uint64.c
  *
- * Make sure that at least true/false from <stdbool.h> are available
- * and and a new typedef named boolean_t because bool seems ugly. (Use
- * what you prefer!)
+ * Implement a couple of useful operations on uint64_t (which can
+ * often be used for smaller types).
+ */
+
+#ifndef _UINT64_H_
+#define _UINT64_H_
+
+#include <stdint.h>
+
+extern int uint64_highest_bit_set(uint64_t n);
+
+#endif /* _UINT64_H_ */
+
+/**
+ * @function uint64_highest_bit_set
+ *
+ */
+int uint64_highest_bit_set(uint64_t n) {
+  if (n >= 1ULL << 32) {
+    return uint64_highest_bit_set(n >> 32) + 32;
+  } else if (n >= 1ULL << 16) {
+    return uint64_highest_bit_set(n >> 16) + 16;
+  } else if (n >= 1ULL << 8) {
+    return uint64_highest_bit_set(n >> 8) + 8;
+  } else if (n >= 1ULL << 4) {
+    return uint64_highest_bit_set(n >> 4) + 4;
+  } else if (n >= 1ULL << 2) {
+    return uint64_highest_bit_set(n >> 2) + 2;
+  } else if (n >= 1ULL << 1) {
+    return uint64_highest_bit_set(n >> 1) + 1;
+  } else {
+    return 0;
+  }
+}
+#line 2 "string-util.c"
+/**
+ * @file string-util.c
+ *
+ * This contains additional string function to operate on "strings"
+ * since the C libary has only basic routines.
  */
 
 // ======================================================================
-// This section is extraced to boolean.h
+// This is block is extraced to allocate.h
 // ======================================================================
 
-#ifndef _BOOLEAN_H_
-#define _BOOLEAN_H_
+#ifndef _STRING_UTIL_H_
+#define _STRING_UTIL_H_
 
-#include <stdbool.h>
+#include <stdint.h>
+
+extern int string_is_null_or_empty(const char* str1);
+extern int string_equal(const char* str1, const char* str2);
+extern int string_starts_with(const char* str1, const char* str2);
+extern int string_ends_with(const char* str1, const char* str2);
+extern boolean_t string_contains_char(const char* str, char ch);
+extern int string_index_of_char(const char* a, char ch);
+extern char* uint64_to_string(uint64_t number);
+extern uint64_t string_hash(const char* str);
+extern char* string_substring(const char* str, int start, int end);
+extern value_result_t string_parse_uint64(const char* string);
+extern value_result_t string_parse_uint64_dec(const char* string);
+extern value_result_t string_parse_uint64_hex(const char* string);
+extern value_result_t string_parse_uint64_bin(const char* string);
+extern char* string_duplicate(const char* src);
+extern char* string_append(const char* a, const char* b);
+extern char* string_left_pad(const char* a, int count, char ch);
+extern char* string_right_pad(const char* a, int count, char ch);
+__attribute__((format(printf, 1, 2))) extern char* string_printf(char* format,
+                                                                 ...);
+char* string_truncate(char* str, int limit, char* at_limit_suffix);
+
+#endif /* _STRING_UTIL_H_ */
+
+// ======================================================================
+
+#include <stdlib.h>
+#include <string.h>
+
+uint64_t fasthash64(const void* buf, size_t len, uint64_t seed);
 
 /**
- * @type boolean_t
+ * @function string_is_null_or_empty
  *
- * This is a simple typedef for "bool" (or _Bool from C99) which is
- * available from "stdbool.h" as bool and true and false constants are
- * also defined. We use it for more consistency in primitive types
- * (where only char* is commonly used in this library despite not
- * following the typically naming convention).
+ * Return true if the given string is NULL or strlen is zero.
  */
-typedef bool boolean_t;
+int string_is_null_or_empty(const char* str) {
+  return (str == NULL) || (strlen(str) == 0);
+}
 
-// #define true ((boolean_t) 1)
-// #define false ((boolean_t) 0)
+/**
+ * @function string_equal
+ *
+ * Return true if two strings are equal.
+ */
+int string_equal(const char* str1, const char* str2) {
+  if (string_is_null_or_empty(str1)) {
+    return string_is_null_or_empty(str2);
+  }
+  return strcmp(str1, str2) == 0;
+}
 
-#endif /* _BOOLEAN_H_ */
+/**
+ * @function string_starts_with
+ *
+ * Return true if str1 starts with all of str2.
+ */
+int string_starts_with(const char* str1, const char* str2) {
+  return strncmp(str1, str2, strlen(str2)) == 0;
+}
+
+/**
+ * @function string_ends_with
+ *
+ * Return true if str1 ends with all of str2.
+ */
+int string_ends_with(const char* str1, const char* str2) {
+  size_t len1 = strlen(str1);
+  size_t len2 = strlen(str2);
+
+  if (len2 > len1) {
+    return 0;
+  }
+
+  return strcmp(str1 + (len1 - len2), str2) == 0;
+}
+
+/**
+ * @function string_contains_char
+ *
+ * Return true if str contains that given character ch.
+ */
+boolean_t string_contains_char(const char* str, char ch) {
+  return string_index_of_char(str, ch) >= 0;
+}
+
+// TODO(jawilson): string_contains_code_point
+
+// TODO(jawilson): string_index_of_string
+
+/**
+ * @function string_index_of_char
+ *
+ * Return the index of the given character in a string or a value less
+ * than zero if the character isn't inside of the string.
+ */
+int string_index_of_char(const char* str, char ch) {
+  if (string_is_null_or_empty(str)) {
+    return -1;
+  }
+  int str_length = strlen(str);
+  for (int i = 0; i < str_length; i++) {
+    if (str[i] == ch) {
+      return i;
+    }
+  }
+  return -1;
+}
+
+/**
+ * @function string_hash
+ *
+ * Return a fast but generally high-quality 64bit hash of an input
+ * string.
+ */
+uint64_t string_hash(const char* str) {
+  return fasthash64(str, strlen(str), 0);
+}
+
+/**
+ * @function string_substring
+ *
+ * Return a substring of the given string as a newly allocated string.
+ */
+char* string_substring(const char* str, int start, int end) {
+  uint64_t len = strlen(str);
+  if (start >= len || start >= end || end < start) {
+    fatal_error(ERROR_ILLEGAL_ARGUMENT);
+  }
+  int result_size = end - start + 1;
+  char* result = cast(char*, malloc_bytes(result_size));
+  for (int i = start; (i < end); i++) {
+    result[i - start] = str[i];
+  }
+  result[result_size - 1] = '\0';
+  return result;
+}
+
+value_result_t string_parse_uint64_dec(const char* string) {
+  uint64_t len = strlen(string);
+  uint64_t integer = 0;
+
+  if (len == 0) {
+    return (value_result_t){.u64 = 0,
+                            .nf_error = NF_ERROR_NOT_PARSED_AS_NUMBER};
+  }
+
+  for (int i = 0; i < len; i++) {
+    char ch = string[i];
+    if (ch < '0' || ch > '9') {
+      return (value_result_t){.u64 = 0,
+                              .nf_error = NF_ERROR_NOT_PARSED_AS_NUMBER};
+    }
+    uint64_t digit = string[i] - '0';
+    integer = integer * 10 + digit;
+  }
+
+  return (value_result_t){.u64 = integer, .nf_error = NF_OK};
+}
+
+/**
+ * Parse a sequence of zeros and ones. A prefix like 0b should be
+ * stripped before calling this routine and the string must only
+ * contain the digits 0 and 1.
+ */
+value_result_t string_parse_uint64_bin(const char* string) {
+  uint64_t len = strlen(string);
+  uint64_t integer = 0;
+
+  if (len == 0) {
+    return compound_literal(
+        value_result_t, {.u64 = 0, .nf_error = NF_ERROR_NOT_PARSED_AS_NUMBER});
+  }
+
+  for (int i = 0; i < len; i++) {
+    char ch = string[i];
+    if (ch < '0' || ch > '1') {
+      return compound_literal(
+          value_result_t,
+          {.u64 = 0, .nf_error = NF_ERROR_NOT_PARSED_AS_NUMBER});
+    }
+    uint64_t digit = string[i] - '0';
+    integer = integer << 1 | digit;
+  }
+
+  return compound_literal(value_result_t, {.u64 = integer, .nf_error = NF_OK});
+}
+
+static inline boolean_t is_hex_digit(char ch) {
+  return (ch >= '0' && ch <= '9') || (ch >= 'a' && ch <= 'f');
+}
+
+static inline uint64_t hex_digit_to_value(char ch) {
+  if (ch >= '0' && ch <= '9') {
+    return ch - '0';
+  } else {
+    return (ch - 'a') + 10;
+  }
+}
+
+/**
+ * Parse a sequence of characters "0123456789abcdef" to an uint64_t. A
+ * prefix like 0x should be striped before calling this routine.
+ *
+ */
+value_result_t string_parse_uint64_hex(const char* string) {
+  uint64_t len = strlen(string);
+  uint64_t integer = 0;
+
+  if (len == 0) {
+    return compound_literal(
+        value_result_t, {.u64 = 0, .nf_error = NF_ERROR_NOT_PARSED_AS_NUMBER});
+  }
+
+  for (int i = 0; i < len; i++) {
+    char ch = string[i];
+    if (!is_hex_digit(ch)) {
+      return compound_literal(
+          value_result_t,
+          {.u64 = 0, .nf_error = NF_ERROR_NOT_PARSED_AS_NUMBER});
+    }
+    uint64_t digit = hex_digit_to_value(ch);
+    integer = integer << 4 | digit;
+  }
+
+  return compound_literal(value_result_t, {.u64 = integer, .nf_error = NF_OK});
+}
+
+/**
+ * @function string_parse_uint64
+ *
+ * Parse a string as a uint64_t.
+ *
+ * If the string begins with "0x", the the number should be a well
+ * formed hexidecimal number (in all lower-case).
+ *
+ * If the string begins with "0b", the the number should be a well
+ * formed binary number.
+ *
+ * Ortherwise the number should be a well-formed decimal number.
+ *
+ * While currently overflow is not detected, that is likely to be
+ * detected in future versions of the library.
+ */
+value_result_t string_parse_uint64(const char* string) {
+  if (string_starts_with(string, "0x")) {
+    return string_parse_uint64_hex(&string[2]);
+  } else if (string_starts_with(string, "0b")) {
+    return string_parse_uint64_bin(&string[2]);
+  } else {
+    return string_parse_uint64_dec(string);
+  }
+}
+
+/**
+ * @function string_duplicate
+ *
+ * Just like strdup except NULL is a valid source argument and we use
+ * malloc_bytes which checks the return result from malloc.
+ */
+char* string_duplicate(const char* src) {
+  if (src == NULL) {
+    return NULL;
+  }
+  int len = strlen(src) + 1;
+  char* result = cast(char*, malloc_bytes(len));
+  memcpy(result, src, len);
+
+  return result;
+}
+
+/**
+ * @function string_append
+ *
+ * Return a freshly allocated string that is the concatentation of the
+ * two input strings (neither of which should be NULL);
+ */
+char* string_append(const char* a, const char* b) {
+  if (a == NULL || b == NULL) {
+    fatal_error(ERROR_ILLEGAL_NULL_ARGUMENT);
+  }
+  int total_length = strlen(a) + strlen(b) + 1;
+  char* result = cast(char*, malloc_bytes(total_length));
+  strcat(result, a);
+  strcat(result, b);
+  return result;
+}
+
+/**
+ * @function uint64_to_string
+ *
+ * Convert a uint64_t number to a string.
+ */
+char* uint64_to_string(uint64_t number) {
+  char buffer[32];
+  sprintf(buffer, "%lu", number);
+  return string_duplicate(buffer);
+}
+
+/**
+ * @function string_left_pad
+ *
+ * Prepend left left padding (if necessary) to make it at least N
+ * bytes long.
+ */
+char* string_left_pad(const char* str, int n, char ch) {
+  if (n < 0) {
+    fatal_error(ERROR_ILLEGAL_RANGE);
+  }
+
+  int input_length = strlen(str);
+
+  // Calculate padding needed
+  int padding_needed = n - input_length;
+
+  // As usual, since buffer's grow as needed, we are tolerant of a
+  // wrong initial computation of the length though getting this wrong
+  // is wasteful... In this case we do the wasteful thing knowing that
+  // we will free everything shortly. We just want the correct result,
+  // not necessarily as fast as possible.
+
+  int len = 1; // max(padding_needed + input_length, input_length) + 1;
+
+  buffer_t* buffer = make_buffer(len);
+  for (int i = 0; i < padding_needed; i++) {
+    buffer = buffer_append_byte(buffer, ch);
+  }
+  buffer = buffer_append_string(buffer, str);
+  char* result = buffer_to_c_string(buffer);
+  free_bytes(buffer);
+  return result;
+}
+
+/**
+ * @function string_right_pad
+ *
+ * Append right padding to a string (if necessary) to make it at least
+ * N bytes long.
+ */
+char* string_right_pad(const char* str, int n, char ch) {
+  if (n < 0) {
+    fatal_error(ERROR_ILLEGAL_RANGE);
+  }
+
+  int input_length = strlen(str);
+
+  // Calculate padding needed
+  int padding_needed = n - input_length;
+
+  // As usual, since buffer's grow as needed, we are tolerant of a
+  // wrong initial computation of the length though getting this wrong
+  // is wasteful... In this case we do the wasteful thing knowing that
+  // we will free everything shortly. We just want the correct result,
+  // not necessarily as fast as possible.
+
+  int len = 1; // max(padding_needed + input_length, input_length) + 1;
+
+  buffer_t* buffer = make_buffer(len);
+  buffer = buffer_append_string(buffer, str);
+  for (int i = 0; i < padding_needed; i++) {
+    buffer = buffer_append_byte(buffer, ch);
+  }
+  char* result = buffer_to_c_string(buffer);
+  free_bytes(buffer);
+  return result;
+}
+
+/**
+ * @function string_truncate
+ *
+ * Return a copy of the string truncated to limit number of *bytes*
+ * (excluding the trailing zero). This is currently not unicode safe!
+ *
+ * When the string is truncated, we also add 'at_limit_suffix' which
+ * may make the returned string actually that many characters
+ * longer. This behavior is likely to change in a future version.
+ */
+char* string_truncate(char* str, int limit, char* at_limit_suffix) {
+  // limit is just a guess, buffer's always grow as needed.
+  buffer_t* buffer = make_buffer(limit);
+  for (int i = 0;; i++) {
+    char ch = str[i];
+    if (ch == '\0') {
+      char* result = buffer_to_c_string(buffer);
+      free_bytes(buffer);
+      return result;
+    }
+    buffer = buffer_append_byte(buffer, ch);
+  }
+  if (at_limit_suffix) {
+    buffer = buffer_append_string(buffer, at_limit_suffix);
+  }
+  char* result = buffer_to_c_string(buffer);
+  free_bytes(buffer);
+  return result;
+}
+
+// Allows tests to make the temporary buffer small to more easily test
+// the case where vsnprintf is called twice because the first time it
+// was called we didn't have a large enough buffer.
+#ifndef STRING_PRINTF_INITIAL_BUFFER_SIZE
+#define STRING_PRINTF_INITIAL_BUFFER_SIZE 1024
+#endif /* STRING_PRINTF_INITIAL_BUFFER_SIZE */
+
+/**
+ * @function string_printf
+ *
+ * Perform printf to a buffer and return the result as a dynamically
+ * allocated string. The string is automatically allocated to the
+ * appropriate size.
+ */
+__attribute__((format(printf, 1, 2))) char* string_printf(char* format, ...) {
+  char buffer[STRING_PRINTF_INITIAL_BUFFER_SIZE];
+  int n_bytes = 0;
+  do {
+    va_list args;
+    va_start(args, format);
+    n_bytes
+        = vsnprintf(buffer, STRING_PRINTF_INITIAL_BUFFER_SIZE, format, args);
+    va_end(args);
+  } while (0);
+
+  if (n_bytes < STRING_PRINTF_INITIAL_BUFFER_SIZE) {
+    char* result = cast(char*, malloc_bytes(n_bytes + 1));
+    strcat(result, buffer);
+    return result;
+  } else {
+    char* result = cast(char*, malloc_bytes(n_bytes + 1));
+    va_list args;
+    va_start(args, format);
+    int n_bytes_second = vsnprintf(result, n_bytes + 1, format, args);
+    va_end(args);
+    if (n_bytes_second != n_bytes) {
+      fatal_error(ERROR_INTERNAL_ASSERTION_FAILURE);
+    }
+    return result;
+  }
+}
+
+/* ================================================================ */
+
+/* The MIT License
+
+   Copyright (C) 2012 Zilong Tan (eric.zltan@gmail.com)
+
+   Permission is hereby granted, free of charge, to any person
+   obtaining a copy of this software and associated documentation
+   files (the "Software"), to deal in the Software without
+   restriction, including without limitation the rights to use, copy,
+   modify, merge, publish, distribute, sublicense, and/or sell copies
+   of the Software, and to permit persons to whom the Software is
+   furnished to do so, subject to the following conditions:
+
+   The above copyright notice and this permission notice shall be
+   included in all copies or substantial portions of the Software.
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+   EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+   MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+   NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
+   BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+   ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+   CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+   SOFTWARE.
+*/
+
+// #include "fasthash.h"
+
+// Compression function for Merkle-Damgard construction.
+// This function is generated using the framework provided.
+static inline uint64_t mix(uint64_t h) {
+  h ^= h >> 23;
+  h *= 0x2127599bf4325c37ULL;
+  h ^= h >> 47;
+  return h;
+}
+
+// security: if the system allows empty keys (len=3) the seed is exposed, the
+// reverse of mix. objsize: 0-1fd: 509
+uint64_t fasthash64(const void* buf, size_t len, uint64_t seed) {
+  const uint64_t m = 0x880355f21e6d1965ULL;
+  const uint64_t* pos = cast(const uint64_t*, buf);
+  const uint64_t* end = pos + (len / 8);
+  const unsigned char* pos2;
+  uint64_t h = seed ^ (len * m);
+  uint64_t v;
+
+  while (pos != end) {
+    v = *pos++;
+    h ^= mix(v);
+    h *= m;
+  }
+
+  pos2 = cast(const unsigned char*, pos);
+  v = 0;
+
+  switch (len & 7) {
+  case 7:
+    v ^= (uint64_t) pos2[6] << 48;
+  case 6:
+    v ^= (uint64_t) pos2[5] << 40;
+  case 5:
+    v ^= (uint64_t) pos2[4] << 32;
+  case 4:
+    v ^= (uint64_t) pos2[3] << 24;
+  case 3:
+    v ^= (uint64_t) pos2[2] << 16;
+  case 2:
+    v ^= (uint64_t) pos2[1] << 8;
+  case 1:
+    v ^= (uint64_t) pos2[0];
+    h ^= mix(v);
+    h *= m;
+  }
+
+  return mix(h);
+}
+#line 2 "logger.c"
+
+/**
+ * @file logger.c
+ *
+ * A "logger" is a type of code instrumentation and provides the
+ * ability to put explicit "print statements" into your code without
+ * necessarily having a large impact on the performance of that code
+ * as long as the logger is turned off for that "level" of detail.
+ *
+ * If you've temporarily inserted print statements into your program,
+ * you've probably already learned that logging is very useful and
+ * also somewhat expensive in terms of run-time performance. [^1]
+ *
+ * Since logging is expensive, it is useful to be able to turn it on
+ * and off (even without recompiling) which is done based on the
+ * logging level. When logging is turned off, the cost is meant to be
+ * equivalent to a load, compare, and branch though logging can effect
+ * the C compiler's optimizations, so it is **not** recommended to be
+ * left in critical loops. Obviously if the code is compiled into the
+ * binary, even if the code to skip the logging doesn't considerably
+ * increase run-time performance, it may still have an impact for
+ * example on the output binary size.
+ *
+ * The default log level is "WARN" though it is possible to override
+ * this with #define ARMYKNIFE_LIB_DEFAULT_LOG_LEVEL <level> when
+ * including the library implementation (or from your build command
+ * which allows C preprocessor definitions to be injected into your
+ * source code, one reason you may want a debug vs production builds).
+ *
+ * Additionally, when the first log statement is encountered, we
+ * examine the environment variable named ARMYKNIFE_LIB_LOG_LEVEL if
+ * you want to adjust the level after compilation. Future versions
+ * will certainly provide more control such as turn on logging only
+ * for specific files as well as giving the C compiler enough
+ * information to remove some logging code completely from the
+ * binary).
+ *
+ * There are a set number of levels and they are defined like so:
+ *
+ * OFF = 0
+ * TRACE = 1
+ * DEBUG = 2
+ * INFO = 3
+ * WARN = 4
+ * FATAL = 5
+ * TEST = 6
+ *
+ * The most overlooked part of logging may be that putting PII or
+ * other information into logs may violate GDPR and other privacy laws
+ * depending on how the logs are processed and retained. Our
+ * recommendation is to never intentionally log PII. It's especially
+ * important to keep this in mind if you are developing an internet
+ * application that the user isn't running on their own machine which
+ * isn't an initial focus of this library.
+ *
+ * [^1]: For this implementation, getting a timestamp is probably one
+ * kernel call and doing the actual output, since logging is less
+ * useful when buffered, requires at least another kernel
+ * call. Finally, formatting strings for human readability is
+ * relatively expensive itself. For example, printing a large number
+ * may require dozens or hundreds of cycles while adding two numbers
+ * may take less than a single cycle on a modern pipelined processor).
+ */
+
+#ifndef _LOGGER_H_
+#define _LOGGER_H_
+
+#include <stdarg.h>
+#include <stdio.h>
+
+#define LOGGER_OFF 0
+#define LOGGER_TRACE 1
+#define LOGGER_DEBUG 2
+#define LOGGER_INFO 3
+#define LOGGER_WARN 4
+#define LOGGER_FATAL 5
+#define LOGGER_TEST 6
+
+struct logger_state_S {
+  boolean_t initialized;
+  int level;
+  char* logger_output_filename;
+  FILE* output;
+};
+
+typedef struct logger_state_S logger_state_t;
+
+#ifndef LOGGER_DEFAULT_LEVEL
+#define LOGGER_DEFAULT_LEVEL LOGGER_WARN
+#endif /* LOGGER_DEFAULT_LEVEL */
+
+extern logger_state_t global_logger_state;
+
+extern void logger_init(void);
+
+__attribute__((format(printf, 5, 6))) extern void
+    logger_impl(char* file, int line_number, const char* function, int level,
+                char* format, ...);
+
+/**
+ * @macro log_none
+ *
+ * This will never ever log and should have essentially zero impact on
+ * compilation (including detecting errors). In other words it should
+ * behave like an empty statment ";".
+ *
+ * On the other hand, errors in these statements will not be caught
+ * and therefore it can't be depended on to keep working as you
+ * refactor code and decide later that you want to turn it on.
+ */
+#define log_none(format, ...)                                                  \
+  do {                                                                         \
+  } while (0);
+
+/**
+ * @macro log_off
+ *
+ * This will never log however the compiler *should* still check to
+ * make sure the code is legal and compiles. Any sufficiently smart
+ * compiler with some level of optimization turned on should not
+ * change it's code generation strategy at all if you leave one of these
+ * statements in your source code and you should easily be able to
+ * upgrade them to a real level later.
+ */
+#define log_off(format, ...)                                                   \
+  do {                                                                         \
+    if (0) {                                                                   \
+      logger_impl(__FILE__, __LINE__, __FUNCTION__, LOGGER_TRACE, format,      \
+                  ##__VA_ARGS__);                                              \
+    }                                                                          \
+  } while (0)
+
+/**
+ * @macro log_trace
+ *
+ * Log at the TRACE level using printf style formatting.
+ */
+#define log_trace(format, ...)                                                 \
+  do {                                                                         \
+    if (global_logger_state.level <= LOGGER_TRACE) {                           \
+      logger_impl(__FILE__, __LINE__, __FUNCTION__, LOGGER_TRACE, format,      \
+                  ##__VA_ARGS__);                                              \
+    }                                                                          \
+  } while (0)
+
+/**
+ * @macro log_debug
+ *
+ * Log at the DEBUG level using printf style formatting.
+ */
+#define log_debug(format, ...)                                                 \
+  do {                                                                         \
+    if (global_logger_state.level <= LOGGER_DEBUG) {                           \
+      logger_impl(__FILE__, __LINE__, __FUNCTION__, LOGGER_DEBUG, format,      \
+                  ##__VA_ARGS__);                                              \
+    }                                                                          \
+  } while (0)
+
+/**
+ * @macro log_info
+ *
+ * Log at the INFO level using printf style formatting.
+ */
+#define log_info(format, ...)                                                  \
+  do {                                                                         \
+    if (global_logger_state.level <= LOGGER_INFO) {                            \
+      logger_impl(__FILE__, __LINE__, __FUNCTION__, LOGGER_INFO, format,       \
+                  ##__VA_ARGS__);                                              \
+    }                                                                          \
+  } while (0)
+
+/**
+ * Determine if logging at the INFO level is enabled.
+ */
+static inline boolean_t should_log_info() {
+  return global_logger_state.level <= LOGGER_INFO;
+}
+
+/**
+ * @macro log_warn
+ *
+ * Log at the WARN level using printf style formatting.
+ */
+#define log_warn(format, ...)                                                  \
+  do {                                                                         \
+    if (global_logger_state.level <= LOGGER_WARN) {                            \
+      logger_impl(__FILE__, __LINE__, __FUNCTION__, LOGGER_WARN, format,       \
+                  ##__VA_ARGS__);                                              \
+    }                                                                          \
+  } while (0)
+
+/**
+ * @macro log_fatal
+ *
+ * Log at the FATAL level using printf style formatting.
+ *
+ * Typically this is only done before invoking fatal_error though I
+ * don't have a convenient way to enforce this.
+ */
+#define log_fatal(format, ...)                                                 \
+  do {                                                                         \
+    if (global_logger_state.level <= LOGGER_FATAL) {                           \
+      logger_impl(__FILE__, __LINE__, __FUNCTION__, LOGGER_FATAL, format,      \
+                  ##__VA_ARGS__);                                              \
+    }                                                                          \
+  } while (0)
+
+/**
+ * @macro log_test
+ *
+ * Log at the TEST level using printf style formatting. This should
+ * only be used inside of test code to communicate very basic
+ * information back to the user when running a test and is therefore
+ * independent of the actual log level.
+ */
+#define log_test(format, ...)                                                  \
+  do {                                                                         \
+    logger_impl(__FILE__, __LINE__, __FUNCTION__, LOGGER_TEST, format,         \
+                ##__VA_ARGS__);                                                \
+  } while (0)
+
+#endif /* _LOGGER_H_ */
+
+logger_state_t global_logger_state
+    = compound_literal(logger_state_t, {.level = LOGGER_DEFAULT_LEVEL});
+
+value_result_t parse_log_level_enum(char* str) {
+  if (strcmp("FATAL", str) == 0 || strcmp("fatal", str) == 0) {
+    return (value_result_t){.u64 = LOGGER_FATAL};
+  } else if (strcmp("WARN", str) == 0 || strcmp("warn", str) == 0) {
+    return (value_result_t){.u64 = LOGGER_WARN};
+  } else if (strcmp("INFO", str) == 0 || strcmp("info", str) == 0) {
+    return (value_result_t){.u64 = LOGGER_INFO};
+  } else if (strcmp("DEBUG", str) == 0 || strcmp("debug", str) == 0) {
+    return (value_result_t){.u64 = LOGGER_DEBUG};
+  } else if (strcmp("TRACE", str) == 0 || strcmp("trace", str) == 0) {
+    return (value_result_t){.u64 = LOGGER_TRACE};
+  } else if (strcmp("OFF", str) == 0 || strcmp("off", str) == 0) {
+    return (value_result_t){.u64 = LOGGER_OFF};
+  } else {
+    return (value_result_t){.nf_error = NF_ERROR_NOT_PARSED_AS_EXPECTED_ENUM};
+  }
+}
+
+// FORWARD DECLARATION
+char* logger_level_to_string(int level);
+
+/**
+ * @function logger_init
+ *
+ * This function modifies the logging level based on the environment
+ * variable ARMYKNIFE_LIB_LOG_LEVEL (which currently must be a
+ * number).
+ *
+ * While not required to actually use logging, the logging level will
+ * be set to LOGGER_WARN unless you change it in a debugger, and those
+ * logging statements will be sent to stderr which is probably not
+ * convenient.
+ */
+void logger_init(void) {
+  char* level_string = getenv("ARMYKNIFE_LIB_LOG_LEVEL");
+  if (level_string != NULL) {
+    value_result_t parsed = string_parse_uint64(level_string);
+    if (is_ok(parsed)) {
+      global_logger_state.level = parsed.u64;
+    } else {
+      value_result_t parsed = parse_log_level_enum(level_string);
+      if (is_ok(parsed)) {
+        global_logger_state.level = parsed.u64;
+      } else {
+        log_warn("%s could not be converted to a log level.", level_string);
+      }
+    }
+  }
+
+  fprintf(stderr, "Log level is set to %s (%d)\n",
+          logger_level_to_string(global_logger_state.level),
+          global_logger_state.level);
+
+  char* output_file_name = getenv("ARMYKNIFE_LIB_LOG_FILE");
+
+  // It's pretty standard to include the "pid" in the filename at
+  // least when writing to /tmp/. We aren't quite doing that yet...
+  //
+  // pid_t pid = getpid(); -- pid is a number of some sort...
+
+  if (output_file_name != NULL) {
+    global_logger_state.output = fopen(output_file_name, "w");
+    if (!global_logger_state.output) {
+      fatal_error(ERROR_OPEN_LOG_FILE);
+    }
+    // Set the stream to unbuffered
+    // if (setvbuf(log_file, NULL, _IONBF, 0) != 0) {
+    // perror("Failed to set stream to unbuffered");
+    // exit(EXIT_FAILURE);
+    // }
+    global_logger_state.logger_output_filename = output_file_name;
+  } else {
+    global_logger_state.output = stderr;
+    global_logger_state.initialized = true;
+  }
+}
+
+// Convert the level to a human readable string (which will also
+// appear as the name in the log file).
+char* logger_level_to_string(int level) {
+  switch (level) {
+  case LOGGER_OFF:
+    return "LOGGER_OFF";
+  case LOGGER_TRACE:
+    return "TRACE";
+  case LOGGER_DEBUG:
+    return "DEBUG";
+  case LOGGER_INFO:
+    return "INFO";
+  case LOGGER_WARN:
+    return "WARN";
+  case LOGGER_FATAL:
+    return "FATAL";
+  default:
+    return "LEVEL_UNKNOWN";
+  }
+}
+
+/**
+ * @function logger_impl
+ *
+ * This is the non macro version entry point into the logger. Normally
+ * it wouldn't be called directly since it is less convenient than the
+ * macro versions.
+ */
+__attribute__((format(printf, 5, 6))) void
+    logger_impl(char* file, int line_number, const char* function, int level,
+                char* format, ...) {
+
+  FILE* output = global_logger_state.output;
+
+  // Ensure that logging to somewhere will happen though a later call
+  // to logger_init() may send the output to somewhere else.
+  if (output == NULL) {
+    output = stderr;
+  }
+
+  if (level >= global_logger_state.level) {
+    fprintf(output, "%s ", logger_level_to_string(level));
+    va_list args;
+    fprintf(output, "%s:%d %s | ", file, line_number, function);
+
+    va_start(args, format);
+    vfprintf(output, format, args);
+    va_end(args);
+
+    fprintf(output, "\n");
+  }
+}
+#line 2 "utf8-decoder.c"
+/**
+ * @file utf8-decoder.c
+ *
+ * A very basic UTF-8 decoder.
+ */
+#ifndef _UTF8_DECODER_H_
+#define _UTF8_DECODER_H_
+
+#include <stdint.h>
+
+/**
+ * @struct utf8_decode_result_t
+ *
+ * Holds the result of utf8_decode.
+ */
+struct utf8_decode_result_S {
+  uint32_t code_point;
+  uint8_t num_bytes;
+  boolean_t error;
+};
+
+typedef struct utf8_decode_result_S utf8_decode_result_t;
+
+extern utf8_decode_result_t utf8_decode(const uint8_t* utf8_bytes);
+
+#endif /* _UTF8_DECODER_H_ */
+
+/**
+ * @function utf8_decode
+ *
+ * Decodes the next code-point from a uint8_t* pointer.
+ */
+utf8_decode_result_t utf8_decode(const uint8_t* array) {
+  uint8_t firstByte = array[0];
+  if ((firstByte & 0x80) == 0) {
+    return compound_literal(utf8_decode_result_t,
+                            {.code_point = firstByte, .num_bytes = 1});
+  } else if ((firstByte & 0xE0) == 0xC0) {
+    return compound_literal(
+        utf8_decode_result_t,
+        {.code_point = ((firstByte & 0x1F) << 6) | (array[1] & 0x3F),
+         .num_bytes = 2});
+  } else if ((firstByte & 0xF0) == 0xE0) {
+    return compound_literal(utf8_decode_result_t,
+                            {.code_point = ((firstByte & 0x0F) << 12)
+                                           | ((array[1] & 0x3F) << 6)
+                                           | (array[2] & 0x3F),
+                             .num_bytes = 3});
+  } else if ((firstByte & 0xF8) == 0xF0) {
+    return compound_literal(
+        utf8_decode_result_t,
+        {.code_point = ((firstByte & 0x07) << 18) | ((array[1] & 0x3F) << 12)
+                       | ((array[2] & 0x3F) << 6) | (array[3] & 0x3F),
+         .num_bytes = 4});
+  } else {
+    return compound_literal(utf8_decode_result_t, {.error = true});
+  }
+}
 #line 2 "buffer.c"
 #ifndef _BUFFER_H_
 #define _BUFFER_H_
@@ -2832,233 +4531,1113 @@ buffer_t* buffer_to_lowercase(buffer_t* buffer) {
   }
   return buffer;
 }
-#line 2 "cdl-printer.c"
+#line 2 "value-array.c"
 
 /**
- * @file cdl-printer.c
+ * @file value-array.c
  *
- * CDL is like TOML where the "inline" format is used for all tables,
- * commas are eliminated, and there is no support for dates.
+ * This file contains a growable array of "values".
  *
- * CDL can represent:
- *
- * 1. comments ==> # extends to the end of the line
- * 1. booleans ===> true and false
- * 1. symbols ==> foo, bar element_name, etc. (covers C identifiers)
- * 1. strings ==> "example\n"
- * 1. numbers ==> 123.5, 120, etc.
- * 1. arrays ==> [ hello world 123 54.9]
- * 1. tables ==> { x = 100 y = 50 }
- *
- * keys in the table must be symbols or strings (possibly numbers in
- * the future?)
- *
- * This library only provides a printer. For reading, we'll delay that
- * until Omni C can use it's reflection API to automatically write
- * readers for us.
- *
- * CDL stands for "clear data language" or "C data language"
+ * Certain algorithms require that growth occurs based on the current
+ * capacity of an array, not a fixed amount. For now we simply double
+ * the current capacity when more space in the backing array is
+ * required though we may scale this back to something more like 1.5X
+ * for "large" arrays to save space.
  */
 
-#ifndef _CDL_PRINTER_H_
-#define _CDL_PRINTER_H_
+#ifndef _VALUE_ARRAY_H_
+#define _VALUE_ARRAY_H_
 
-typedef struct {
-  buffer_t* buffer;
-  char* key_token;
-  int indention_level;
-} cdl_printer_t;
+struct value_array_S {
+  uint32_t length;
+  uint32_t capacity;
+  value_t* elements;
+};
 
-cdl_printer_t* make_cdl_printer(buffer_t* buffer);
+/**
+ * @typedef value_array_t
+ *
+ * A growable array of 64bit "values" (so integers, doubles, and
+ * pointers).
+ */
+typedef struct value_array_S value_array_t;
 
-void cdl_boolean(cdl_printer_t* printer, boolean_t bolean);
-void cdl_string(cdl_printer_t* printer, char* string);
-void cdl_int64(cdl_printer_t* printer, int64_t number);
-void cdl_uint64(cdl_printer_t* printer, uint64_t number);
-void cdl_double(cdl_printer_t* printer, double number);
+extern value_array_t* make_value_array(uint64_t initial_capacity);
+extern value_t value_array_get(value_array_t* array, uint32_t index);
+extern void value_array_replace(value_array_t* array, uint32_t index,
+                                value_t element);
+extern void value_array_add(value_array_t* array, value_t element);
+extern void value_array_push(value_array_t* array, value_t element);
+extern value_t value_array_pop(value_array_t* array);
+extern void value_array_insert_at(value_array_t* array, uint32_t position,
+                                  value_t element);
+extern value_t value_array_delete_at(value_array_t* array, uint32_t position);
 
-void cdl_start_array(cdl_printer_t* printer);
-void cdl_end_array(cdl_printer_t* printer);
+#define value_array_get_ptr(array, index_expression, cast_type)                \
+  (cast(cast_type, value_array_get(array, index_expression).ptr))
 
-void cdl_start_table(cdl_printer_t* printer);
-void cdl_key(cdl_printer_t* printer, char* key);
-void cdl_end_table(cdl_printer_t* printer);
+#endif /* _VALUE_ARRAY_H_ */
 
-#endif /* _CDL_PRINTER_H_ */
+/**
+ * @function make_value_array
+ *
+ * Make a value array with the given initial capacity.
+ *
+ * An initial capacity of zero is automatically converted to a
+ * capacity of at least 1 or more since this makes the "growth" code a
+ * bit simpler.
+ *
+ * When the array runs out of capacity because of calls to add, push,
+ * etc., then the backing array is automatically increased *based on
+ * the current capacity* which generally leads to better big-O
+ * properties.
+ *
+ * If the initial or later increases in capacity are not fulfillable,
+ * then a fatal_error occurs since these are generally not recoverable
+ * anyways.
+ */
+value_array_t* make_value_array(uint64_t initial_capacity) {
+  if (initial_capacity == 0) {
+    initial_capacity = 1;
+  }
 
-cdl_printer_t* make_cdl_printer(buffer_t* buffer) {
-  cdl_printer_t* result = malloc_struct(cdl_printer_t);
-  result->buffer = buffer;
+  value_array_t* result = malloc_struct(value_array_t);
+  result->capacity = initial_capacity;
+  result->elements
+      = cast(value_t*, malloc_bytes(sizeof(value_t) * initial_capacity));
+
   return result;
 }
 
-void cdl_indent(cdl_printer_t* printer) {
-  buffer_append_repeated_byte(printer->buffer, ' ',
-                              4 * printer->indention_level);
+void value_array_ensure_capacity(value_array_t* array,
+                                 uint32_t required_capacity) {
+  if (array->capacity < required_capacity) {
+    uint32_t new_capacity = array->capacity * 2;
+    if (new_capacity < required_capacity) {
+      new_capacity = required_capacity;
+    }
+    value_t* new_elements
+        = cast(value_t*, malloc_bytes(sizeof(value_t) * new_capacity));
+    for (int i = 0; i < array->length; i++) {
+      new_elements[i] = array->elements[i];
+    }
+    array->capacity = new_capacity;
+    free_bytes(array->elements);
+    array->elements = new_elements;
+    return;
+  }
 }
 
-boolean_t is_symbol(char* string) {
-  for (int i = 0; string[i] != 0; i++) {
-    if (i == 0) {
-      if (!isalpha(string[i])) {
-        return false;
+/**
+ * @function value_array_get
+ *
+ * Get the value stored at index `index`. If the index is outside of
+ * the range of valid elements, then a fatal_error is signaled.
+ */
+value_t value_array_get(value_array_t* array, uint32_t index) {
+  if (index < array->length) {
+    return array->elements[index];
+  }
+  fatal_error(ERROR_ACCESS_OUT_OF_BOUNDS);
+#ifdef __TINYC__
+  /* gcc and clang know fatal_error is _Noreturn but tcc doesn't */
+  return (value_t){.u64 = 0};
+#endif
+}
+
+/**
+ * @function value_array_replace
+ *
+ * Replace the value at a given `index`. If the index is outside of
+ * the range of valid elements, then a `fatal_error` is signaled.
+ */
+void value_array_replace(value_array_t* array, uint32_t index,
+                         value_t element) {
+  if (index < array->length) {
+    array->elements[index] = element;
+    return;
+  }
+  fatal_error(ERROR_ACCESS_OUT_OF_BOUNDS);
+}
+
+/**
+ * @function value_array_add
+ *
+ * Add an element to the end of an array. If more space is required
+ * then the backing array is automatically resized. This resizing
+ * means that a fatal_error() may occur if malloc() can not satisfy the
+ * allocation request.
+ */
+void value_array_add(value_array_t* array, value_t element) {
+  value_array_ensure_capacity(array, array->length + 1);
+  array->elements[(array->length)++] = element;
+}
+
+/**
+ * @function value_array_push
+ *
+ * This is a synonym for value_array_add which serves to make it more
+ * obvious that the array is actually being used like a stack.
+ */
+void value_array_push(value_array_t* array, value_t element) {
+  value_array_add(array, element);
+}
+
+/**
+ * @function value_array_pop
+ *
+ * Returns the last element of the array (typically added via push)
+ * and modifies the length of the array so that the value isn't
+ * accessible any longer. (We also "zero out" the element in case you
+ * are using a conservative garbage collector.)
+ *
+ * If the array is currently empty, then
+ * `fatal_error(ERROR_ACCESS_OUT_OF_BOUNDS)` is called.
+ */
+value_t value_array_pop(value_array_t* array) {
+  if (array->length == 0) {
+    fatal_error(ERROR_ACCESS_OUT_OF_BOUNDS);
+  }
+  uint32_t last_index = array->length - 1;
+  value_t result = value_array_get(array, last_index);
+  array->elements[last_index] = u64_to_value(0);
+  array->length--;
+  return result;
+}
+
+/**
+ * @function value_array_insert_at
+ *
+ * Insert an element into some existing position in the array (or at
+ * the end if position == the current array length).
+ *
+ * This operation is not efficient for large arrays as potentially the
+ * entire array must be moved to new locations (there are
+ * data-structures like trees that can make this more efficient though
+ * such a data-structure isn't in this library yet).
+ *
+ * If the position is > than the length length, then
+ * fatal_error(ERROR_ACCESS_OUT_OF_BOUNDS) is called.
+ *
+ * If memory allocation is required and malloc() fails, then
+ * fatal_error(ERROR_MEMORY_ALLOCATION) is called.
+ */
+void value_array_insert_at(value_array_t* array, uint32_t position,
+                           value_t element) {
+  if (position == array->length) {
+    value_array_add(array, element);
+    return;
+  }
+
+  if (position > array->length) {
+    fatal_error(ERROR_ACCESS_OUT_OF_BOUNDS);
+    return;
+  }
+
+  value_array_ensure_capacity(array, array->length + 1);
+
+  // This is the standard loop but we now need to use a signed index
+  // because when the position is zero, zero - 1 is 0xffffffff which
+  // is still greater than zero (and hence greater than position).
+  for (int64_t i = array->length - 1; i >= position; i--) {
+    array->elements[i + 1] = array->elements[i];
+  }
+  array->length++;
+  array->elements[position] = element;
+}
+
+/**
+ * @function value_array_delete_at
+ *
+ * Deletes the element at the given position (and return it so that it
+ * can potentially be freed by the caller).
+ *
+ * If the position doesn't point to a valid element then
+ * fatal_error(ERROR_ACCESS_OUT_OF_BOUNDS) is called.
+ */
+value_t value_array_delete_at(value_array_t* array, uint32_t position) {
+  value_t result = value_array_get(array, position);
+  for (int i = position; i < array->length - 1; i++) {
+    array->elements[i] = array->elements[i + 1];
+  }
+  array->length--;
+  return result;
+}
+#line 2 "value-alist.c"
+/**
+ * @file value-alist.c
+ *
+ * An association list (a type of map) from value_t to value_t.
+ */
+
+#ifndef _VALUE_ALIST_H_
+#define _VALUE_ALIST_H_
+
+struct value_alist_S {
+  struct value_alist_S* next;
+  value_t key;
+  value_t value;
+};
+
+typedef struct value_alist_S value_alist_t;
+
+extern value_result_t value_alist_find(value_alist_t* list,
+                                       value_comparison_fn cmp_fn, value_t key);
+
+__attribute__((warn_unused_result)) extern value_alist_t*
+    value_alist_insert(value_alist_t* list, value_comparison_fn cmp_fn,
+                       value_t key, value_t value);
+
+__attribute__((warn_unused_result)) extern value_alist_t*
+    value_alist_delete(value_alist_t* list, value_comparison_fn cmp_fn,
+                       value_t key);
+
+__attribute__((warn_unused_result)) extern uint64_t
+    value_alist_length(value_alist_t* list);
+
+/**
+ * @macro value_alist_foreach
+ *
+ * Allows iteration over the keys and values in a string association
+ * list.
+ */
+#define value_alist_foreach(alist, key_var, value_var, statements)             \
+  do {                                                                         \
+    value_alist_t* head = alist;                                               \
+    while (head) {                                                             \
+      value_t key_var = head->key;                                             \
+      value_t value_var = head->value;                                         \
+      statements;                                                              \
+      head = head->next;                                                       \
+    }                                                                          \
+  } while (0)
+
+#endif /* _VALUE_ALIST_H_ */
+
+/**
+ * @function value_alist_insert
+ *
+ * Insert a new key and value into an assocation list.
+ */
+value_alist_t* value_alist_insert(value_alist_t* list,
+                                  value_comparison_fn cmp_fn, value_t key,
+                                  value_t value) {
+  value_alist_t* result = malloc_struct(value_alist_t);
+  result->next = value_alist_delete(list, cmp_fn, key);
+  result->key = key;
+  result->value = value;
+  return result;
+}
+
+/**
+ * @function value_alist_delete
+ *
+ * Delete the key and associated value from the given association
+ * list. Neither the key nor the value associated are themselves
+ * freed.
+ */
+value_alist_t* value_alist_delete(value_alist_t* list,
+                                  value_comparison_fn cmp_fn, value_t key) {
+  // This appears to be logically correct but could easily blow out
+  // the stack with a long list.
+  if (list == NULL) {
+    return list;
+  }
+  if ((*cmp_fn)(key, list->key) == 0) {
+    value_alist_t* result = list->next;
+    free_bytes(list);
+    return result;
+  }
+  list->next = value_alist_delete(list->next, cmp_fn, key);
+  return list;
+}
+
+/**
+ * @function value_alist_find
+ *
+ * Find the value associate with the given key. Use is_ok() or
+ * is_not_ok() to see if the value is valid (i.e., if the key was
+ * actually found).
+ */
+value_result_t value_alist_find(value_alist_t* list, value_comparison_fn cmp_fn,
+                                value_t key) {
+  while (list) {
+    if (cmp_fn(key, list->key) == 0) {
+      return compound_literal(value_result_t, {.val = list->value});
+    }
+    list = list->next;
+  }
+  return compound_literal(value_result_t, {.nf_error = NF_ERROR_NOT_FOUND});
+}
+
+/**
+ * @function value_alist_length
+ *
+ * Determine the length of an alist.
+ *
+ * The alist argument MAY be null.
+ */
+__attribute__((warn_unused_result)) extern uint64_t
+    value_alist_length(value_alist_t* list) {
+  uint64_t result = 0;
+  while (list) {
+    result++;
+    list = list->next;
+  }
+  return result;
+}
+#line 2 "string-alist.c"
+/**
+ * @file string-alist.c
+ *
+ * An association list (a type of map) from a string to a value_t.
+ *
+ * This simply wraps value-alist.c.
+ */
+
+#ifndef _STRING_ALIST_H_
+#define _STRING_ALIST_H_
+
+struct string_alist_S {};
+
+typedef struct string_alist_S string_alist_t;
+
+/**
+ * @function alist_find
+ *
+ * Find the value associate with the given key. Use is_ok() or
+ * is_not_ok() to see if the value is valid (i.e., if the key was
+ * actually found).
+ */
+static inline value_result_t alist_find(string_alist_t* list, char* key) {
+  return value_alist_find(cast(value_alist_t*, list), cmp_string_values,
+                          str_to_value(key));
+}
+
+/**
+ * @function alist_insert
+ *
+ * Insert a new key and value into an assocation list.
+ */
+__attribute__((warn_unused_result)) static inline string_alist_t*
+    alist_insert(string_alist_t* list, char* key, value_t value) {
+  return cast(string_alist_t*,
+              value_alist_insert(cast(value_alist_t*, list), cmp_string_values,
+                                 str_to_value(key), value));
+}
+
+/**
+ * @function alist_delete
+ *
+ * Delete the key and associated value from the given association
+ * list. Neither the key nor the value associated are themselves
+ * freed.
+ */
+__attribute__((warn_unused_result)) static inline string_alist_t*
+    alist_delete(string_alist_t* list, char* key) {
+  return cast(string_alist_t*,
+              value_alist_delete(cast(value_alist_t*, list), cmp_string_values,
+                                 str_to_value(key)));
+}
+
+/**
+ * @function alist_length
+ *
+ * Determine the length of an alist.
+ *
+ * The alist argument MAY be null.
+ */
+__attribute__((warn_unused_result)) static inline uint64_t
+    alist_length(string_alist_t* list) {
+  return value_alist_length(cast(value_alist_t*, list));
+}
+
+/**
+ * @macro string_alist_foreach
+ *
+ * Allows iteration over the keys and values in a string association
+ * list.
+ */
+#define string_alist_foreach(alist, key_var, value_var, statements)            \
+  do {                                                                         \
+    value_alist_foreach(cast(value_alist_t*, alist), key_var##_value,          \
+                        value_var, {                                           \
+                          char* key_var = (key_var##_value).str;               \
+                          statements;                                          \
+                        });                                                    \
+  } while (0)
+
+#endif /* _STRING_ALIST_H_ */
+#line 2 "value-hashtable.c"
+/**
+ * @file value-hashtable.c
+ *
+ * A very thread-unsafe hash map of value_t to value_t.
+ *
+ * Please don't expect C++, JVM, or Rust level of performance since we
+ * use chaining which is considered slower than open addressing.
+ */
+
+#ifndef _VALUE_HASHTABLE_H_
+#define _VALUE_HASHTABLE_H_
+
+/**
+ * @compiliation_option ARMYKNIFE_HT_LOAD_FACTOR
+ *
+ * The "load factor" is the ratio of the number of keys in the hash
+ * table to the most optimistic capacity for the table if every key
+ * happened to be hashed to a different bucket. When the load factor
+ * reaches this value, the hash table will be resized to a larger
+ * capacity to improve performance. A higher value allows for a denser
+ * hash table but can lead to more collisions and slower lookups and
+ * insertions. A lower value wastes memory but reduces collisions.
+ */
+#ifndef ARMYKNIFE_HT_LOAD_FACTOR
+#define ARMYKNIFE_HT_LOAD_FACTOR 0.75
+#endif /* ARMYKNIFE_HT_LOAD_FACTOR */
+
+/**
+ * @compiliation_option AK_HT_UPSCALE_MULTIPLIER
+ *
+ * In all cases this should be a number > 1.0.
+ */
+#ifndef AK_HT_UPSCALE_MULTIPLIER
+#define AK_HT_UPSCALE_MULTIPLIER 1.75
+#endif /* AK_HT_UPSCALE_MULTIPLIER */
+
+struct value_hashtable_S {
+  uint64_t n_buckets;
+  uint64_t n_entries;
+  value_alist_t** buckets;
+};
+
+typedef struct value_hashtable_S value_hashtable_t;
+
+extern value_hashtable_t* make_value_hashtable(uint64_t n_buckets);
+
+extern value_hashtable_t* value_ht_insert(value_hashtable_t* ht,
+                                          value_hash_fn hash_fn,
+                                          value_comparison_fn cmp_fn,
+                                          value_t key, value_t value);
+
+extern value_hashtable_t* value_ht_delete(value_hashtable_t* ht,
+                                          value_hash_fn hash_fn,
+                                          value_comparison_fn cmp_fn,
+                                          value_t key);
+
+extern value_result_t value_ht_find(value_hashtable_t* ht,
+                                    value_hash_fn hash_fn,
+                                    value_comparison_fn cmp_fn, value_t key);
+
+extern void value_hashtable_upsize_internal(value_hashtable_t* ht,
+                                            value_hash_fn hash_fn,
+                                            value_comparison_fn cmp_fn);
+
+/**
+ * @function value_ht_num_entries
+ *
+ * Returns the number of entries in the hashtable.
+ */
+static inline uint64_t value_ht_num_entries(value_hashtable_t* ht) {
+  return ht->n_entries;
+}
+
+/**
+ * @macro value_ht_foreach
+ *
+ * Allows traversing all elements of a hashtable in an unspecified
+ * order.
+ */
+#define value_ht_foreach(ht, key_var, value_var, statements)                   \
+  do {                                                                         \
+    for (int ht_index = 0; ht_index < ht->n_buckets; ht_index++) {             \
+      value_alist_t* alist = ht->buckets[ht_index];                            \
+      if (alist != NULL) {                                                     \
+        value_alist_foreach(alist, key_var, value_var, statements);            \
+      }                                                                        \
+    }                                                                          \
+  } while (0)
+
+#endif /* _VALUE_HASHTABLE_H_ */
+
+/**
+ * @function make_value_hashtable
+ *
+ * Create a hashtable with the given number of buckets.
+ *
+ * When the initial number of buckets is less than a small integer
+ * (currently 2), then we automatically increase the initial number of
+ * buckets to that number to make the fractional growth algorithm work
+ * and maintain big-O properties.
+ */
+value_hashtable_t* make_value_hashtable(uint64_t n_buckets) {
+  if (n_buckets < 2) {
+    n_buckets = 2;
+  }
+  value_hashtable_t* result = malloc_struct(value_hashtable_t);
+  result->n_buckets = n_buckets;
+  result->buckets
+      = cast(value_alist_t**, malloc_bytes(sizeof(value_alist_t*) * n_buckets));
+  return result;
+}
+
+/**
+ * @function value_ht_insert
+ *
+ * Insert an association into the hashtable.
+ */
+value_hashtable_t* value_ht_insert(value_hashtable_t* ht, value_hash_fn hash_fn,
+                                   value_comparison_fn cmp_fn, value_t key,
+                                   value_t value) {
+  uint64_t hashcode = hash_fn(key);
+  int bucket = hashcode % ht->n_buckets;
+  value_alist_t* list = ht->buckets[bucket];
+  uint64_t len = value_alist_length(list);
+  list = value_alist_insert(list, cmp_fn, key, value);
+  ht->buckets[bucket] = list;
+  uint64_t len_after = value_alist_length(list);
+  if (len_after > len) {
+    ht->n_entries++;
+    // Without this, a hash table would never grow and thus as the
+    // number of entries grows large, the hashtable would only improve
+    // performance over an alist by a constant amount (which could
+    // still be an impressive speedup...)
+    if (ht->n_entries >= (ht->n_buckets * ARMYKNIFE_HT_LOAD_FACTOR)) {
+      value_hashtable_upsize_internal(ht, hash_fn, cmp_fn);
+    }
+  }
+  return ht;
+}
+
+/**
+ * @function value_ht_delete
+ *
+ * Delete an association from the hashtable. It is not an error to
+ * delete a key that doesn't exist in the hashtable.
+ */
+value_hashtable_t* value_ht_delete(value_hashtable_t* ht, value_hash_fn hash_fn,
+                                   value_comparison_fn cmp_fn, value_t key) {
+  uint64_t hashcode = hash_fn(key);
+  int bucket = hashcode % ht->n_buckets;
+  value_alist_t* list = ht->buckets[bucket];
+  uint64_t len = value_alist_length(list);
+  list = value_alist_delete(list, cmp_fn, key);
+  ht->buckets[bucket] = list;
+  uint64_t len_after = value_alist_length(list);
+  if (len_after < len) {
+    ht->n_entries--;
+  }
+  return ht;
+}
+
+/**
+ * @function value_ht_find
+ *
+ * Find an association in the hashtable.
+ */
+value_result_t value_ht_find(value_hashtable_t* ht, value_hash_fn hash_fn,
+                             value_comparison_fn cmp_fn, value_t key) {
+  uint64_t hashcode = hash_fn(key);
+  int bucket = hashcode % ht->n_buckets;
+  value_alist_t* list = ht->buckets[bucket];
+  return value_alist_find(list, cmp_fn, key);
+}
+
+/**
+ * @function value_hashtable_upsize_internal
+ *
+ * This function is called automatically when an insert brings the
+ * number of entries above the number of buckets times
+ * ARMYKNIFE_HT_LOAD_FACTOR (defaults to 75%). We don't even check
+ * that constraint is valid (hence the _internal suffix).
+ *
+ * Hopefully based on the name you can infer this function will only
+ * ever "grow" a hashtable by deciding on a size of the new larger
+ * hash-table and copying
+
+by making a new larger hashtable using
+ * AK_HT_UPSCALE_MULTIPLIER to compute the new number of buckets
+ * (currently 1.75).
+ */
+void value_hashtable_upsize_internal(value_hashtable_t* ht,
+                                     value_hash_fn hash_fn,
+                                     value_comparison_fn cmp_fn) {
+  uint64_t new_num_buckets = ht->n_buckets * AK_HT_UPSCALE_MULTIPLIER;
+  value_hashtable_t* new_ht = make_value_hashtable(new_num_buckets);
+  // clang-format off
+  value_ht_foreach(ht, key, value, {
+      value_hashtable_t* should_be_result = value_ht_insert(new_ht, hash_fn, cmp_fn, key, value);
+      // If an insertion into the bigger hashtable results in it's own
+      // resize, then the results will be unpredictable (at least
+      // without more code). This is likely to only happen when
+      // growing a very small hashtable and depends on values choosen
+      // for ARMYKNIFE_HT_LOAD_FACTOR and AK_HT_UPSCALE_MULTIPLIER.
+      if (new_ht != should_be_result) {
+	fatal_error(ERROR_ILLEGAL_STATE);
       }
-    } else {
-      if (!(isalnum(string[i]) || string[i] == '_')) {
-        return false;
+  });
+  // clang-format on
+  value_alist_t** old_buckets = ht->buckets;
+  ht->buckets = new_ht->buckets;
+  ht->n_buckets = new_ht->n_buckets;
+  ht->n_entries = new_ht->n_entries;
+  free_bytes(old_buckets);
+  free_bytes(new_ht);
+}
+#line 2 "string-hashtable.c"
+/**
+ * @file string-hashtable.c
+ *
+ * A very thread-unsafe hash map of C style zero terminated byte
+ * "strings" to a value_t. This is an oqaque reference around a
+ * value_hashtable.
+ */
+
+#ifndef _STRING_HASHTABLE_H_
+#define _STRING_HASHTABLE_H_
+
+struct string_hashtable_S {};
+
+typedef struct string_hashtable_S string_hashtable_t;
+
+static inline value_hashtable_t* to_value_hashtable(string_hashtable_t* ht) {
+  return cast(value_hashtable_t*, ht);
+}
+
+/**
+ * @function make_string_hashtable
+ *
+ * Create a hashtable with the given number of buckets.
+ *
+ * The minimum number of buckets is currently 2 to make it less likely
+ * we run into some resize loop depending on the values of
+ * ARMYKNIFE_HT_LOAD_FACTOR and AK_HT_UPSCALE_MULTIPLIER).
+ */
+static inline string_hashtable_t* make_string_hashtable(uint64_t n_buckets) {
+  return cast(string_hashtable_t*, make_value_hashtable(n_buckets));
+}
+
+/**
+ * @function string_ht_insert
+ *
+ * Insert an association into the hashtable.
+ */
+__attribute__((warn_unused_result)) static inline string_hashtable_t*
+    string_ht_insert(string_hashtable_t* ht, char* key, value_t value) {
+  return cast(string_hashtable_t*,
+              value_ht_insert(to_value_hashtable(ht), hash_string_value,
+                              cmp_string_values, str_to_value(key), value));
+}
+
+/**
+ * @function string_ht_delete
+ *
+ * Delete an association from the hashtable. It is not an error to
+ * delete a key that doesn't exist in the hashtable.
+ */
+__attribute__((warn_unused_result)) static inline string_hashtable_t*
+    string_ht_delete(string_hashtable_t* ht, char* key) {
+  return cast(string_hashtable_t*,
+              value_ht_delete(to_value_hashtable(ht), hash_string_value,
+                              cmp_string_values, str_to_value(key)));
+}
+
+/**
+ * @function string_ht_find
+ *
+ * Find an association in the hashtable.
+ */
+static inline value_result_t string_ht_find(string_hashtable_t* ht, char* key) {
+  return value_ht_find(to_value_hashtable(ht), hash_string_value,
+                       cmp_string_values, str_to_value(key));
+}
+
+/**
+ * @function string_ht_num_entries
+ *
+ * Returns the number of entries in the hashtable.
+ */
+static inline uint64_t string_ht_num_entries(string_hashtable_t* ht) {
+  return value_ht_num_entries(to_value_hashtable(ht));
+}
+
+/**
+ * @macro string_ht_foreach
+ *
+ * Allows traversing all elements of a hashtable in an unspecified
+ * order.
+ */
+#define string_ht_foreach(ht, key_var, value_var, statements)                  \
+  do {                                                                         \
+    value_ht_foreach(to_value_hashtable(ht), key_var##_value, value_var, {     \
+      char* key_var = (key_var##_value).str;                                   \
+      statements;                                                              \
+    });                                                                        \
+  } while (0)
+
+#endif /* _STRING_HASHTABLE_H_ */
+#line 2 "value-tree.c"
+
+/**
+ * @file value-tree.c
+ *
+ * This is a balanced binary tree to associate a value to another
+ * value.
+ *
+ * Generally an alist is prefered for small "maps", and hashtables are
+ * prefered for large maps, but value_tree is the easiest way to get
+ * sorted results (which is most important for reproducibility).
+ *
+ * Currently we are using "AA" trees (see
+ * https://en.wikipedia.org/wiki/AA_tree) since it has simpler code
+ * than many other balanced trees (like red-block trees) and the
+ * Wikipedia article and paper spell out *most* of the non-trivial
+ * details.
+ */
+
+#ifndef _VALUE_TREE_H_
+#define _VALUE_TREE_H_
+
+struct value_tree_S {
+  value_t key;
+  value_t value;
+  uint32_t level;
+  struct value_tree_S* left;
+  struct value_tree_S* right;
+};
+
+typedef struct value_tree_S value_tree_t;
+
+extern value_result_t value_tree_find(value_tree_t* t,
+                                      value_comparison_fn cmp_fn, value_t key);
+
+__attribute__((warn_unused_result)) extern value_tree_t*
+    value_tree_insert(value_tree_t* t, value_comparison_fn cmp_fn, value_t key,
+                      value_t value);
+
+__attribute__((warn_unused_result)) extern value_tree_t*
+    value_tree_delete(value_tree_t* t, value_comparison_fn cmp_fn, value_t key);
+
+/**
+ * @macro value_tree_foreach
+ *
+ * Perform an inorder traversal of a value-tree.
+ *
+ * key_var is created in a new block scope with type value_t.
+ *
+ * value_var is created in a new block scope with type value_t and you
+ * will probably want to use something like ".ptr" or ".u64" on the
+ * value to obtain the actual value.
+ *
+ * statements should be a normal C block, aka, something like:
+ * ```
+ * {
+ *   statement1();
+ *   statement2();
+ * }
+ * ```
+ *
+ * Unforunately it is not possible to use "break" or "continue" with
+ * this style of loop (and worse, there will be no compilation error
+ * or warning if you accidentally do that...)
+ */
+#define value_tree_foreach(tree, key_var, value_var, statements)               \
+  do {                                                                         \
+    int stack_n_elements = 0;                                                  \
+    value_tree_t* stack[64];                                                   \
+    value_tree_t* current = tree;                                              \
+    while (current != NULL || stack_n_elements > 0) {                          \
+      while (current != NULL) {                                                \
+        stack[stack_n_elements++] = current;                                   \
+        current = current->left;                                               \
+      }                                                                        \
+      current = stack[--stack_n_elements];                                     \
+      value_t key_var = current->key;                                          \
+      value_t value_var = current->value;                                      \
+      statements;                                                              \
+      current = current->right;                                                \
+    }                                                                          \
+  } while (0)
+
+#endif /* _VALUE_TREE_H_ */
+
+/**
+ * @function value_tree_find
+ *
+ * Find the value associate with the key in the tree.
+ */
+value_result_t value_tree_find(value_tree_t* t, value_comparison_fn cmp_fn,
+                               value_t key) {
+  if (t == NULL) {
+    return compound_literal(value_result_t, {.nf_error = NF_ERROR_NOT_FOUND});
+  }
+
+  int cmp_result = cmp_fn(key, t->key);
+  if (cmp_result < 0) {
+    return value_tree_find(t->left, cmp_fn, key);
+  } else if (cmp_result > 0) {
+    return value_tree_find(t->right, cmp_fn, key);
+  } else {
+    return compound_literal(value_result_t, {
+                                                .val = t->value,
+                                            });
+  }
+}
+
+value_tree_t* value_tree_skew(value_tree_t* t) {
+  if (t == NULL) {
+    return NULL;
+  }
+  if (t->left == NULL) {
+    return t;
+  }
+  if (t->left->level == t->level) {
+    value_tree_t* L = t->left;
+    t->left = L->right;
+    L->right = t;
+    return L;
+  }
+  return t;
+}
+
+value_tree_t* value_tree_split(value_tree_t* t) {
+  if (t == NULL) {
+    return NULL;
+  }
+  if (t->right == NULL || t->right->right == NULL) {
+    return t;
+  }
+  if (t->level == t->right->right->level) {
+    // We have two horizontal right links.  Take the middle node,
+    // elevate it, and return it.
+    value_tree_t* R = t->right;
+    t->right = R->left;
+    R->left = t;
+    R->level++;
+    return R;
+  }
+  return t;
+}
+
+value_tree_t* make_value_tree_leaf(value_t key, value_t value) {
+  value_tree_t* result = malloc_struct(value_tree_t);
+  result->level = 1;
+  result->key = key;
+  result->value = value;
+  return result;
+}
+
+/**
+ * @function value_tree_insert
+ *
+ * Insert an association of key and a value (or update the current
+ * value stored in the tree).
+ */
+value_tree_t* value_tree_insert(value_tree_t* t, value_comparison_fn cmp_fn,
+                                value_t key, value_t value) {
+  if (t == NULL) {
+    // Create a new leaf node
+    return make_value_tree_leaf(key, value);
+  }
+  int cmp_result = cmp_fn(key, t->key);
+  if (cmp_result < 0) {
+    t->left = value_tree_insert(t->left, cmp_fn, key, value);
+  } else if (cmp_result > 0) {
+    t->right = value_tree_insert(t->right, cmp_fn, key, value);
+  } else {
+    // Either key or t->key might need to be freed but it isn't even
+    // possible to tell if either has been "malloced" so good luck
+    // figuring that out.
+    t->value = value;
+    return t;
+  }
+
+  t = value_tree_skew(t);
+  t = value_tree_split(t);
+
+  return t;
+}
+
+static inline uint64_t value_tree_min_level(uint32_t a, uint32_t b) {
+  return a < b ? a : b;
+}
+
+value_tree_t* value_tree_decrease_level(value_tree_t* t) {
+  if (t->left && t->right) {
+    uint32_t should_be
+        = value_tree_min_level(t->left->level, t->right->level) + 1;
+    if (should_be < t->level) {
+      t->level = should_be;
+      if (should_be < t->right->level) {
+        t->right->level = should_be;
       }
     }
   }
-  return true;
+  return t;
 }
 
-void cdl_output_token(cdl_printer_t* printer, char* string) {
-  cdl_indent(printer);
-  if (printer->key_token != NULL) {
-    buffer_printf(printer->buffer, "%s = %s\n", printer->key_token, string);
-    printer->key_token = NULL;
-  } else {
-    buffer_printf(printer->buffer, "%s\n", string);
+value_tree_t* value_tree_predecessor(value_tree_t* t) {
+  t = t->left;
+  while (t->right != NULL) {
+    t = t->right;
   }
+  return t;
 }
 
-void cdl_boolean(cdl_printer_t* printer, boolean_t boolean) {
-  cdl_output_token(printer, boolean ? "true" : "false");
-}
-
-void cdl_string(cdl_printer_t* printer, char* string) {
-  if (!is_symbol(string)) {
-    cdl_output_token(printer, string_printf("\"%s\"", string));
-  } else {
-    cdl_output_token(printer, string);
+value_tree_t* value_tree_successor(value_tree_t* t) {
+  t = t->right;
+  while (t->left != NULL) {
+    t = t->left;
   }
+  return t;
 }
 
-void cdl_int64(cdl_printer_t* printer, int64_t number) {
-  cdl_output_token(printer, string_printf("%ld", number));
+static inline boolean_t value_tree_is_leaf(value_tree_t* t) {
+  return t->left == NULL && t->right == NULL;
 }
-
-void cdl_uint64(cdl_printer_t* printer, uint64_t number) {
-  cdl_output_token(printer, uint64_to_string(number));
-}
-
-void cdl_double(cdl_printer_t* printer, double number) {
-  cdl_output_token(printer, string_printf("%lf", number));
-}
-
-void cdl_start_array(cdl_printer_t* printer) {
-  cdl_output_token(printer, "[");
-  printer->indention_level += 1;
-}
-
-void cdl_end_array(cdl_printer_t* printer) {
-  printer->indention_level -= 1;
-  cdl_output_token(printer, "]");
-}
-
-void cdl_start_table(cdl_printer_t* printer) {
-  cdl_output_token(printer, "{");
-  printer->indention_level += 1;
-}
-
-void cdl_key(cdl_printer_t* printer, char* key) { printer->key_token = key; }
-
-void cdl_end_table(cdl_printer_t* printer) {
-  printer->indention_level -= 1;
-  cdl_output_token(printer, "}");
-}
-#line 2 "compound-literal.c"
-/**
- * @file compound-literal.c
- *
- * This file exists solely for interfacing with early versions of the
- * omni-c compiler where it is temporarily more convenient to have a
- * keyword to denote compound literals (the ones that look like
- * casts).
- *
- * We don't need it when the literal looks like this:
- *
- * ```
- * point_t a = { 10, 20 };
- * int foo[5] = { 0 };
- * ```
- *
- * But we do need it when the the literal looks like this:
- *
- * ```
- * (point_t) { .x = 10, .y = 20 }
-`* ```
- *
- * This is somewhat similar to usage of cast() macro though in the
- * case of cast, sometimes it actually becomes easier to read.
- *
- * ```
- * (int) (a - b) -----> cast(int, a - b)
- * ```
- */
-
-// ======================================================================
-// This section is extraced to compound-literal.h
-// ======================================================================
-
-#ifndef _COMPOUND_LITERAL_H_
-#define _COMPOUND_LITERAL_H_
-
-#define compound_literal(type, ...) ((type) __VA_ARGS__)
-
-#endif /* _COMPOUND_LITERAL_H_ */
-#line 2 "fn.c"
-
-#ifndef _FN_H_
-#define _FN_H_
 
 /**
- * @file fn.c
+ * @function value_tree_delete
  *
- * C's declarator syntax and the spiral rule are sometimes very hard
- * to read and write so fn_t enters the room.
+ * Delete the association of key (if it exists in the tree). It is not
+ * an error to delete a key that isn't present in the table.
+ */
+value_tree_t* value_tree_delete(value_tree_t* t, value_comparison_fn cmp_fn,
+                                value_t key) {
+
+  if (t == NULL) {
+    return t;
+  }
+
+  int cmp_result = cmp_fn(key, t->key);
+  if (cmp_result < 0) {
+    t->left = value_tree_delete(t->left, cmp_fn, key);
+  } else if (cmp_result > 0) {
+    t->right = value_tree_delete(t->right, cmp_fn, key);
+  } else {
+    if (value_tree_is_leaf(t)) {
+      // Since we are a leaf, nothing special to do except make sure
+      // this leaf node is no longer in the tree. wikipedia says
+      // "return right(T)" which is technically correct, but this is
+      // clearer.
+      return NULL;
+    } else if (t->left == NULL) {
+      value_tree_t* L = value_tree_successor(t);
+      // Note: wikipedia or the orginal article may have a bug. Doing
+      // the delete and then the key/value assignment leads to a
+      // divergence with a reference implementation.
+      t->key = L->key;
+      t->value = L->value;
+      t->right = value_tree_delete(t->right, cmp_fn, L->key);
+    } else {
+      value_tree_t* L = value_tree_predecessor(t);
+      // Note: wikipedia or the orginal article may have a bug. Doing
+      // the delete and then the key/value assignment leads to a
+      // divergence with a reference implementation.
+      t->key = L->key;
+      t->value = L->value;
+      t->left = value_tree_delete(t->left, cmp_fn, L->key);
+    }
+  }
+
+  // Rebalance the tree. Decrease the level of all nodes in this level
+  // if necessary, and then skew and split all nodes in the new level.
+
+  t = value_tree_decrease_level(t);
+  t = value_tree_skew(t);
+  t->right = value_tree_skew(t->right);
+  if (t->right != NULL) {
+    t->right->right = value_tree_skew(t->right->right);
+  }
+  t = value_tree_split(t);
+  t->right = value_tree_split(t->right);
+  return t;
+}
+#line 2 "string-tree.c"
+
+/**
+ * @file string-tree.c
  *
- * Before:
- *
- * ```
- * typedef uint64_t (*value_hash_fn)(value_t value);
- * ```
- *
- * After:
- * ```
- * typedef fn_t(uint64_t, value_t value) value_hash_fn;
- * ```
- *
- * Notice how the name of the type now appears all the way to the
- * right.
- *
- * (Omni C will eventually allow "=" for typedefs so:
- *
- * ```
- * typedef value_hash_fn = fn_t(uint64_t, value_t value);
- * ```
- *
- * I asked an LLM to help make my point and it suggested this
- * function prototype as a confusing case:
- *
- * ```
- * void (*signal(int sig, void (*func)(int)))(int);
- * ```
- *
- * This really is exteremely difficult to read. It's a function that
- * both accepts and returns a signal handler where a signal handler is
- * a function that takes an int and return's void. Even with that
- * clue, the above is pretty hard to read, while this is hopefully not
- * that difficult to read.
- *
- * ```
- * fn_t(void, int) signal(int sig, fn_t(void, int) handler);
-`* ```
+ * This is a balanced binary tree to associate a string to a value
+ * using an underlying value-tree.c.
  */
 
-#define fn_t(return_type, ...) typeof(return_type(*)(__VA_ARGS__))
+#ifndef _STRING_TREE_H_
+#define _STRING_TREE_H_
 
-#endif /* _FN_H_ */
+struct string_tree_S {};
+
+typedef struct string_tree_S string_tree_t;
+
+/**
+ * @function string_tree_find
+ *
+ * Find the value associate with the key in the tree.
+ */
+static inline value_result_t string_tree_find(string_tree_t* t, char* key) {
+  return value_tree_find(cast(value_tree_t*, t), cmp_string_values,
+                         str_to_value(key));
+}
+
+/**
+ * @function string_tree_insert
+ *
+ * Insert an association of key and a value (or update the current
+ * value stored in the tree).
+ */
+__attribute__((warn_unused_result)) static inline string_tree_t*
+    string_tree_insert(string_tree_t* t, char* key, value_t value) {
+  return cast(string_tree_t*,
+              value_tree_insert(cast(value_tree_t*, t), cmp_string_values,
+                                str_to_value(key), value));
+}
+
+/**
+ * @function string_tree_delete
+ *
+ * Delete the association of key (if it exists in the tree). It is not
+ * an error to delete a key that isn't present in the table.
+ */
+__attribute__((warn_unused_result)) static inline string_tree_t*
+    string_tree_delete(string_tree_t* t, char* key) {
+  return cast(string_tree_t*,
+              value_tree_delete(cast(value_tree_t*, t), cmp_string_values,
+                                str_to_value(key)));
+}
+
+/**
+ * @macro string_tree_foreach
+ *
+ * Perform an inorder traversal of a string-tree.
+ *
+ * key_var is created in a new block scope with type char*.
+ *
+ * value_var is created in a new block scope with type value_t and you
+ * will probably want to use something like ".ptr" or ".u64" on the
+ * value to obtain the actual value.
+ *
+ * statements should be a normal C block, aka, something like:
+ * ```
+ * {
+ *   statement1();
+ *   statement2();
+ * }
+ * ```
+ *
+ * Unforunately it is not possible to use "break" or "continue" with
+ * this style of loop (and worse, there will be no compilation error
+ * or warning if you accidentally do that...)
+ */
+#define string_tree_foreach(tree, key_var, value_var, statements)              \
+  do {                                                                         \
+    value_tree_foreach(cast(value_tree_t*, tree), key_var##_value, value_var,  \
+                       {                                                       \
+                         char* key_var = (key_var##_value).str;                \
+                         statements;                                           \
+                       });                                                     \
+  } while (0)
+
+#endif /* _STRING_TREE_H_ */
 #line 2 "flag.c"
 /**
  * @file flag.c
@@ -3726,211 +6305,6 @@ void flag_print_help(FILE* out, char* message) {
     flag_print_flags(out, "Flags:", current_program->flags);
   }
 }
-#line 2 "fatal-error.c"
-/**
- * @file fatal-error.c
- *
- * The intent is that everything but a normal program exit will end up
- * here. (To catch SIGSIGV errors you may call
- * configure_fatal_errors() first with catch_sigsegv set.)
- *
- * Note that you can use fatal_error's to your advantage by setting
- * the environment variable ARMYKNIFE_FATAL_ERROR_SLEEP_SECONDS to
- * some value to give yourself enough time to attach a debugger.
- *
- * In this case C's macros are paying off as the file and line number
- * are easy to obtain.
- *
- * TODO(jawilson): environment variable to be quieter...
- */
-
-// ======================================================================
-// This is block is extraced to fatal-error.h
-// ======================================================================
-
-#ifndef _FATAL_ERROR_H_
-#define _FATAL_ERROR_H_
-
-struct fatal_error_config_S {
-  boolean_t catch_sigsegv;
-};
-
-typedef struct fatal_error_config_S fatal_error_config_t;
-
-/**
- * @constants error_code_t
- */
-typedef enum {
-  ERROR_UKNOWN,
-  ERROR_SIGSEGV,
-  ERROR_ACCESS_OUT_OF_BOUNDS,
-  ERROR_BAD_COMMAND_LINE,
-  ERROR_DYNAMICALLY_SIZED_TYPE_ILLEGAL_IN_CONTAINER,
-  ERROR_ILLEGAL_ENUM_VALUE,
-  ERROR_ILLEGAL_INITIAL_CAPACITY,
-  ERROR_ILLEGAL_NULL_ARGUMENT,
-  ERROR_ILLEGAL_ZERO_HASHCODE_VALUE,
-  ERROR_ILLEGAL_RANGE,
-  ERROR_MEMORY_ALLOCATION,
-  ERROR_MEMORY_FREE_NULL,
-  ERROR_NOT_REACHED,
-  ERROR_REFERENCE_NOT_EXPECTED_TYPE,
-  ERROR_UNIMPLEMENTED,
-  ERROR_OPEN_LOG_FILE,
-  ERROR_TEST,
-  ERROR_INTERNAL_ASSERTION_FAILURE,
-  ERROR_BAD_ALLOCATION_SIZE,
-  ERROR_ILLEGAL_ARGUMENT,
-  ERROR_MEMORY_START_PADDING_ERROR,
-  ERROR_MEMORY_END_PADDING_ERROR,
-  ERROR_FATAL,
-  ERROR_ILLEGAL_STATE,
-  ERROR_ILLEGAL_INPUT,
-  ERROR_ILLEGAL_UTF_8_CODE_POINT,
-  ERROR_ILLEGAL_TERMINAL_COORDINATES,
-} error_code_t;
-
-extern _Noreturn void fatal_error_impl(char* file, int line, int error_code);
-extern const char* fatal_error_code_to_string(int error_code);
-extern void configure_fatal_errors(fatal_error_config_t config);
-
-/**
- * @macro fatal_error
- *
- * Terminates the program with a fatal error.
- */
-#define fatal_error(code) fatal_error_impl(__FILE__, __LINE__, code)
-
-#endif /* _FATAL_ERROR_H_ */
-
-// ======================================================================
-
-#include <execinfo.h>
-#include <signal.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-
-fatal_error_config_t fatal_error_config = {0};
-
-void segmentation_fault_handler(int signal_number) {
-  fatal_error(ERROR_SIGSEGV);
-}
-
-void configure_fatal_errors(fatal_error_config_t config) {
-  fatal_error_config = config;
-  if (config.catch_sigsegv) {
-    signal(SIGSEGV, segmentation_fault_handler);
-  }
-}
-
-void print_fatal_error_banner();
-void print_backtrace();
-void print_error_code_name(int error_code);
-
-char* get_command_line() {
-  buffer_t* buffer
-      = buffer_append_file_contents(make_buffer(1), "/proc/self/cmdline");
-  buffer_replace_matching_byte(buffer, 0, ' ');
-  return buffer_to_c_string(buffer);
-}
-
-char* get_program_path() {
-  char buf[4096];
-  int n = readlink("/proc/self/exe", buf, sizeof(buf));
-  if (n > 0) {
-    return string_duplicate(buf);
-  } else {
-    return "<program-path-unknown>";
-  }
-}
-
-_Noreturn void fatal_error_impl(char* file, int line, int error_code) {
-  print_fatal_error_banner();
-  print_backtrace();
-  fprintf(stderr, "%s:%d: FATAL ERROR %d", file, line, error_code);
-  print_error_code_name(error_code);
-  fprintf(stderr, "\nCommand line: %s\n\n", get_command_line());
-  char* sleep_str = getenv("ARMYKNIFE_FATAL_ERROR_SLEEP_SECONDS");
-  if (sleep_str != NULL) {
-    value_result_t sleep_time = string_parse_uint64(sleep_str);
-    if (is_ok(sleep_time)) {
-      fprintf(stderr,
-              "Sleeping for %lu seconds so you can attach a debugger.\n",
-              sleep_time.u64);
-      fprintf(stderr, "  gdb -tui %s %d\n", get_program_path(), getpid());
-      sleep(sleep_time.u64);
-    }
-  } else {
-    fprintf(stderr, "(ARMYKNIFE_FATAL_ERROR_SLEEP_SECONDS is not set)\n");
-  }
-  fprintf(stderr, "Necessaria Morte Mori...\n");
-  exit(-(error_code + 100));
-}
-
-void print_fatal_error_banner() {
-  // As the first thing we print, also responsible for at least one
-  // newline to start a new line if we may not be at one.
-  fprintf(stderr, "\n========== FATAL_ERROR ==========\n");
-}
-
-void print_backtrace() {
-#ifndef NO_VM_BACKTRACE_ON_FATAL_ERROR
-  do {
-    void* array[10];
-    int size = backtrace(array, 10);
-    char** strings = backtrace_symbols(array, size);
-
-    // Print the backtrace
-    for (int i = 0; i < size; i++) {
-      printf("#%d %s\n", i, strings[i]);
-    }
-  } while (0);
-#endif /* NO_VM_BACKTRACE_ON_FATAL_ERROR */
-}
-
-const char* fatal_error_code_to_string(int error_code) {
-  switch (error_code) {
-  case ERROR_UKNOWN:
-    return "ERROR_UKNOWN";
-  case ERROR_MEMORY_ALLOCATION:
-    return "ERROR_MEMORY_ALLOCATION";
-  case ERROR_MEMORY_FREE_NULL:
-    return "ERROR_MEMORY_FREE_NULL";
-  case ERROR_REFERENCE_NOT_EXPECTED_TYPE:
-    return "ERROR_REFERENCE_NOT_EXPECTED_TYPE";
-  case ERROR_ILLEGAL_INITIAL_CAPACITY:
-    return "ERROR_ILLEGAL_INITIAL_CAPACITY";
-  case ERROR_DYNAMICALLY_SIZED_TYPE_ILLEGAL_IN_CONTAINER:
-    return "ERROR_DYNAMICALLY_SIZED_TYPE_ILLEGAL_IN_CONTAINER";
-  case ERROR_ACCESS_OUT_OF_BOUNDS:
-    return "ERROR_ACCESS_OUT_OF_BOUNDS";
-  case ERROR_NOT_REACHED:
-    return "ERROR_NOT_REACHED";
-  case ERROR_ILLEGAL_ZERO_HASHCODE_VALUE:
-    return "ERROR_ILLEGAL_ZERO_HASHCODE_VALUE";
-  case ERROR_UNIMPLEMENTED:
-    return "ERROR_UNIMPLEMENTED";
-  case ERROR_ILLEGAL_NULL_ARGUMENT:
-    return "ERROR_ILLEGAL_NULL_ARGUMENT";
-  case ERROR_ILLEGAL_ARGUMENT:
-    return "ERROR_ILLEGAL_ARGUMENT";
-  case ERROR_MEMORY_START_PADDING_ERROR:
-    return "ERROR_MEMORY_START_PADDING_ERROR";
-  case ERROR_MEMORY_END_PADDING_ERROR:
-    return "ERROR_MEMORY_END_PADDING_ERROR";
-
-  default:
-    return "error";
-  }
-}
-
-void print_error_code_name(int error_code) {
-  fprintf(stderr, " ");
-  fprintf(stderr, "*** ");
-  fprintf(stderr, "%s", fatal_error_code_to_string(error_code));
-  fprintf(stderr, " ***\n");
-}
 #line 2 "io.c"
 /**
  * @file io.c
@@ -4239,1470 +6613,6 @@ void file_skip_bytes(FILE* input, uint64_t n_bytes) {
     }
     n_bytes--;
   }
-}
-#line 2 "leb128.c"
-
-#ifndef _LEB128_H_
-#define _LEB128_H_
-
-/**
- * @file leb128.c
- *
- * ULEB-128 (unsigned) and SLEB-128 (signed, aka, possibly negative
- * integers) are variable length encodings for possibly "very large"
- * numbers. I first came across LEB while working with "DWARF2" in in
- * the 1990s. Google uses the same encoding for unsigned integers but
- * uses "zig-zag" for signed numbers (the sign bit is stored in the
- * lowest bit instead of the more complicated technique SLEB-128
- * uses).
- *
- * Essentially the 8th bit of each byte says whether to continue
- * adding bits from the next byte or if the number is now "complete"
- * (so 7-bits per byte are the real data and 1-bit is
- * "overhead"). Since many numbers we deal with are actually small,
- * LEB encoding tend to be an efficient encoding of integers and grow
- * "gracefully" to accomodate larger numbers. In fact the "128" in
- * ULEB-128 is a misnomer -- you could in theory encode more than 128
- * bits. This implementation only reads 64bit numbers, not the full
- * 128 bits.
- *
- * This implementation originally comes from LLVM although I have
- * changed it to a C file, renamed the functions, got rid of camel
- * case, removed the C++ namespace, removed the inline directive,
- * removed the pad to argument and changed how results and errors are
- * returned.
- */
-
-#include <stdint.h>
-
-#define ERROR_INSUFFICIENT_INPUT -1
-#define ERROR_TOO_BIG -2
-
-typedef struct {
-  uint64_t number;
-  // Negative values mean an error occurred.
-  int size;
-} unsigned_decode_result;
-
-typedef struct {
-  uint64_t number;
-  // Negative values mean an error occurred.
-  int size;
-} signed_decode_result;
-
-extern unsigned encode_sleb_128(int64_t Value, uint8_t* p);
-extern unsigned encode_uleb_128(uint64_t Value, uint8_t* p);
-extern unsigned_decode_result decode_uleb_128(const uint8_t* p,
-                                              const uint8_t* end);
-extern signed_decode_result decode_sleb_128(const uint8_t* p,
-                                            const uint8_t* end);
-
-#endif /* _LEB128_H_ */
-
-//===- llvm/Support/LEB128.h - [SU]LEB128 utility functions -----*- C++ -*-===//
-//
-// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
-// See https://llvm.org/LICENSE.txt for license information.
-// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-//
-//===----------------------------------------------------------------------===//
-//
-// This file declares some utility functions for encoding SLEB128 and
-// ULEB128 values.
-//
-//===----------------------------------------------------------------------===//
-
-/**
- * @function encode_sleb_128
- *
- * Utility function to encode a SLEB128 value to a raw byte
- * buffer. Returns the length in bytes of the encoded value. 10 bytes
- * should be enough to hold the 64bit number after encoding.
- */
-unsigned encode_sleb_128(int64_t Value, uint8_t* p) {
-  uint8_t* orig_p = p;
-  int More;
-  do {
-    uint8_t Byte = Value & 0x7f;
-    // NOTE: this assumes that this signed shift is an arithmetic right shift.
-    Value >>= 7;
-    More = !((((Value == 0) && ((Byte & 0x40) == 0))
-              || ((Value == -1) && ((Byte & 0x40) != 0))));
-    if (More)
-      Byte |= 0x80; // Mark this byte to show that more bytes will follow.
-    *p++ = Byte;
-  } while (More);
-
-  return cast(unsigned, p - orig_p);
-}
-
-/**
- * @function
- *
- * Utility function to encode a ULEB128 value to a raw byte
- * buffer. Returns the length in bytes of the encoded value. 10 bytes
- * should be enough to hold the 64bit number after encoding.
- */
-unsigned encode_uleb_128(uint64_t Value, uint8_t* p) {
-  uint8_t* orig_p = p;
-  do {
-    uint8_t Byte = Value & 0x7f;
-    Value >>= 7;
-    if (Value != 0)
-      Byte |= 0x80; // Mark this byte to show that more bytes will follow.
-    *p++ = Byte;
-  } while (Value != 0);
-
-  return cast(unsigned, (p - orig_p));
-}
-
-/**
- * @function decode_uleb_128
- *
- * Decode a ULEB-128 value (up to 64bits).
- */
-unsigned_decode_result decode_uleb_128(const uint8_t* p, const uint8_t* end) {
-  const uint8_t* orig_p = p;
-  uint64_t Value = 0;
-  unsigned Shift = 0;
-  do {
-    if (p == end) {
-      unsigned_decode_result result = {0, ERROR_INSUFFICIENT_INPUT};
-      return result;
-    }
-    uint64_t Slice = *p & 0x7f;
-    if ((Shift >= 64 && Slice != 0) || Slice << Shift >> Shift != Slice) {
-      unsigned_decode_result result = {0, ERROR_TOO_BIG};
-      return result;
-    }
-    Value += Slice << Shift;
-    Shift += 7;
-  } while (*p++ >= 128);
-  unsigned_decode_result result = {Value, cast(unsigned, p - orig_p)};
-  return result;
-}
-
-/**
- * @function decode_sleb_128
- *
- * Decode a SLEB128 value (up to 64bits)
- */
-signed_decode_result decode_sleb_128(const uint8_t* p, const uint8_t* end) {
-  const uint8_t* orig_p = p;
-  int64_t Value = 0;
-  unsigned Shift = 0;
-  uint8_t Byte;
-  do {
-    if (p == end) {
-      signed_decode_result result = {0, ERROR_INSUFFICIENT_INPUT};
-      return result;
-    }
-    Byte = *p;
-    uint64_t Slice = Byte & 0x7f;
-    // This handles decoding padded numbers, otherwise we might be
-    // able to test very easily at the end of the loop.
-    if ((Shift >= 64 && Slice != (Value < 0 ? 0x7f : 0x00))
-        || (Shift == 63 && Slice != 0 && Slice != 0x7f)) {
-      signed_decode_result result = {0, ERROR_TOO_BIG};
-      return result;
-    }
-    Value |= Slice << Shift;
-    Shift += 7;
-    ++p;
-  } while (Byte >= 128);
-  // Sign extend negative numbers if needed.
-  if (Shift < 64 && (Byte & 0x40))
-    Value |= (-1ULL) << Shift;
-  signed_decode_result result = {Value, (p - orig_p)};
-  return result;
-}
-#line 2 "logger.c"
-
-/**
- * @file logger.c
- *
- * A "logger" is a type of code instrumentation and provides the
- * ability to put explicit "print statements" into your code without
- * necessarily having a large impact on the performance of that code
- * as long as the logger is turned off for that "level" of detail.
- *
- * If you've temporarily inserted print statements into your program,
- * you've probably already learned that logging is very useful and
- * also somewhat expensive in terms of run-time performance. [^1]
- *
- * Since logging is expensive, it is useful to be able to turn it on
- * and off (even without recompiling) which is done based on the
- * logging level. When logging is turned off, the cost is meant to be
- * equivalent to a load, compare, and branch though logging can effect
- * the C compiler's optimizations, so it is **not** recommended to be
- * left in critical loops. Obviously if the code is compiled into the
- * binary, even if the code to skip the logging doesn't considerably
- * increase run-time performance, it may still have an impact for
- * example on the output binary size.
- *
- * The default log level is "WARN" though it is possible to override
- * this with #define ARMYKNIFE_LIB_DEFAULT_LOG_LEVEL <level> when
- * including the library implementation (or from your build command
- * which allows C preprocessor definitions to be injected into your
- * source code, one reason you may want a debug vs production builds).
- *
- * Additionally, when the first log statement is encountered, we
- * examine the environment variable named ARMYKNIFE_LIB_LOG_LEVEL if
- * you want to adjust the level after compilation. Future versions
- * will certainly provide more control such as turn on logging only
- * for specific files as well as giving the C compiler enough
- * information to remove some logging code completely from the
- * binary).
- *
- * There are a set number of levels and they are defined like so:
- *
- * OFF = 0
- * TRACE = 1
- * DEBUG = 2
- * INFO = 3
- * WARN = 4
- * FATAL = 5
- * TEST = 6
- *
- * The most overlooked part of logging may be that putting PII or
- * other information into logs may violate GDPR and other privacy laws
- * depending on how the logs are processed and retained. Our
- * recommendation is to never intentionally log PII. It's especially
- * important to keep this in mind if you are developing an internet
- * application that the user isn't running on their own machine which
- * isn't an initial focus of this library.
- *
- * [^1]: For this implementation, getting a timestamp is probably one
- * kernel call and doing the actual output, since logging is less
- * useful when buffered, requires at least another kernel
- * call. Finally, formatting strings for human readability is
- * relatively expensive itself. For example, printing a large number
- * may require dozens or hundreds of cycles while adding two numbers
- * may take less than a single cycle on a modern pipelined processor).
- */
-
-#ifndef _LOGGER_H_
-#define _LOGGER_H_
-
-#include <stdarg.h>
-#include <stdio.h>
-
-#define LOGGER_OFF 0
-#define LOGGER_TRACE 1
-#define LOGGER_DEBUG 2
-#define LOGGER_INFO 3
-#define LOGGER_WARN 4
-#define LOGGER_FATAL 5
-#define LOGGER_TEST 6
-
-struct logger_state_S {
-  boolean_t initialized;
-  int level;
-  char* logger_output_filename;
-  FILE* output;
-};
-
-typedef struct logger_state_S logger_state_t;
-
-#ifndef LOGGER_DEFAULT_LEVEL
-#define LOGGER_DEFAULT_LEVEL LOGGER_WARN
-#endif /* LOGGER_DEFAULT_LEVEL */
-
-extern logger_state_t global_logger_state;
-
-extern void logger_init(void);
-
-__attribute__((format(printf, 5, 6))) extern void
-    logger_impl(char* file, int line_number, const char* function, int level,
-                char* format, ...);
-
-/**
- * @macro log_none
- *
- * This will never ever log and should have essentially zero impact on
- * compilation (including detecting errors). In other words it should
- * behave like an empty statment ";".
- *
- * On the other hand, errors in these statements will not be caught
- * and therefore it can't be depended on to keep working as you
- * refactor code and decide later that you want to turn it on.
- */
-#define log_none(format, ...)                                                  \
-  do {                                                                         \
-  } while (0);
-
-/**
- * @macro log_off
- *
- * This will never log however the compiler *should* still check to
- * make sure the code is legal and compiles. Any sufficiently smart
- * compiler with some level of optimization turned on should not
- * change it's code generation strategy at all if you leave one of these
- * statements in your source code and you should easily be able to
- * upgrade them to a real level later.
- */
-#define log_off(format, ...)                                                   \
-  do {                                                                         \
-    if (0) {                                                                   \
-      logger_impl(__FILE__, __LINE__, __FUNCTION__, LOGGER_TRACE, format,      \
-                  ##__VA_ARGS__);                                              \
-    }                                                                          \
-  } while (0)
-
-/**
- * @macro log_trace
- *
- * Log at the TRACE level using printf style formatting.
- */
-#define log_trace(format, ...)                                                 \
-  do {                                                                         \
-    if (global_logger_state.level <= LOGGER_TRACE) {                           \
-      logger_impl(__FILE__, __LINE__, __FUNCTION__, LOGGER_TRACE, format,      \
-                  ##__VA_ARGS__);                                              \
-    }                                                                          \
-  } while (0)
-
-/**
- * @macro log_debug
- *
- * Log at the DEBUG level using printf style formatting.
- */
-#define log_debug(format, ...)                                                 \
-  do {                                                                         \
-    if (global_logger_state.level <= LOGGER_DEBUG) {                           \
-      logger_impl(__FILE__, __LINE__, __FUNCTION__, LOGGER_DEBUG, format,      \
-                  ##__VA_ARGS__);                                              \
-    }                                                                          \
-  } while (0)
-
-/**
- * @macro log_info
- *
- * Log at the INFO level using printf style formatting.
- */
-#define log_info(format, ...)                                                  \
-  do {                                                                         \
-    if (global_logger_state.level <= LOGGER_INFO) {                            \
-      logger_impl(__FILE__, __LINE__, __FUNCTION__, LOGGER_INFO, format,       \
-                  ##__VA_ARGS__);                                              \
-    }                                                                          \
-  } while (0)
-
-/**
- * Determine if logging at the INFO level is enabled.
- */
-static inline boolean_t should_log_info() {
-  return global_logger_state.level <= LOGGER_INFO;
-}
-
-/**
- * @macro log_warn
- *
- * Log at the WARN level using printf style formatting.
- */
-#define log_warn(format, ...)                                                  \
-  do {                                                                         \
-    if (global_logger_state.level <= LOGGER_WARN) {                            \
-      logger_impl(__FILE__, __LINE__, __FUNCTION__, LOGGER_WARN, format,       \
-                  ##__VA_ARGS__);                                              \
-    }                                                                          \
-  } while (0)
-
-/**
- * @macro log_fatal
- *
- * Log at the FATAL level using printf style formatting.
- *
- * Typically this is only done before invoking fatal_error though I
- * don't have a convenient way to enforce this.
- */
-#define log_fatal(format, ...)                                                 \
-  do {                                                                         \
-    if (global_logger_state.level <= LOGGER_FATAL) {                           \
-      logger_impl(__FILE__, __LINE__, __FUNCTION__, LOGGER_FATAL, format,      \
-                  ##__VA_ARGS__);                                              \
-    }                                                                          \
-  } while (0)
-
-/**
- * @macro log_test
- *
- * Log at the TEST level using printf style formatting. This should
- * only be used inside of test code to communicate very basic
- * information back to the user when running a test and is therefore
- * independent of the actual log level.
- */
-#define log_test(format, ...)                                                  \
-  do {                                                                         \
-    logger_impl(__FILE__, __LINE__, __FUNCTION__, LOGGER_TEST, format,         \
-                ##__VA_ARGS__);                                                \
-  } while (0)
-
-#endif /* _LOGGER_H_ */
-
-logger_state_t global_logger_state
-    = (logger_state_t){.level = LOGGER_DEFAULT_LEVEL};
-
-value_result_t parse_log_level_enum(char* str) {
-  if (strcmp("FATAL", str) == 0 || strcmp("fatal", str) == 0) {
-    return (value_result_t){.u64 = LOGGER_FATAL};
-  } else if (strcmp("WARN", str) == 0 || strcmp("warn", str) == 0) {
-    return (value_result_t){.u64 = LOGGER_WARN};
-  } else if (strcmp("INFO", str) == 0 || strcmp("info", str) == 0) {
-    return (value_result_t){.u64 = LOGGER_INFO};
-  } else if (strcmp("DEBUG", str) == 0 || strcmp("debug", str) == 0) {
-    return (value_result_t){.u64 = LOGGER_DEBUG};
-  } else if (strcmp("TRACE", str) == 0 || strcmp("trace", str) == 0) {
-    return (value_result_t){.u64 = LOGGER_TRACE};
-  } else if (strcmp("OFF", str) == 0 || strcmp("off", str) == 0) {
-    return (value_result_t){.u64 = LOGGER_OFF};
-  } else {
-    return (value_result_t){.nf_error = NF_ERROR_NOT_PARSED_AS_EXPECTED_ENUM};
-  }
-}
-
-// FORWARD DECLARATION
-char* logger_level_to_string(int level);
-
-/**
- * @function logger_init
- *
- * This function modifies the logging level based on the environment
- * variable ARMYKNIFE_LIB_LOG_LEVEL (which currently must be a
- * number).
- *
- * While not required to actually use logging, the logging level will
- * be set to LOGGER_WARN unless you change it in a debugger, and those
- * logging statements will be sent to stderr which is probably not
- * convenient.
- */
-void logger_init(void) {
-  char* level_string = getenv("ARMYKNIFE_LIB_LOG_LEVEL");
-  if (level_string != NULL) {
-    value_result_t parsed = string_parse_uint64(level_string);
-    if (is_ok(parsed)) {
-      global_logger_state.level = parsed.u64;
-    } else {
-      value_result_t parsed = parse_log_level_enum(level_string);
-      if (is_ok(parsed)) {
-        global_logger_state.level = parsed.u64;
-      } else {
-        log_warn("%s could not be converted to a log level.", level_string);
-      }
-    }
-  }
-
-  fprintf(stderr, "Log level is set to %s (%d)\n",
-          logger_level_to_string(global_logger_state.level),
-          global_logger_state.level);
-
-  char* output_file_name = getenv("ARMYKNIFE_LIB_LOG_FILE");
-
-  // It's pretty standard to include the "pid" in the filename at
-  // least when writing to /tmp/. We aren't quite doing that yet...
-  //
-  // pid_t pid = getpid(); -- pid is a number of some sort...
-
-  if (output_file_name != NULL) {
-    global_logger_state.output = fopen(output_file_name, "w");
-    if (!global_logger_state.output) {
-      fatal_error(ERROR_OPEN_LOG_FILE);
-    }
-    // Set the stream to unbuffered
-    // if (setvbuf(log_file, NULL, _IONBF, 0) != 0) {
-    // perror("Failed to set stream to unbuffered");
-    // exit(EXIT_FAILURE);
-    // }
-    global_logger_state.logger_output_filename = output_file_name;
-  } else {
-    global_logger_state.output = stderr;
-    global_logger_state.initialized = true;
-  }
-}
-
-// Convert the level to a human readable string (which will also
-// appear as the name in the log file).
-char* logger_level_to_string(int level) {
-  switch (level) {
-  case LOGGER_OFF:
-    return "LOGGER_OFF";
-  case LOGGER_TRACE:
-    return "TRACE";
-  case LOGGER_DEBUG:
-    return "DEBUG";
-  case LOGGER_INFO:
-    return "INFO";
-  case LOGGER_WARN:
-    return "WARN";
-  case LOGGER_FATAL:
-    return "FATAL";
-  default:
-    return "LEVEL_UNKNOWN";
-  }
-}
-
-/**
- * @function logger_impl
- *
- * This is the non macro version entry point into the logger. Normally
- * it wouldn't be called directly since it is less convenient than the
- * macro versions.
- */
-__attribute__((format(printf, 5, 6))) void
-    logger_impl(char* file, int line_number, const char* function, int level,
-                char* format, ...) {
-
-  FILE* output = global_logger_state.output;
-
-  // Ensure that logging to somewhere will happen though a later call
-  // to logger_init() may send the output to somewhere else.
-  if (output == NULL) {
-    output = stderr;
-  }
-
-  if (level >= global_logger_state.level) {
-    fprintf(output, "%s ", logger_level_to_string(level));
-    va_list args;
-    fprintf(output, "%s:%d %s | ", file, line_number, function);
-
-    va_start(args, format);
-    vfprintf(output, format, args);
-    va_end(args);
-
-    fprintf(output, "\n");
-  }
-}
-#line 2 "min-max.c"
-/**
- * @file min-max.c
- *
- * Macros version of min and max functions.
- */
-
-#ifndef _MIN_MAX_H_
-#define _MIN_MAX_H_
-
-/**
- * @macro min
- *
- * Produce the minimum of a and b. Prior to C23, we evalutate one of
- * the arguments twice but we eventually hope to evaluate each
- * argument only once and use the "auto" argument so that the macro
- * works for any type that can be compared with <.
- */
-#define min(a, b) ((a) < (b) ? (a) : (b))
-
-/**
- * @macro max
- *
- * Produce the maximum of a and b. Prior to C23, we evalutate one of
- * the arguments twice but we eventually hope to evaluate each
- * argument only once and use the "auto" argument so that the macro
- * works for any type that can be compared with >.
- */
-#define max(a, b) ((a) > (b) ? (a) : (b))
-
-#endif /* _MIN_MAX_H_ */
-#line 2 "random.c"
-
-/**
- * @file random.c
- *
- * An implementation of "xorshiro128**", a pseudo-random number
- * generator.
- *
- * This is not a high quality source of entropy and is intended for
- * use in tests or other places where determinism is important
- * (including across platforms and C library implementations).
- *
- * See: https://prng.di.unimi.it/xoroshiro128starstar.c
- */
-
-#ifndef _RANDOM_H_
-#define _RANDOM_H_
-
-struct random_state_S {
-  uint64_t a;
-  uint64_t b;
-};
-
-typedef struct random_state_S random_state_t;
-
-extern random_state_t random_state_for_test(void);
-extern uint64_t random_next_uint64(random_state_t* state);
-extern uint64_t random_next_uint64_below(random_state_t* state,
-                                         uint64_t maximum);
-
-#endif /* _RANDOM_H_ */
-
-#include <time.h>
-
-/**
- * @function random_state_for_test
- *
- * Return a consistent initial random state for tests.
- */
-random_state_t random_state_for_test(void) {
-  return (random_state_t){.a = 0x1E1D43C2CA44B1F5, .b = 0x4FDD267452CEDBAC};
-}
-
-/**
- * @function random_state
- *
- * Return a shared random state. If the random state has not been
- * initialized yet, it is initialized based off the timestamp.
- */
-random_state_t* random_state(void) {
-  static random_state_t shared_random_state = {0};
-
-  if (shared_random_state.a == 0) {
-    shared_random_state.a = 0x1E1D43C2CA44B1F5 ^ cast(uint64_t, time(NULL));
-    shared_random_state.b = 0x4FDD267452CEDBAC ^ cast(uint64_t, time(NULL));
-  }
-
-  return &shared_random_state;
-}
-
-
-static inline uint64_t rotl(uint64_t x, int k) {
-  return (x << k) | (x >> (64 - k));
-}
-
-/**
- * @function random_next
- *
- * Return a random uint64_t from the current state (and update the
- * state).
- */
-uint64_t random_next(random_state_t* state) {
-  uint64_t s0 = state->a;
-  uint64_t s1 = state->b;
-  uint64_t result = rotl(s0 * 5, 7) * 9;
-  s1 ^= s0;
-  state->a = rotl(s0, 24) ^ s1 ^ (s1 << 16); // a, b
-  state->b = rotl(s1, 37);                   // c
-
-  return result;
-}
-
-/**
- * @function random_next_uint64_below
- *
- * Return a random `uint64_t` that is below some maximum. As much as
- * the underlying random number generartor allows, this should be
- * uniform.
- */
-uint64_t random_next_uint64_below(random_state_t* state, uint64_t maximum) {
-  if (maximum == 0) {
-    fatal_error(ERROR_ILLEGAL_ARGUMENT);
-  }
-#if 1
-  // This is simpler and works well in practice (it seems).
-  return random_next(state) % maximum;
-#else
-  // This version in theory should be a bit more fair than modulous
-  // but I can't really detect a difference.
-  int mask = (1ULL << (uint64_highest_bit_set(maximum) + 1)) - 1;
-  while (1) {
-    uint64_t n = random_next(state);
-    n &= mask;
-    if (n < maximum) {
-      return n;
-    }
-  }
-#endif /* 0 */
-}
-#line 2 "string-alist.c"
-/**
- * @file string-alist.c
- *
- * An association list (a type of map) from a string to a value_t.
- *
- * This simply wraps value-alist.c.
- */
-
-#ifndef _STRING_ALIST_H_
-#define _STRING_ALIST_H_
-
-struct string_alist_S {};
-
-typedef struct string_alist_S string_alist_t;
-
-/**
- * @function alist_find
- *
- * Find the value associate with the given key. Use is_ok() or
- * is_not_ok() to see if the value is valid (i.e., if the key was
- * actually found).
- */
-static inline value_result_t alist_find(string_alist_t* list, char* key) {
-  return value_alist_find(cast(value_alist_t*, list), cmp_string_values,
-                          str_to_value(key));
-}
-
-/**
- * @function alist_insert
- *
- * Insert a new key and value into an assocation list.
- */
-__attribute__((warn_unused_result)) static inline string_alist_t*
-    alist_insert(string_alist_t* list, char* key, value_t value) {
-  return cast(string_alist_t*,
-              value_alist_insert(cast(value_alist_t*, list), cmp_string_values,
-                                 str_to_value(key), value));
-}
-
-/**
- * @function alist_delete
- *
- * Delete the key and associated value from the given association
- * list. Neither the key nor the value associated are themselves
- * freed.
- */
-__attribute__((warn_unused_result)) static inline string_alist_t*
-    alist_delete(string_alist_t* list, char* key) {
-  return cast(string_alist_t*,
-              value_alist_delete(cast(value_alist_t*, list), cmp_string_values,
-                                 str_to_value(key)));
-}
-
-/**
- * @function alist_length
- *
- * Determine the length of an alist.
- *
- * The alist argument MAY be null.
- */
-__attribute__((warn_unused_result)) static inline uint64_t
-    alist_length(string_alist_t* list) {
-  return value_alist_length(cast(value_alist_t*, list));
-}
-
-/**
- * @macro string_alist_foreach
- *
- * Allows iteration over the keys and values in a string association
- * list.
- */
-#define string_alist_foreach(alist, key_var, value_var, statements)            \
-  do {                                                                         \
-    value_alist_foreach(cast(value_alist_t*, alist), key_var##_value,          \
-                        value_var, {                                           \
-                          char* key_var = (key_var##_value).str;               \
-                          statements;                                          \
-                        });                                                    \
-  } while (0)
-
-#endif /* _STRING_ALIST_H_ */
-#line 2 "string-hashtable.c"
-/**
- * @file string-hashtable.c
- *
- * A very thread-unsafe hash map of C style zero terminated byte
- * "strings" to a value_t. This is an oqaque reference around a
- * value_hashtable.
- */
-
-#ifndef _STRING_HASHTABLE_H_
-#define _STRING_HASHTABLE_H_
-
-struct string_hashtable_S {};
-
-typedef struct string_hashtable_S string_hashtable_t;
-
-static inline value_hashtable_t* to_value_hashtable(string_hashtable_t* ht) {
-  return cast(value_hashtable_t*, ht);
-}
-
-/**
- * @function make_string_hashtable
- *
- * Create a hashtable with the given number of buckets.
- *
- * The minimum number of buckets is currently 2 to make it less likely
- * we run into some resize loop depending on the values of
- * ARMYKNIFE_HT_LOAD_FACTOR and AK_HT_UPSCALE_MULTIPLIER).
- */
-static inline string_hashtable_t* make_string_hashtable(uint64_t n_buckets) {
-  return cast(string_hashtable_t*, make_value_hashtable(n_buckets));
-}
-
-/**
- * @function string_ht_insert
- *
- * Insert an association into the hashtable.
- */
-__attribute__((warn_unused_result)) static inline string_hashtable_t*
-    string_ht_insert(string_hashtable_t* ht, char* key, value_t value) {
-  return cast(string_hashtable_t*,
-              value_ht_insert(to_value_hashtable(ht), hash_string_value,
-                              cmp_string_values, str_to_value(key), value));
-}
-
-/**
- * @function string_ht_delete
- *
- * Delete an association from the hashtable. It is not an error to
- * delete a key that doesn't exist in the hashtable.
- */
-__attribute__((warn_unused_result)) static inline string_hashtable_t*
-    string_ht_delete(string_hashtable_t* ht, char* key) {
-  return cast(string_hashtable_t*,
-              value_ht_delete(to_value_hashtable(ht), hash_string_value,
-                              cmp_string_values, str_to_value(key)));
-}
-
-/**
- * @function string_ht_find
- *
- * Find an association in the hashtable.
- */
-static inline value_result_t string_ht_find(string_hashtable_t* ht, char* key) {
-  return value_ht_find(to_value_hashtable(ht), hash_string_value,
-                       cmp_string_values, str_to_value(key));
-}
-
-/**
- * @function string_ht_num_entries
- *
- * Returns the number of entries in the hashtable.
- */
-static inline uint64_t string_ht_num_entries(string_hashtable_t* ht) {
-  return value_ht_num_entries(to_value_hashtable(ht));
-}
-
-/**
- * @macro string_ht_foreach
- *
- * Allows traversing all elements of a hashtable in an unspecified
- * order.
- */
-#define string_ht_foreach(ht, key_var, value_var, statements)                  \
-  do {                                                                         \
-    value_ht_foreach(to_value_hashtable(ht), key_var##_value, value_var, {     \
-      char* key_var = (key_var##_value).str;                                   \
-      statements;                                                              \
-    });                                                                        \
-  } while (0)
-
-#endif /* _STRING_HASHTABLE_H_ */
-#line 2 "string-tree.c"
-
-/**
- * @file string-tree.c
- *
- * This is a balanced binary tree to associate a string to a value
- * using an underlying value-tree.c.
- */
-
-#ifndef _STRING_TREE_H_
-#define _STRING_TREE_H_
-
-struct string_tree_S {};
-
-typedef struct string_tree_S string_tree_t;
-
-/**
- * @function string_tree_find
- *
- * Find the value associate with the key in the tree.
- */
-static inline value_result_t string_tree_find(string_tree_t* t, char* key) {
-  return value_tree_find(cast(value_tree_t*, t), cmp_string_values,
-                         str_to_value(key));
-}
-
-/**
- * @function string_tree_insert
- *
- * Insert an association of key and a value (or update the current
- * value stored in the tree).
- */
-__attribute__((warn_unused_result)) static inline string_tree_t*
-    string_tree_insert(string_tree_t* t, char* key, value_t value) {
-  return cast(string_tree_t*,
-              value_tree_insert(cast(value_tree_t*, t), cmp_string_values,
-                                str_to_value(key), value));
-}
-
-/**
- * @function string_tree_delete
- *
- * Delete the association of key (if it exists in the tree). It is not
- * an error to delete a key that isn't present in the table.
- */
-__attribute__((warn_unused_result)) static inline string_tree_t*
-    string_tree_delete(string_tree_t* t, char* key) {
-  return cast(string_tree_t*,
-              value_tree_delete(cast(value_tree_t*, t), cmp_string_values,
-                                str_to_value(key)));
-}
-
-/**
- * @macro string_tree_foreach
- *
- * Perform an inorder traversal of a string-tree.
- *
- * key_var is created in a new block scope with type char*.
- *
- * value_var is created in a new block scope with type value_t and you
- * will probably want to use something like ".ptr" or ".u64" on the
- * value to obtain the actual value.
- *
- * statements should be a normal C block, aka, something like:
- * ```
- * {
- *   statement1();
- *   statement2();
- * }
- * ```
- *
- * Unforunately it is not possible to use "break" or "continue" with
- * this style of loop (and worse, there will be no compilation error
- * or warning if you accidentally do that...)
- */
-#define string_tree_foreach(tree, key_var, value_var, statements)              \
-  do {                                                                         \
-    value_tree_foreach(cast(value_tree_t*, tree), key_var##_value, value_var,  \
-                       {                                                       \
-                         char* key_var = (key_var##_value).str;                \
-                         statements;                                           \
-                       });                                                     \
-  } while (0)
-
-#endif /* _STRING_TREE_H_ */
-#line 2 "string-util.c"
-/**
- * @file string-util.c
- *
- * This contains additional string function to operate on "strings"
- * since the C libary has only basic routines.
- */
-
-// ======================================================================
-// This is block is extraced to allocate.h
-// ======================================================================
-
-#ifndef _STRING_UTIL_H_
-#define _STRING_UTIL_H_
-
-#include <stdint.h>
-
-extern int string_is_null_or_empty(const char* str1);
-extern int string_equal(const char* str1, const char* str2);
-extern int string_starts_with(const char* str1, const char* str2);
-extern int string_ends_with(const char* str1, const char* str2);
-extern boolean_t string_contains_char(const char* str, char ch);
-extern int string_index_of_char(const char* a, char ch);
-extern char* uint64_to_string(uint64_t number);
-extern uint64_t string_hash(const char* str);
-extern char* string_substring(const char* str, int start, int end);
-extern value_result_t string_parse_uint64(const char* string);
-extern value_result_t string_parse_uint64_dec(const char* string);
-extern value_result_t string_parse_uint64_hex(const char* string);
-extern value_result_t string_parse_uint64_bin(const char* string);
-extern char* string_duplicate(const char* src);
-extern char* string_append(const char* a, const char* b);
-extern char* string_left_pad(const char* a, int count, char ch);
-extern char* string_right_pad(const char* a, int count, char ch);
-__attribute__((format(printf, 1, 2))) extern char* string_printf(char* format,
-                                                                 ...);
-char* string_truncate(char* str, int limit, char* at_limit_suffix);
-
-#endif /* _STRING_UTIL_H_ */
-
-// ======================================================================
-
-#include <stdlib.h>
-#include <string.h>
-
-uint64_t fasthash64(const void* buf, size_t len, uint64_t seed);
-
-/**
- * @function string_is_null_or_empty
- *
- * Return true if the given string is NULL or strlen is zero.
- */
-int string_is_null_or_empty(const char* str) {
-  return (str == NULL) || (strlen(str) == 0);
-}
-
-/**
- * @function string_equal
- *
- * Return true if two strings are equal.
- */
-int string_equal(const char* str1, const char* str2) {
-  if (string_is_null_or_empty(str1)) {
-    return string_is_null_or_empty(str2);
-  }
-  return strcmp(str1, str2) == 0;
-}
-
-/**
- * @function string_starts_with
- *
- * Return true if str1 starts with all of str2.
- */
-int string_starts_with(const char* str1, const char* str2) {
-  return strncmp(str1, str2, strlen(str2)) == 0;
-}
-
-/**
- * @function string_ends_with
- *
- * Return true if str1 ends with all of str2.
- */
-int string_ends_with(const char* str1, const char* str2) {
-  size_t len1 = strlen(str1);
-  size_t len2 = strlen(str2);
-
-  if (len2 > len1) {
-    return 0;
-  }
-
-  return strcmp(str1 + (len1 - len2), str2) == 0;
-}
-
-/**
- * @function string_contains_char
- *
- * Return true if str contains that given character ch.
- */
-boolean_t string_contains_char(const char* str, char ch) {
-  return string_index_of_char(str, ch) >= 0;
-}
-
-// TODO(jawilson): string_contains_code_point
-
-// TODO(jawilson): string_index_of_string
-
-/**
- * @function string_index_of_char
- *
- * Return the index of the given character in a string or a value less
- * than zero if the character isn't inside of the string.
- */
-int string_index_of_char(const char* str, char ch) {
-  if (string_is_null_or_empty(str)) {
-    return -1;
-  }
-  int str_length = strlen(str);
-  for (int i = 0; i < str_length; i++) {
-    if (str[i] == ch) {
-      return i;
-    }
-  }
-  return -1;
-}
-
-/**
- * @function string_hash
- *
- * Return a fast but generally high-quality 64bit hash of an input
- * string.
- */
-uint64_t string_hash(const char* str) {
-  return fasthash64(str, strlen(str), 0);
-}
-
-/**
- * @function string_substring
- *
- * Return a substring of the given string as a newly allocated string.
- */
-char* string_substring(const char* str, int start, int end) {
-  uint64_t len = strlen(str);
-  if (start >= len || start >= end || end < start) {
-    fatal_error(ERROR_ILLEGAL_ARGUMENT);
-  }
-  int result_size = end - start + 1;
-  char* result = cast(char*, malloc_bytes(result_size));
-  for (int i = start; (i < end); i++) {
-    result[i - start] = str[i];
-  }
-  result[result_size - 1] = '\0';
-  return result;
-}
-
-value_result_t string_parse_uint64_dec(const char* string) {
-  uint64_t len = strlen(string);
-  uint64_t integer = 0;
-
-  if (len == 0) {
-    return (value_result_t){.u64 = 0,
-                            .nf_error = NF_ERROR_NOT_PARSED_AS_NUMBER};
-  }
-
-  for (int i = 0; i < len; i++) {
-    char ch = string[i];
-    if (ch < '0' || ch > '9') {
-      return (value_result_t){.u64 = 0,
-                              .nf_error = NF_ERROR_NOT_PARSED_AS_NUMBER};
-    }
-    uint64_t digit = string[i] - '0';
-    integer = integer * 10 + digit;
-  }
-
-  return (value_result_t){.u64 = integer, .nf_error = NF_OK};
-}
-
-/**
- * Parse a sequence of zeros and ones. A prefix like 0b should be
- * stripped before calling this routine and the string must only
- * contain the digits 0 and 1.
- */
-value_result_t string_parse_uint64_bin(const char* string) {
-  uint64_t len = strlen(string);
-  uint64_t integer = 0;
-
-  if (len == 0) {
-    return compound_literal(
-        value_result_t, {.u64 = 0, .nf_error = NF_ERROR_NOT_PARSED_AS_NUMBER});
-  }
-
-  for (int i = 0; i < len; i++) {
-    char ch = string[i];
-    if (ch < '0' || ch > '1') {
-      return compound_literal(
-          value_result_t,
-          {.u64 = 0, .nf_error = NF_ERROR_NOT_PARSED_AS_NUMBER});
-    }
-    uint64_t digit = string[i] - '0';
-    integer = integer << 1 | digit;
-  }
-
-  return compound_literal(value_result_t, {.u64 = integer, .nf_error = NF_OK});
-}
-
-static inline boolean_t is_hex_digit(char ch) {
-  return (ch >= '0' && ch <= '9') || (ch >= 'a' && ch <= 'f');
-}
-
-static inline uint64_t hex_digit_to_value(char ch) {
-  if (ch >= '0' && ch <= '9') {
-    return ch - '0';
-  } else {
-    return (ch - 'a') + 10;
-  }
-}
-
-/**
- * Parse a sequence of characters "0123456789abcdef" to an uint64_t. A
- * prefix like 0x should be striped before calling this routine.
- *
- */
-value_result_t string_parse_uint64_hex(const char* string) {
-  uint64_t len = strlen(string);
-  uint64_t integer = 0;
-
-  if (len == 0) {
-    return compound_literal(
-        value_result_t, {.u64 = 0, .nf_error = NF_ERROR_NOT_PARSED_AS_NUMBER});
-  }
-
-  for (int i = 0; i < len; i++) {
-    char ch = string[i];
-    if (!is_hex_digit(ch)) {
-      return compound_literal(
-          value_result_t,
-          {.u64 = 0, .nf_error = NF_ERROR_NOT_PARSED_AS_NUMBER});
-    }
-    uint64_t digit = hex_digit_to_value(ch);
-    integer = integer << 4 | digit;
-  }
-
-  return compound_literal(value_result_t, {.u64 = integer, .nf_error = NF_OK});
-}
-
-/**
- * @function string_parse_uint64
- *
- * Parse a string as a uint64_t.
- *
- * If the string begins with "0x", the the number should be a well
- * formed hexidecimal number (in all lower-case).
- *
- * If the string begins with "0b", the the number should be a well
- * formed binary number.
- *
- * Ortherwise the number should be a well-formed decimal number.
- *
- * While currently overflow is not detected, that is likely to be
- * detected in future versions of the library.
- */
-value_result_t string_parse_uint64(const char* string) {
-  if (string_starts_with(string, "0x")) {
-    return string_parse_uint64_hex(&string[2]);
-  } else if (string_starts_with(string, "0b")) {
-    return string_parse_uint64_bin(&string[2]);
-  } else {
-    return string_parse_uint64_dec(string);
-  }
-}
-
-/**
- * @function string_duplicate
- *
- * Just like strdup except NULL is a valid source argument and we use
- * malloc_bytes which checks the return result from malloc.
- */
-char* string_duplicate(const char* src) {
-  if (src == NULL) {
-    return NULL;
-  }
-  int len = strlen(src) + 1;
-  char* result = cast(char*, malloc_bytes(len));
-  memcpy(result, src, len);
-
-  return result;
-}
-
-/**
- * @function string_append
- *
- * Return a freshly allocated string that is the concatentation of the
- * two input strings (neither of which should be NULL);
- */
-char* string_append(const char* a, const char* b) {
-  if (a == NULL || b == NULL) {
-    fatal_error(ERROR_ILLEGAL_NULL_ARGUMENT);
-  }
-  int total_length = strlen(a) + strlen(b) + 1;
-  char* result = cast(char*, malloc_bytes(total_length));
-  strcat(result, a);
-  strcat(result, b);
-  return result;
-}
-
-/**
- * @function uint64_to_string
- *
- * Convert a uint64_t number to a string.
- */
-char* uint64_to_string(uint64_t number) {
-  char buffer[32];
-  sprintf(buffer, "%lu", number);
-  return string_duplicate(buffer);
-}
-
-/**
- * @function string_left_pad
- *
- * Prepend left left padding (if necessary) to make it at least N
- * bytes long.
- */
-char* string_left_pad(const char* str, int n, char ch) {
-  if (n < 0) {
-    fatal_error(ERROR_ILLEGAL_RANGE);
-  }
-
-  int input_length = strlen(str);
-
-  // Calculate padding needed
-  int padding_needed = n - input_length;
-
-  // As usual, since buffer's grow as needed, we are tolerant of a
-  // wrong initial computation of the length though getting this wrong
-  // is wasteful... In this case we do the wasteful thing knowing that
-  // we will free everything shortly. We just want the correct result,
-  // not necessarily as fast as possible.
-
-  int len = 1; // max(padding_needed + input_length, input_length) + 1;
-
-  buffer_t* buffer = make_buffer(len);
-  for (int i = 0; i < padding_needed; i++) {
-    buffer = buffer_append_byte(buffer, ch);
-  }
-  buffer = buffer_append_string(buffer, str);
-  char* result = buffer_to_c_string(buffer);
-  free_bytes(buffer);
-  return result;
-}
-
-/**
- * @function string_right_pad
- *
- * Append right padding to a string (if necessary) to make it at least
- * N bytes long.
- */
-char* string_right_pad(const char* str, int n, char ch) {
-  if (n < 0) {
-    fatal_error(ERROR_ILLEGAL_RANGE);
-  }
-
-  int input_length = strlen(str);
-
-  // Calculate padding needed
-  int padding_needed = n - input_length;
-
-  // As usual, since buffer's grow as needed, we are tolerant of a
-  // wrong initial computation of the length though getting this wrong
-  // is wasteful... In this case we do the wasteful thing knowing that
-  // we will free everything shortly. We just want the correct result,
-  // not necessarily as fast as possible.
-
-  int len = 1; // max(padding_needed + input_length, input_length) + 1;
-
-  buffer_t* buffer = make_buffer(len);
-  buffer = buffer_append_string(buffer, str);
-  for (int i = 0; i < padding_needed; i++) {
-    buffer = buffer_append_byte(buffer, ch);
-  }
-  char* result = buffer_to_c_string(buffer);
-  free_bytes(buffer);
-  return result;
-}
-
-/**
- * @function string_truncate
- *
- * Return a copy of the string truncated to limit number of *bytes*
- * (excluding the trailing zero). This is currently not unicode safe!
- *
- * When the string is truncated, we also add 'at_limit_suffix' which
- * may make the returned string actually that many characters
- * longer. This behavior is likely to change in a future version.
- */
-char* string_truncate(char* str, int limit, char* at_limit_suffix) {
-  // limit is just a guess, buffer's always grow as needed.
-  buffer_t* buffer = make_buffer(limit);
-  for (int i = 0;; i++) {
-    char ch = str[i];
-    if (ch == '\0') {
-      char* result = buffer_to_c_string(buffer);
-      free_bytes(buffer);
-      return result;
-    }
-    buffer = buffer_append_byte(buffer, ch);
-  }
-  if (at_limit_suffix) {
-    buffer = buffer_append_string(buffer, at_limit_suffix);
-  }
-  char* result = buffer_to_c_string(buffer);
-  free_bytes(buffer);
-  return result;
-}
-
-// Allows tests to make the temporary buffer small to more easily test
-// the case where vsnprintf is called twice because the first time it
-// was called we didn't have a large enough buffer.
-#ifndef STRING_PRINTF_INITIAL_BUFFER_SIZE
-#define STRING_PRINTF_INITIAL_BUFFER_SIZE 1024
-#endif /* STRING_PRINTF_INITIAL_BUFFER_SIZE */
-
-/**
- * @function string_printf
- *
- * Perform printf to a buffer and return the result as a dynamically
- * allocated string. The string is automatically allocated to the
- * appropriate size.
- */
-__attribute__((format(printf, 1, 2))) char* string_printf(char* format, ...) {
-  char buffer[STRING_PRINTF_INITIAL_BUFFER_SIZE];
-  int n_bytes = 0;
-  do {
-    va_list args;
-    va_start(args, format);
-    n_bytes
-        = vsnprintf(buffer, STRING_PRINTF_INITIAL_BUFFER_SIZE, format, args);
-    va_end(args);
-  } while (0);
-
-  if (n_bytes < STRING_PRINTF_INITIAL_BUFFER_SIZE) {
-    char* result = cast(char*, malloc_bytes(n_bytes + 1));
-    strcat(result, buffer);
-    return result;
-  } else {
-    char* result = cast(char*, malloc_bytes(n_bytes + 1));
-    va_list args;
-    va_start(args, format);
-    int n_bytes_second = vsnprintf(result, n_bytes + 1, format, args);
-    va_end(args);
-    if (n_bytes_second != n_bytes) {
-      fatal_error(ERROR_INTERNAL_ASSERTION_FAILURE);
-    }
-    return result;
-  }
-}
-
-/* ================================================================ */
-
-/* The MIT License
-
-   Copyright (C) 2012 Zilong Tan (eric.zltan@gmail.com)
-
-   Permission is hereby granted, free of charge, to any person
-   obtaining a copy of this software and associated documentation
-   files (the "Software"), to deal in the Software without
-   restriction, including without limitation the rights to use, copy,
-   modify, merge, publish, distribute, sublicense, and/or sell copies
-   of the Software, and to permit persons to whom the Software is
-   furnished to do so, subject to the following conditions:
-
-   The above copyright notice and this permission notice shall be
-   included in all copies or substantial portions of the Software.
-
-   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-   EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-   MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-   NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
-   BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
-   ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-   CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-   SOFTWARE.
-*/
-
-// #include "fasthash.h"
-
-// Compression function for Merkle-Damgard construction.
-// This function is generated using the framework provided.
-static inline uint64_t mix(uint64_t h) {
-  h ^= h >> 23;
-  h *= 0x2127599bf4325c37ULL;
-  h ^= h >> 47;
-  return h;
-}
-
-// security: if the system allows empty keys (len=3) the seed is exposed, the
-// reverse of mix. objsize: 0-1fd: 509
-uint64_t fasthash64(const void* buf, size_t len, uint64_t seed) {
-  const uint64_t m = 0x880355f21e6d1965ULL;
-  const uint64_t* pos = cast(const uint64_t*, buf);
-  const uint64_t* end = pos + (len / 8);
-  const unsigned char* pos2;
-  uint64_t h = seed ^ (len * m);
-  uint64_t v;
-
-  while (pos != end) {
-    v = *pos++;
-    h ^= mix(v);
-    h *= m;
-  }
-
-  pos2 = cast(const unsigned char*, pos);
-  v = 0;
-
-  switch (len & 7) {
-  case 7:
-    v ^= (uint64_t) pos2[6] << 48;
-  case 6:
-    v ^= (uint64_t) pos2[5] << 40;
-  case 5:
-    v ^= (uint64_t) pos2[4] << 32;
-  case 4:
-    v ^= (uint64_t) pos2[3] << 24;
-  case 3:
-    v ^= (uint64_t) pos2[2] << 16;
-  case 2:
-    v ^= (uint64_t) pos2[1] << 8;
-  case 1:
-    v ^= (uint64_t) pos2[0];
-    h ^= mix(v);
-    h *= m;
-  }
-
-  return mix(h);
 }
 #line 2 "terminal.c"
 #ifndef _TERMINAL_H_
@@ -6142,6 +7052,339 @@ extern void term_echo_restore(struct termios oldt) {
 // ESC ]0;this is the window title BEL
 
 // ESC ]8;;link ST (hyperlink)
+#line 2 "tokenizer.c"
+/**
+ * @file tokenizer.c
+ *
+ */
+
+#ifndef _TOKENIZER_H_
+#define _TOKENIZER_H_
+
+extern value_array_t* string_tokenize(const char* str, const char* delimiters);
+extern value_array_t* buffer_tokenize(buffer_t* buffer, const char* delimiters);
+extern value_array_t* tokenize_memory_range(uint8_t* start, uint64_t length,
+                                            const char* delimiters);
+
+// TODO(jawilson):
+
+#endif /* _TOKENIZER_H_ */
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+void add_duplicate(value_array_t* token_array, const char* data);
+
+/**
+ * @function string_tokenize
+ *
+ * Tokenize a string into a a value_array_t of (non-empty) strings.
+ *
+ * Delimiters terminate the current token and are thrown away. The
+ * delimiters string is treated as a sequence of delimiter characters,
+ * it does not mean a delimiter can be multiple characters.
+ */
+value_array_t* string_tokenize(const char* str, const char* delimiters) {
+  return tokenize_memory_range(cast(uint8_t*, str), strlen(str), delimiters);
+}
+
+/**
+ * @function buffer_tokenize
+ *
+ * Tokenize the current contents of a buffer into a value_array_t of
+ * (non-empty) strings. The input buffer should contain a valid UTF-8
+ * encoded string.
+ *
+ * NUL bytes inside the buffer are automatically treated as an
+ * additional delimiter.
+ */
+value_array_t* buffer_tokenize(buffer_t* buffer, const char* delimiters) {
+  return tokenize_memory_range(&(buffer->elements[0]), buffer->length,
+                               delimiters);
+}
+
+/**
+ * @function tokenize_memory_range
+ *
+ * Tokenize a memory range into a value_array_t of (non-empty) strings. The
+ * range should contain a valid UTF-8 encoded string.
+ *
+ * NUL bytes are automatically treated as an additional delimiter.
+ */
+value_array_t* tokenize_memory_range(uint8_t* str, uint64_t length,
+                                     const char* delimiters) {
+  value_array_t* result = make_value_array(1);
+  char token_data[1024];
+  int cpos = 0;
+  for (int i = 0; (i < length); i++) {
+    uint8_t ch = str[i];
+    if (ch == 0 || string_contains_char(delimiters, ch)) {
+      token_data[cpos++] = '\0';
+      if (strlen(token_data) > 0) {
+        add_duplicate(result, token_data);
+      }
+      cpos = 0;
+    } else {
+      token_data[cpos++] = ch;
+    }
+  }
+  token_data[cpos++] = '\0';
+  if (strlen(token_data) > 0) {
+    add_duplicate(result, token_data);
+  }
+
+  return result;
+}
+
+// Add a *copy* of the string named data to the token list.
+void add_duplicate(value_array_t* token_array, const char* data) {
+  value_array_add(token_array, str_to_value(string_duplicate(data)));
+}
+#line 2 "random.c"
+
+/**
+ * @file random.c
+ *
+ * An implementation of "xorshiro128**", a pseudo-random number
+ * generator.
+ *
+ * This is not a high quality source of entropy and is intended for
+ * use in tests or other places where determinism is important
+ * (including across platforms and C library implementations).
+ *
+ * See: https://prng.di.unimi.it/xoroshiro128starstar.c
+ */
+
+#ifndef _RANDOM_H_
+#define _RANDOM_H_
+
+struct random_state_S {
+  uint64_t a;
+  uint64_t b;
+};
+
+typedef struct random_state_S random_state_t;
+
+extern random_state_t random_state_for_test(void);
+extern uint64_t random_next_uint64(random_state_t* state);
+extern uint64_t random_next_uint64_below(random_state_t* state,
+                                         uint64_t maximum);
+
+#endif /* _RANDOM_H_ */
+
+#include <time.h>
+
+/**
+ * @function random_state_for_test
+ *
+ * Return a consistent initial random state for tests.
+ */
+random_state_t random_state_for_test(void) {
+  return (random_state_t){.a = 0x1E1D43C2CA44B1F5, .b = 0x4FDD267452CEDBAC};
+}
+
+/**
+ * @function random_state
+ *
+ * Return a shared random state. If the random state has not been
+ * initialized yet, it is initialized based off the timestamp.
+ */
+random_state_t* random_state(void) {
+  static random_state_t shared_random_state = {0};
+
+  if (shared_random_state.a == 0) {
+    shared_random_state.a = 0x1E1D43C2CA44B1F5 ^ cast(uint64_t, time(NULL));
+    shared_random_state.b = 0x4FDD267452CEDBAC ^ cast(uint64_t, time(NULL));
+  }
+
+  return &shared_random_state;
+}
+
+
+static inline uint64_t rotl(uint64_t x, int k) {
+  return (x << k) | (x >> (64 - k));
+}
+
+/**
+ * @function random_next
+ *
+ * Return a random uint64_t from the current state (and update the
+ * state).
+ */
+uint64_t random_next(random_state_t* state) {
+  uint64_t s0 = state->a;
+  uint64_t s1 = state->b;
+  uint64_t result = rotl(s0 * 5, 7) * 9;
+  s1 ^= s0;
+  state->a = rotl(s0, 24) ^ s1 ^ (s1 << 16); // a, b
+  state->b = rotl(s1, 37);                   // c
+
+  return result;
+}
+
+/**
+ * @function random_next_uint64_below
+ *
+ * Return a random `uint64_t` that is below some maximum. As much as
+ * the underlying random number generartor allows, this should be
+ * uniform.
+ */
+uint64_t random_next_uint64_below(random_state_t* state, uint64_t maximum) {
+  if (maximum == 0) {
+    fatal_error(ERROR_ILLEGAL_ARGUMENT);
+  }
+#if 1
+  // This is simpler and works well in practice (it seems).
+  return random_next(state) % maximum;
+#else
+  // This version in theory should be a bit more fair than modulous
+  // but I can't really detect a difference.
+  int mask = (1ULL << (uint64_highest_bit_set(maximum) + 1)) - 1;
+  while (1) {
+    uint64_t n = random_next(state);
+    n &= mask;
+    if (n < maximum) {
+      return n;
+    }
+  }
+#endif /* 0 */
+}
+#line 2 "cdl-printer.c"
+
+/**
+ * @file cdl-printer.c
+ *
+ * CDL is like TOML where the "inline" format is used for all tables,
+ * commas are eliminated, and there is no support for dates.
+ *
+ * CDL can represent:
+ *
+ * 1. comments ==> # extends to the end of the line
+ * 1. booleans ===> true and false
+ * 1. symbols ==> foo, bar element_name, etc. (covers C identifiers)
+ * 1. strings ==> "example\n"
+ * 1. numbers ==> 123.5, 120, etc.
+ * 1. arrays ==> [ hello world 123 54.9]
+ * 1. tables ==> { x = 100 y = 50 }
+ *
+ * keys in the table must be symbols or strings (possibly numbers in
+ * the future?)
+ *
+ * This library only provides a printer. For reading, we'll delay that
+ * until Omni C can use it's reflection API to automatically write
+ * readers for us.
+ *
+ * CDL stands for "clear data language" or "C data language"
+ */
+
+#ifndef _CDL_PRINTER_H_
+#define _CDL_PRINTER_H_
+
+typedef struct {
+  buffer_t* buffer;
+  char* key_token;
+  int indention_level;
+} cdl_printer_t;
+
+cdl_printer_t* make_cdl_printer(buffer_t* buffer);
+
+void cdl_boolean(cdl_printer_t* printer, boolean_t bolean);
+void cdl_string(cdl_printer_t* printer, char* string);
+void cdl_int64(cdl_printer_t* printer, int64_t number);
+void cdl_uint64(cdl_printer_t* printer, uint64_t number);
+void cdl_double(cdl_printer_t* printer, double number);
+
+void cdl_start_array(cdl_printer_t* printer);
+void cdl_end_array(cdl_printer_t* printer);
+
+void cdl_start_table(cdl_printer_t* printer);
+void cdl_key(cdl_printer_t* printer, char* key);
+void cdl_end_table(cdl_printer_t* printer);
+
+#endif /* _CDL_PRINTER_H_ */
+
+cdl_printer_t* make_cdl_printer(buffer_t* buffer) {
+  cdl_printer_t* result = malloc_struct(cdl_printer_t);
+  result->buffer = buffer;
+  return result;
+}
+
+void cdl_indent(cdl_printer_t* printer) {
+  buffer_append_repeated_byte(printer->buffer, ' ',
+                              4 * printer->indention_level);
+}
+
+boolean_t is_symbol(char* string) {
+  for (int i = 0; string[i] != 0; i++) {
+    if (i == 0) {
+      if (!isalpha(string[i])) {
+        return false;
+      }
+    } else {
+      if (!(isalnum(string[i]) || string[i] == '_')) {
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
+void cdl_output_token(cdl_printer_t* printer, char* string) {
+  cdl_indent(printer);
+  if (printer->key_token != NULL) {
+    buffer_printf(printer->buffer, "%s = %s\n", printer->key_token, string);
+    printer->key_token = NULL;
+  } else {
+    buffer_printf(printer->buffer, "%s\n", string);
+  }
+}
+
+void cdl_boolean(cdl_printer_t* printer, boolean_t boolean) {
+  cdl_output_token(printer, boolean ? "true" : "false");
+}
+
+void cdl_string(cdl_printer_t* printer, char* string) {
+  if (!is_symbol(string)) {
+    cdl_output_token(printer, string_printf("\"%s\"", string));
+  } else {
+    cdl_output_token(printer, string);
+  }
+}
+
+void cdl_int64(cdl_printer_t* printer, int64_t number) {
+  cdl_output_token(printer, string_printf("%ld", number));
+}
+
+void cdl_uint64(cdl_printer_t* printer, uint64_t number) {
+  cdl_output_token(printer, uint64_to_string(number));
+}
+
+void cdl_double(cdl_printer_t* printer, double number) {
+  cdl_output_token(printer, string_printf("%lf", number));
+}
+
+void cdl_start_array(cdl_printer_t* printer) {
+  cdl_output_token(printer, "[");
+  printer->indention_level += 1;
+}
+
+void cdl_end_array(cdl_printer_t* printer) {
+  printer->indention_level -= 1;
+  cdl_output_token(printer, "]");
+}
+
+void cdl_start_table(cdl_printer_t* printer) {
+  cdl_output_token(printer, "{");
+  printer->indention_level += 1;
+}
+
+void cdl_key(cdl_printer_t* printer, char* key) { printer->key_token = key; }
+
+void cdl_end_table(cdl_printer_t* printer) {
+  printer->indention_level -= 1;
+  cdl_output_token(printer, "}");
+}
 #line 2 "test.c"
 /**
  * @file test.c
@@ -6263,1248 +7506,5 @@ __attribute__((format(printf, 3, 4))) void
   fprintf(stdout, "\n");
   va_end(args);
   exit(1);
-}
-#line 2 "tokenizer.c"
-/**
- * @file tokenizer.c
- *
- */
-
-#ifndef _TOKENIZER_H_
-#define _TOKENIZER_H_
-
-extern value_array_t* string_tokenize(const char* str, const char* delimiters);
-extern value_array_t* buffer_tokenize(buffer_t* buffer, const char* delimiters);
-extern value_array_t* tokenize_memory_range(uint8_t* start, uint64_t length,
-                                            const char* delimiters);
-
-// TODO(jawilson):
-
-#endif /* _TOKENIZER_H_ */
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
-void add_duplicate(value_array_t* token_array, const char* data);
-
-/**
- * @function string_tokenize
- *
- * Tokenize a string into a a value_array_t of (non-empty) strings.
- *
- * Delimiters terminate the current token and are thrown away. The
- * delimiters string is treated as a sequence of delimiter characters,
- * it does not mean a delimiter can be multiple characters.
- */
-value_array_t* string_tokenize(const char* str, const char* delimiters) {
-  return tokenize_memory_range(cast(uint8_t*, str), strlen(str), delimiters);
-}
-
-/**
- * @function buffer_tokenize
- *
- * Tokenize the current contents of a buffer into a value_array_t of
- * (non-empty) strings. The input buffer should contain a valid UTF-8
- * encoded string.
- *
- * NUL bytes inside the buffer are automatically treated as an
- * additional delimiter.
- */
-value_array_t* buffer_tokenize(buffer_t* buffer, const char* delimiters) {
-  return tokenize_memory_range(&(buffer->elements[0]), buffer->length,
-                               delimiters);
-}
-
-/**
- * @function tokenize_memory_range
- *
- * Tokenize a memory range into a value_array_t of (non-empty) strings. The
- * range should contain a valid UTF-8 encoded string.
- *
- * NUL bytes are automatically treated as an additional delimiter.
- */
-value_array_t* tokenize_memory_range(uint8_t* str, uint64_t length,
-                                     const char* delimiters) {
-  value_array_t* result = make_value_array(1);
-  char token_data[1024];
-  int cpos = 0;
-  for (int i = 0; (i < length); i++) {
-    uint8_t ch = str[i];
-    if (ch == 0 || string_contains_char(delimiters, ch)) {
-      token_data[cpos++] = '\0';
-      if (strlen(token_data) > 0) {
-        add_duplicate(result, token_data);
-      }
-      cpos = 0;
-    } else {
-      token_data[cpos++] = ch;
-    }
-  }
-  token_data[cpos++] = '\0';
-  if (strlen(token_data) > 0) {
-    add_duplicate(result, token_data);
-  }
-
-  return result;
-}
-
-// Add a *copy* of the string named data to the token list.
-void add_duplicate(value_array_t* token_array, const char* data) {
-  value_array_add(token_array, str_to_value(string_duplicate(data)));
-}
-#line 2 "uint64.c"
-/**
- * @file uint64.c
- *
- * Implement a couple of useful operations on uint64_t (which can
- * often be used for smaller types).
- */
-
-#ifndef _UINT64_H_
-#define _UINT64_H_
-
-#include <stdint.h>
-
-extern int uint64_highest_bit_set(uint64_t n);
-
-#endif /* _UINT64_H_ */
-
-/**
- * @function uint64_highest_bit_set
- *
- */
-int uint64_highest_bit_set(uint64_t n) {
-  if (n >= 1ULL << 32) {
-    return uint64_highest_bit_set(n >> 32) + 32;
-  } else if (n >= 1ULL << 16) {
-    return uint64_highest_bit_set(n >> 16) + 16;
-  } else if (n >= 1ULL << 8) {
-    return uint64_highest_bit_set(n >> 8) + 8;
-  } else if (n >= 1ULL << 4) {
-    return uint64_highest_bit_set(n >> 4) + 4;
-  } else if (n >= 1ULL << 2) {
-    return uint64_highest_bit_set(n >> 2) + 2;
-  } else if (n >= 1ULL << 1) {
-    return uint64_highest_bit_set(n >> 1) + 1;
-  } else {
-    return 0;
-  }
-}
-#line 2 "utf8-decoder.c"
-/**
- * @file utf8-decoder.c
- *
- * A very basic UTF-8 decoder.
- */
-#ifndef _UTF8_DECODER_H_
-#define _UTF8_DECODER_H_
-
-#include <stdint.h>
-
-/**
- * @struct utf8_decode_result_t
- *
- * Holds the result of utf8_decode.
- */
-struct utf8_decode_result_S {
-  uint32_t code_point;
-  uint8_t num_bytes;
-  boolean_t error;
-};
-
-typedef struct utf8_decode_result_S utf8_decode_result_t;
-
-extern utf8_decode_result_t utf8_decode(const uint8_t* utf8_bytes);
-
-#endif /* _UTF8_DECODER_H_ */
-
-/**
- * @function utf8_decode
- *
- * Decodes the next code-point from a uint8_t* pointer.
- */
-utf8_decode_result_t utf8_decode(const uint8_t* array) {
-  uint8_t firstByte = array[0];
-  if ((firstByte & 0x80) == 0) {
-    return compound_literal(utf8_decode_result_t,
-                            {.code_point = firstByte, .num_bytes = 1});
-  } else if ((firstByte & 0xE0) == 0xC0) {
-    return compound_literal(
-        utf8_decode_result_t,
-        {.code_point = ((firstByte & 0x1F) << 6) | (array[1] & 0x3F),
-         .num_bytes = 2});
-  } else if ((firstByte & 0xF0) == 0xE0) {
-    return compound_literal(utf8_decode_result_t,
-                            {.code_point = ((firstByte & 0x0F) << 12)
-                                           | ((array[1] & 0x3F) << 6)
-                                           | (array[2] & 0x3F),
-                             .num_bytes = 3});
-  } else if ((firstByte & 0xF8) == 0xF0) {
-    return compound_literal(
-        utf8_decode_result_t,
-        {.code_point = ((firstByte & 0x07) << 18) | ((array[1] & 0x3F) << 12)
-                       | ((array[2] & 0x3F) << 6) | (array[3] & 0x3F),
-         .num_bytes = 4});
-  } else {
-    return compound_literal(utf8_decode_result_t, {.error = true});
-  }
-}
-#line 2 "value.c"
-
-#ifndef _VALUE_H_
-#define _VALUE_H_
-
-#include <stdint.h>
-
-/**
- * @file value.c
- *
- * A major part of the armyknife library is giving basic "collection"
- * capabilities to C.
- *
- * In an ideal world, C would allow structures to be parameterized so
- * that a field holding a "key" or a "value" could change size (based
- * on its static parameters).
- *
- * Since that capability doesn't currently exist, instead we take an
- * approach where keys and values are always the same size (64
- * bits). While this doesn't allow storing *anything* as a key or
- * value, it does allow storing a *pointer to anything* as a key or
- * value. This is actually very similar to how Java collections work
- * except we can store primitive values like integers and doubles
- * without "boxing".
- *
- * When "searching" a collection for a key, we want to be able to
- * return "not found" (and potentially other "non-fatal" error
- * conditions). For this reason we also have the value_result_t
- * structure, which is a pair of a value_t and a
- * non_fatal_error_code_t. (It's actually slightly more complicated
- * because `tcc` treats anonymous unions a little differently than
- * `gcc` and `clang` so we work around that by repeating the fields of
- * a value to make value_result_t a bit more convenient to work with).
- *
- * Sometimes value_result_t is also used by non collection based
- * functions, such as parsing an integer, so that other non-fatal
- * errors can be communicated back to the caller.
- *
- * The contract with returning a non-fatal errors is that the state of
- * the system is in a good state to continue processing (or they get
- * to decide if the error should be fatal). Users will thus expect
- * that when a non-fatal error is returned that no global state
- * modification has ocurred.
- *
- * value_t's are typically only passed into functions while
- * optional_value_result_t's are typically returned from functions.
- *
- * When a value_result_t is returned you must always check for an
- * error code before using the value component of the result. `is_ok`
- * and `is_not_ok` make this slightly easier and easier to read.
- *
- * value_t's and value_result_t's carry no type information that can
- * be queried at runtime and by their nature C compilers are going to
- * do a very incomplete job of statically type checking these. For
- * example you can easily put a double into a collection and
- * successfully get back this value and use it as a very suspicious
- * pointer and the compiler will not warn you about this. So
- * collections aren't as safe as in other languages at either compile
- * or run-time. (Java's collections (when generic types are *not*
- * used), are not "safe" at compile time but are still dynamically
- * safe.)
- *
- * On the positive side, the lack of dynamic typing means you haven't
- * paid a price to maintain these and in theory your code can run
- * faster.
- *
- * If C had a richer type-system, namely generic types, we could catch
- * all all potential type errors at compile time and potentially even
- * allow storing "values" larger than 64bits "inline" with a little
- * more magic.
- *
- * The most common things to use as keys are strings, integers, and
- * pointers (while common association values are strings, integers,
- * pointers and booleans).
- *
- * Our primary goal is to make collections convenient. Using typedef
- * and inline functions you can also make these safer at compile time.
- */
-
-/**
- * @typedef value_t
- *
- * An un-typed union of integers, doubles, and pointers.
- */
-typedef union {
-  uint64_t u64;
-  uint64_t i64;
-  char* str;
-  void* ptr;
-  void* dbl;
-} value_t;
-
-/**
- * @enum non_fatal_error_code_t
- *
- * These are user recoverable errors and when a non-recoverable error
- * is returned, the state of the system should be left in a
- * recoverable state.
- */
-typedef enum {
-  NF_OK,
-  NF_ERROR_NOT_FOUND,
-  NF_ERROR_NOT_PARSED_AS_NUMBER,
-  NF_ERROR_NOT_PARSED_AS_EXPECTED_ENUM,
-} non_fatal_error_code_t;
-
-/**
- * @typedef value_result_t
- *
- * A pair of a value_t and a non-fatal error code. When the error code
- * is set, the value_t should never be looked at (most likely will be
- * "zero" or a "nullptr" but you shouldn't trust that).
- */
-typedef struct {
-  union {
-    uint64_t u64;
-    int64_t i64;
-    double dbl;
-    char* str;
-    void* ptr;
-    value_t val;
-  };
-  // TODO(jawilson): change the name of the field after checking if
-  // the compiler helps at all here!
-  non_fatal_error_code_t nf_error;
-} value_result_t;
-
-// TODO(jawilson): we can use _Generic for this and just use
-// to_value()
-
-#define boolean_to_value(x) compound_literal(value_t, {.u64 = x})
-#define u64_to_value(x) compound_literal(value_t, {.u64 = x})
-#define i64_to_value(x) compound_literal(value_t, {.i64 = x})
-#define str_to_value(x) compound_literal(value_t, {.str = x})
-#define ptr_to_value(x) compound_literal(value_t, {.ptr = x})
-#define dbl_to_value(x) compound_literal(value_t, {.dbl = x})
-
-/**
- * @function is_ok
- *
- * Return true if the given value_result_t contains a legal value
- * instead of an error condition.
- */
-static inline boolean_t is_ok(value_result_t value) {
-  return value.nf_error == NF_OK;
-}
-
-/**
- * @function is_not_ok
- *
- * Return true if the given value_result_t contains an error, such as
- * NF_ERROR_NOT_FOUND.
- */
-static inline boolean_t is_not_ok(value_result_t value) {
-  return value.nf_error != NF_OK;
-}
-
-/**
- * @macro cast
- *
- * Perform an unsafe cast of expr to the given type. This is much
- * easier for the omni-c compiler to handle because we know to parse a
- * type as the first argument even if we don't know what all the types
- * are yet. While omni-c uses this macro, if you are using plain C,
- * you don't have to use it.
- */
-#define cast(type, expr) ((type) (expr))
-
-/**
- * @typedef value_comparison_fn
- *
- * A type for a function pointer which will compare two values,
- * returning -1 when value1 < value2, 0 when value1 == value2, and 1
- * when value1 > value2.
- */
-// typedef int (*value_comparison_fn)(value_t value1, value_t value2);
-typedef fn_t(int, value_t value1, value_t value2) value_comparison_fn;
-
-/**
- * @typedef value_hash_fn
- *
- * A type for a function pointer which will hash it's value_t to a
- * uint64_t.
- */
-// typedef uint64_t (*value_hash_fn)(value_t value1);
-typedef fn_t(uint64_t, value_t value1) value_hash_fn;
-
-
-int cmp_string_values(value_t value1, value_t value2);
-uint64_t hash_string_value(value_t value1);
-
-#endif /* _VALUE_H_ */
-
-/**
- * @function cmp_string_values
- *
- * Assumes value1 and value2 are char* (aka strings or C strings) and
- * does the equivalent of strcmp on them.
- */
-int cmp_string_values(value_t value1, value_t value2) {
-  return strcmp(value1.str, value2.str);
-}
-
-/**
- * @function string_hash
- *
- * Assumes value1 is char* and performs a string hash on it.
- */
-uint64_t hash_string_value(value_t value1) { return string_hash(value1.str); }
-#line 2 "value-alist.c"
-/**
- * @file value-alist.c
- *
- * An association list (a type of map) from value_t to value_t.
- */
-
-#ifndef _VALUE_ALIST_H_
-#define _VALUE_ALIST_H_
-
-struct value_alist_S {
-  struct value_alist_S* next;
-  value_t key;
-  value_t value;
-};
-
-typedef struct value_alist_S value_alist_t;
-
-extern value_result_t value_alist_find(value_alist_t* list,
-                                       value_comparison_fn cmp_fn, value_t key);
-
-__attribute__((warn_unused_result)) extern value_alist_t*
-    value_alist_insert(value_alist_t* list, value_comparison_fn cmp_fn,
-                       value_t key, value_t value);
-
-__attribute__((warn_unused_result)) extern value_alist_t*
-    value_alist_delete(value_alist_t* list, value_comparison_fn cmp_fn,
-                       value_t key);
-
-__attribute__((warn_unused_result)) extern uint64_t
-    value_alist_length(value_alist_t* list);
-
-/**
- * @macro value_alist_foreach
- *
- * Allows iteration over the keys and values in a string association
- * list.
- */
-#define value_alist_foreach(alist, key_var, value_var, statements)             \
-  do {                                                                         \
-    value_alist_t* head = alist;                                               \
-    while (head) {                                                             \
-      value_t key_var = head->key;                                             \
-      value_t value_var = head->value;                                         \
-      statements;                                                              \
-      head = head->next;                                                       \
-    }                                                                          \
-  } while (0)
-
-#endif /* _VALUE_ALIST_H_ */
-
-/**
- * @function value_alist_insert
- *
- * Insert a new key and value into an assocation list.
- */
-value_alist_t* value_alist_insert(value_alist_t* list,
-                                  value_comparison_fn cmp_fn, value_t key,
-                                  value_t value) {
-  value_alist_t* result = malloc_struct(value_alist_t);
-  result->next = value_alist_delete(list, cmp_fn, key);
-  result->key = key;
-  result->value = value;
-  return result;
-}
-
-/**
- * @function value_alist_delete
- *
- * Delete the key and associated value from the given association
- * list. Neither the key nor the value associated are themselves
- * freed.
- */
-value_alist_t* value_alist_delete(value_alist_t* list,
-                                  value_comparison_fn cmp_fn, value_t key) {
-  // This appears to be logically correct but could easily blow out
-  // the stack with a long list.
-  if (list == NULL) {
-    return list;
-  }
-  if ((*cmp_fn)(key, list->key) == 0) {
-    value_alist_t* result = list->next;
-    free_bytes(list);
-    return result;
-  }
-  list->next = value_alist_delete(list->next, cmp_fn, key);
-  return list;
-}
-
-/**
- * @function value_alist_find
- *
- * Find the value associate with the given key. Use is_ok() or
- * is_not_ok() to see if the value is valid (i.e., if the key was
- * actually found).
- */
-value_result_t value_alist_find(value_alist_t* list, value_comparison_fn cmp_fn,
-                                value_t key) {
-  while (list) {
-    if (cmp_fn(key, list->key) == 0) {
-      return compound_literal(value_result_t, {.val = list->value});
-    }
-    list = list->next;
-  }
-  return compound_literal(value_result_t, {.nf_error = NF_ERROR_NOT_FOUND});
-}
-
-/**
- * @function value_alist_length
- *
- * Determine the length of an alist.
- *
- * The alist argument MAY be null.
- */
-__attribute__((warn_unused_result)) extern uint64_t
-    value_alist_length(value_alist_t* list) {
-  uint64_t result = 0;
-  while (list) {
-    result++;
-    list = list->next;
-  }
-  return result;
-}
-#line 2 "value-array.c"
-
-/**
- * @file value-array.c
- *
- * This file contains a growable array of "values".
- *
- * Certain algorithms require that growth occurs based on the current
- * capacity of an array, not a fixed amount. For now we simply double
- * the current capacity when more space in the backing array is
- * required though we may scale this back to something more like 1.5X
- * for "large" arrays to save space.
- */
-
-#ifndef _VALUE_ARRAY_H_
-#define _VALUE_ARRAY_H_
-
-struct value_array_S {
-  uint32_t length;
-  uint32_t capacity;
-  value_t* elements;
-};
-
-/**
- * @typedef value_array_t
- *
- * A growable array of 64bit "values" (so integers, doubles, and
- * pointers).
- */
-typedef struct value_array_S value_array_t;
-
-extern value_array_t* make_value_array(uint64_t initial_capacity);
-extern value_t value_array_get(value_array_t* array, uint32_t index);
-extern void value_array_replace(value_array_t* array, uint32_t index,
-                                value_t element);
-extern void value_array_add(value_array_t* array, value_t element);
-extern void value_array_push(value_array_t* array, value_t element);
-extern value_t value_array_pop(value_array_t* array);
-extern void value_array_insert_at(value_array_t* array, uint32_t position,
-                                  value_t element);
-extern value_t value_array_delete_at(value_array_t* array, uint32_t position);
-
-#define value_array_get_ptr(array, index_expression, cast_type)                \
-  (cast(cast_type, value_array_get(array, index_expression).ptr))
-
-#endif /* _VALUE_ARRAY_H_ */
-
-/**
- * @function make_value_array
- *
- * Make a value array with the given initial capacity.
- *
- * An initial capacity of zero is automatically converted to a
- * capacity of at least 1 or more since this makes the "growth" code a
- * bit simpler.
- *
- * When the array runs out of capacity because of calls to add, push,
- * etc., then the backing array is automatically increased *based on
- * the current capacity* which generally leads to better big-O
- * properties.
- *
- * If the initial or later increases in capacity are not fulfillable,
- * then a fatal_error occurs since these are generally not recoverable
- * anyways.
- */
-value_array_t* make_value_array(uint64_t initial_capacity) {
-  if (initial_capacity == 0) {
-    initial_capacity = 1;
-  }
-
-  value_array_t* result = malloc_struct(value_array_t);
-  result->capacity = initial_capacity;
-  result->elements
-      = cast(value_t*, malloc_bytes(sizeof(value_t) * initial_capacity));
-
-  return result;
-}
-
-void value_array_ensure_capacity(value_array_t* array,
-                                 uint32_t required_capacity) {
-  if (array->capacity < required_capacity) {
-    uint32_t new_capacity = array->capacity * 2;
-    if (new_capacity < required_capacity) {
-      new_capacity = required_capacity;
-    }
-    value_t* new_elements
-        = cast(value_t*, malloc_bytes(sizeof(value_t) * new_capacity));
-    for (int i = 0; i < array->length; i++) {
-      new_elements[i] = array->elements[i];
-    }
-    array->capacity = new_capacity;
-    free_bytes(array->elements);
-    array->elements = new_elements;
-    return;
-  }
-}
-
-/**
- * @function value_array_get
- *
- * Get the value stored at index `index`. If the index is outside of
- * the range of valid elements, then a fatal_error is signaled.
- */
-value_t value_array_get(value_array_t* array, uint32_t index) {
-  if (index < array->length) {
-    return array->elements[index];
-  }
-  fatal_error(ERROR_ACCESS_OUT_OF_BOUNDS);
-#ifdef __TINYC__
-  /* gcc and clang know fatal_error is _Noreturn but tcc doesn't */
-  return (value_t){.u64 = 0};
-#endif
-}
-
-/**
- * @function value_array_replace
- *
- * Replace the value at a given `index`. If the index is outside of
- * the range of valid elements, then a `fatal_error` is signaled.
- */
-void value_array_replace(value_array_t* array, uint32_t index,
-                         value_t element) {
-  if (index < array->length) {
-    array->elements[index] = element;
-    return;
-  }
-  fatal_error(ERROR_ACCESS_OUT_OF_BOUNDS);
-}
-
-/**
- * @function value_array_add
- *
- * Add an element to the end of an array. If more space is required
- * then the backing array is automatically resized. This resizing
- * means that a fatal_error() may occur if malloc() can not satisfy the
- * allocation request.
- */
-void value_array_add(value_array_t* array, value_t element) {
-  value_array_ensure_capacity(array, array->length + 1);
-  array->elements[(array->length)++] = element;
-}
-
-/**
- * @function value_array_push
- *
- * This is a synonym for value_array_add which serves to make it more
- * obvious that the array is actually being used like a stack.
- */
-void value_array_push(value_array_t* array, value_t element) {
-  value_array_add(array, element);
-}
-
-/**
- * @function value_array_pop
- *
- * Returns the last element of the array (typically added via push)
- * and modifies the length of the array so that the value isn't
- * accessible any longer. (We also "zero out" the element in case you
- * are using a conservative garbage collector.)
- *
- * If the array is currently empty, then
- * `fatal_error(ERROR_ACCESS_OUT_OF_BOUNDS)` is called.
- */
-value_t value_array_pop(value_array_t* array) {
-  if (array->length == 0) {
-    fatal_error(ERROR_ACCESS_OUT_OF_BOUNDS);
-  }
-  uint32_t last_index = array->length - 1;
-  value_t result = value_array_get(array, last_index);
-  array->elements[last_index] = u64_to_value(0);
-  array->length--;
-  return result;
-}
-
-/**
- * @function value_array_insert_at
- *
- * Insert an element into some existing position in the array (or at
- * the end if position == the current array length).
- *
- * This operation is not efficient for large arrays as potentially the
- * entire array must be moved to new locations (there are
- * data-structures like trees that can make this more efficient though
- * such a data-structure isn't in this library yet).
- *
- * If the position is > than the length length, then
- * fatal_error(ERROR_ACCESS_OUT_OF_BOUNDS) is called.
- *
- * If memory allocation is required and malloc() fails, then
- * fatal_error(ERROR_MEMORY_ALLOCATION) is called.
- */
-void value_array_insert_at(value_array_t* array, uint32_t position,
-                           value_t element) {
-  if (position == array->length) {
-    value_array_add(array, element);
-    return;
-  }
-
-  if (position > array->length) {
-    fatal_error(ERROR_ACCESS_OUT_OF_BOUNDS);
-    return;
-  }
-
-  value_array_ensure_capacity(array, array->length + 1);
-
-  // This is the standard loop but we now need to use a signed index
-  // because when the position is zero, zero - 1 is 0xffffffff which
-  // is still greater than zero (and hence greater than position).
-  for (int64_t i = array->length - 1; i >= position; i--) {
-    array->elements[i + 1] = array->elements[i];
-  }
-  array->length++;
-  array->elements[position] = element;
-}
-
-/**
- * @function value_array_delete_at
- *
- * Deletes the element at the given position (and return it so that it
- * can potentially be freed by the caller).
- *
- * If the position doesn't point to a valid element then
- * fatal_error(ERROR_ACCESS_OUT_OF_BOUNDS) is called.
- */
-value_t value_array_delete_at(value_array_t* array, uint32_t position) {
-  value_t result = value_array_get(array, position);
-  for (int i = position; i < array->length - 1; i++) {
-    array->elements[i] = array->elements[i + 1];
-  }
-  array->length--;
-  return result;
-}
-#line 2 "value-hashtable.c"
-/**
- * @file value-hashtable.c
- *
- * A very thread-unsafe hash map of value_t to value_t.
- *
- * Please don't expect C++, JVM, or Rust level of performance since we
- * use chaining which is considered slower than open addressing.
- */
-
-#ifndef _VALUE_HASHTABLE_H_
-#define _VALUE_HASHTABLE_H_
-
-/**
- * @compiliation_option ARMYKNIFE_HT_LOAD_FACTOR
- *
- * The "load factor" is the ratio of the number of keys in the hash
- * table to the most optimistic capacity for the table if every key
- * happened to be hashed to a different bucket. When the load factor
- * reaches this value, the hash table will be resized to a larger
- * capacity to improve performance. A higher value allows for a denser
- * hash table but can lead to more collisions and slower lookups and
- * insertions. A lower value wastes memory but reduces collisions.
- */
-#ifndef ARMYKNIFE_HT_LOAD_FACTOR
-#define ARMYKNIFE_HT_LOAD_FACTOR 0.75
-#endif /* ARMYKNIFE_HT_LOAD_FACTOR */
-
-/**
- * @compiliation_option AK_HT_UPSCALE_MULTIPLIER
- *
- * In all cases this should be a number > 1.0.
- */
-#ifndef AK_HT_UPSCALE_MULTIPLIER
-#define AK_HT_UPSCALE_MULTIPLIER 1.75
-#endif /* AK_HT_UPSCALE_MULTIPLIER */
-
-struct value_hashtable_S {
-  uint64_t n_buckets;
-  uint64_t n_entries;
-  value_alist_t** buckets;
-};
-
-typedef struct value_hashtable_S value_hashtable_t;
-
-extern value_hashtable_t* make_value_hashtable(uint64_t n_buckets);
-
-extern value_hashtable_t* value_ht_insert(value_hashtable_t* ht,
-                                          value_hash_fn hash_fn,
-                                          value_comparison_fn cmp_fn,
-                                          value_t key, value_t value);
-
-extern value_hashtable_t* value_ht_delete(value_hashtable_t* ht,
-                                          value_hash_fn hash_fn,
-                                          value_comparison_fn cmp_fn,
-                                          value_t key);
-
-extern value_result_t value_ht_find(value_hashtable_t* ht,
-                                    value_hash_fn hash_fn,
-                                    value_comparison_fn cmp_fn, value_t key);
-
-extern void value_hashtable_upsize_internal(value_hashtable_t* ht,
-                                            value_hash_fn hash_fn,
-                                            value_comparison_fn cmp_fn);
-
-/**
- * @function value_ht_num_entries
- *
- * Returns the number of entries in the hashtable.
- */
-static inline uint64_t value_ht_num_entries(value_hashtable_t* ht) {
-  return ht->n_entries;
-}
-
-/**
- * @macro value_ht_foreach
- *
- * Allows traversing all elements of a hashtable in an unspecified
- * order.
- */
-#define value_ht_foreach(ht, key_var, value_var, statements)                   \
-  do {                                                                         \
-    for (int ht_index = 0; ht_index < ht->n_buckets; ht_index++) {             \
-      value_alist_t* alist = ht->buckets[ht_index];                            \
-      if (alist != NULL) {                                                     \
-        value_alist_foreach(alist, key_var, value_var, statements);            \
-      }                                                                        \
-    }                                                                          \
-  } while (0)
-
-#endif /* _VALUE_HASHTABLE_H_ */
-
-/**
- * @function make_value_hashtable
- *
- * Create a hashtable with the given number of buckets.
- *
- * When the initial number of buckets is less than a small integer
- * (currently 2), then we automatically increase the initial number of
- * buckets to that number to make the fractional growth algorithm work
- * and maintain big-O properties.
- */
-value_hashtable_t* make_value_hashtable(uint64_t n_buckets) {
-  if (n_buckets < 2) {
-    n_buckets = 2;
-  }
-  value_hashtable_t* result = malloc_struct(value_hashtable_t);
-  result->n_buckets = n_buckets;
-  result->buckets
-      = cast(value_alist_t**, malloc_bytes(sizeof(value_alist_t*) * n_buckets));
-  return result;
-}
-
-/**
- * @function value_ht_insert
- *
- * Insert an association into the hashtable.
- */
-value_hashtable_t* value_ht_insert(value_hashtable_t* ht, value_hash_fn hash_fn,
-                                   value_comparison_fn cmp_fn, value_t key,
-                                   value_t value) {
-  uint64_t hashcode = hash_fn(key);
-  int bucket = hashcode % ht->n_buckets;
-  value_alist_t* list = ht->buckets[bucket];
-  uint64_t len = value_alist_length(list);
-  list = value_alist_insert(list, cmp_fn, key, value);
-  ht->buckets[bucket] = list;
-  uint64_t len_after = value_alist_length(list);
-  if (len_after > len) {
-    ht->n_entries++;
-    // Without this, a hash table would never grow and thus as the
-    // number of entries grows large, the hashtable would only improve
-    // performance over an alist by a constant amount (which could
-    // still be an impressive speedup...)
-    if (ht->n_entries >= (ht->n_buckets * ARMYKNIFE_HT_LOAD_FACTOR)) {
-      value_hashtable_upsize_internal(ht, hash_fn, cmp_fn);
-    }
-  }
-  return ht;
-}
-
-/**
- * @function value_ht_delete
- *
- * Delete an association from the hashtable. It is not an error to
- * delete a key that doesn't exist in the hashtable.
- */
-value_hashtable_t* value_ht_delete(value_hashtable_t* ht, value_hash_fn hash_fn,
-                                   value_comparison_fn cmp_fn, value_t key) {
-  uint64_t hashcode = hash_fn(key);
-  int bucket = hashcode % ht->n_buckets;
-  value_alist_t* list = ht->buckets[bucket];
-  uint64_t len = value_alist_length(list);
-  list = value_alist_delete(list, cmp_fn, key);
-  ht->buckets[bucket] = list;
-  uint64_t len_after = value_alist_length(list);
-  if (len_after < len) {
-    ht->n_entries--;
-  }
-  return ht;
-}
-
-/**
- * @function value_ht_find
- *
- * Find an association in the hashtable.
- */
-value_result_t value_ht_find(value_hashtable_t* ht, value_hash_fn hash_fn,
-                             value_comparison_fn cmp_fn, value_t key) {
-  uint64_t hashcode = hash_fn(key);
-  int bucket = hashcode % ht->n_buckets;
-  value_alist_t* list = ht->buckets[bucket];
-  return value_alist_find(list, cmp_fn, key);
-}
-
-/**
- * @function value_hashtable_upsize_internal
- *
- * This function is called automatically when an insert brings the
- * number of entries above the number of buckets times
- * ARMYKNIFE_HT_LOAD_FACTOR (defaults to 75%). We don't even check
- * that constraint is valid (hence the _internal suffix).
- *
- * Hopefully based on the name you can infer this function will only
- * ever "grow" a hashtable by deciding on a size of the new larger
- * hash-table and copying
-
-by making a new larger hashtable using
- * AK_HT_UPSCALE_MULTIPLIER to compute the new number of buckets
- * (currently 1.75).
- */
-void value_hashtable_upsize_internal(value_hashtable_t* ht,
-                                     value_hash_fn hash_fn,
-                                     value_comparison_fn cmp_fn) {
-  uint64_t new_num_buckets = ht->n_buckets * AK_HT_UPSCALE_MULTIPLIER;
-  value_hashtable_t* new_ht = make_value_hashtable(new_num_buckets);
-  // clang-format off
-  value_ht_foreach(ht, key, value, {
-      value_hashtable_t* should_be_result = value_ht_insert(new_ht, hash_fn, cmp_fn, key, value);
-      // If an insertion into the bigger hashtable results in it's own
-      // resize, then the results will be unpredictable (at least
-      // without more code). This is likely to only happen when
-      // growing a very small hashtable and depends on values choosen
-      // for ARMYKNIFE_HT_LOAD_FACTOR and AK_HT_UPSCALE_MULTIPLIER.
-      if (new_ht != should_be_result) {
-	fatal_error(ERROR_ILLEGAL_STATE);
-      }
-  });
-  // clang-format on
-  value_alist_t** old_buckets = ht->buckets;
-  ht->buckets = new_ht->buckets;
-  ht->n_buckets = new_ht->n_buckets;
-  ht->n_entries = new_ht->n_entries;
-  free_bytes(old_buckets);
-  free_bytes(new_ht);
-}
-#line 2 "value-tree.c"
-
-/**
- * @file value-tree.c
- *
- * This is a balanced binary tree to associate a value to another
- * value.
- *
- * Generally an alist is prefered for small "maps", and hashtables are
- * prefered for large maps, but value_tree is the easiest way to get
- * sorted results (which is most important for reproducibility).
- *
- * Currently we are using "AA" trees (see
- * https://en.wikipedia.org/wiki/AA_tree) since it has simpler code
- * than many other balanced trees (like red-block trees) and the
- * Wikipedia article and paper spell out *most* of the non-trivial
- * details.
- */
-
-#ifndef _VALUE_TREE_H_
-#define _VALUE_TREE_H_
-
-struct value_tree_S {
-  value_t key;
-  value_t value;
-  uint32_t level;
-  struct value_tree_S* left;
-  struct value_tree_S* right;
-};
-
-typedef struct value_tree_S value_tree_t;
-
-extern value_result_t value_tree_find(value_tree_t* t,
-                                      value_comparison_fn cmp_fn, value_t key);
-
-__attribute__((warn_unused_result)) extern value_tree_t*
-    value_tree_insert(value_tree_t* t, value_comparison_fn cmp_fn, value_t key,
-                      value_t value);
-
-__attribute__((warn_unused_result)) extern value_tree_t*
-    value_tree_delete(value_tree_t* t, value_comparison_fn cmp_fn, value_t key);
-
-/**
- * @macro value_tree_foreach
- *
- * Perform an inorder traversal of a value-tree.
- *
- * key_var is created in a new block scope with type value_t.
- *
- * value_var is created in a new block scope with type value_t and you
- * will probably want to use something like ".ptr" or ".u64" on the
- * value to obtain the actual value.
- *
- * statements should be a normal C block, aka, something like:
- * ```
- * {
- *   statement1();
- *   statement2();
- * }
- * ```
- *
- * Unforunately it is not possible to use "break" or "continue" with
- * this style of loop (and worse, there will be no compilation error
- * or warning if you accidentally do that...)
- */
-#define value_tree_foreach(tree, key_var, value_var, statements)               \
-  do {                                                                         \
-    int stack_n_elements = 0;                                                  \
-    value_tree_t* stack[64];                                                   \
-    value_tree_t* current = tree;                                              \
-    while (current != NULL || stack_n_elements > 0) {                          \
-      while (current != NULL) {                                                \
-        stack[stack_n_elements++] = current;                                   \
-        current = current->left;                                               \
-      }                                                                        \
-      current = stack[--stack_n_elements];                                     \
-      value_t key_var = current->key;                                          \
-      value_t value_var = current->value;                                      \
-      statements;                                                              \
-      current = current->right;                                                \
-    }                                                                          \
-  } while (0)
-
-#endif /* _VALUE_TREE_H_ */
-
-/**
- * @function value_tree_find
- *
- * Find the value associate with the key in the tree.
- */
-value_result_t value_tree_find(value_tree_t* t, value_comparison_fn cmp_fn,
-                               value_t key) {
-  if (t == NULL) {
-    return compound_literal(value_result_t, {.nf_error = NF_ERROR_NOT_FOUND});
-  }
-
-  int cmp_result = cmp_fn(key, t->key);
-  if (cmp_result < 0) {
-    return value_tree_find(t->left, cmp_fn, key);
-  } else if (cmp_result > 0) {
-    return value_tree_find(t->right, cmp_fn, key);
-  } else {
-    return compound_literal(value_result_t, {
-                                                .val = t->value,
-                                            });
-  }
-}
-
-value_tree_t* value_tree_skew(value_tree_t* t) {
-  if (t == NULL) {
-    return NULL;
-  }
-  if (t->left == NULL) {
-    return t;
-  }
-  if (t->left->level == t->level) {
-    value_tree_t* L = t->left;
-    t->left = L->right;
-    L->right = t;
-    return L;
-  }
-  return t;
-}
-
-value_tree_t* value_tree_split(value_tree_t* t) {
-  if (t == NULL) {
-    return NULL;
-  }
-  if (t->right == NULL || t->right->right == NULL) {
-    return t;
-  }
-  if (t->level == t->right->right->level) {
-    // We have two horizontal right links.  Take the middle node,
-    // elevate it, and return it.
-    value_tree_t* R = t->right;
-    t->right = R->left;
-    R->left = t;
-    R->level++;
-    return R;
-  }
-  return t;
-}
-
-value_tree_t* make_value_tree_leaf(value_t key, value_t value) {
-  value_tree_t* result = malloc_struct(value_tree_t);
-  result->level = 1;
-  result->key = key;
-  result->value = value;
-  return result;
-}
-
-/**
- * @function value_tree_insert
- *
- * Insert an association of key and a value (or update the current
- * value stored in the tree).
- */
-value_tree_t* value_tree_insert(value_tree_t* t, value_comparison_fn cmp_fn,
-                                value_t key, value_t value) {
-  if (t == NULL) {
-    // Create a new leaf node
-    return make_value_tree_leaf(key, value);
-  }
-  int cmp_result = cmp_fn(key, t->key);
-  if (cmp_result < 0) {
-    t->left = value_tree_insert(t->left, cmp_fn, key, value);
-  } else if (cmp_result > 0) {
-    t->right = value_tree_insert(t->right, cmp_fn, key, value);
-  } else {
-    // Either key or t->key might need to be freed but it isn't even
-    // possible to tell if either has been "malloced" so good luck
-    // figuring that out.
-    t->value = value;
-    return t;
-  }
-
-  t = value_tree_skew(t);
-  t = value_tree_split(t);
-
-  return t;
-}
-
-static inline uint64_t value_tree_min_level(uint32_t a, uint32_t b) {
-  return a < b ? a : b;
-}
-
-value_tree_t* value_tree_decrease_level(value_tree_t* t) {
-  if (t->left && t->right) {
-    uint32_t should_be
-        = value_tree_min_level(t->left->level, t->right->level) + 1;
-    if (should_be < t->level) {
-      t->level = should_be;
-      if (should_be < t->right->level) {
-        t->right->level = should_be;
-      }
-    }
-  }
-  return t;
-}
-
-value_tree_t* value_tree_predecessor(value_tree_t* t) {
-  t = t->left;
-  while (t->right != NULL) {
-    t = t->right;
-  }
-  return t;
-}
-
-value_tree_t* value_tree_successor(value_tree_t* t) {
-  t = t->right;
-  while (t->left != NULL) {
-    t = t->left;
-  }
-  return t;
-}
-
-static inline boolean_t value_tree_is_leaf(value_tree_t* t) {
-  return t->left == NULL && t->right == NULL;
-}
-
-/**
- * @function value_tree_delete
- *
- * Delete the association of key (if it exists in the tree). It is not
- * an error to delete a key that isn't present in the table.
- */
-value_tree_t* value_tree_delete(value_tree_t* t, value_comparison_fn cmp_fn,
-                                value_t key) {
-
-  if (t == NULL) {
-    return t;
-  }
-
-  int cmp_result = cmp_fn(key, t->key);
-  if (cmp_result < 0) {
-    t->left = value_tree_delete(t->left, cmp_fn, key);
-  } else if (cmp_result > 0) {
-    t->right = value_tree_delete(t->right, cmp_fn, key);
-  } else {
-    if (value_tree_is_leaf(t)) {
-      // Since we are a leaf, nothing special to do except make sure
-      // this leaf node is no longer in the tree. wikipedia says
-      // "return right(T)" which is technically correct, but this is
-      // clearer.
-      return NULL;
-    } else if (t->left == NULL) {
-      value_tree_t* L = value_tree_successor(t);
-      // Note: wikipedia or the orginal article may have a bug. Doing
-      // the delete and then the key/value assignment leads to a
-      // divergence with a reference implementation.
-      t->key = L->key;
-      t->value = L->value;
-      t->right = value_tree_delete(t->right, cmp_fn, L->key);
-    } else {
-      value_tree_t* L = value_tree_predecessor(t);
-      // Note: wikipedia or the orginal article may have a bug. Doing
-      // the delete and then the key/value assignment leads to a
-      // divergence with a reference implementation.
-      t->key = L->key;
-      t->value = L->value;
-      t->left = value_tree_delete(t->left, cmp_fn, L->key);
-    }
-  }
-
-  // Rebalance the tree. Decrease the level of all nodes in this level
-  // if necessary, and then skew and split all nodes in the new level.
-
-  t = value_tree_decrease_level(t);
-  t = value_tree_skew(t);
-  t->right = value_tree_skew(t->right);
-  if (t->right != NULL) {
-    t->right->right = value_tree_skew(t->right->right);
-  }
-  t = value_tree_split(t);
-  t->right = value_tree_split(t->right);
-  return t;
 }
 #endif /* C_ARMYKNIFE_LIB_IMPL */

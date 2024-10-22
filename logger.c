@@ -223,7 +223,7 @@ static inline boolean_t should_log_info() {
 #endif /* _LOGGER_H_ */
 
 logger_state_t global_logger_state
-    = (logger_state_t){.level = LOGGER_DEFAULT_LEVEL};
+    = compound_literal(logger_state_t, {.level = LOGGER_DEFAULT_LEVEL});
 
 value_result_t parse_log_level_enum(char* str) {
   if (strcmp("FATAL", str) == 0 || strcmp("fatal", str) == 0) {

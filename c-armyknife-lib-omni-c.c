@@ -87,25 +87,68 @@ typedef struct {
 #endif /* _REFLECTION_H_ */
 // ========== system includes ==========
 
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include <stdbool.h>
-#include <ctype.h>
+#include <stdint.h>
 #include <execinfo.h>
 #include <signal.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <unistd.h>
+#include <string.h>
+#include <stdarg.h>
+#include <ctype.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <limits.h>
 #include <sys/select.h>
 #include <sys/time.h>
 #include <sys/stat.h>
-#include <time.h>
 #include <termios.h>
+#include <time.h>
 
 // ========== defines ==========
+
+#define _MIN_MAX_H_
+
+#define min(a, b) ((a) < (b) ? (a) : (b))
+
+#define max(a, b) ((a) > (b) ? (a) : (b))
+
+#define _BOOLEAN_H_
+
+#define _COMPOUND_LITERAL_H_
+
+#define compound_literal(type, ...) ((type) __VA_ARGS__)
+
+#define _FN_H_
+
+#define fn_t(return_type, ...) typeof(return_type(*)(__VA_ARGS__))
+
+#define _LEB128_H_
+
+#define ERROR_INSUFFICIENT_INPUT -1
+
+#define ERROR_TOO_BIG -2
+
+#define _FATAL_ERROR_H_
+
+#define fatal_error(code) fatal_error_impl(__FILE__, __LINE__, code)
+
+#define _VALUE_H_
+
+#define boolean_to_value(x) compound_literal(value_t, {.u64 = x})
+
+#define u64_to_value(x) compound_literal(value_t, {.u64 = x})
+
+#define i64_to_value(x) compound_literal(value_t, {.i64 = x})
+
+#define str_to_value(x) compound_literal(value_t, {.str = x})
+
+#define ptr_to_value(x) compound_literal(value_t, {.ptr = x})
+
+#define dbl_to_value(x) compound_literal(value_t, {.dbl = x})
+
+#define cast(type, expr) ((type) (expr))
 
 #define _ALLOCATE_H_
 
@@ -131,45 +174,111 @@ typedef struct {
 
 #define END_PADDING_BYTE ((~START_PADDING_BYTE) & 0xff)
 
-#define _BOOLEAN_H_
+#define _UINT64_H_
+
+#define _STRING_UTIL_H_
+
+#define STRING_PRINTF_INITIAL_BUFFER_SIZE 1024
+
+#define _LOGGER_H_
+
+#define LOGGER_OFF 0
+
+#define LOGGER_TRACE 1
+
+#define LOGGER_DEBUG 2
+
+#define LOGGER_INFO 3
+
+#define LOGGER_WARN 4
+
+#define LOGGER_FATAL 5
+
+#define LOGGER_TEST 6
+
+#define LOGGER_DEFAULT_LEVEL LOGGER_WARN
+
+#define log_none(format, ...)                                                  \
+  do {                                                                         \
+  } while (0);
+
+#define log_off(format, ...)                                                   \
+  do {                                                                         \
+    if (0) {                                                                   \
+      logger_impl(__FILE__, __LINE__, __FUNCTION__, LOGGER_TRACE, format,      \
+                  ##__VA_ARGS__);                                              \
+    }                                                                          \
+  } while (0)
+
+#define log_trace(format, ...)                                                 \
+  do {                                                                         \
+    if (global_logger_state.level <= LOGGER_TRACE) {                           \
+      logger_impl(__FILE__, __LINE__, __FUNCTION__, LOGGER_TRACE, format,      \
+                  ##__VA_ARGS__);                                              \
+    }                                                                          \
+  } while (0)
+
+#define log_debug(format, ...)                                                 \
+  do {                                                                         \
+    if (global_logger_state.level <= LOGGER_DEBUG) {                           \
+      logger_impl(__FILE__, __LINE__, __FUNCTION__, LOGGER_DEBUG, format,      \
+                  ##__VA_ARGS__);                                              \
+    }                                                                          \
+  } while (0)
+
+#define log_info(format, ...)                                                  \
+  do {                                                                         \
+    if (global_logger_state.level <= LOGGER_INFO) {                            \
+      logger_impl(__FILE__, __LINE__, __FUNCTION__, LOGGER_INFO, format,       \
+                  ##__VA_ARGS__);                                              \
+    }                                                                          \
+  } while (0)
+
+#define log_warn(format, ...)                                                  \
+  do {                                                                         \
+    if (global_logger_state.level <= LOGGER_WARN) {                            \
+      logger_impl(__FILE__, __LINE__, __FUNCTION__, LOGGER_WARN, format,       \
+                  ##__VA_ARGS__);                                              \
+    }                                                                          \
+  } while (0)
+
+#define log_fatal(format, ...)                                                 \
+  do {                                                                         \
+    if (global_logger_state.level <= LOGGER_FATAL) {                           \
+      logger_impl(__FILE__, __LINE__, __FUNCTION__, LOGGER_FATAL, format,      \
+                  ##__VA_ARGS__);                                              \
+    }                                                                          \
+  } while (0)
+
+#define log_test(format, ...)                                                  \
+  do {                                                                         \
+    logger_impl(__FILE__, __LINE__, __FUNCTION__, LOGGER_TEST, format,         \
+                ##__VA_ARGS__);                                                \
+  } while (0)
+
+#define _UTF8_DECODER_H_
 
 #define _BUFFER_H_
 
 #define BUFFER_PRINTF_INITIAL_BUFFER_SIZE 1024
 
-#define _CDL_PRINTER_H_
+#define _VALUE_ARRAY_H_
 
-#define _COMPOUND_LITERAL_H_
+#define value_array_get_ptr(array, index_expression, cast_type)                \
+  (cast(cast_type, value_array_get(array, index_expression).ptr))
 
-#define compound_literal(type, ...) ((type) __VA_ARGS__)
+#define _VALUE_ALIST_H_
 
-#define _FN_H_
-
-#define fn_t(return_type, ...) typeof(return_type(*)(__VA_ARGS__))
-
-#define _FLAG_H_
-
-#define _FATAL_ERROR_H_
-
-#define fatal_error(code) fatal_error_impl(__FILE__, __LINE__, code)
-
-#define _IO_H_
-
-#define FILE_COPY_STREAM_BUFFER_SIZE 1024
-
-#define _LEB128_H_
-
-#define ERROR_INSUFFICIENT_INPUT -1
-
-#define ERROR_TOO_BIG -2
-
-#define _MIN_MAX_H_
-
-#define min(a, b) ((a) < (b) ? (a) : (b))
-
-#define max(a, b) ((a) > (b) ? (a) : (b))
-
-#define _RANDOM_H_
+#define value_alist_foreach(alist, key_var, value_var, statements)             \
+  do {                                                                         \
+    value_alist_t* head = alist;                                               \
+    while (head) {                                                             \
+      value_t key_var = head->key;                                             \
+      value_t value_var = head->value;                                         \
+      statements;                                                              \
+      head = head->next;                                                       \
+    }                                                                          \
+  } while (0)
 
 #define _STRING_ALIST_H_
 
@@ -182,6 +291,22 @@ typedef struct {
                         });                                                    \
   } while (0)
 
+#define _VALUE_HASHTABLE_H_
+
+#define ARMYKNIFE_HT_LOAD_FACTOR 0.75
+
+#define AK_HT_UPSCALE_MULTIPLIER 1.75
+
+#define value_ht_foreach(ht, key_var, value_var, statements)                   \
+  do {                                                                         \
+    for (int ht_index = 0; ht_index < ht->n_buckets; ht_index++) {             \
+      value_alist_t* alist = ht->buckets[ht_index];                            \
+      if (alist != NULL) {                                                     \
+        value_alist_foreach(alist, key_var, value_var, statements);            \
+      }                                                                        \
+    }                                                                          \
+  } while (0)
+
 #define _STRING_HASHTABLE_H_
 
 #define string_ht_foreach(ht, key_var, value_var, statements)                  \
@@ -190,6 +315,26 @@ typedef struct {
       char* key_var = (key_var##_value).str;                                   \
       statements;                                                              \
     });                                                                        \
+  } while (0)
+
+#define _VALUE_TREE_H_
+
+#define value_tree_foreach(tree, key_var, value_var, statements)               \
+  do {                                                                         \
+    int stack_n_elements = 0;                                                  \
+    value_tree_t* stack[64];                                                   \
+    value_tree_t* current = tree;                                              \
+    while (current != NULL || stack_n_elements > 0) {                          \
+      while (current != NULL) {                                                \
+        stack[stack_n_elements++] = current;                                   \
+        current = current->left;                                               \
+      }                                                                        \
+      current = stack[--stack_n_elements];                                     \
+      value_t key_var = current->key;                                          \
+      value_t value_var = current->value;                                      \
+      statements;                                                              \
+      current = current->right;                                                \
+    }                                                                          \
   } while (0)
 
 #define _STRING_TREE_H_
@@ -203,9 +348,11 @@ typedef struct {
                        });                                                     \
   } while (0)
 
-#define _STRING_UTIL_H_
+#define _FLAG_H_
 
-#define STRING_PRINTF_INITIAL_BUFFER_SIZE 1024
+#define _IO_H_
+
+#define FILE_COPY_STREAM_BUFFER_SIZE 1024
 
 #define _TERMINAL_H_
 
@@ -419,6 +566,12 @@ typedef struct {
 
 #define TERM_ESCAPE_END "m"
 
+#define _TOKENIZER_H_
+
+#define _RANDOM_H_
+
+#define _CDL_PRINTER_H_
+
 #define _TEST_H_
 
 #define test_fail(format, ...)                                                 \
@@ -461,114 +614,15 @@ typedef struct {
     }                                                                           \
   } while (0)
 
-#define _TOKENIZER_H_
-
-#define _UINT64_H_
-
-#define _UTF8_DECODER_H_
-
-#define _VALUE_H_
-
-#define boolean_to_value(x) compound_literal(value_t, {.u64 = x})
-
-#define u64_to_value(x) compound_literal(value_t, {.u64 = x})
-
-#define i64_to_value(x) compound_literal(value_t, {.i64 = x})
-
-#define str_to_value(x) compound_literal(value_t, {.str = x})
-
-#define ptr_to_value(x) compound_literal(value_t, {.ptr = x})
-
-#define dbl_to_value(x) compound_literal(value_t, {.dbl = x})
-
-#define cast(type, expr) ((type) (expr))
-
-#define _VALUE_ALIST_H_
-
-#define value_alist_foreach(alist, key_var, value_var, statements)             \
-  do {                                                                         \
-    value_alist_t* head = alist;                                               \
-    while (head) {                                                             \
-      value_t key_var = head->key;                                             \
-      value_t value_var = head->value;                                         \
-      statements;                                                              \
-      head = head->next;                                                       \
-    }                                                                          \
-  } while (0)
-
-#define _VALUE_ARRAY_H_
-
-#define value_array_get_ptr(array, index_expression, cast_type)                \
-  (cast(cast_type, value_array_get(array, index_expression).ptr))
-
-#define _VALUE_HASHTABLE_H_
-
-#define ARMYKNIFE_HT_LOAD_FACTOR 0.75
-
-#define AK_HT_UPSCALE_MULTIPLIER 1.75
-
-#define value_ht_foreach(ht, key_var, value_var, statements)                   \
-  do {                                                                         \
-    for (int ht_index = 0; ht_index < ht->n_buckets; ht_index++) {             \
-      value_alist_t* alist = ht->buckets[ht_index];                            \
-      if (alist != NULL) {                                                     \
-        value_alist_foreach(alist, key_var, value_var, statements);            \
-      }                                                                        \
-    }                                                                          \
-  } while (0)
-
-#define _VALUE_TREE_H_
-
-#define value_tree_foreach(tree, key_var, value_var, statements)               \
-  do {                                                                         \
-    int stack_n_elements = 0;                                                  \
-    value_tree_t* stack[64];                                                   \
-    value_tree_t* current = tree;                                              \
-    while (current != NULL || stack_n_elements > 0) {                          \
-      while (current != NULL) {                                                \
-        stack[stack_n_elements++] = current;                                   \
-        current = current->left;                                               \
-      }                                                                        \
-      current = stack[--stack_n_elements];                                     \
-      value_t key_var = current->key;                                          \
-      value_t value_var = current->value;                                      \
-      statements;                                                              \
-      current = current->right;                                                \
-    }                                                                          \
-  } while (0)
-
 // ========== enums ==========
 
 // ========== typedefs ==========
 
-typedef struct memory_hashtable_bucket_S memory_hashtable_bucket_t;
-
 typedef bool boolean_t;
 
-typedef struct buffer_S buffer_t;
+typedef struct unsigned_decode_result__generated_S unsigned_decode_result;
 
-typedef struct line_and_column_S line_and_column_t;
-
-typedef struct cdl_printer_t__generated_S cdl_printer_t;
-
-typedef enum {
-  flag_type_none,
-  flag_type_boolean,
-  flag_type_string,
-  flag_type_uint64,
-  flag_type_int64,
-  flag_type_double,
-  flag_type_enum,
-  flag_type_custom,
-} flag_type_t;
-
-typedef struct program_descriptor_S program_descriptor_t;
-
-typedef struct command_descriptor_S command_descriptor_t;
-
-typedef struct flag_descriptor_S flag_descriptor_t;
-
-typedef struct flag_key_value_S flag_key_value_t;
+typedef struct signed_decode_result__generated_S signed_decode_result;
 
 typedef struct fatal_error_config_S fatal_error_config_t;
 
@@ -602,24 +656,6 @@ typedef enum {
   ERROR_ILLEGAL_TERMINAL_COORDINATES,
 } error_code_t;
 
-typedef struct unsigned_decode_result__generated_S unsigned_decode_result;
-
-typedef struct signed_decode_result__generated_S signed_decode_result;
-
-typedef struct random_state_S random_state_t;
-
-typedef struct string_alist_S string_alist_t;
-
-typedef struct string_hashtable_S string_hashtable_t;
-
-typedef struct string_tree_S string_tree_t;
-
-typedef struct box_drawing_S box_drawing_t;
-
-typedef struct term_keypress_S term_keypress_t;
-
-typedef struct utf8_decode_result_S utf8_decode_result_t;
-
 typedef union  {
   uint64_t u64;
   uint64_t i64;
@@ -641,15 +677,62 @@ typedef fn_t(int, value_t, value_t) value_comparison_fn;
 
 typedef fn_t(uint64_t, value_t) value_hash_fn;
 
-typedef struct value_alist_S value_alist_t;
+typedef struct memory_hashtable_bucket_S memory_hashtable_bucket_t;
+
+typedef struct logger_state_S logger_state_t;
+
+typedef struct utf8_decode_result_S utf8_decode_result_t;
+
+typedef struct buffer_S buffer_t;
+
+typedef struct line_and_column_S line_and_column_t;
 
 typedef struct value_array_S value_array_t;
 
+typedef struct value_alist_S value_alist_t;
+
+typedef struct string_alist_S string_alist_t;
+
 typedef struct value_hashtable_S value_hashtable_t;
+
+typedef struct string_hashtable_S string_hashtable_t;
 
 typedef struct value_tree_S value_tree_t;
 
+typedef struct string_tree_S string_tree_t;
+
+typedef enum {
+  flag_type_none,
+  flag_type_boolean,
+  flag_type_string,
+  flag_type_uint64,
+  flag_type_int64,
+  flag_type_double,
+  flag_type_enum,
+  flag_type_custom,
+} flag_type_t;
+
+typedef struct program_descriptor_S program_descriptor_t;
+
+typedef struct command_descriptor_S command_descriptor_t;
+
+typedef struct flag_descriptor_S flag_descriptor_t;
+
+typedef struct flag_key_value_S flag_key_value_t;
+
+typedef struct box_drawing_S box_drawing_t;
+
+typedef struct term_keypress_S term_keypress_t;
+
+typedef struct random_state_S random_state_t;
+
+typedef struct cdl_printer_t__generated_S cdl_printer_t;
+
 // ========== stuctures/unions ==========
+
+struct fatal_error_config_S {
+  boolean_t catch_sigsegv;
+};
 
 struct memory_hashtable_bucket_S {
   uint64_t malloc_address;
@@ -658,10 +741,58 @@ struct memory_hashtable_bucket_S {
   uint64_t allocation_line_number;
 };
 
+struct logger_state_S {
+  boolean_t initialized;
+  int level;
+  char* logger_output_filename;
+  FILE* output;
+};
+
+struct utf8_decode_result_S {
+  uint32_t code_point;
+  uint8_t num_bytes;
+  boolean_t error;
+};
+
 struct buffer_S {
   uint32_t length;
   uint32_t capacity;
   uint8_t* elements;
+};
+
+struct value_array_S {
+  uint32_t length;
+  uint32_t capacity;
+  value_t* elements;
+};
+
+struct value_alist_S {
+  struct value_alist_S* next;
+  value_t key;
+  value_t value;
+};
+
+struct string_alist_S {
+};
+
+struct value_hashtable_S {
+  uint64_t n_buckets;
+  uint64_t n_entries;
+  value_alist_t** buckets;
+};
+
+struct string_hashtable_S {
+};
+
+struct value_tree_S {
+  value_t key;
+  value_t value;
+  uint32_t level;
+  struct value_tree_S* left;
+  struct value_tree_S* right;
+};
+
+struct string_tree_S {
 };
 
 struct program_descriptor_S {
@@ -696,24 +827,6 @@ struct flag_key_value_S {
   char* value;
 };
 
-struct fatal_error_config_S {
-  boolean_t catch_sigsegv;
-};
-
-struct random_state_S {
-  uint64_t a;
-  uint64_t b;
-};
-
-struct string_alist_S {
-};
-
-struct string_hashtable_S {
-};
-
-struct string_tree_S {
-};
-
 struct box_drawing_S {
   uint32_t upper_left_corner;
   uint32_t upper_right_corner;
@@ -736,47 +849,9 @@ struct term_keypress_S {
   uint8_t hyper;
 };
 
-struct utf8_decode_result_S {
-  uint32_t code_point;
-  uint8_t num_bytes;
-  boolean_t error;
-};
-
-struct value_alist_S {
-  struct value_alist_S* next;
-  value_t key;
-  value_t value;
-};
-
-struct value_array_S {
-  uint32_t length;
-  uint32_t capacity;
-  value_t* elements;
-};
-
-struct value_hashtable_S {
-  uint64_t n_buckets;
-  uint64_t n_entries;
-  value_alist_t** buckets;
-};
-
-struct value_tree_S {
-  value_t key;
-  value_t value;
-  uint32_t level;
-  struct value_tree_S* left;
-  struct value_tree_S* right;
-};
-
-struct line_and_column_S {
-  uint64_t line;
-  uint64_t column;
-};
-
-struct cdl_printer_t__generated_S {
-  buffer_t* buffer;
-  char* key_token;
-  int indention_level;
+struct random_state_S {
+  uint64_t a;
+  uint64_t b;
 };
 
 struct unsigned_decode_result__generated_S {
@@ -801,7 +876,20 @@ struct value_result_t__generated_S {
   non_fatal_error_code_t nf_error;
 };
 
+struct line_and_column_S {
+  uint64_t line;
+  uint64_t column;
+};
+
+struct cdl_printer_t__generated_S {
+  buffer_t* buffer;
+  char* key_token;
+  int indention_level;
+};
+
 // ========== global variables ==========
+
+fatal_error_config_t fatal_error_config = {0};
 
 boolean_t is_initialized = false;
 
@@ -815,16 +903,31 @@ uint64_t number_of_free_calls = 0;
 
 memory_hashtable_bucket_t memory_ht[ARMYKNIFE_MEMORY_ALLOCATION_HASHTABLE_SIZE];
 
+logger_state_t global_logger_state;
+
 program_descriptor_t* current_program;
 
 command_descriptor_t* current_command;
 
 flag_descriptor_t* current_flag;
 
-fatal_error_config_t fatal_error_config = {0};
-
 // ========== function prototypes ==========
 
+extern unsigned encode_sleb_128(int64_t Value, uint8_t* p);
+extern unsigned encode_uleb_128(uint64_t Value, uint8_t* p);
+extern unsigned_decode_result decode_uleb_128(uint8_t* p, uint8_t* end);
+extern signed_decode_result decode_sleb_128(uint8_t* p, uint8_t* end);
+extern _Noreturn void fatal_error_impl(char* file, int line, int error_code);
+extern char* fatal_error_code_to_string(int error_code);
+extern void configure_fatal_errors(fatal_error_config_t config);
+void segmentation_fault_handler(int signal_number);
+void print_fatal_error_banner();
+void print_backtrace();
+void print_error_code_name(int error_code);
+char* get_command_line();
+char* get_program_path();
+int cmp_string_values(value_t value1, value_t value2);
+uint64_t hash_string_value(value_t value1);
 extern uint8_t* checked_malloc(char* file, int line, uint64_t amount);
 extern uint8_t* checked_malloc_copy_of(char* file, int line, uint8_t* source, uint64_t amount);
 extern void checked_free(char* file, int line, void* pointer);
@@ -834,6 +937,32 @@ void check_end_padding(uint8_t* address, char* filename, uint64_t line);
 uint64_t mumurhash64_mix(uint64_t h);
 void track_padding(char* file, int line, uint8_t* address, uint64_t amount);
 void untrack_padding(uint8_t* malloc_address);
+extern int uint64_highest_bit_set(uint64_t n);
+extern int string_is_null_or_empty(char* str1);
+extern int string_equal(char* str1, char* str2);
+extern int string_starts_with(char* str1, char* str2);
+extern int string_ends_with(char* str1, char* str2);
+extern boolean_t string_contains_char(char* str, char ch);
+extern int string_index_of_char(char* a, char ch);
+extern char* uint64_to_string(uint64_t number);
+extern uint64_t string_hash(char* str);
+extern char* string_substring(char* str, int start, int end);
+extern value_result_t string_parse_uint64(char* string);
+extern value_result_t string_parse_uint64_dec(char* string);
+extern value_result_t string_parse_uint64_hex(char* string);
+extern value_result_t string_parse_uint64_bin(char* string);
+extern char* string_duplicate(char* src);
+extern char* string_append(char* a, char* b);
+extern char* string_left_pad(char* a, int count, char ch);
+extern char* string_right_pad(char* a, int count, char ch);
+__attribute__((format(printf, 1, 2))) extern char* string_printf(char* format, ...);
+char* string_truncate(char* str, int limit, char* at_limit_suffix);
+uint64_t fasthash64(void* buf, size_t len, uint64_t seed);
+extern void logger_init(void);
+__attribute__((format(printf, 5, 6))) extern void logger_impl(char* file, int line_number, char* function, int level, char* format, ...);
+value_result_t parse_log_level_enum(char* str);
+char* logger_level_to_string(int level);
+extern utf8_decode_result_t utf8_decode(uint8_t* utf8_bytes);
 extern buffer_t* make_buffer(uint64_t initial_capacity);
 extern uint64_t buffer_length(buffer_t* buffer);
 extern uint8_t buffer_get(buffer_t* buffer, uint64_t position);
@@ -861,20 +990,33 @@ uint64_t buffer_end_of_line(buffer_t* buffer, uint64_t start);
 buffer_t* buffer_to_uppercase(buffer_t* buffer);
 buffer_t* buffer_to_lowercase(buffer_t* buffer);
 line_and_column_t buffer_position_to_line_and_column(buffer_t* buffer, uint64_t position);
-cdl_printer_t* make_cdl_printer(buffer_t* buffer);
-void cdl_boolean(cdl_printer_t* printer, boolean_t bolean);
-void cdl_string(cdl_printer_t* printer, char* string);
-void cdl_int64(cdl_printer_t* printer, int64_t number);
-void cdl_uint64(cdl_printer_t* printer, uint64_t number);
-void cdl_double(cdl_printer_t* printer, double number);
-void cdl_start_array(cdl_printer_t* printer);
-void cdl_end_array(cdl_printer_t* printer);
-void cdl_start_table(cdl_printer_t* printer);
-void cdl_key(cdl_printer_t* printer, char* key);
-void cdl_end_table(cdl_printer_t* printer);
-void cdl_indent(cdl_printer_t* printer);
-boolean_t is_symbol(char* string);
-void cdl_output_token(cdl_printer_t* printer, char* string);
+extern value_array_t* make_value_array(uint64_t initial_capacity);
+extern value_t value_array_get(value_array_t* array, uint32_t index);
+extern void value_array_replace(value_array_t* array, uint32_t index, value_t element);
+extern void value_array_add(value_array_t* array, value_t element);
+extern void value_array_push(value_array_t* array, value_t element);
+extern value_t value_array_pop(value_array_t* array);
+extern void value_array_insert_at(value_array_t* array, uint32_t position, value_t element);
+extern value_t value_array_delete_at(value_array_t* array, uint32_t position);
+void value_array_ensure_capacity(value_array_t* array, uint32_t required_capacity);
+extern value_result_t value_alist_find(value_alist_t* list, value_comparison_fn cmp_fn, value_t key);
+__attribute__((warn_unused_result)) extern value_alist_t* value_alist_insert(value_alist_t* list, value_comparison_fn cmp_fn, value_t key, value_t value);
+__attribute__((warn_unused_result)) extern value_alist_t* value_alist_delete(value_alist_t* list, value_comparison_fn cmp_fn, value_t key);
+__attribute__((warn_unused_result)) extern uint64_t value_alist_length(value_alist_t* list);
+extern value_hashtable_t* make_value_hashtable(uint64_t n_buckets);
+extern value_hashtable_t* value_ht_insert(value_hashtable_t* ht, value_hash_fn hash_fn, value_comparison_fn cmp_fn, value_t key, value_t value);
+extern value_hashtable_t* value_ht_delete(value_hashtable_t* ht, value_hash_fn hash_fn, value_comparison_fn cmp_fn, value_t key);
+extern value_result_t value_ht_find(value_hashtable_t* ht, value_hash_fn hash_fn, value_comparison_fn cmp_fn, value_t key);
+extern void value_hashtable_upsize_internal(value_hashtable_t* ht, value_hash_fn hash_fn, value_comparison_fn cmp_fn);
+extern value_result_t value_tree_find(value_tree_t* t, value_comparison_fn cmp_fn, value_t key);
+__attribute__((warn_unused_result)) extern value_tree_t* value_tree_insert(value_tree_t* t, value_comparison_fn cmp_fn, value_t key, value_t value);
+__attribute__((warn_unused_result)) extern value_tree_t* value_tree_delete(value_tree_t* t, value_comparison_fn cmp_fn, value_t key);
+value_tree_t* value_tree_skew(value_tree_t* t);
+value_tree_t* value_tree_split(value_tree_t* t);
+value_tree_t* make_value_tree_leaf(value_t key, value_t value);
+value_tree_t* value_tree_decrease_level(value_tree_t* t);
+value_tree_t* value_tree_predecessor(value_tree_t* t);
+value_tree_t* value_tree_successor(value_tree_t* t);
 extern void flag_program_name(char* name);
 extern void flag_description(char* description);
 extern void flag_file_args(value_array_t** write_back_ptr);
@@ -899,15 +1041,6 @@ char* parse_and_write_uint64(flag_descriptor_t* flag, flag_key_value_t key_value
 char* parse_and_write_enum(flag_descriptor_t* flag, flag_key_value_t key_value);
 void add_flag(char* name, void* write_back_ptr, flag_type_t flag_type);
 void flag_print_flags(FILE* out, char* header, string_tree_t* flags);
-extern _Noreturn void fatal_error_impl(char* file, int line, int error_code);
-extern char* fatal_error_code_to_string(int error_code);
-extern void configure_fatal_errors(fatal_error_config_t config);
-void segmentation_fault_handler(int signal_number);
-void print_fatal_error_banner();
-void print_backtrace();
-void print_error_code_name(int error_code);
-char* get_command_line();
-char* get_program_path();
 __attribute__((warn_unused_result)) extern buffer_t* buffer_append_file_contents(buffer_t* bytes, char* file_name);
 __attribute__((warn_unused_result)) extern buffer_t* buffer_append_all(buffer_t* buffer, FILE* input);
 extern void buffer_write_file(buffer_t* bytes, char* file_name);
@@ -917,35 +1050,6 @@ int file_peek_byte(FILE* input);
 boolean_t file_eof(FILE* input);
 void file_copy_stream(FILE* input, FILE* output, boolean_t until_eof, uint64_t size);
 void file_skip_bytes(FILE* input, uint64_t n_bytes);
-extern unsigned encode_sleb_128(int64_t Value, uint8_t* p);
-extern unsigned encode_uleb_128(uint64_t Value, uint8_t* p);
-extern unsigned_decode_result decode_uleb_128(uint8_t* p, uint8_t* end);
-extern signed_decode_result decode_sleb_128(uint8_t* p, uint8_t* end);
-extern random_state_t random_state_for_test(void);
-extern uint64_t random_next_uint64(random_state_t* state);
-extern uint64_t random_next_uint64_below(random_state_t* state, uint64_t maximum);
-random_state_t* random_state(void);
-uint64_t random_next(random_state_t* state);
-extern int string_is_null_or_empty(char* str1);
-extern int string_equal(char* str1, char* str2);
-extern int string_starts_with(char* str1, char* str2);
-extern int string_ends_with(char* str1, char* str2);
-extern boolean_t string_contains_char(char* str, char ch);
-extern int string_index_of_char(char* a, char ch);
-extern char* uint64_to_string(uint64_t number);
-extern uint64_t string_hash(char* str);
-extern char* string_substring(char* str, int start, int end);
-extern value_result_t string_parse_uint64(char* string);
-extern value_result_t string_parse_uint64_dec(char* string);
-extern value_result_t string_parse_uint64_hex(char* string);
-extern value_result_t string_parse_uint64_bin(char* string);
-extern char* string_duplicate(char* src);
-extern char* string_append(char* a, char* b);
-extern char* string_left_pad(char* a, int count, char ch);
-extern char* string_right_pad(char* a, int count, char ch);
-__attribute__((format(printf, 1, 2))) extern char* string_printf(char* format, ...);
-char* string_truncate(char* str, int limit, char* at_limit_suffix);
-uint64_t fasthash64(void* buf, size_t len, uint64_t seed);
 __attribute__((warn_unused_result)) extern buffer_t* term_clear_screen(buffer_t* buffer);
 __attribute__((warn_unused_result)) extern buffer_t* term_set_foreground_color(buffer_t* buffer, uint32_t color);
 __attribute__((warn_unused_result)) extern buffer_t* term_set_background_color(buffer_t* buffer, uint32_t color);
@@ -959,54 +1063,48 @@ __attribute__((warn_unused_result)) extern buffer_t* term_reset_formatting(buffe
 __attribute__((warn_unused_result)) extern buffer_t* term_draw_box(buffer_t* buffer, uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, box_drawing_t* box);
 extern struct termios term_echo_off();
 extern void term_echo_restore(struct termios oldt);
-__attribute__((format(printf, 3, 4))) void test_fail_and_exit(char* file_name, int line_number, char* format, ...);
 extern value_array_t* string_tokenize(char* str, char* delimiters);
 extern value_array_t* buffer_tokenize(buffer_t* buffer, char* delimiters);
 extern value_array_t* tokenize_memory_range(uint8_t* start, uint64_t length, char* delimiters);
 void add_duplicate(value_array_t* token_array, char* data);
-extern int uint64_highest_bit_set(uint64_t n);
-extern utf8_decode_result_t utf8_decode(uint8_t* utf8_bytes);
-int cmp_string_values(value_t value1, value_t value2);
-uint64_t hash_string_value(value_t value1);
-extern value_result_t value_alist_find(value_alist_t* list, value_comparison_fn cmp_fn, value_t key);
-__attribute__((warn_unused_result)) extern value_alist_t* value_alist_insert(value_alist_t* list, value_comparison_fn cmp_fn, value_t key, value_t value);
-__attribute__((warn_unused_result)) extern value_alist_t* value_alist_delete(value_alist_t* list, value_comparison_fn cmp_fn, value_t key);
-__attribute__((warn_unused_result)) extern uint64_t value_alist_length(value_alist_t* list);
-extern value_array_t* make_value_array(uint64_t initial_capacity);
-extern value_t value_array_get(value_array_t* array, uint32_t index);
-extern void value_array_replace(value_array_t* array, uint32_t index, value_t element);
-extern void value_array_add(value_array_t* array, value_t element);
-extern void value_array_push(value_array_t* array, value_t element);
-extern value_t value_array_pop(value_array_t* array);
-extern void value_array_insert_at(value_array_t* array, uint32_t position, value_t element);
-extern value_t value_array_delete_at(value_array_t* array, uint32_t position);
-void value_array_ensure_capacity(value_array_t* array, uint32_t required_capacity);
-extern value_hashtable_t* make_value_hashtable(uint64_t n_buckets);
-__attribute__((warn_unused_result)) extern value_hashtable_t* value_ht_insert(value_hashtable_t* ht, value_hash_fn hash_fn, value_comparison_fn cmp_fn, value_t key, value_t value);
-__attribute__((warn_unused_result)) extern value_hashtable_t* value_ht_delete(value_hashtable_t* ht, value_hash_fn hash_fn, value_comparison_fn cmp_fn, value_t key);
-extern value_result_t value_ht_find(value_hashtable_t* ht, value_hash_fn hash_fn, value_comparison_fn cmp_fn, value_t key);
-__attribute__((warn_unused_result)) extern value_hashtable_t* value_hashtable_upsize_internal(value_hashtable_t* ht, value_hash_fn hash_fn, value_comparison_fn cmp_fn);
-extern value_result_t value_tree_find(value_tree_t* t, value_comparison_fn cmp_fn, value_t key);
-__attribute__((warn_unused_result)) extern value_tree_t* value_tree_insert(value_tree_t* t, value_comparison_fn cmp_fn, value_t key, value_t value);
-__attribute__((warn_unused_result)) extern value_tree_t* value_tree_delete(value_tree_t* t, value_comparison_fn cmp_fn, value_t key);
-value_tree_t* value_tree_skew(value_tree_t* t);
-value_tree_t* value_tree_split(value_tree_t* t);
-value_tree_t* make_value_tree_leaf(value_t key, value_t value);
-value_tree_t* value_tree_decrease_level(value_tree_t* t);
-value_tree_t* value_tree_predecessor(value_tree_t* t);
-value_tree_t* value_tree_successor(value_tree_t* t);
-char* flag_type_to_string(flag_type_t value);
-flag_type_t string_to_flag_type(char* value);
-enum_metadata_t* flag_type_metadata();
+extern random_state_t random_state_for_test(void);
+extern uint64_t random_next_uint64(random_state_t* state);
+extern uint64_t random_next_uint64_below(random_state_t* state, uint64_t maximum);
+random_state_t* random_state(void);
+uint64_t random_next(random_state_t* state);
+cdl_printer_t* make_cdl_printer(buffer_t* buffer);
+void cdl_boolean(cdl_printer_t* printer, boolean_t bolean);
+void cdl_string(cdl_printer_t* printer, char* string);
+void cdl_int64(cdl_printer_t* printer, int64_t number);
+void cdl_uint64(cdl_printer_t* printer, uint64_t number);
+void cdl_double(cdl_printer_t* printer, double number);
+void cdl_start_array(cdl_printer_t* printer);
+void cdl_end_array(cdl_printer_t* printer);
+void cdl_start_table(cdl_printer_t* printer);
+void cdl_key(cdl_printer_t* printer, char* key);
+void cdl_end_table(cdl_printer_t* printer);
+void cdl_indent(cdl_printer_t* printer);
+boolean_t is_symbol(char* string);
+void cdl_output_token(cdl_printer_t* printer, char* string);
+__attribute__((format(printf, 3, 4))) void test_fail_and_exit(char* file_name, int line_number, char* format, ...);
 char* error_code_to_string(error_code_t value);
 error_code_t string_to_error_code(char* value);
 enum_metadata_t* error_code_metadata();
 char* non_fatal_error_code_to_string(non_fatal_error_code_t value);
 non_fatal_error_code_t string_to_non_fatal_error_code(char* value);
 enum_metadata_t* non_fatal_error_code_metadata();
+char* flag_type_to_string(flag_type_t value);
+flag_type_t string_to_flag_type(char* value);
+enum_metadata_t* flag_type_metadata();
 
 // ========== inlined functions ==========
 
+static inline boolean_t is_ok(value_result_t value){
+  return value.nf_error == NF_OK;
+}
+static inline boolean_t is_not_ok(value_result_t value){
+  return value.nf_error != NF_OK;
+}
 static inline boolean_t should_log_memory_allocation(){
   if (is_initialized) {
     return should_log_value;
@@ -1018,8 +1116,24 @@ static inline boolean_t should_log_memory_allocation(){
   }
   return should_log_value;
 }
-static inline uint64_t rotl(uint64_t x, int k){
-  return (x << k) | (x >> (64 - k));
+static inline boolean_t is_hex_digit(char ch){
+  return (ch >= '0' && ch <= '9') || (ch >= 'a' && ch <= 'f');
+}
+static inline uint64_t hex_digit_to_value(char ch){
+  if (ch >= '0' && ch <= '9') {
+    return ch - '0';
+  } else {
+    return (ch - 'a') + 10;
+  }
+}
+static inline uint64_t mix(uint64_t h){
+  h ^= h >> 23;
+  h *= 0x2127599bf4325c37ULL;
+  h ^= h >> 47;
+  return h;
+}
+static inline boolean_t should_log_info(){
+  return global_logger_state.level <= LOGGER_INFO;
 }
 static inline value_result_t alist_find(string_alist_t* list, char* key){
   return value_alist_find(cast(value_alist_t*, list), cmp_string_values,
@@ -1037,6 +1151,9 @@ __attribute__((warn_unused_result)) static inline string_alist_t* alist_delete(s
 }
 __attribute__((warn_unused_result)) static inline uint64_t alist_length(string_alist_t* list){
   return value_alist_length(cast(value_alist_t*, list));
+}
+static inline uint64_t value_ht_num_entries(value_hashtable_t* ht){
+  return ht->n_entries;
 }
 static inline value_hashtable_t* to_value_hashtable(string_hashtable_t* ht){
   return cast(value_hashtable_t*, ht);
@@ -1061,6 +1178,12 @@ static inline value_result_t string_ht_find(string_hashtable_t* ht, char* key){
 static inline uint64_t string_ht_num_entries(string_hashtable_t* ht){
   return value_ht_num_entries(to_value_hashtable(ht));
 }
+static inline uint64_t value_tree_min_level(uint32_t a, uint32_t b){
+  return a < b ? a : b;
+}
+static inline boolean_t value_tree_is_leaf(value_tree_t* t){
+  return t->left == NULL && t->right == NULL;
+}
 static inline value_result_t string_tree_find(string_tree_t* t, char* key){
   return value_tree_find(cast(value_tree_t*, t), cmp_string_values,
                          str_to_value(key));
@@ -1075,21 +1198,8 @@ __attribute__((warn_unused_result)) static inline string_tree_t* string_tree_del
               value_tree_delete(cast(value_tree_t*, t), cmp_string_values,
                                 str_to_value(key)));
 }
-static inline boolean_t is_hex_digit(char ch){
-  return (ch >= '0' && ch <= '9') || (ch >= 'a' && ch <= 'f');
-}
-static inline uint64_t hex_digit_to_value(char ch){
-  if (ch >= '0' && ch <= '9') {
-    return ch - '0';
-  } else {
-    return (ch - 'a') + 10;
-  }
-}
-static inline uint64_t mix(uint64_t h){
-  h ^= h >> 23;
-  h *= 0x2127599bf4325c37ULL;
-  h ^= h >> 47;
-  return h;
+static inline uint64_t rotl(uint64_t x, int k){
+  return (x << k) | (x >> (64 - k));
 }
 static inline void open_arena_for_test(void){
 #ifdef C_ARMYKNIFE_LIB_USE_ARENAS
@@ -1101,25 +1211,212 @@ static inline void close_arena_for_test(void){
   arena_close();
 #endif
 }
-static inline boolean_t is_ok(value_result_t value){
-  return value.nf_error == NF_OK;
-}
-static inline boolean_t is_not_ok(value_result_t value){
-  return value.nf_error != NF_OK;
-}
-static inline uint64_t value_ht_num_entries(value_hashtable_t* ht){
-  return ht->n_entries;
-}
-static inline uint64_t value_tree_min_level(uint32_t a, uint32_t b){
-  return a < b ? a : b;
-}
-static inline boolean_t value_tree_is_leaf(value_tree_t* t){
-  return t->left == NULL && t->right == NULL;
-}
 
 // ========== functions ==========
 
 /* i=0 j=1 */
+unsigned encode_sleb_128(int64_t Value, uint8_t* p){
+  uint8_t* orig_p = p;
+  int More;
+  do {
+    uint8_t Byte = Value & 0x7f;
+    // NOTE: this assumes that this signed shift is an arithmetic right shift.
+    Value >>= 7;
+    More = !((((Value == 0) && ((Byte & 0x40) == 0))
+              || ((Value == -1) && ((Byte & 0x40) != 0))));
+    if (More)
+      Byte |= 0x80; // Mark this byte to show that more bytes will follow.
+    *p++ = Byte;
+  } while (More);
+
+  return cast(unsigned, p - orig_p);
+}
+/* i=1 j=1 */
+unsigned encode_uleb_128(uint64_t Value, uint8_t* p){
+  uint8_t* orig_p = p;
+  do {
+    uint8_t Byte = Value & 0x7f;
+    Value >>= 7;
+    if (Value != 0)
+      Byte |= 0x80; // Mark this byte to show that more bytes will follow.
+    *p++ = Byte;
+  } while (Value != 0);
+
+  return cast(unsigned, (p - orig_p));
+}
+/* i=2 j=1 */
+unsigned_decode_result decode_uleb_128(uint8_t* p, uint8_t* end){
+  const uint8_t* orig_p = p;
+  uint64_t Value = 0;
+  unsigned Shift = 0;
+  do {
+    if (p == end) {
+      unsigned_decode_result result = {0, ERROR_INSUFFICIENT_INPUT};
+      return result;
+    }
+    uint64_t Slice = *p & 0x7f;
+    if ((Shift >= 64 && Slice != 0) || Slice << Shift >> Shift != Slice) {
+      unsigned_decode_result result = {0, ERROR_TOO_BIG};
+      return result;
+    }
+    Value += Slice << Shift;
+    Shift += 7;
+  } while (*p++ >= 128);
+  unsigned_decode_result result = {Value, cast(unsigned, p - orig_p)};
+  return result;
+}
+/* i=3 j=1 */
+signed_decode_result decode_sleb_128(uint8_t* p, uint8_t* end){
+  const uint8_t* orig_p = p;
+  int64_t Value = 0;
+  unsigned Shift = 0;
+  uint8_t Byte;
+  do {
+    if (p == end) {
+      signed_decode_result result = {0, ERROR_INSUFFICIENT_INPUT};
+      return result;
+    }
+    Byte = *p;
+    uint64_t Slice = Byte & 0x7f;
+    // This handles decoding padded numbers, otherwise we might be
+    // able to test very easily at the end of the loop.
+    if ((Shift >= 64 && Slice != (Value < 0 ? 0x7f : 0x00))
+        || (Shift == 63 && Slice != 0 && Slice != 0x7f)) {
+      signed_decode_result result = {0, ERROR_TOO_BIG};
+      return result;
+    }
+    Value |= Slice << Shift;
+    Shift += 7;
+    ++p;
+  } while (Byte >= 128);
+  // Sign extend negative numbers if needed.
+  if (Shift < 64 && (Byte & 0x40))
+    Value |= (-1ULL) << Shift;
+  signed_decode_result result = {Value, (p - orig_p)};
+  return result;
+}
+/* i=4 j=1 */
+_Noreturn void fatal_error_impl(char* file, int line, int error_code){
+  print_fatal_error_banner();
+  print_backtrace();
+  fprintf(stderr, "%s:%d: FATAL ERROR %d", file, line, error_code);
+  print_error_code_name(error_code);
+  fprintf(stderr, "\nCommand line: %s\n\n", get_command_line());
+  char* sleep_str = getenv("ARMYKNIFE_FATAL_ERROR_SLEEP_SECONDS");
+  if (sleep_str != NULL) {
+    value_result_t sleep_time = string_parse_uint64(sleep_str);
+    if (is_ok(sleep_time)) {
+      fprintf(stderr,
+              "Sleeping for %lu seconds so you can attach a debugger.\n",
+              sleep_time.u64);
+      fprintf(stderr, "  gdb -tui %s %d\n", get_program_path(), getpid());
+      sleep(sleep_time.u64);
+    }
+  } else {
+    fprintf(stderr, "(ARMYKNIFE_FATAL_ERROR_SLEEP_SECONDS is not set)\n");
+  }
+  fprintf(stderr, "Necessaria Morte Mori...\n");
+  exit(-(error_code + 100));
+}
+/* i=5 j=1 */
+char* fatal_error_code_to_string(int error_code){
+  switch (error_code) {
+  case ERROR_UKNOWN:
+    return "ERROR_UKNOWN";
+  case ERROR_MEMORY_ALLOCATION:
+    return "ERROR_MEMORY_ALLOCATION";
+  case ERROR_MEMORY_FREE_NULL:
+    return "ERROR_MEMORY_FREE_NULL";
+  case ERROR_REFERENCE_NOT_EXPECTED_TYPE:
+    return "ERROR_REFERENCE_NOT_EXPECTED_TYPE";
+  case ERROR_ILLEGAL_INITIAL_CAPACITY:
+    return "ERROR_ILLEGAL_INITIAL_CAPACITY";
+  case ERROR_DYNAMICALLY_SIZED_TYPE_ILLEGAL_IN_CONTAINER:
+    return "ERROR_DYNAMICALLY_SIZED_TYPE_ILLEGAL_IN_CONTAINER";
+  case ERROR_ACCESS_OUT_OF_BOUNDS:
+    return "ERROR_ACCESS_OUT_OF_BOUNDS";
+  case ERROR_NOT_REACHED:
+    return "ERROR_NOT_REACHED";
+  case ERROR_ILLEGAL_ZERO_HASHCODE_VALUE:
+    return "ERROR_ILLEGAL_ZERO_HASHCODE_VALUE";
+  case ERROR_UNIMPLEMENTED:
+    return "ERROR_UNIMPLEMENTED";
+  case ERROR_ILLEGAL_NULL_ARGUMENT:
+    return "ERROR_ILLEGAL_NULL_ARGUMENT";
+  case ERROR_ILLEGAL_ARGUMENT:
+    return "ERROR_ILLEGAL_ARGUMENT";
+  case ERROR_MEMORY_START_PADDING_ERROR:
+    return "ERROR_MEMORY_START_PADDING_ERROR";
+  case ERROR_MEMORY_END_PADDING_ERROR:
+    return "ERROR_MEMORY_END_PADDING_ERROR";
+
+  default:
+    return "error";
+  }
+}
+/* i=6 j=1 */
+void configure_fatal_errors(fatal_error_config_t config){
+  fatal_error_config = config;
+  if (config.catch_sigsegv) {
+    signal(SIGSEGV, segmentation_fault_handler);
+  }
+}
+/* i=7 j=0 */
+void segmentation_fault_handler(int signal_number){
+  fatal_error(ERROR_SIGSEGV);
+}
+/* i=8 j=1 */
+void print_fatal_error_banner(){
+  // As the first thing we print, also responsible for at least one
+  // newline to start a new line if we may not be at one.
+  fprintf(stderr, "\n========== FATAL_ERROR ==========\n");
+}
+/* i=9 j=1 */
+void print_backtrace(){
+#ifndef NO_VM_BACKTRACE_ON_FATAL_ERROR
+  do {
+    void* array[10];
+    int size = backtrace(array, 10);
+    char** strings = backtrace_symbols(array, size);
+
+    // Print the backtrace
+    for (int i = 0; i < size; i++) {
+      printf("#%d %s\n", i, strings[i]);
+    }
+  } while (0);
+#endif /* NO_VM_BACKTRACE_ON_FATAL_ERROR */
+}
+/* i=10 j=1 */
+void print_error_code_name(int error_code){
+  fprintf(stderr, " ");
+  fprintf(stderr, "*** ");
+  fprintf(stderr, "%s", fatal_error_code_to_string(error_code));
+  fprintf(stderr, " ***\n");
+}
+/* i=11 j=0 */
+char* get_command_line(){
+  buffer_t* buffer
+      = buffer_append_file_contents(make_buffer(1), "/proc/self/cmdline");
+  buffer_replace_matching_byte(buffer, 0, ' ');
+  return buffer_to_c_string(buffer);
+}
+/* i=12 j=0 */
+char* get_program_path(){
+  char buf[4096];
+  int n = readlink("/proc/self/exe", buf, sizeof(buf));
+  if (n > 0) {
+    return string_duplicate(buf);
+  } else {
+    return "<program-path-unknown>";
+  }
+}
+/* i=15 j=1 */
+int cmp_string_values(value_t value1, value_t value2){
+  return strcmp(value1.str, value2.str);
+}
+/* i=16 j=1 */
+uint64_t hash_string_value(value_t value1){ return string_hash(value1.str); }
+/* i=17 j=1 */
 uint8_t* checked_malloc(char* file, int line, uint64_t amount){
 
   if (amount == 0 || amount > ARMYKNIFE_MEMORY_ALLOCATION_MAXIMUM_AMOUNT) {
@@ -1156,13 +1453,13 @@ uint8_t* checked_malloc(char* file, int line, uint64_t amount){
 
   return result + ARMYKNIFE_MEMORY_ALLOCATION_START_PADDING;
 }
-/* i=1 j=1 */
+/* i=18 j=1 */
 uint8_t* checked_malloc_copy_of(char* file, int line, uint8_t* source, uint64_t amount){
   uint8_t* result = checked_malloc(file, line, amount);
   memcpy(result, source, amount);
   return result;
 }
-/* i=2 j=1 */
+/* i=19 j=1 */
 void checked_free(char* file, int line, void* pointer){
   if (should_log_memory_allocation()) {
     fprintf(stderr, "DEALLOCATE %s:%d -- %lu\n", file, line,
@@ -1185,7 +1482,7 @@ void checked_free(char* file, int line, void* pointer){
   number_of_free_calls++;
   free(malloc_pointer);
 }
-/* i=3 j=1 */
+/* i=20 j=1 */
 void check_memory_hashtable_padding(){
   for (int i = 0; i < ARMYKNIFE_MEMORY_ALLOCATION_HASHTABLE_SIZE; i++) {
     if (memory_ht[i].malloc_address != 0) {
@@ -1201,7 +1498,7 @@ void check_memory_hashtable_padding(){
     }
   }
 }
-/* i=5 j=0 */
+/* i=22 j=0 */
 void check_start_padding(uint8_t* address){
   for (int i = 0; i < ARMYKNIFE_MEMORY_ALLOCATION_START_PADDING; i++) {
     if (address[i] != START_PADDING_BYTE) {
@@ -1209,7 +1506,7 @@ void check_start_padding(uint8_t* address){
     }
   }
 }
-/* i=6 j=0 */
+/* i=23 j=0 */
 void check_end_padding(uint8_t* address, char* filename, uint64_t line){
   for (int i = 0; i < ARMYKNIFE_MEMORY_ALLOCATION_END_PADDING; i++) {
     if (address[i] != END_PADDING_BYTE) {
@@ -1221,7 +1518,7 @@ void check_end_padding(uint8_t* address, char* filename, uint64_t line){
     }
   }
 }
-/* i=7 j=0 */
+/* i=24 j=0 */
 uint64_t mumurhash64_mix(uint64_t h){
   h *= h >> 33;
   h *= 0xff51afd7ed558ccdL;
@@ -1230,7 +1527,7 @@ uint64_t mumurhash64_mix(uint64_t h){
   h *= h >> 33;
   return h;
 }
-/* i=8 j=0 */
+/* i=25 j=0 */
 void track_padding(char* file, int line, uint8_t* address, uint64_t amount){
   // First set the padding to predicatable values
   for (int i = 0; i < ARMYKNIFE_MEMORY_ALLOCATION_START_PADDING; i++) {
@@ -1256,7 +1553,7 @@ void track_padding(char* file, int line, uint8_t* address, uint64_t amount){
     memory_ht[bucket].allocation_line_number = line;
   }
 }
-/* i=9 j=0 */
+/* i=26 j=0 */
 void untrack_padding(uint8_t* malloc_address){
   check_start_padding(malloc_address);
   // Unfortunately, since we don't know the size of the allocation, we
@@ -1277,7 +1574,466 @@ void untrack_padding(uint8_t* malloc_address){
     memory_ht[bucket].allocation_line_number = 0;
   }
 }
-/* i=10 j=1 */
+/* i=27 j=1 */
+int uint64_highest_bit_set(uint64_t n){
+  if (n >= 1ULL << 32) {
+    return uint64_highest_bit_set(n >> 32) + 32;
+  } else if (n >= 1ULL << 16) {
+    return uint64_highest_bit_set(n >> 16) + 16;
+  } else if (n >= 1ULL << 8) {
+    return uint64_highest_bit_set(n >> 8) + 8;
+  } else if (n >= 1ULL << 4) {
+    return uint64_highest_bit_set(n >> 4) + 4;
+  } else if (n >= 1ULL << 2) {
+    return uint64_highest_bit_set(n >> 2) + 2;
+  } else if (n >= 1ULL << 1) {
+    return uint64_highest_bit_set(n >> 1) + 1;
+  } else {
+    return 0;
+  }
+}
+/* i=28 j=1 */
+int string_is_null_or_empty(char* str){
+  return (str == NULL) || (strlen(str) == 0);
+}
+/* i=29 j=1 */
+int string_equal(char* str1, char* str2){
+  if (string_is_null_or_empty(str1)) {
+    return string_is_null_or_empty(str2);
+  }
+  return strcmp(str1, str2) == 0;
+}
+/* i=30 j=1 */
+int string_starts_with(char* str1, char* str2){
+  return strncmp(str1, str2, strlen(str2)) == 0;
+}
+/* i=31 j=1 */
+int string_ends_with(char* str1, char* str2){
+  size_t len1 = strlen(str1);
+  size_t len2 = strlen(str2);
+
+  if (len2 > len1) {
+    return 0;
+  }
+
+  return strcmp(str1 + (len1 - len2), str2) == 0;
+}
+/* i=32 j=1 */
+boolean_t string_contains_char(char* str, char ch){
+  return string_index_of_char(str, ch) >= 0;
+}
+/* i=33 j=1 */
+int string_index_of_char(char* str, char ch){
+  if (string_is_null_or_empty(str)) {
+    return -1;
+  }
+  int str_length = strlen(str);
+  for (int i = 0; i < str_length; i++) {
+    if (str[i] == ch) {
+      return i;
+    }
+  }
+  return -1;
+}
+/* i=34 j=1 */
+char* uint64_to_string(uint64_t number){
+  char buffer[32];
+  sprintf(buffer, "%lu", number);
+  return string_duplicate(buffer);
+}
+/* i=35 j=1 */
+uint64_t string_hash(char* str){
+  return fasthash64(str, strlen(str), 0);
+}
+/* i=36 j=1 */
+char* string_substring(char* str, int start, int end){
+  uint64_t len = strlen(str);
+  if (start >= len || start >= end || end < start) {
+    fatal_error(ERROR_ILLEGAL_ARGUMENT);
+  }
+  int result_size = end - start + 1;
+  char* result = cast(char*, malloc_bytes(result_size));
+  for (int i = start; (i < end); i++) {
+    result[i - start] = str[i];
+  }
+  result[result_size - 1] = '\0';
+  return result;
+}
+/* i=37 j=1 */
+value_result_t string_parse_uint64(char* string){
+  if (string_starts_with(string, "0x")) {
+    return string_parse_uint64_hex(&string[2]);
+  } else if (string_starts_with(string, "0b")) {
+    return string_parse_uint64_bin(&string[2]);
+  } else {
+    return string_parse_uint64_dec(string);
+  }
+}
+/* i=38 j=1 */
+value_result_t string_parse_uint64_dec(char* string){
+  uint64_t len = strlen(string);
+  uint64_t integer = 0;
+
+  if (len == 0) {
+    return (value_result_t){.u64 = 0,
+                            .nf_error = NF_ERROR_NOT_PARSED_AS_NUMBER};
+  }
+
+  for (int i = 0; i < len; i++) {
+    char ch = string[i];
+    if (ch < '0' || ch > '9') {
+      return (value_result_t){.u64 = 0,
+                              .nf_error = NF_ERROR_NOT_PARSED_AS_NUMBER};
+    }
+    uint64_t digit = string[i] - '0';
+    integer = integer * 10 + digit;
+  }
+
+  return (value_result_t){.u64 = integer, .nf_error = NF_OK};
+}
+/* i=39 j=1 */
+value_result_t string_parse_uint64_hex(char* string){
+  uint64_t len = strlen(string);
+  uint64_t integer = 0;
+
+  if (len == 0) {
+    return compound_literal(
+        value_result_t, {.u64 = 0, .nf_error = NF_ERROR_NOT_PARSED_AS_NUMBER});
+  }
+
+  for (int i = 0; i < len; i++) {
+    char ch = string[i];
+    if (!is_hex_digit(ch)) {
+      return compound_literal(
+          value_result_t,
+          {.u64 = 0, .nf_error = NF_ERROR_NOT_PARSED_AS_NUMBER});
+    }
+    uint64_t digit = hex_digit_to_value(ch);
+    integer = integer << 4 | digit;
+  }
+
+  return compound_literal(value_result_t, {.u64 = integer, .nf_error = NF_OK});
+}
+/* i=40 j=1 */
+value_result_t string_parse_uint64_bin(char* string){
+  uint64_t len = strlen(string);
+  uint64_t integer = 0;
+
+  if (len == 0) {
+    return compound_literal(
+        value_result_t, {.u64 = 0, .nf_error = NF_ERROR_NOT_PARSED_AS_NUMBER});
+  }
+
+  for (int i = 0; i < len; i++) {
+    char ch = string[i];
+    if (ch < '0' || ch > '1') {
+      return compound_literal(
+          value_result_t,
+          {.u64 = 0, .nf_error = NF_ERROR_NOT_PARSED_AS_NUMBER});
+    }
+    uint64_t digit = string[i] - '0';
+    integer = integer << 1 | digit;
+  }
+
+  return compound_literal(value_result_t, {.u64 = integer, .nf_error = NF_OK});
+}
+/* i=41 j=1 */
+char* string_duplicate(char* src){
+  if (src == NULL) {
+    return NULL;
+  }
+  int len = strlen(src) + 1;
+  char* result = cast(char*, malloc_bytes(len));
+  memcpy(result, src, len);
+
+  return result;
+}
+/* i=42 j=1 */
+char* string_append(char* a, char* b){
+  if (a == NULL || b == NULL) {
+    fatal_error(ERROR_ILLEGAL_NULL_ARGUMENT);
+  }
+  int total_length = strlen(a) + strlen(b) + 1;
+  char* result = cast(char*, malloc_bytes(total_length));
+  strcat(result, a);
+  strcat(result, b);
+  return result;
+}
+/* i=43 j=1 */
+char* string_left_pad(char* str, int n, char ch){
+  if (n < 0) {
+    fatal_error(ERROR_ILLEGAL_RANGE);
+  }
+
+  int input_length = strlen(str);
+
+  // Calculate padding needed
+  int padding_needed = n - input_length;
+
+  // As usual, since buffer's grow as needed, we are tolerant of a
+  // wrong initial computation of the length though getting this wrong
+  // is wasteful... In this case we do the wasteful thing knowing that
+  // we will free everything shortly. We just want the correct result,
+  // not necessarily as fast as possible.
+
+  int len = 1; // max(padding_needed + input_length, input_length) + 1;
+
+  buffer_t* buffer = make_buffer(len);
+  for (int i = 0; i < padding_needed; i++) {
+    buffer = buffer_append_byte(buffer, ch);
+  }
+  buffer = buffer_append_string(buffer, str);
+  char* result = buffer_to_c_string(buffer);
+  free_bytes(buffer);
+  return result;
+}
+/* i=44 j=1 */
+char* string_right_pad(char* str, int n, char ch){
+  if (n < 0) {
+    fatal_error(ERROR_ILLEGAL_RANGE);
+  }
+
+  int input_length = strlen(str);
+
+  // Calculate padding needed
+  int padding_needed = n - input_length;
+
+  // As usual, since buffer's grow as needed, we are tolerant of a
+  // wrong initial computation of the length though getting this wrong
+  // is wasteful... In this case we do the wasteful thing knowing that
+  // we will free everything shortly. We just want the correct result,
+  // not necessarily as fast as possible.
+
+  int len = 1; // max(padding_needed + input_length, input_length) + 1;
+
+  buffer_t* buffer = make_buffer(len);
+  buffer = buffer_append_string(buffer, str);
+  for (int i = 0; i < padding_needed; i++) {
+    buffer = buffer_append_byte(buffer, ch);
+  }
+  char* result = buffer_to_c_string(buffer);
+  free_bytes(buffer);
+  return result;
+}
+/* i=45 j=1 */
+__attribute__((format(printf, 1, 2))) char* string_printf(char* format, ...){
+  char buffer[STRING_PRINTF_INITIAL_BUFFER_SIZE];
+  int n_bytes = 0;
+  do {
+    va_list args;
+    va_start(args, format);
+    n_bytes
+        = vsnprintf(buffer, STRING_PRINTF_INITIAL_BUFFER_SIZE, format, args);
+    va_end(args);
+  } while (0);
+
+  if (n_bytes < STRING_PRINTF_INITIAL_BUFFER_SIZE) {
+    char* result = cast(char*, malloc_bytes(n_bytes + 1));
+    strcat(result, buffer);
+    return result;
+  } else {
+    char* result = cast(char*, malloc_bytes(n_bytes + 1));
+    va_list args;
+    va_start(args, format);
+    int n_bytes_second = vsnprintf(result, n_bytes + 1, format, args);
+    va_end(args);
+    if (n_bytes_second != n_bytes) {
+      fatal_error(ERROR_INTERNAL_ASSERTION_FAILURE);
+    }
+    return result;
+  }
+}
+/* i=46 j=1 */
+char* string_truncate(char* str, int limit, char* at_limit_suffix){
+  // limit is just a guess, buffer's always grow as needed.
+  buffer_t* buffer = make_buffer(limit);
+  for (int i = 0;; i++) {
+    char ch = str[i];
+    if (ch == '\0') {
+      char* result = buffer_to_c_string(buffer);
+      free_bytes(buffer);
+      return result;
+    }
+    buffer = buffer_append_byte(buffer, ch);
+  }
+  if (at_limit_suffix) {
+    buffer = buffer_append_string(buffer, at_limit_suffix);
+  }
+  char* result = buffer_to_c_string(buffer);
+  free_bytes(buffer);
+  return result;
+}
+/* i=47 j=1 */
+uint64_t fasthash64(void* buf, size_t len, uint64_t seed){
+  const uint64_t m = 0x880355f21e6d1965ULL;
+  const uint64_t* pos = cast(const uint64_t*, buf);
+  const uint64_t* end = pos + (len / 8);
+  const unsigned char* pos2;
+  uint64_t h = seed ^ (len * m);
+  uint64_t v;
+
+  while (pos != end) {
+    v = *pos++;
+    h ^= mix(v);
+    h *= m;
+  }
+
+  pos2 = cast(const unsigned char*, pos);
+  v = 0;
+
+  switch (len & 7) {
+  case 7:
+    v ^= (uint64_t) pos2[6] << 48;
+  case 6:
+    v ^= (uint64_t) pos2[5] << 40;
+  case 5:
+    v ^= (uint64_t) pos2[4] << 32;
+  case 4:
+    v ^= (uint64_t) pos2[3] << 24;
+  case 3:
+    v ^= (uint64_t) pos2[2] << 16;
+  case 2:
+    v ^= (uint64_t) pos2[1] << 8;
+  case 1:
+    v ^= (uint64_t) pos2[0];
+    h ^= mix(v);
+    h *= m;
+  }
+
+  return mix(h);
+}
+/* i=51 j=1 */
+void logger_init(void){
+  char* level_string = getenv("ARMYKNIFE_LIB_LOG_LEVEL");
+  if (level_string != NULL) {
+    value_result_t parsed = string_parse_uint64(level_string);
+    if (is_ok(parsed)) {
+      global_logger_state.level = parsed.u64;
+    } else {
+      value_result_t parsed = parse_log_level_enum(level_string);
+      if (is_ok(parsed)) {
+        global_logger_state.level = parsed.u64;
+      } else {
+        log_warn("%s could not be converted to a log level.", level_string);
+      }
+    }
+  }
+
+  fprintf(stderr, "Log level is set to %s (%d)\n",
+          logger_level_to_string(global_logger_state.level),
+          global_logger_state.level);
+
+  char* output_file_name = getenv("ARMYKNIFE_LIB_LOG_FILE");
+
+  // It's pretty standard to include the "pid" in the filename at
+  // least when writing to /tmp/. We aren't quite doing that yet...
+  //
+  // pid_t pid = getpid(); -- pid is a number of some sort...
+
+  if (output_file_name != NULL) {
+    global_logger_state.output = fopen(output_file_name, "w");
+    if (!global_logger_state.output) {
+      fatal_error(ERROR_OPEN_LOG_FILE);
+    }
+    // Set the stream to unbuffered
+    // if (setvbuf(log_file, NULL, _IONBF, 0) != 0) {
+    // perror("Failed to set stream to unbuffered");
+    // exit(EXIT_FAILURE);
+    // }
+    global_logger_state.logger_output_filename = output_file_name;
+  } else {
+    global_logger_state.output = stderr;
+    global_logger_state.initialized = true;
+  }
+}
+/* i=52 j=1 */
+__attribute__((format(printf, 5, 6))) void logger_impl(char* file, int line_number, char* function, int level, char* format, ...){
+
+  FILE* output = global_logger_state.output;
+
+  // Ensure that logging to somewhere will happen though a later call
+  // to logger_init() may send the output to somewhere else.
+  if (output == NULL) {
+    output = stderr;
+  }
+
+  if (level >= global_logger_state.level) {
+    fprintf(output, "%s ", logger_level_to_string(level));
+    va_list args;
+    fprintf(output, "%s:%d %s | ", file, line_number, function);
+
+    va_start(args, format);
+    vfprintf(output, format, args);
+    va_end(args);
+
+    fprintf(output, "\n");
+  }
+}
+/* i=54 j=0 */
+value_result_t parse_log_level_enum(char* str){
+  if (strcmp("FATAL", str) == 0 || strcmp("fatal", str) == 0) {
+    return (value_result_t){.u64 = LOGGER_FATAL};
+  } else if (strcmp("WARN", str) == 0 || strcmp("warn", str) == 0) {
+    return (value_result_t){.u64 = LOGGER_WARN};
+  } else if (strcmp("INFO", str) == 0 || strcmp("info", str) == 0) {
+    return (value_result_t){.u64 = LOGGER_INFO};
+  } else if (strcmp("DEBUG", str) == 0 || strcmp("debug", str) == 0) {
+    return (value_result_t){.u64 = LOGGER_DEBUG};
+  } else if (strcmp("TRACE", str) == 0 || strcmp("trace", str) == 0) {
+    return (value_result_t){.u64 = LOGGER_TRACE};
+  } else if (strcmp("OFF", str) == 0 || strcmp("off", str) == 0) {
+    return (value_result_t){.u64 = LOGGER_OFF};
+  } else {
+    return (value_result_t){.nf_error = NF_ERROR_NOT_PARSED_AS_EXPECTED_ENUM};
+  }
+}
+/* i=55 j=1 */
+char* logger_level_to_string(int level){
+  switch (level) {
+  case LOGGER_OFF:
+    return "LOGGER_OFF";
+  case LOGGER_TRACE:
+    return "TRACE";
+  case LOGGER_DEBUG:
+    return "DEBUG";
+  case LOGGER_INFO:
+    return "INFO";
+  case LOGGER_WARN:
+    return "WARN";
+  case LOGGER_FATAL:
+    return "FATAL";
+  default:
+    return "LEVEL_UNKNOWN";
+  }
+}
+/* i=56 j=1 */
+utf8_decode_result_t utf8_decode(uint8_t* array){
+  uint8_t firstByte = array[0];
+  if ((firstByte & 0x80) == 0) {
+    return compound_literal(utf8_decode_result_t,
+                            {.code_point = firstByte, .num_bytes = 1});
+  } else if ((firstByte & 0xE0) == 0xC0) {
+    return compound_literal(
+        utf8_decode_result_t,
+        {.code_point = ((firstByte & 0x1F) << 6) | (array[1] & 0x3F),
+         .num_bytes = 2});
+  } else if ((firstByte & 0xF0) == 0xE0) {
+    return compound_literal(utf8_decode_result_t,
+                            {.code_point = ((firstByte & 0x0F) << 12)
+                                           | ((array[1] & 0x3F) << 6)
+                                           | (array[2] & 0x3F),
+                             .num_bytes = 3});
+  } else if ((firstByte & 0xF8) == 0xF0) {
+    return compound_literal(
+        utf8_decode_result_t,
+        {.code_point = ((firstByte & 0x07) << 18) | ((array[1] & 0x3F) << 12)
+                       | ((array[2] & 0x3F) << 6) | (array[3] & 0x3F),
+         .num_bytes = 4});
+  } else {
+    return compound_literal(utf8_decode_result_t, {.error = true});
+  }
+}
+/* i=57 j=1 */
 buffer_t* make_buffer(uint64_t initial_capacity){
   buffer_t* result = malloc_struct(buffer_t);
   if (initial_capacity < 16) {
@@ -1289,9 +2045,9 @@ buffer_t* make_buffer(uint64_t initial_capacity){
   }
   return result;
 }
-/* i=11 j=1 */
+/* i=58 j=1 */
 uint64_t buffer_length(buffer_t* array){ return array->length; }
-/* i=12 j=1 */
+/* i=59 j=1 */
 uint8_t buffer_get(buffer_t* buffer, uint64_t position){
   if (position < buffer->length) {
     return buffer->elements[position];
@@ -1303,7 +2059,7 @@ uint8_t buffer_get(buffer_t* buffer, uint64_t position){
 #endif
   }
 }
-/* i=13 j=1 */
+/* i=60 j=1 */
 char* buffer_c_substring(buffer_t* buffer, uint64_t start, uint64_t end){
   if (buffer == NULL) {
     fatal_error(ERROR_ILLEGAL_NULL_ARGUMENT);
@@ -1321,18 +2077,18 @@ char* buffer_c_substring(buffer_t* buffer, uint64_t start, uint64_t end){
   result[copy_length] = '\0';
   return result;
 }
-/* i=14 j=1 */
+/* i=61 j=1 */
 char* buffer_to_c_string(buffer_t* buffer){
   return buffer_c_substring(buffer, 0, buffer->length);
 }
-/* i=15 j=1 */
+/* i=62 j=1 */
 void buffer_clear(buffer_t* buffer){
   for (int i = 0; i < buffer->capacity; i++) {
     buffer->elements[i] = 0;
   }
   buffer->length = 0;
 }
-/* i=16 j=1 */
+/* i=63 j=1 */
 extern buffer_t* buffer_increase_capacity(buffer_t* buffer, uint64_t capacity){
   if (buffer->capacity < capacity) {
     uint8_t* new_elements = malloc_bytes(capacity);
@@ -1343,7 +2099,7 @@ extern buffer_t* buffer_increase_capacity(buffer_t* buffer, uint64_t capacity){
   }
   return buffer;
 }
-/* i=17 j=1 */
+/* i=64 j=1 */
 buffer_t* buffer_append_byte(buffer_t* buffer, uint8_t element){
   if (buffer->length < buffer->capacity) {
     buffer->elements[buffer->length] = element;
@@ -1353,7 +2109,7 @@ buffer_t* buffer_append_byte(buffer_t* buffer, uint8_t element){
   buffer = buffer_increase_capacity(buffer, buffer->capacity * 2);
   return buffer_append_byte(buffer, element);
 }
-/* i=18 j=1 */
+/* i=65 j=1 */
 buffer_t* buffer_append_bytes(buffer_t* buffer, uint8_t* bytes, uint64_t n_bytes){
   // Obviously this can be optimized...
   for (int i = 0; i < n_bytes; i++) {
@@ -1361,11 +2117,11 @@ buffer_t* buffer_append_bytes(buffer_t* buffer, uint8_t* bytes, uint64_t n_bytes
   }
   return buffer;
 }
-/* i=19 j=1 */
+/* i=66 j=1 */
 extern buffer_t* buffer_append_buffer(buffer_t* buffer, buffer_t* src_buffer){
   return buffer_append_sub_buffer(buffer, 0, src_buffer->length, src_buffer);
 }
-/* i=20 j=1 */
+/* i=67 j=1 */
 extern buffer_t* buffer_append_sub_buffer(buffer_t* buffer, uint64_t start_position, uint64_t end_position, buffer_t* src_buffer){
   if (buffer == src_buffer) {
     fatal_error(ERROR_ILLEGAL_STATE);
@@ -1376,11 +2132,11 @@ extern buffer_t* buffer_append_sub_buffer(buffer_t* buffer, uint64_t start_posit
   }
   return buffer;
 }
-/* i=21 j=1 */
+/* i=68 j=1 */
 buffer_t* buffer_append_string(buffer_t* buffer, char* str){
   return buffer_append_bytes(buffer, cast(uint8_t*, str), strlen(str));
 }
-/* i=22 j=1 */
+/* i=69 j=1 */
 __attribute__((format(printf, 2, 3))) buffer_t* buffer_printf(buffer_t* buffer, char* format, ...){
   char cbuffer[BUFFER_PRINTF_INITIAL_BUFFER_SIZE];
   int n_bytes = 0;
@@ -1411,14 +2167,14 @@ __attribute__((format(printf, 2, 3))) buffer_t* buffer_printf(buffer_t* buffer, 
     return buffer;
   }
 }
-/* i=23 j=1 */
+/* i=70 j=1 */
 extern buffer_t* buffer_append_repeated_byte(buffer_t* buffer, uint8_t byte, int count){
   for (int i = 0; i < count; i++) {
     buffer = buffer_append_byte(buffer, byte);
   }
   return buffer;
 }
-/* i=24 j=1 */
+/* i=71 j=1 */
 utf8_decode_result_t buffer_utf8_decode(buffer_t* buffer, uint64_t position){
   if (position >= buffer->length) {
     return (utf8_decode_result_t){.error = true};
@@ -1432,7 +2188,7 @@ utf8_decode_result_t buffer_utf8_decode(buffer_t* buffer, uint64_t position){
   }
   return result;
 }
-/* i=25 j=1 */
+/* i=72 j=1 */
 extern buffer_t* buffer_append_code_point(buffer_t* buffer, uint32_t code_point){
   if (code_point < 0x80) {
     // 1-byte sequence for code points in the range 0-127
@@ -1462,7 +2218,7 @@ extern buffer_t* buffer_append_code_point(buffer_t* buffer, uint32_t code_point)
     return 0; // Not Reached.
   }
 }
-/* i=26 j=1 */
+/* i=73 j=1 */
 boolean_t buffer_match_string_at(buffer_t* buffer, uint64_t start_position, char* str){
   for (uint64_t pos = start_position; true; pos++) {
     uint8_t byte_str = cast(uint8_t*, str)[pos - start_position];
@@ -1480,13 +2236,13 @@ boolean_t buffer_match_string_at(buffer_t* buffer, uint64_t start_position, char
   /* NOT REACHED */
   return false;
 }
-/* i=27 j=1 */
+/* i=74 j=1 */
 buffer_t* buffer_from_string(char* string){
   buffer_t* result = make_buffer(strlen(string));
   result = buffer_append_string(result, string);
   return result;
 }
-/* i=28 j=1 */
+/* i=75 j=1 */
 buffer_t* buffer_adjust_region(buffer_t* buffer, uint64_t start, uint64_t end, uint64_t new_width){
   // TODO(jawilson): more range testing.
   uint64_t len = buffer->length;
@@ -1514,7 +2270,7 @@ buffer_t* buffer_adjust_region(buffer_t* buffer, uint64_t start, uint64_t end, u
   }
   return buffer;
 }
-/* i=29 j=1 */
+/* i=76 j=1 */
 buffer_t* buffer_replace_all(buffer_t* buffer, char* original_text, char* replacement_text){
   int len_original = strlen(original_text);
   int len_replacement = strlen(replacement_text);
@@ -1533,7 +2289,7 @@ buffer_t* buffer_replace_all(buffer_t* buffer, char* original_text, char* replac
   }
   return buffer;
 }
-/* i=30 j=1 */
+/* i=77 j=1 */
 buffer_t* buffer_replace_matching_byte(buffer_t* buffer, uint8_t original, uint8_t replacement){
   for (int i = 0; i < buffer->length; i++) {
     if (buffer->elements[i] == original) {
@@ -1542,7 +2298,7 @@ buffer_t* buffer_replace_matching_byte(buffer_t* buffer, uint8_t original, uint8
   }
   return buffer;
 }
-/* i=31 j=1 */
+/* i=78 j=1 */
 boolean_t buffer_region_contains(buffer_t* buffer, uint64_t start, uint64_t end, char* text){
   for (int i = start; i < end; i++) {
     if (buffer_match_string_at(buffer, i, text)) {
@@ -1551,7 +2307,7 @@ boolean_t buffer_region_contains(buffer_t* buffer, uint64_t start, uint64_t end,
   }
   return false;
 }
-/* i=32 j=1 */
+/* i=79 j=1 */
 uint64_t buffer_beginning_of_line(buffer_t* buffer, uint64_t start){
   uint64_t position = start;
   while (position > 0) {
@@ -1562,7 +2318,7 @@ uint64_t buffer_beginning_of_line(buffer_t* buffer, uint64_t start){
   }
   return position;
 }
-/* i=33 j=1 */
+/* i=80 j=1 */
 uint64_t buffer_end_of_line(buffer_t* buffer, uint64_t start){
   uint64_t position = start;
   while (position < buffer->length && buffer_get(buffer, position) != '\n') {
@@ -1570,21 +2326,21 @@ uint64_t buffer_end_of_line(buffer_t* buffer, uint64_t start){
   }
   return position;
 }
-/* i=34 j=1 */
+/* i=81 j=1 */
 buffer_t* buffer_to_uppercase(buffer_t* buffer){
   for (uint64_t i = 0; i < buffer->length; i++) {
     buffer->elements[i] = toupper(buffer->elements[i]);
   }
   return buffer;
 }
-/* i=35 j=1 */
+/* i=82 j=1 */
 buffer_t* buffer_to_lowercase(buffer_t* buffer){
   for (uint64_t i = 0; i < buffer->length; i++) {
     buffer->elements[i] = tolower(buffer->elements[i]);
   }
   return buffer;
 }
-/* i=36 j=1 */
+/* i=83 j=1 */
 line_and_column_t buffer_position_to_line_and_column(buffer_t* buffer, uint64_t position){
   uint64_t line = 1;
   uint64_t column = 1;
@@ -1605,96 +2361,400 @@ line_and_column_t buffer_position_to_line_and_column(buffer_t* buffer, uint64_t 
       .column = column,
   };
 }
-/* i=37 j=1 */
-cdl_printer_t* make_cdl_printer(buffer_t* buffer){
-  cdl_printer_t* result = malloc_struct(cdl_printer_t);
-  result->buffer = buffer;
+/* i=84 j=1 */
+value_array_t* make_value_array(uint64_t initial_capacity){
+  if (initial_capacity == 0) {
+    initial_capacity = 1;
+  }
+
+  value_array_t* result = malloc_struct(value_array_t);
+  result->capacity = initial_capacity;
+  result->elements
+      = cast(value_t*, malloc_bytes(sizeof(value_t) * initial_capacity));
+
   return result;
 }
-/* i=38 j=1 */
-void cdl_boolean(cdl_printer_t* printer, boolean_t boolean){
-  cdl_output_token(printer, boolean ? "true" : "false");
+/* i=85 j=1 */
+value_t value_array_get(value_array_t* array, uint32_t index){
+  if (index < array->length) {
+    return array->elements[index];
+  }
+  fatal_error(ERROR_ACCESS_OUT_OF_BOUNDS);
+#ifdef __TINYC__
+  /* gcc and clang know fatal_error is _Noreturn but tcc doesn't */
+  return (value_t){.u64 = 0};
+#endif
 }
-/* i=39 j=1 */
-void cdl_string(cdl_printer_t* printer, char* string){
-  if (!is_symbol(string)) {
-    cdl_output_token(printer, string_printf("\"%s\"", string));
-  } else {
-    cdl_output_token(printer, string);
+/* i=86 j=1 */
+void value_array_replace(value_array_t* array, uint32_t index, value_t element){
+  if (index < array->length) {
+    array->elements[index] = element;
+    return;
+  }
+  fatal_error(ERROR_ACCESS_OUT_OF_BOUNDS);
+}
+/* i=87 j=1 */
+void value_array_add(value_array_t* array, value_t element){
+  value_array_ensure_capacity(array, array->length + 1);
+  array->elements[(array->length)++] = element;
+}
+/* i=88 j=1 */
+void value_array_push(value_array_t* array, value_t element){
+  value_array_add(array, element);
+}
+/* i=89 j=1 */
+value_t value_array_pop(value_array_t* array){
+  if (array->length == 0) {
+    fatal_error(ERROR_ACCESS_OUT_OF_BOUNDS);
+  }
+  uint32_t last_index = array->length - 1;
+  value_t result = value_array_get(array, last_index);
+  array->elements[last_index] = u64_to_value(0);
+  array->length--;
+  return result;
+}
+/* i=90 j=1 */
+void value_array_insert_at(value_array_t* array, uint32_t position, value_t element){
+  if (position == array->length) {
+    value_array_add(array, element);
+    return;
+  }
+
+  if (position > array->length) {
+    fatal_error(ERROR_ACCESS_OUT_OF_BOUNDS);
+    return;
+  }
+
+  value_array_ensure_capacity(array, array->length + 1);
+
+  // This is the standard loop but we now need to use a signed index
+  // because when the position is zero, zero - 1 is 0xffffffff which
+  // is still greater than zero (and hence greater than position).
+  for (int64_t i = array->length - 1; i >= position; i--) {
+    array->elements[i + 1] = array->elements[i];
+  }
+  array->length++;
+  array->elements[position] = element;
+}
+/* i=91 j=1 */
+value_t value_array_delete_at(value_array_t* array, uint32_t position){
+  value_t result = value_array_get(array, position);
+  for (int i = position; i < array->length - 1; i++) {
+    array->elements[i] = array->elements[i + 1];
+  }
+  array->length--;
+  return result;
+}
+/* i=92 j=0 */
+void value_array_ensure_capacity(value_array_t* array, uint32_t required_capacity){
+  if (array->capacity < required_capacity) {
+    uint32_t new_capacity = array->capacity * 2;
+    if (new_capacity < required_capacity) {
+      new_capacity = required_capacity;
+    }
+    value_t* new_elements
+        = cast(value_t*, malloc_bytes(sizeof(value_t) * new_capacity));
+    for (int i = 0; i < array->length; i++) {
+      new_elements[i] = array->elements[i];
+    }
+    array->capacity = new_capacity;
+    free_bytes(array->elements);
+    array->elements = new_elements;
+    return;
   }
 }
-/* i=40 j=1 */
-void cdl_int64(cdl_printer_t* printer, int64_t number){
-  cdl_output_token(printer, string_printf("%ld", number));
+/* i=93 j=1 */
+value_result_t value_alist_find(value_alist_t* list, value_comparison_fn cmp_fn, value_t key){
+  while (list) {
+    if (cmp_fn(key, list->key) == 0) {
+      return compound_literal(value_result_t, {.val = list->value});
+    }
+    list = list->next;
+  }
+  return compound_literal(value_result_t, {.nf_error = NF_ERROR_NOT_FOUND});
 }
-/* i=41 j=1 */
-void cdl_uint64(cdl_printer_t* printer, uint64_t number){
-  cdl_output_token(printer, uint64_to_string(number));
+/* i=94 j=1 */
+value_alist_t* value_alist_insert(value_alist_t* list, value_comparison_fn cmp_fn, value_t key, value_t value){
+  value_alist_t* result = malloc_struct(value_alist_t);
+  result->next = value_alist_delete(list, cmp_fn, key);
+  result->key = key;
+  result->value = value;
+  return result;
 }
-/* i=42 j=1 */
-void cdl_double(cdl_printer_t* printer, double number){
-  cdl_output_token(printer, string_printf("%lf", number));
+/* i=95 j=1 */
+value_alist_t* value_alist_delete(value_alist_t* list, value_comparison_fn cmp_fn, value_t key){
+  // This appears to be logically correct but could easily blow out
+  // the stack with a long list.
+  if (list == NULL) {
+    return list;
+  }
+  if ((*cmp_fn)(key, list->key) == 0) {
+    value_alist_t* result = list->next;
+    free_bytes(list);
+    return result;
+  }
+  list->next = value_alist_delete(list->next, cmp_fn, key);
+  return list;
 }
-/* i=43 j=1 */
-void cdl_start_array(cdl_printer_t* printer){
-  cdl_output_token(printer, "[");
-  printer->indention_level += 1;
+/* i=96 j=1 */
+__attribute__((warn_unused_result)) extern uint64_t value_alist_length(value_alist_t* list){
+  uint64_t result = 0;
+  while (list) {
+    result++;
+    list = list->next;
+  }
+  return result;
 }
-/* i=44 j=1 */
-void cdl_end_array(cdl_printer_t* printer){
-  printer->indention_level -= 1;
-  cdl_output_token(printer, "]");
+/* i=101 j=1 */
+value_hashtable_t* make_value_hashtable(uint64_t n_buckets){
+  if (n_buckets < 2) {
+    n_buckets = 2;
+  }
+  value_hashtable_t* result = malloc_struct(value_hashtable_t);
+  result->n_buckets = n_buckets;
+  result->buckets
+      = cast(value_alist_t**, malloc_bytes(sizeof(value_alist_t*) * n_buckets));
+  return result;
 }
-/* i=45 j=1 */
-void cdl_start_table(cdl_printer_t* printer){
-  cdl_output_token(printer, "{");
-  printer->indention_level += 1;
+/* i=102 j=1 */
+value_hashtable_t* value_ht_insert(value_hashtable_t* ht, value_hash_fn hash_fn, value_comparison_fn cmp_fn, value_t key, value_t value){
+  uint64_t hashcode = hash_fn(key);
+  int bucket = hashcode % ht->n_buckets;
+  value_alist_t* list = ht->buckets[bucket];
+  uint64_t len = value_alist_length(list);
+  list = value_alist_insert(list, cmp_fn, key, value);
+  ht->buckets[bucket] = list;
+  uint64_t len_after = value_alist_length(list);
+  if (len_after > len) {
+    ht->n_entries++;
+    // Without this, a hash table would never grow and thus as the
+    // number of entries grows large, the hashtable would only improve
+    // performance over an alist by a constant amount (which could
+    // still be an impressive speedup...)
+    if (ht->n_entries >= (ht->n_buckets * ARMYKNIFE_HT_LOAD_FACTOR)) {
+      value_hashtable_upsize_internal(ht, hash_fn, cmp_fn);
+    }
+  }
+  return ht;
 }
-/* i=46 j=1 */
-void cdl_key(cdl_printer_t* printer, char* key){ printer->key_token = key; }
-/* i=47 j=1 */
-void cdl_end_table(cdl_printer_t* printer){
-  printer->indention_level -= 1;
-  cdl_output_token(printer, "}");
+/* i=103 j=1 */
+value_hashtable_t* value_ht_delete(value_hashtable_t* ht, value_hash_fn hash_fn, value_comparison_fn cmp_fn, value_t key){
+  uint64_t hashcode = hash_fn(key);
+  int bucket = hashcode % ht->n_buckets;
+  value_alist_t* list = ht->buckets[bucket];
+  uint64_t len = value_alist_length(list);
+  list = value_alist_delete(list, cmp_fn, key);
+  ht->buckets[bucket] = list;
+  uint64_t len_after = value_alist_length(list);
+  if (len_after < len) {
+    ht->n_entries--;
+  }
+  return ht;
 }
-/* i=48 j=0 */
-void cdl_indent(cdl_printer_t* printer){
-  buffer_append_repeated_byte(printer->buffer, ' ',
-                              4 * printer->indention_level);
+/* i=104 j=1 */
+value_result_t value_ht_find(value_hashtable_t* ht, value_hash_fn hash_fn, value_comparison_fn cmp_fn, value_t key){
+  uint64_t hashcode = hash_fn(key);
+  int bucket = hashcode % ht->n_buckets;
+  value_alist_t* list = ht->buckets[bucket];
+  return value_alist_find(list, cmp_fn, key);
 }
-/* i=49 j=0 */
-boolean_t is_symbol(char* string){
-  for (int i = 0; string[i] != 0; i++) {
-    if (i == 0) {
-      if (!isalpha(string[i])) {
-        return false;
+/* i=105 j=1 */
+void value_hashtable_upsize_internal(value_hashtable_t* ht, value_hash_fn hash_fn, value_comparison_fn cmp_fn){
+  uint64_t new_num_buckets = ht->n_buckets * AK_HT_UPSCALE_MULTIPLIER;
+  value_hashtable_t* new_ht = make_value_hashtable(new_num_buckets);
+  // clang-format off
+  value_ht_foreach(ht, key, value, {
+      value_hashtable_t* should_be_result = value_ht_insert(new_ht, hash_fn, cmp_fn, key, value);
+      // If an insertion into the bigger hashtable results in it's own
+      // resize, then the results will be unpredictable (at least
+      // without more code). This is likely to only happen when
+      // growing a very small hashtable and depends on values choosen
+      // for ARMYKNIFE_HT_LOAD_FACTOR and AK_HT_UPSCALE_MULTIPLIER.
+      if (new_ht != should_be_result) {
+	fatal_error(ERROR_ILLEGAL_STATE);
       }
+  });
+  // clang-format on
+  value_alist_t** old_buckets = ht->buckets;
+  ht->buckets = new_ht->buckets;
+  ht->n_buckets = new_ht->n_buckets;
+  ht->n_entries = new_ht->n_entries;
+  free_bytes(old_buckets);
+  free_bytes(new_ht);
+}
+/* i=113 j=1 */
+value_result_t value_tree_find(value_tree_t* t, value_comparison_fn cmp_fn, value_t key){
+  if (t == NULL) {
+    return compound_literal(value_result_t, {.nf_error = NF_ERROR_NOT_FOUND});
+  }
+
+  int cmp_result = cmp_fn(key, t->key);
+  if (cmp_result < 0) {
+    return value_tree_find(t->left, cmp_fn, key);
+  } else if (cmp_result > 0) {
+    return value_tree_find(t->right, cmp_fn, key);
+  } else {
+    return compound_literal(value_result_t, {
+                                                .val = t->value,
+                                            });
+  }
+}
+/* i=114 j=1 */
+value_tree_t* value_tree_insert(value_tree_t* t, value_comparison_fn cmp_fn, value_t key, value_t value){
+  if (t == NULL) {
+    // Create a new leaf node
+    return make_value_tree_leaf(key, value);
+  }
+  int cmp_result = cmp_fn(key, t->key);
+  if (cmp_result < 0) {
+    t->left = value_tree_insert(t->left, cmp_fn, key, value);
+  } else if (cmp_result > 0) {
+    t->right = value_tree_insert(t->right, cmp_fn, key, value);
+  } else {
+    // Either key or t->key might need to be freed but it isn't even
+    // possible to tell if either has been "malloced" so good luck
+    // figuring that out.
+    t->value = value;
+    return t;
+  }
+
+  t = value_tree_skew(t);
+  t = value_tree_split(t);
+
+  return t;
+}
+/* i=115 j=1 */
+value_tree_t* value_tree_delete(value_tree_t* t, value_comparison_fn cmp_fn, value_t key){
+
+  if (t == NULL) {
+    return t;
+  }
+
+  int cmp_result = cmp_fn(key, t->key);
+  if (cmp_result < 0) {
+    t->left = value_tree_delete(t->left, cmp_fn, key);
+  } else if (cmp_result > 0) {
+    t->right = value_tree_delete(t->right, cmp_fn, key);
+  } else {
+    if (value_tree_is_leaf(t)) {
+      // Since we are a leaf, nothing special to do except make sure
+      // this leaf node is no longer in the tree. wikipedia says
+      // "return right(T)" which is technically correct, but this is
+      // clearer.
+      return NULL;
+    } else if (t->left == NULL) {
+      value_tree_t* L = value_tree_successor(t);
+      // Note: wikipedia or the orginal article may have a bug. Doing
+      // the delete and then the key/value assignment leads to a
+      // divergence with a reference implementation.
+      t->key = L->key;
+      t->value = L->value;
+      t->right = value_tree_delete(t->right, cmp_fn, L->key);
     } else {
-      if (!(isalnum(string[i]) || string[i] == '_')) {
-        return false;
+      value_tree_t* L = value_tree_predecessor(t);
+      // Note: wikipedia or the orginal article may have a bug. Doing
+      // the delete and then the key/value assignment leads to a
+      // divergence with a reference implementation.
+      t->key = L->key;
+      t->value = L->value;
+      t->left = value_tree_delete(t->left, cmp_fn, L->key);
+    }
+  }
+
+  // Rebalance the tree. Decrease the level of all nodes in this level
+  // if necessary, and then skew and split all nodes in the new level.
+
+  t = value_tree_decrease_level(t);
+  t = value_tree_skew(t);
+  t->right = value_tree_skew(t->right);
+  if (t->right != NULL) {
+    t->right->right = value_tree_skew(t->right->right);
+  }
+  t = value_tree_split(t);
+  t->right = value_tree_split(t->right);
+  return t;
+}
+/* i=116 j=0 */
+value_tree_t* value_tree_skew(value_tree_t* t){
+  if (t == NULL) {
+    return NULL;
+  }
+  if (t->left == NULL) {
+    return t;
+  }
+  if (t->left->level == t->level) {
+    value_tree_t* L = t->left;
+    t->left = L->right;
+    L->right = t;
+    return L;
+  }
+  return t;
+}
+/* i=117 j=0 */
+value_tree_t* value_tree_split(value_tree_t* t){
+  if (t == NULL) {
+    return NULL;
+  }
+  if (t->right == NULL || t->right->right == NULL) {
+    return t;
+  }
+  if (t->level == t->right->right->level) {
+    // We have two horizontal right links.  Take the middle node,
+    // elevate it, and return it.
+    value_tree_t* R = t->right;
+    t->right = R->left;
+    R->left = t;
+    R->level++;
+    return R;
+  }
+  return t;
+}
+/* i=118 j=0 */
+value_tree_t* make_value_tree_leaf(value_t key, value_t value){
+  value_tree_t* result = malloc_struct(value_tree_t);
+  result->level = 1;
+  result->key = key;
+  result->value = value;
+  return result;
+}
+/* i=120 j=0 */
+value_tree_t* value_tree_decrease_level(value_tree_t* t){
+  if (t->left && t->right) {
+    uint32_t should_be
+        = value_tree_min_level(t->left->level, t->right->level) + 1;
+    if (should_be < t->level) {
+      t->level = should_be;
+      if (should_be < t->right->level) {
+        t->right->level = should_be;
       }
     }
   }
-  return true;
+  return t;
 }
-/* i=50 j=0 */
-void cdl_output_token(cdl_printer_t* printer, char* string){
-  cdl_indent(printer);
-  if (printer->key_token != NULL) {
-    buffer_printf(printer->buffer, "%s = %s\n", printer->key_token, string);
-    printer->key_token = NULL;
-  } else {
-    buffer_printf(printer->buffer, "%s\n", string);
+/* i=121 j=0 */
+value_tree_t* value_tree_predecessor(value_tree_t* t){
+  t = t->left;
+  while (t->right != NULL) {
+    t = t->right;
   }
+  return t;
 }
-/* i=51 j=1 */
+/* i=122 j=0 */
+value_tree_t* value_tree_successor(value_tree_t* t){
+  t = t->right;
+  while (t->left != NULL) {
+    t = t->left;
+  }
+  return t;
+}
+/* i=127 j=1 */
 void flag_program_name(char* name){
   current_program = malloc_struct(program_descriptor_t);
   current_program->name = name;
   current_command = NULL;
   current_flag = NULL;
 }
-/* i=52 j=1 */
+/* i=128 j=1 */
 void flag_description(char* description){
   if (current_flag != NULL) {
     current_flag->description = description;
@@ -1707,7 +2767,7 @@ void flag_description(char* description){
     fatal_error(ERROR_ILLEGAL_STATE);
   }
 }
-/* i=53 j=1 */
+/* i=129 j=1 */
 void flag_file_args(value_array_t** write_back_file_args_ptr){
   if (current_command != NULL) {
     current_command->write_back_file_args_ptr = write_back_file_args_ptr;
@@ -1718,7 +2778,7 @@ void flag_file_args(value_array_t** write_back_file_args_ptr){
     fatal_error(ERROR_ILLEGAL_STATE);
   }
 }
-/* i=54 j=1 */
+/* i=130 j=1 */
 void flag_command(char* name, char** write_back_ptr){
   current_command = malloc_struct(command_descriptor_t);
   current_command->name = name;
@@ -1727,37 +2787,37 @@ void flag_command(char* name, char** write_back_ptr){
   current_program->commands = string_tree_insert(
       current_program->commands, name, ptr_to_value(current_command));
 }
-/* i=55 j=1 */
+/* i=131 j=1 */
 void flag_boolean(char* name, boolean_t* write_back_ptr){
   add_flag(name, write_back_ptr, flag_type_boolean);
 }
-/* i=56 j=1 */
+/* i=132 j=1 */
 void flag_string(char* name, char** write_back_ptr){
   add_flag(name, write_back_ptr, flag_type_string);
 }
-/* i=57 j=1 */
+/* i=133 j=1 */
 void flag_uint64(char* name, uint64_t* write_back_ptr){
   add_flag(name, write_back_ptr, flag_type_uint64);
 }
-/* i=58 j=1 */
+/* i=134 j=1 */
 void flag_int64(char* name, int64_t* write_back_ptr){
   add_flag(name, write_back_ptr, flag_type_int64);
 }
-/* i=59 j=1 */
+/* i=135 j=1 */
 void flag_double(char* name, double* write_back_ptr){
   add_flag(name, write_back_ptr, flag_type_double);
 }
-/* i=60 j=1 */
+/* i=136 j=1 */
 void flag_enum(char* name, int* write_back_ptr){
   add_flag(name, write_back_ptr, flag_type_enum);
   current_flag->enum_size = sizeof(int) * 8;
 }
-/* i=61 j=1 */
+/* i=137 j=1 */
 void flag_enum_64(char* name, uint64_t* write_back_ptr){
   add_flag(name, write_back_ptr, flag_type_enum);
   current_flag->enum_size = 64;
 }
-/* i=62 j=1 */
+/* i=138 j=1 */
 void flag_enum_value(char* name, uint64_t value){
   if (!current_flag || current_flag->flag_type != flag_type_enum) {
     log_fatal("The current flag is not an enum type");
@@ -1767,7 +2827,7 @@ void flag_enum_value(char* name, uint64_t value){
   current_flag->enum_values = string_tree_insert(current_flag->enum_values,
                                                  name, u64_to_value(value));
 }
-/* i=63 j=1 */
+/* i=139 j=1 */
 void flag_alias(char* alias){
   if (current_flag != NULL) {
     // TODO(jawilson): check for a flag with the same name?
@@ -1786,7 +2846,7 @@ void flag_alias(char* alias){
     fatal_error(ERROR_ILLEGAL_STATE);
   }
 }
-/* i=64 j=1 */
+/* i=140 j=1 */
 char* flag_parse_command_line(int argc, char** argv){
   if (current_program == NULL) {
     log_fatal(
@@ -1870,7 +2930,7 @@ char* flag_parse_command_line(int argc, char** argv){
   }
   return NULL;
 }
-/* i=65 j=1 */
+/* i=141 j=1 */
 void flag_print_help(FILE* out, char* message){
   fprintf(out, "\nMessage: %s\n", message);
 
@@ -1901,7 +2961,7 @@ void flag_print_help(FILE* out, char* message){
     flag_print_flags(out, "Flags:", current_program->flags);
   }
 }
-/* i=66 j=1 */
+/* i=142 j=1 */
 command_descriptor_t* flag_find_command_descriptor(char* name){
   if (current_program->commands == NULL) {
     log_fatal(
@@ -1917,7 +2977,7 @@ command_descriptor_t* flag_find_command_descriptor(char* name){
     return NULL;
   }
 }
-/* i=67 j=1 */
+/* i=143 j=1 */
 flag_descriptor_t* flag_find_flag_descriptor(command_descriptor_t* command, char* name){
   if (command != NULL) {
     value_result_t command_flag_value = string_tree_find(command->flags, name);
@@ -1934,7 +2994,7 @@ flag_descriptor_t* flag_find_flag_descriptor(command_descriptor_t* command, char
 
   return NULL;
 }
-/* i=68 j=1 */
+/* i=144 j=1 */
 flag_key_value_t flag_split_argument(char* arg){
   int equal_sign_index = string_index_of_char(arg, '=');
   if (equal_sign_index >= 0) {
@@ -1948,7 +3008,7 @@ flag_key_value_t flag_split_argument(char* arg){
   }
   return compound_literal(flag_key_value_t, {.key = arg, .value = NULL});
 }
-/* i=69 j=1 */
+/* i=145 j=1 */
 char* parse_and_write_value(flag_descriptor_t* flag, flag_key_value_t key_value){
   switch (flag->flag_type) {
   case flag_type_boolean:
@@ -1970,7 +3030,7 @@ char* parse_and_write_value(flag_descriptor_t* flag, flag_key_value_t key_value)
   }
   return "<ILLEGAL-STATE-NOT-REACHED>";
 }
-/* i=70 j=1 */
+/* i=146 j=1 */
 char* parse_and_write_boolean(flag_descriptor_t* flag, flag_key_value_t key_value){
   char* val = key_value.value;
   if (string_equal("true", val) || string_equal("t", val)
@@ -1985,7 +3045,7 @@ char* parse_and_write_boolean(flag_descriptor_t* flag, flag_key_value_t key_valu
   }
   return NULL;
 }
-/* i=71 j=1 */
+/* i=147 j=1 */
 char* parse_and_write_uint64(flag_descriptor_t* flag, flag_key_value_t key_value){
   value_result_t val_result = string_parse_uint64(key_value.value);
   if (is_ok(val_result)) {
@@ -1996,7 +3056,7 @@ char* parse_and_write_uint64(flag_descriptor_t* flag, flag_key_value_t key_value
   }
   return NULL;
 }
-/* i=72 j=1 */
+/* i=148 j=1 */
 char* parse_and_write_enum(flag_descriptor_t* flag, flag_key_value_t key_value){
   value_result_t val_result
       = string_tree_find(flag->enum_values, key_value.value);
@@ -2029,7 +3089,7 @@ char* parse_and_write_enum(flag_descriptor_t* flag, flag_key_value_t key_value){
   }
   */
 }
-/* i=73 j=0 */
+/* i=149 j=0 */
 void add_flag(char* name, void* write_back_ptr, flag_type_t flag_type){
   current_flag = malloc_struct(flag_descriptor_t);
   current_flag->flag_type = flag_type;
@@ -2048,7 +3108,7 @@ void add_flag(char* name, void* write_back_ptr, flag_type_t flag_type){
     fatal_error(ERROR_ILLEGAL_STATE);
   }
 }
-/* i=74 j=0 */
+/* i=150 j=0 */
 void flag_print_flags(FILE* out, char* header, string_tree_t* flags){
   fprintf(out, "%s\n", header);
   // clang-format off
@@ -2057,122 +3117,7 @@ void flag_print_flags(FILE* out, char* header, string_tree_t* flags){
     });
   // clang-format on
 }
-/* i=75 j=1 */
-_Noreturn void fatal_error_impl(char* file, int line, int error_code){
-  print_fatal_error_banner();
-  print_backtrace();
-  fprintf(stderr, "%s:%d: FATAL ERROR %d", file, line, error_code);
-  print_error_code_name(error_code);
-  fprintf(stderr, "\nCommand line: %s\n\n", get_command_line());
-  char* sleep_str = getenv("ARMYKNIFE_FATAL_ERROR_SLEEP_SECONDS");
-  if (sleep_str != NULL) {
-    value_result_t sleep_time = string_parse_uint64(sleep_str);
-    if (is_ok(sleep_time)) {
-      fprintf(stderr,
-              "Sleeping for %lu seconds so you can attach a debugger.\n",
-              sleep_time.u64);
-      fprintf(stderr, "  gdb -tui %s %d\n", get_program_path(), getpid());
-      sleep(sleep_time.u64);
-    }
-  } else {
-    fprintf(stderr, "(ARMYKNIFE_FATAL_ERROR_SLEEP_SECONDS is not set)\n");
-  }
-  fprintf(stderr, "Necessaria Morte Mori...\n");
-  exit(-(error_code + 100));
-}
-/* i=76 j=1 */
-char* fatal_error_code_to_string(int error_code){
-  switch (error_code) {
-  case ERROR_UKNOWN:
-    return "ERROR_UKNOWN";
-  case ERROR_MEMORY_ALLOCATION:
-    return "ERROR_MEMORY_ALLOCATION";
-  case ERROR_MEMORY_FREE_NULL:
-    return "ERROR_MEMORY_FREE_NULL";
-  case ERROR_REFERENCE_NOT_EXPECTED_TYPE:
-    return "ERROR_REFERENCE_NOT_EXPECTED_TYPE";
-  case ERROR_ILLEGAL_INITIAL_CAPACITY:
-    return "ERROR_ILLEGAL_INITIAL_CAPACITY";
-  case ERROR_DYNAMICALLY_SIZED_TYPE_ILLEGAL_IN_CONTAINER:
-    return "ERROR_DYNAMICALLY_SIZED_TYPE_ILLEGAL_IN_CONTAINER";
-  case ERROR_ACCESS_OUT_OF_BOUNDS:
-    return "ERROR_ACCESS_OUT_OF_BOUNDS";
-  case ERROR_NOT_REACHED:
-    return "ERROR_NOT_REACHED";
-  case ERROR_ILLEGAL_ZERO_HASHCODE_VALUE:
-    return "ERROR_ILLEGAL_ZERO_HASHCODE_VALUE";
-  case ERROR_UNIMPLEMENTED:
-    return "ERROR_UNIMPLEMENTED";
-  case ERROR_ILLEGAL_NULL_ARGUMENT:
-    return "ERROR_ILLEGAL_NULL_ARGUMENT";
-  case ERROR_ILLEGAL_ARGUMENT:
-    return "ERROR_ILLEGAL_ARGUMENT";
-  case ERROR_MEMORY_START_PADDING_ERROR:
-    return "ERROR_MEMORY_START_PADDING_ERROR";
-  case ERROR_MEMORY_END_PADDING_ERROR:
-    return "ERROR_MEMORY_END_PADDING_ERROR";
-
-  default:
-    return "error";
-  }
-}
-/* i=77 j=1 */
-void configure_fatal_errors(fatal_error_config_t config){
-  fatal_error_config = config;
-  if (config.catch_sigsegv) {
-    signal(SIGSEGV, segmentation_fault_handler);
-  }
-}
-/* i=78 j=0 */
-void segmentation_fault_handler(int signal_number){
-  fatal_error(ERROR_SIGSEGV);
-}
-/* i=79 j=1 */
-void print_fatal_error_banner(){
-  // As the first thing we print, also responsible for at least one
-  // newline to start a new line if we may not be at one.
-  fprintf(stderr, "\n========== FATAL_ERROR ==========\n");
-}
-/* i=80 j=1 */
-void print_backtrace(){
-#ifndef NO_VM_BACKTRACE_ON_FATAL_ERROR
-  do {
-    void* array[10];
-    int size = backtrace(array, 10);
-    char** strings = backtrace_symbols(array, size);
-
-    // Print the backtrace
-    for (int i = 0; i < size; i++) {
-      printf("#%d %s\n", i, strings[i]);
-    }
-  } while (0);
-#endif /* NO_VM_BACKTRACE_ON_FATAL_ERROR */
-}
-/* i=81 j=1 */
-void print_error_code_name(int error_code){
-  fprintf(stderr, " ");
-  fprintf(stderr, "*** ");
-  fprintf(stderr, "%s", fatal_error_code_to_string(error_code));
-  fprintf(stderr, " ***\n");
-}
-/* i=82 j=0 */
-char* get_command_line(){
-  buffer_t* buffer
-      = buffer_append_file_contents(make_buffer(1), "/proc/self/cmdline");
-  buffer_replace_matching_byte(buffer, 0, ' ');
-  return buffer_to_c_string(buffer);
-}
-/* i=83 j=0 */
-char* get_program_path(){
-  char buf[4096];
-  int n = readlink("/proc/self/exe", buf, sizeof(buf));
-  if (n > 0) {
-    return string_duplicate(buf);
-  } else {
-    return "<program-path-unknown>";
-  }
-}
-/* i=84 j=1 */
+/* i=151 j=1 */
 __attribute__((warn_unused_result)) buffer_t* buffer_append_file_contents(buffer_t* bytes, char* file_name){
 
   uint64_t capacity = bytes->capacity;
@@ -2195,7 +3140,7 @@ __attribute__((warn_unused_result)) buffer_t* buffer_append_file_contents(buffer
 
   return bytes;
 }
-/* i=85 j=1 */
+/* i=152 j=1 */
 __attribute__((warn_unused_result)) extern buffer_t* buffer_append_all(buffer_t* bytes, FILE* input){
   uint8_t buffer[1024];
   while (1) {
@@ -2207,7 +3152,7 @@ __attribute__((warn_unused_result)) extern buffer_t* buffer_append_all(buffer_t*
   }
   return bytes;
 }
-/* i=86 j=1 */
+/* i=153 j=1 */
 void buffer_write_file(buffer_t* bytes, char* file_name){
   FILE* file = fopen(file_name, "w");
   if (file == NULL) {
@@ -2227,7 +3172,7 @@ void buffer_write_file(buffer_t* bytes, char* file_name){
     fatal_error(ERROR_ILLEGAL_STATE);
   }
 }
-/* i=87 j=1 */
+/* i=154 j=1 */
 buffer_t* buffer_read_until(buffer_t* buffer, FILE* input, char end_of_line){
   while (!feof(input)) {
     int ch = fgetc(input);
@@ -2241,7 +3186,7 @@ buffer_t* buffer_read_until(buffer_t* buffer, FILE* input, char end_of_line){
   }
   return buffer;
 }
-/* i=88 j=1 */
+/* i=155 j=1 */
 __attribute__((warn_unused_result)) extern buffer_t* buffer_read_ready_bytes(buffer_t* buffer, FILE* input, uint64_t max_bytes){
   int file_number = fileno(input);
   fcntl(file_number, F_SETFL, fcntl(file_number, F_GETFL) | O_NONBLOCK);
@@ -2292,7 +3237,7 @@ __attribute__((warn_unused_result)) extern buffer_t* buffer_read_ready_bytes(buf
 
   return buffer;
 }
-/* i=89 j=1 */
+/* i=156 j=1 */
 int file_peek_byte(FILE* input){
   if (feof(input)) {
     return -1;
@@ -2306,11 +3251,11 @@ int file_peek_byte(FILE* input){
   }
   return result;
 }
-/* i=90 j=1 */
+/* i=157 j=1 */
 boolean_t file_eof(FILE* input){
   return feof(input) || file_peek_byte(input) < 0;
 }
-/* i=91 j=1 */
+/* i=158 j=1 */
 void file_copy_stream(FILE* input, FILE* output, boolean_t until_eof, uint64_t size){
   if (until_eof) {
     size = ULLONG_MAX;
@@ -2329,7 +3274,7 @@ void file_copy_stream(FILE* input, FILE* output, boolean_t until_eof, uint64_t s
     size -= n_read;
   }
 }
-/* i=92 j=1 */
+/* i=159 j=1 */
 void file_skip_bytes(FILE* input, uint64_t n_bytes){
 
   // We'd try to do it like this but Gemini claims that this doesn't
@@ -2349,449 +3294,11 @@ void file_skip_bytes(FILE* input, uint64_t n_bytes){
     n_bytes--;
   }
 }
-/* i=93 j=1 */
-unsigned encode_sleb_128(int64_t Value, uint8_t* p){
-  uint8_t* orig_p = p;
-  int More;
-  do {
-    uint8_t Byte = Value & 0x7f;
-    // NOTE: this assumes that this signed shift is an arithmetic right shift.
-    Value >>= 7;
-    More = !((((Value == 0) && ((Byte & 0x40) == 0))
-              || ((Value == -1) && ((Byte & 0x40) != 0))));
-    if (More)
-      Byte |= 0x80; // Mark this byte to show that more bytes will follow.
-    *p++ = Byte;
-  } while (More);
-
-  return cast(unsigned, p - orig_p);
-}
-/* i=94 j=1 */
-unsigned encode_uleb_128(uint64_t Value, uint8_t* p){
-  uint8_t* orig_p = p;
-  do {
-    uint8_t Byte = Value & 0x7f;
-    Value >>= 7;
-    if (Value != 0)
-      Byte |= 0x80; // Mark this byte to show that more bytes will follow.
-    *p++ = Byte;
-  } while (Value != 0);
-
-  return cast(unsigned, (p - orig_p));
-}
-/* i=95 j=1 */
-unsigned_decode_result decode_uleb_128(uint8_t* p, uint8_t* end){
-  const uint8_t* orig_p = p;
-  uint64_t Value = 0;
-  unsigned Shift = 0;
-  do {
-    if (p == end) {
-      unsigned_decode_result result = {0, ERROR_INSUFFICIENT_INPUT};
-      return result;
-    }
-    uint64_t Slice = *p & 0x7f;
-    if ((Shift >= 64 && Slice != 0) || Slice << Shift >> Shift != Slice) {
-      unsigned_decode_result result = {0, ERROR_TOO_BIG};
-      return result;
-    }
-    Value += Slice << Shift;
-    Shift += 7;
-  } while (*p++ >= 128);
-  unsigned_decode_result result = {Value, cast(unsigned, p - orig_p)};
-  return result;
-}
-/* i=96 j=1 */
-signed_decode_result decode_sleb_128(uint8_t* p, uint8_t* end){
-  const uint8_t* orig_p = p;
-  int64_t Value = 0;
-  unsigned Shift = 0;
-  uint8_t Byte;
-  do {
-    if (p == end) {
-      signed_decode_result result = {0, ERROR_INSUFFICIENT_INPUT};
-      return result;
-    }
-    Byte = *p;
-    uint64_t Slice = Byte & 0x7f;
-    // This handles decoding padded numbers, otherwise we might be
-    // able to test very easily at the end of the loop.
-    if ((Shift >= 64 && Slice != (Value < 0 ? 0x7f : 0x00))
-        || (Shift == 63 && Slice != 0 && Slice != 0x7f)) {
-      signed_decode_result result = {0, ERROR_TOO_BIG};
-      return result;
-    }
-    Value |= Slice << Shift;
-    Shift += 7;
-    ++p;
-  } while (Byte >= 128);
-  // Sign extend negative numbers if needed.
-  if (Shift < 64 && (Byte & 0x40))
-    Value |= (-1ULL) << Shift;
-  signed_decode_result result = {Value, (p - orig_p)};
-  return result;
-}
-/* i=97 j=1 */
-random_state_t random_state_for_test(void){
-  return (random_state_t){.a = 0x1E1D43C2CA44B1F5, .b = 0x4FDD267452CEDBAC};
-}
-/* i=99 j=1 */
-uint64_t random_next_uint64_below(random_state_t* state, uint64_t maximum){
-  if (maximum == 0) {
-    fatal_error(ERROR_ILLEGAL_ARGUMENT);
-  }
-#if 1
-  // This is simpler and works well in practice (it seems).
-  return random_next(state) % maximum;
-#else
-  // This version in theory should be a bit more fair than modulous
-  // but I can't really detect a difference.
-  int mask = (1ULL << (uint64_highest_bit_set(maximum) + 1)) - 1;
-  while (1) {
-    uint64_t n = random_next(state);
-    n &= mask;
-    if (n < maximum) {
-      return n;
-    }
-  }
-#endif /* 0 */
-}
-/* i=100 j=0 */
-random_state_t* random_state(void){
-  static random_state_t shared_random_state = {0};
-
-  if (shared_random_state.a == 0) {
-    shared_random_state.a = 0x1E1D43C2CA44B1F5 ^ cast(uint64_t, time(NULL));
-    shared_random_state.b = 0x4FDD267452CEDBAC ^ cast(uint64_t, time(NULL));
-  }
-
-  return &shared_random_state;
-}
-/* i=102 j=0 */
-uint64_t random_next(random_state_t* state){
-  uint64_t s0 = state->a;
-  uint64_t s1 = state->b;
-  uint64_t result = rotl(s0 * 5, 7) * 9;
-  s1 ^= s0;
-  state->a = rotl(s0, 24) ^ s1 ^ (s1 << 16); // a, b
-  state->b = rotl(s1, 37);                   // c
-
-  return result;
-}
-/* i=116 j=1 */
-int string_is_null_or_empty(char* str){
-  return (str == NULL) || (strlen(str) == 0);
-}
-/* i=117 j=1 */
-int string_equal(char* str1, char* str2){
-  if (string_is_null_or_empty(str1)) {
-    return string_is_null_or_empty(str2);
-  }
-  return strcmp(str1, str2) == 0;
-}
-/* i=118 j=1 */
-int string_starts_with(char* str1, char* str2){
-  return strncmp(str1, str2, strlen(str2)) == 0;
-}
-/* i=119 j=1 */
-int string_ends_with(char* str1, char* str2){
-  size_t len1 = strlen(str1);
-  size_t len2 = strlen(str2);
-
-  if (len2 > len1) {
-    return 0;
-  }
-
-  return strcmp(str1 + (len1 - len2), str2) == 0;
-}
-/* i=120 j=1 */
-boolean_t string_contains_char(char* str, char ch){
-  return string_index_of_char(str, ch) >= 0;
-}
-/* i=121 j=1 */
-int string_index_of_char(char* str, char ch){
-  if (string_is_null_or_empty(str)) {
-    return -1;
-  }
-  int str_length = strlen(str);
-  for (int i = 0; i < str_length; i++) {
-    if (str[i] == ch) {
-      return i;
-    }
-  }
-  return -1;
-}
-/* i=122 j=1 */
-char* uint64_to_string(uint64_t number){
-  char buffer[32];
-  sprintf(buffer, "%lu", number);
-  return string_duplicate(buffer);
-}
-/* i=123 j=1 */
-uint64_t string_hash(char* str){
-  return fasthash64(str, strlen(str), 0);
-}
-/* i=124 j=1 */
-char* string_substring(char* str, int start, int end){
-  uint64_t len = strlen(str);
-  if (start >= len || start >= end || end < start) {
-    fatal_error(ERROR_ILLEGAL_ARGUMENT);
-  }
-  int result_size = end - start + 1;
-  char* result = cast(char*, malloc_bytes(result_size));
-  for (int i = start; (i < end); i++) {
-    result[i - start] = str[i];
-  }
-  result[result_size - 1] = '\0';
-  return result;
-}
-/* i=125 j=1 */
-value_result_t string_parse_uint64(char* string){
-  if (string_starts_with(string, "0x")) {
-    return string_parse_uint64_hex(&string[2]);
-  } else if (string_starts_with(string, "0b")) {
-    return string_parse_uint64_bin(&string[2]);
-  } else {
-    return string_parse_uint64_dec(string);
-  }
-}
-/* i=126 j=1 */
-value_result_t string_parse_uint64_dec(char* string){
-  uint64_t len = strlen(string);
-  uint64_t integer = 0;
-
-  if (len == 0) {
-    return (value_result_t){.u64 = 0,
-                            .nf_error = NF_ERROR_NOT_PARSED_AS_NUMBER};
-  }
-
-  for (int i = 0; i < len; i++) {
-    char ch = string[i];
-    if (ch < '0' || ch > '9') {
-      return (value_result_t){.u64 = 0,
-                              .nf_error = NF_ERROR_NOT_PARSED_AS_NUMBER};
-    }
-    uint64_t digit = string[i] - '0';
-    integer = integer * 10 + digit;
-  }
-
-  return (value_result_t){.u64 = integer, .nf_error = NF_OK};
-}
-/* i=127 j=1 */
-value_result_t string_parse_uint64_hex(char* string){
-  uint64_t len = strlen(string);
-  uint64_t integer = 0;
-
-  if (len == 0) {
-    return compound_literal(
-        value_result_t, {.u64 = 0, .nf_error = NF_ERROR_NOT_PARSED_AS_NUMBER});
-  }
-
-  for (int i = 0; i < len; i++) {
-    char ch = string[i];
-    if (!is_hex_digit(ch)) {
-      return compound_literal(
-          value_result_t,
-          {.u64 = 0, .nf_error = NF_ERROR_NOT_PARSED_AS_NUMBER});
-    }
-    uint64_t digit = hex_digit_to_value(ch);
-    integer = integer << 4 | digit;
-  }
-
-  return compound_literal(value_result_t, {.u64 = integer, .nf_error = NF_OK});
-}
-/* i=128 j=1 */
-value_result_t string_parse_uint64_bin(char* string){
-  uint64_t len = strlen(string);
-  uint64_t integer = 0;
-
-  if (len == 0) {
-    return compound_literal(
-        value_result_t, {.u64 = 0, .nf_error = NF_ERROR_NOT_PARSED_AS_NUMBER});
-  }
-
-  for (int i = 0; i < len; i++) {
-    char ch = string[i];
-    if (ch < '0' || ch > '1') {
-      return compound_literal(
-          value_result_t,
-          {.u64 = 0, .nf_error = NF_ERROR_NOT_PARSED_AS_NUMBER});
-    }
-    uint64_t digit = string[i] - '0';
-    integer = integer << 1 | digit;
-  }
-
-  return compound_literal(value_result_t, {.u64 = integer, .nf_error = NF_OK});
-}
-/* i=129 j=1 */
-char* string_duplicate(char* src){
-  if (src == NULL) {
-    return NULL;
-  }
-  int len = strlen(src) + 1;
-  char* result = cast(char*, malloc_bytes(len));
-  memcpy(result, src, len);
-
-  return result;
-}
-/* i=130 j=1 */
-char* string_append(char* a, char* b){
-  if (a == NULL || b == NULL) {
-    fatal_error(ERROR_ILLEGAL_NULL_ARGUMENT);
-  }
-  int total_length = strlen(a) + strlen(b) + 1;
-  char* result = cast(char*, malloc_bytes(total_length));
-  strcat(result, a);
-  strcat(result, b);
-  return result;
-}
-/* i=131 j=1 */
-char* string_left_pad(char* str, int n, char ch){
-  if (n < 0) {
-    fatal_error(ERROR_ILLEGAL_RANGE);
-  }
-
-  int input_length = strlen(str);
-
-  // Calculate padding needed
-  int padding_needed = n - input_length;
-
-  // As usual, since buffer's grow as needed, we are tolerant of a
-  // wrong initial computation of the length though getting this wrong
-  // is wasteful... In this case we do the wasteful thing knowing that
-  // we will free everything shortly. We just want the correct result,
-  // not necessarily as fast as possible.
-
-  int len = 1; // max(padding_needed + input_length, input_length) + 1;
-
-  buffer_t* buffer = make_buffer(len);
-  for (int i = 0; i < padding_needed; i++) {
-    buffer = buffer_append_byte(buffer, ch);
-  }
-  buffer = buffer_append_string(buffer, str);
-  char* result = buffer_to_c_string(buffer);
-  free_bytes(buffer);
-  return result;
-}
-/* i=132 j=1 */
-char* string_right_pad(char* str, int n, char ch){
-  if (n < 0) {
-    fatal_error(ERROR_ILLEGAL_RANGE);
-  }
-
-  int input_length = strlen(str);
-
-  // Calculate padding needed
-  int padding_needed = n - input_length;
-
-  // As usual, since buffer's grow as needed, we are tolerant of a
-  // wrong initial computation of the length though getting this wrong
-  // is wasteful... In this case we do the wasteful thing knowing that
-  // we will free everything shortly. We just want the correct result,
-  // not necessarily as fast as possible.
-
-  int len = 1; // max(padding_needed + input_length, input_length) + 1;
-
-  buffer_t* buffer = make_buffer(len);
-  buffer = buffer_append_string(buffer, str);
-  for (int i = 0; i < padding_needed; i++) {
-    buffer = buffer_append_byte(buffer, ch);
-  }
-  char* result = buffer_to_c_string(buffer);
-  free_bytes(buffer);
-  return result;
-}
-/* i=133 j=1 */
-__attribute__((format(printf, 1, 2))) char* string_printf(char* format, ...){
-  char buffer[STRING_PRINTF_INITIAL_BUFFER_SIZE];
-  int n_bytes = 0;
-  do {
-    va_list args;
-    va_start(args, format);
-    n_bytes
-        = vsnprintf(buffer, STRING_PRINTF_INITIAL_BUFFER_SIZE, format, args);
-    va_end(args);
-  } while (0);
-
-  if (n_bytes < STRING_PRINTF_INITIAL_BUFFER_SIZE) {
-    char* result = cast(char*, malloc_bytes(n_bytes + 1));
-    strcat(result, buffer);
-    return result;
-  } else {
-    char* result = cast(char*, malloc_bytes(n_bytes + 1));
-    va_list args;
-    va_start(args, format);
-    int n_bytes_second = vsnprintf(result, n_bytes + 1, format, args);
-    va_end(args);
-    if (n_bytes_second != n_bytes) {
-      fatal_error(ERROR_INTERNAL_ASSERTION_FAILURE);
-    }
-    return result;
-  }
-}
-/* i=134 j=1 */
-char* string_truncate(char* str, int limit, char* at_limit_suffix){
-  // limit is just a guess, buffer's always grow as needed.
-  buffer_t* buffer = make_buffer(limit);
-  for (int i = 0;; i++) {
-    char ch = str[i];
-    if (ch == '\0') {
-      char* result = buffer_to_c_string(buffer);
-      free_bytes(buffer);
-      return result;
-    }
-    buffer = buffer_append_byte(buffer, ch);
-  }
-  if (at_limit_suffix) {
-    buffer = buffer_append_string(buffer, at_limit_suffix);
-  }
-  char* result = buffer_to_c_string(buffer);
-  free_bytes(buffer);
-  return result;
-}
-/* i=135 j=1 */
-uint64_t fasthash64(void* buf, size_t len, uint64_t seed){
-  const uint64_t m = 0x880355f21e6d1965ULL;
-  const uint64_t* pos = cast(const uint64_t*, buf);
-  const uint64_t* end = pos + (len / 8);
-  const unsigned char* pos2;
-  uint64_t h = seed ^ (len * m);
-  uint64_t v;
-
-  while (pos != end) {
-    v = *pos++;
-    h ^= mix(v);
-    h *= m;
-  }
-
-  pos2 = cast(const unsigned char*, pos);
-  v = 0;
-
-  switch (len & 7) {
-  case 7:
-    v ^= (uint64_t) pos2[6] << 48;
-  case 6:
-    v ^= (uint64_t) pos2[5] << 40;
-  case 5:
-    v ^= (uint64_t) pos2[4] << 32;
-  case 4:
-    v ^= (uint64_t) pos2[3] << 24;
-  case 3:
-    v ^= (uint64_t) pos2[2] << 16;
-  case 2:
-    v ^= (uint64_t) pos2[1] << 8;
-  case 1:
-    v ^= (uint64_t) pos2[0];
-    h ^= mix(v);
-    h *= m;
-  }
-
-  return mix(h);
-}
-/* i=139 j=1 */
+/* i=160 j=1 */
 __attribute__((warn_unused_result)) extern buffer_t* term_clear_screen(buffer_t* buffer){
   return buffer_printf(buffer, TERM_ESCAPE_START "2J");
 }
-/* i=140 j=1 */
+/* i=161 j=1 */
 __attribute__((warn_unused_result)) extern buffer_t* term_set_foreground_color(buffer_t* buffer, uint32_t color){
   uint8_t blue = color & 0xff;
   uint8_t green = (color >> 8) & 0xff;
@@ -2802,7 +3309,7 @@ __attribute__((warn_unused_result)) extern buffer_t* term_set_foreground_color(b
                        TERM_ESCAPE_START "38;2;%d;%d;%d" TERM_ESCAPE_END, red,
                        green, blue);
 }
-/* i=141 j=1 */
+/* i=162 j=1 */
 __attribute__((warn_unused_result)) extern buffer_t* term_set_background_color(buffer_t* buffer, uint32_t color){
   uint8_t blue = color & 0xff;
   uint8_t green = (color >> 8) & 0xff;
@@ -2813,12 +3320,12 @@ __attribute__((warn_unused_result)) extern buffer_t* term_set_background_color(b
                        TERM_ESCAPE_START "48;2;%d;%d;%d" TERM_ESCAPE_END, red,
                        green, blue);
 }
-/* i=142 j=1 */
+/* i=163 j=1 */
 __attribute__((warn_unused_result)) extern buffer_t* term_move_cursor_absolute(buffer_t* buffer, int x, int y){
   // Escape sequence for cursor movement (ESC [ y; x H)
   return buffer_printf(buffer, TERM_ESCAPE_START "%d;%dH", y + 1, x + 1);
 }
-/* i=143 j=1 */
+/* i=164 j=1 */
 __attribute__((warn_unused_result)) extern buffer_t* term_move_cursor_relative(buffer_t* buffer, int x, int y){
   // First handle the x position
   if (x > 0) {
@@ -2833,27 +3340,27 @@ __attribute__((warn_unused_result)) extern buffer_t* term_move_cursor_relative(b
   }
   return buffer;
 }
-/* i=144 j=1 */
+/* i=165 j=1 */
 __attribute__((warn_unused_result)) extern buffer_t* term_bold(buffer_t* buffer){
   return buffer_printf(buffer, TERM_ESCAPE_START "1m");
 }
-/* i=145 j=1 */
+/* i=166 j=1 */
 __attribute__((warn_unused_result)) extern buffer_t* term_dim(buffer_t* buffer){
   return buffer_printf(buffer, TERM_ESCAPE_START "2m");
 }
-/* i=146 j=1 */
+/* i=167 j=1 */
 __attribute__((warn_unused_result)) extern buffer_t* term_italic(buffer_t* buffer){
   return buffer_printf(buffer, TERM_ESCAPE_START "3m");
 }
-/* i=147 j=1 */
+/* i=168 j=1 */
 __attribute__((warn_unused_result)) extern buffer_t* term_underline(buffer_t* buffer){
   return buffer_printf(buffer, TERM_ESCAPE_START "4m");
 }
-/* i=148 j=1 */
+/* i=169 j=1 */
 __attribute__((warn_unused_result)) extern buffer_t* term_reset_formatting(buffer_t* buffer){
   return buffer_printf(buffer, TERM_ESCAPE_START "0m");
 }
-/* i=149 j=1 */
+/* i=170 j=1 */
 __attribute__((warn_unused_result)) extern buffer_t* term_draw_box(buffer_t* buffer, uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, box_drawing_t* box){
   // top
   buffer = term_move_cursor_absolute(buffer, x0, y0);
@@ -2886,7 +3393,7 @@ __attribute__((warn_unused_result)) extern buffer_t* term_draw_box(buffer_t* buf
 
   return buffer;
 }
-/* i=150 j=1 */
+/* i=171 j=1 */
 extern struct termios term_echo_off(){
   struct termios oldt;
   struct termios newt;
@@ -2903,31 +3410,21 @@ extern struct termios term_echo_off(){
 
   return oldt;
 }
-/* i=151 j=1 */
+/* i=172 j=1 */
 extern void term_echo_restore(struct termios oldt){
   // Restore the original terminal settings
   tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
 }
-/* i=154 j=0 */
-__attribute__((format(printf, 3, 4))) void test_fail_and_exit(char* file_name, int line_number, char* format, ...){
-  va_list args;
-  fprintf(stdout, "%s:%d: ", file_name, line_number);
-  va_start(args, format);
-  vfprintf(stdout, format, args);
-  fprintf(stdout, "\n");
-  va_end(args);
-  exit(1);
-}
-/* i=155 j=1 */
+/* i=173 j=1 */
 value_array_t* string_tokenize(char* str, char* delimiters){
   return tokenize_memory_range(cast(uint8_t*, str), strlen(str), delimiters);
 }
-/* i=156 j=1 */
+/* i=174 j=1 */
 value_array_t* buffer_tokenize(buffer_t* buffer, char* delimiters){
   return tokenize_memory_range(&(buffer->elements[0]), buffer->length,
                                delimiters);
 }
-/* i=157 j=1 */
+/* i=175 j=1 */
 value_array_t* tokenize_memory_range(uint8_t* str, uint64_t length, char* delimiters){
   value_array_t* result = make_value_array(1);
   char token_data[1024];
@@ -2951,542 +3448,150 @@ value_array_t* tokenize_memory_range(uint8_t* str, uint64_t length, char* delimi
 
   return result;
 }
-/* i=158 j=1 */
+/* i=176 j=1 */
 void add_duplicate(value_array_t* token_array, char* data){
   value_array_add(token_array, str_to_value(string_duplicate(data)));
 }
-/* i=159 j=1 */
-int uint64_highest_bit_set(uint64_t n){
-  if (n >= 1ULL << 32) {
-    return uint64_highest_bit_set(n >> 32) + 32;
-  } else if (n >= 1ULL << 16) {
-    return uint64_highest_bit_set(n >> 16) + 16;
-  } else if (n >= 1ULL << 8) {
-    return uint64_highest_bit_set(n >> 8) + 8;
-  } else if (n >= 1ULL << 4) {
-    return uint64_highest_bit_set(n >> 4) + 4;
-  } else if (n >= 1ULL << 2) {
-    return uint64_highest_bit_set(n >> 2) + 2;
-  } else if (n >= 1ULL << 1) {
-    return uint64_highest_bit_set(n >> 1) + 1;
-  } else {
-    return 0;
-  }
-}
-/* i=160 j=1 */
-utf8_decode_result_t utf8_decode(uint8_t* array){
-  uint8_t firstByte = array[0];
-  if ((firstByte & 0x80) == 0) {
-    return compound_literal(utf8_decode_result_t,
-                            {.code_point = firstByte, .num_bytes = 1});
-  } else if ((firstByte & 0xE0) == 0xC0) {
-    return compound_literal(
-        utf8_decode_result_t,
-        {.code_point = ((firstByte & 0x1F) << 6) | (array[1] & 0x3F),
-         .num_bytes = 2});
-  } else if ((firstByte & 0xF0) == 0xE0) {
-    return compound_literal(utf8_decode_result_t,
-                            {.code_point = ((firstByte & 0x0F) << 12)
-                                           | ((array[1] & 0x3F) << 6)
-                                           | (array[2] & 0x3F),
-                             .num_bytes = 3});
-  } else if ((firstByte & 0xF8) == 0xF0) {
-    return compound_literal(
-        utf8_decode_result_t,
-        {.code_point = ((firstByte & 0x07) << 18) | ((array[1] & 0x3F) << 12)
-                       | ((array[2] & 0x3F) << 6) | (array[3] & 0x3F),
-         .num_bytes = 4});
-  } else {
-    return compound_literal(utf8_decode_result_t, {.error = true});
-  }
-}
-/* i=163 j=1 */
-int cmp_string_values(value_t value1, value_t value2){
-  return strcmp(value1.str, value2.str);
-}
-/* i=164 j=1 */
-uint64_t hash_string_value(value_t value1){ return string_hash(value1.str); }
-/* i=165 j=1 */
-value_result_t value_alist_find(value_alist_t* list, value_comparison_fn cmp_fn, value_t key){
-  while (list) {
-    if (cmp_fn(key, list->key) == 0) {
-      return compound_literal(value_result_t, {.val = list->value});
-    }
-    list = list->next;
-  }
-  return compound_literal(value_result_t, {.nf_error = NF_ERROR_NOT_FOUND});
-}
-/* i=166 j=1 */
-value_alist_t* value_alist_insert(value_alist_t* list, value_comparison_fn cmp_fn, value_t key, value_t value){
-  value_alist_t* result = malloc_struct(value_alist_t);
-  result->next = value_alist_delete(list, cmp_fn, key);
-  result->key = key;
-  result->value = value;
-  return result;
-}
-/* i=167 j=1 */
-value_alist_t* value_alist_delete(value_alist_t* list, value_comparison_fn cmp_fn, value_t key){
-  // This appears to be logically correct but could easily blow out
-  // the stack with a long list.
-  if (list == NULL) {
-    return list;
-  }
-  if ((*cmp_fn)(key, list->key) == 0) {
-    value_alist_t* result = list->next;
-    free_bytes(list);
-    return result;
-  }
-  list->next = value_alist_delete(list->next, cmp_fn, key);
-  return list;
-}
-/* i=168 j=1 */
-__attribute__((warn_unused_result)) extern uint64_t value_alist_length(value_alist_t* list){
-  uint64_t result = 0;
-  while (list) {
-    result++;
-    list = list->next;
-  }
-  return result;
-}
-/* i=169 j=1 */
-value_array_t* make_value_array(uint64_t initial_capacity){
-  if (initial_capacity == 0) {
-    initial_capacity = 1;
-  }
-
-  value_array_t* result = malloc_struct(value_array_t);
-  result->capacity = initial_capacity;
-  result->elements
-      = cast(value_t*, malloc_bytes(sizeof(value_t) * initial_capacity));
-
-  return result;
-}
-/* i=170 j=1 */
-value_t value_array_get(value_array_t* array, uint32_t index){
-  if (index < array->length) {
-    return array->elements[index];
-  }
-  fatal_error(ERROR_ACCESS_OUT_OF_BOUNDS);
-#ifdef __TINYC__
-  /* gcc and clang know fatal_error is _Noreturn but tcc doesn't */
-  return (value_t){.u64 = 0};
-#endif
-}
-/* i=171 j=1 */
-void value_array_replace(value_array_t* array, uint32_t index, value_t element){
-  if (index < array->length) {
-    array->elements[index] = element;
-    return;
-  }
-  fatal_error(ERROR_ACCESS_OUT_OF_BOUNDS);
-}
-/* i=172 j=1 */
-void value_array_add(value_array_t* array, value_t element){
-  value_array_ensure_capacity(array, array->length + 1);
-  array->elements[(array->length)++] = element;
-}
-/* i=173 j=1 */
-void value_array_push(value_array_t* array, value_t element){
-  value_array_add(array, element);
-}
-/* i=174 j=1 */
-value_t value_array_pop(value_array_t* array){
-  if (array->length == 0) {
-    fatal_error(ERROR_ACCESS_OUT_OF_BOUNDS);
-  }
-  uint32_t last_index = array->length - 1;
-  value_t result = value_array_get(array, last_index);
-  array->elements[last_index] = u64_to_value(0);
-  array->length--;
-  return result;
-}
-/* i=175 j=1 */
-void value_array_insert_at(value_array_t* array, uint32_t position, value_t element){
-  if (position == array->length) {
-    value_array_add(array, element);
-    return;
-  }
-
-  if (position > array->length) {
-    fatal_error(ERROR_ACCESS_OUT_OF_BOUNDS);
-    return;
-  }
-
-  value_array_ensure_capacity(array, array->length + 1);
-
-  // This is the standard loop but we now need to use a signed index
-  // because when the position is zero, zero - 1 is 0xffffffff which
-  // is still greater than zero (and hence greater than position).
-  for (int64_t i = array->length - 1; i >= position; i--) {
-    array->elements[i + 1] = array->elements[i];
-  }
-  array->length++;
-  array->elements[position] = element;
-}
-/* i=176 j=1 */
-value_t value_array_delete_at(value_array_t* array, uint32_t position){
-  value_t result = value_array_get(array, position);
-  for (int i = position; i < array->length - 1; i++) {
-    array->elements[i] = array->elements[i + 1];
-  }
-  array->length--;
-  return result;
-}
-/* i=177 j=0 */
-void value_array_ensure_capacity(value_array_t* array, uint32_t required_capacity){
-  if (array->capacity < required_capacity) {
-    uint32_t new_capacity = array->capacity * 2;
-    if (new_capacity < required_capacity) {
-      new_capacity = required_capacity;
-    }
-    value_t* new_elements
-        = cast(value_t*, malloc_bytes(sizeof(value_t) * new_capacity));
-    for (int i = 0; i < array->length; i++) {
-      new_elements[i] = array->elements[i];
-    }
-    array->capacity = new_capacity;
-    free_bytes(array->elements);
-    array->elements = new_elements;
-    return;
-  }
-}
-/* i=178 j=1 */
-value_hashtable_t* make_value_hashtable(uint64_t n_buckets){
-  if (n_buckets < 2) {
-    n_buckets = 2;
-  }
-  value_hashtable_t* result = malloc_struct(value_hashtable_t);
-  result->n_buckets = n_buckets;
-  result->buckets = cast(value_alist_t**, malloc_bytes(sizeof(value_alist_t*) * n_buckets));
-  return result;
+/* i=177 j=1 */
+random_state_t random_state_for_test(void){
+  return (random_state_t){.a = 0x1E1D43C2CA44B1F5, .b = 0x4FDD267452CEDBAC};
 }
 /* i=179 j=1 */
-value_hashtable_t* value_ht_insert(value_hashtable_t* ht, value_hash_fn hash_fn, value_comparison_fn cmp_fn, value_t key, value_t value){
-  uint64_t hashcode = hash_fn(key);
-  int bucket = hashcode % ht->n_buckets;
-  value_alist_t* list = ht->buckets[bucket];
-  uint64_t len = value_alist_length(list);
-  list = value_alist_insert(list, cmp_fn, key, value);
-  ht->buckets[bucket] = list;
-  uint64_t len_after = value_alist_length(list);
-  if (len_after > len) {
-    ht->n_entries++;
-    // Without this, a hash table would never grow and thus as the
-    // number of entries grows large, the hashtable would only improve
-    // performance over an alist by a constant amount (which could
-    // still be an impressive speedup...)
-    if (ht->n_entries >= (ht->n_buckets * ARMYKNIFE_HT_LOAD_FACTOR)) {
-      ht = value_hashtable_upsize_internal(ht, hash_fn, cmp_fn);
+uint64_t random_next_uint64_below(random_state_t* state, uint64_t maximum){
+  if (maximum == 0) {
+    fatal_error(ERROR_ILLEGAL_ARGUMENT);
+  }
+#if 1
+  // This is simpler and works well in practice (it seems).
+  return random_next(state) % maximum;
+#else
+  // This version in theory should be a bit more fair than modulous
+  // but I can't really detect a difference.
+  int mask = (1ULL << (uint64_highest_bit_set(maximum) + 1)) - 1;
+  while (1) {
+    uint64_t n = random_next(state);
+    n &= mask;
+    if (n < maximum) {
+      return n;
     }
   }
-  return ht;
+#endif /* 0 */
 }
-/* i=180 j=1 */
-value_hashtable_t* value_ht_delete(value_hashtable_t* ht, value_hash_fn hash_fn, value_comparison_fn cmp_fn, value_t key){
-  uint64_t hashcode = hash_fn(key);
-  int bucket = hashcode % ht->n_buckets;
-  value_alist_t* list = ht->buckets[bucket];
-  uint64_t len = value_alist_length(list);
-  list = value_alist_delete(list, cmp_fn, key);
-  ht->buckets[bucket] = list;
-  uint64_t len_after = value_alist_length(list);
-  if (len_after < len) {
-    ht->n_entries--;
+/* i=180 j=0 */
+random_state_t* random_state(void){
+  static random_state_t shared_random_state = {0};
+
+  if (shared_random_state.a == 0) {
+    shared_random_state.a = 0x1E1D43C2CA44B1F5 ^ cast(uint64_t, time(NULL));
+    shared_random_state.b = 0x4FDD267452CEDBAC ^ cast(uint64_t, time(NULL));
   }
-  return ht;
+
+  return &shared_random_state;
 }
-/* i=181 j=1 */
-value_result_t value_ht_find(value_hashtable_t* ht, value_hash_fn hash_fn, value_comparison_fn cmp_fn, value_t key){
-  uint64_t hashcode = hash_fn(key);
-  int bucket = hashcode % ht->n_buckets;
-  value_alist_t* list = ht->buckets[bucket];
-  return value_alist_find(list, cmp_fn, key);
+/* i=182 j=0 */
+uint64_t random_next(random_state_t* state){
+  uint64_t s0 = state->a;
+  uint64_t s1 = state->b;
+  uint64_t result = rotl(s0 * 5, 7) * 9;
+  s1 ^= s0;
+  state->a = rotl(s0, 24) ^ s1 ^ (s1 << 16); // a, b
+  state->b = rotl(s1, 37);                   // c
+
+  return result;
 }
-/* i=182 j=1 */
-value_hashtable_t* value_hashtable_upsize_internal(value_hashtable_t* ht, value_hash_fn hash_fn, value_comparison_fn cmp_fn){
-  uint64_t new_num_buckets = ht->n_buckets * AK_HT_UPSCALE_MULTIPLIER;
-  value_hashtable_t* result = make_value_hashtable(new_num_buckets);
-  // clang-format off
-  value_ht_foreach(ht, key, value, {
-      value_hashtable_t* should_be_result = value_ht_insert(result, hash_fn, cmp_fn, key, value);
-      // If an insertion into the bigger hashtable results in it's own
-      // resize, then the results will be unpredictable (at least
-      // without more code). This is likely to only happen when
-      // growing a very small hashtable and depends on values choosen
-      // for ARMYKNIFE_HT_LOAD_FACTOR and AK_HT_UPSCALE_MULTIPLIER.
-      if (result != should_be_result) {
-	fatal_error(ERROR_ILLEGAL_STATE);
-      }
-  });
-  free_bytes(ht);
-  // clang-format on
+/* i=183 j=1 */
+cdl_printer_t* make_cdl_printer(buffer_t* buffer){
+  cdl_printer_t* result = malloc_struct(cdl_printer_t);
+  result->buffer = buffer;
   return result;
 }
 /* i=184 j=1 */
-value_result_t value_tree_find(value_tree_t* t, value_comparison_fn cmp_fn, value_t key){
-  if (t == NULL) {
-    return compound_literal(value_result_t, {.nf_error = NF_ERROR_NOT_FOUND});
-  }
-
-  int cmp_result = cmp_fn(key, t->key);
-  if (cmp_result < 0) {
-    return value_tree_find(t->left, cmp_fn, key);
-  } else if (cmp_result > 0) {
-    return value_tree_find(t->right, cmp_fn, key);
-  } else {
-    return compound_literal(value_result_t, {
-                                                .val = t->value,
-                                            });
-  }
+void cdl_boolean(cdl_printer_t* printer, boolean_t boolean){
+  cdl_output_token(printer, boolean ? "true" : "false");
 }
 /* i=185 j=1 */
-value_tree_t* value_tree_insert(value_tree_t* t, value_comparison_fn cmp_fn, value_t key, value_t value){
-  if (t == NULL) {
-    // Create a new leaf node
-    return make_value_tree_leaf(key, value);
-  }
-  int cmp_result = cmp_fn(key, t->key);
-  if (cmp_result < 0) {
-    t->left = value_tree_insert(t->left, cmp_fn, key, value);
-  } else if (cmp_result > 0) {
-    t->right = value_tree_insert(t->right, cmp_fn, key, value);
+void cdl_string(cdl_printer_t* printer, char* string){
+  if (!is_symbol(string)) {
+    cdl_output_token(printer, string_printf("\"%s\"", string));
   } else {
-    // Either key or t->key might need to be freed but it isn't even
-    // possible to tell if either has been "malloced" so good luck
-    // figuring that out.
-    t->value = value;
-    return t;
+    cdl_output_token(printer, string);
   }
-
-  t = value_tree_skew(t);
-  t = value_tree_split(t);
-
-  return t;
 }
 /* i=186 j=1 */
-value_tree_t* value_tree_delete(value_tree_t* t, value_comparison_fn cmp_fn, value_t key){
-
-  if (t == NULL) {
-    return t;
-  }
-
-  int cmp_result = cmp_fn(key, t->key);
-  if (cmp_result < 0) {
-    t->left = value_tree_delete(t->left, cmp_fn, key);
-  } else if (cmp_result > 0) {
-    t->right = value_tree_delete(t->right, cmp_fn, key);
-  } else {
-    if (value_tree_is_leaf(t)) {
-      // Since we are a leaf, nothing special to do except make sure
-      // this leaf node is no longer in the tree. wikipedia says
-      // "return right(T)" which is technically correct, but this is
-      // clearer.
-      return NULL;
-    } else if (t->left == NULL) {
-      value_tree_t* L = value_tree_successor(t);
-      // Note: wikipedia or the orginal article may have a bug. Doing
-      // the delete and then the key/value assignment leads to a
-      // divergence with a reference implementation.
-      t->key = L->key;
-      t->value = L->value;
-      t->right = value_tree_delete(t->right, cmp_fn, L->key);
+void cdl_int64(cdl_printer_t* printer, int64_t number){
+  cdl_output_token(printer, string_printf("%ld", number));
+}
+/* i=187 j=1 */
+void cdl_uint64(cdl_printer_t* printer, uint64_t number){
+  cdl_output_token(printer, uint64_to_string(number));
+}
+/* i=188 j=1 */
+void cdl_double(cdl_printer_t* printer, double number){
+  cdl_output_token(printer, string_printf("%lf", number));
+}
+/* i=189 j=1 */
+void cdl_start_array(cdl_printer_t* printer){
+  cdl_output_token(printer, "[");
+  printer->indention_level += 1;
+}
+/* i=190 j=1 */
+void cdl_end_array(cdl_printer_t* printer){
+  printer->indention_level -= 1;
+  cdl_output_token(printer, "]");
+}
+/* i=191 j=1 */
+void cdl_start_table(cdl_printer_t* printer){
+  cdl_output_token(printer, "{");
+  printer->indention_level += 1;
+}
+/* i=192 j=1 */
+void cdl_key(cdl_printer_t* printer, char* key){ printer->key_token = key; }
+/* i=193 j=1 */
+void cdl_end_table(cdl_printer_t* printer){
+  printer->indention_level -= 1;
+  cdl_output_token(printer, "}");
+}
+/* i=194 j=0 */
+void cdl_indent(cdl_printer_t* printer){
+  buffer_append_repeated_byte(printer->buffer, ' ',
+                              4 * printer->indention_level);
+}
+/* i=195 j=0 */
+boolean_t is_symbol(char* string){
+  for (int i = 0; string[i] != 0; i++) {
+    if (i == 0) {
+      if (!isalpha(string[i])) {
+        return false;
+      }
     } else {
-      value_tree_t* L = value_tree_predecessor(t);
-      // Note: wikipedia or the orginal article may have a bug. Doing
-      // the delete and then the key/value assignment leads to a
-      // divergence with a reference implementation.
-      t->key = L->key;
-      t->value = L->value;
-      t->left = value_tree_delete(t->left, cmp_fn, L->key);
-    }
-  }
-
-  // Rebalance the tree. Decrease the level of all nodes in this level
-  // if necessary, and then skew and split all nodes in the new level.
-
-  t = value_tree_decrease_level(t);
-  t = value_tree_skew(t);
-  t->right = value_tree_skew(t->right);
-  if (t->right != NULL) {
-    t->right->right = value_tree_skew(t->right->right);
-  }
-  t = value_tree_split(t);
-  t->right = value_tree_split(t->right);
-  return t;
-}
-/* i=187 j=0 */
-value_tree_t* value_tree_skew(value_tree_t* t){
-  if (t == NULL) {
-    return NULL;
-  }
-  if (t->left == NULL) {
-    return t;
-  }
-  if (t->left->level == t->level) {
-    value_tree_t* L = t->left;
-    t->left = L->right;
-    L->right = t;
-    return L;
-  }
-  return t;
-}
-/* i=188 j=0 */
-value_tree_t* value_tree_split(value_tree_t* t){
-  if (t == NULL) {
-    return NULL;
-  }
-  if (t->right == NULL || t->right->right == NULL) {
-    return t;
-  }
-  if (t->level == t->right->right->level) {
-    // We have two horizontal right links.  Take the middle node,
-    // elevate it, and return it.
-    value_tree_t* R = t->right;
-    t->right = R->left;
-    R->left = t;
-    R->level++;
-    return R;
-  }
-  return t;
-}
-/* i=189 j=0 */
-value_tree_t* make_value_tree_leaf(value_t key, value_t value){
-  value_tree_t* result = malloc_struct(value_tree_t);
-  result->level = 1;
-  result->key = key;
-  result->value = value;
-  return result;
-}
-/* i=191 j=0 */
-value_tree_t* value_tree_decrease_level(value_tree_t* t){
-  if (t->left && t->right) {
-    uint32_t should_be
-        = value_tree_min_level(t->left->level, t->right->level) + 1;
-    if (should_be < t->level) {
-      t->level = should_be;
-      if (should_be < t->right->level) {
-        t->right->level = should_be;
+      if (!(isalnum(string[i]) || string[i] == '_')) {
+        return false;
       }
     }
   }
-  return t;
-}
-/* i=192 j=0 */
-value_tree_t* value_tree_predecessor(value_tree_t* t){
-  t = t->left;
-  while (t->right != NULL) {
-    t = t->right;
-  }
-  return t;
-}
-/* i=193 j=0 */
-value_tree_t* value_tree_successor(value_tree_t* t){
-  t = t->right;
-  while (t->left != NULL) {
-    t = t->left;
-  }
-  return t;
-}
-/* i=195 j=0 */
-char* flag_type_to_string(flag_type_t value){
-  switch (value) {
-    case flag_type_none:
-return "flag_type_none";
-  case flag_type_boolean:
-return "flag_type_boolean";
-  case flag_type_string:
-return "flag_type_string";
-  case flag_type_uint64:
-return "flag_type_uint64";
-  case flag_type_int64:
-return "flag_type_int64";
-  case flag_type_double:
-return "flag_type_double";
-  case flag_type_enum:
-return "flag_type_enum";
-  case flag_type_custom:
-return "flag_type_custom";
-  default:
-    return "<<unknown-flag_type>>";
-  }
+  return true;
 }
 /* i=196 j=0 */
-flag_type_t string_to_flag_type(char* value){
-  if (strcmp(value, "flag_type_none") == 0) {
-return flag_type_none;
+void cdl_output_token(cdl_printer_t* printer, char* string){
+  cdl_indent(printer);
+  if (printer->key_token != NULL) {
+    buffer_printf(printer->buffer, "%s = %s\n", printer->key_token, string);
+    printer->key_token = NULL;
+  } else {
+    buffer_printf(printer->buffer, "%s\n", string);
   }
-  if (strcmp(value, "flag_type_boolean") == 0) {
-return flag_type_boolean;
-  }
-  if (strcmp(value, "flag_type_string") == 0) {
-return flag_type_string;
-  }
-  if (strcmp(value, "flag_type_uint64") == 0) {
-return flag_type_uint64;
-  }
-  if (strcmp(value, "flag_type_int64") == 0) {
-return flag_type_int64;
-  }
-  if (strcmp(value, "flag_type_double") == 0) {
-return flag_type_double;
-  }
-  if (strcmp(value, "flag_type_enum") == 0) {
-return flag_type_enum;
-  }
-  if (strcmp(value, "flag_type_custom") == 0) {
-return flag_type_custom;
-  }
-  return 0;
 }
-/* i=197 j=0 */
-enum_metadata_t* flag_type_metadata(){
-    static enum_element_metadata_t var_0 = (enum_element_metadata_t) {
-        .next = NULL,
-        .name = "flag_type_none",
-        .value = flag_type_none
-    };
-    static enum_element_metadata_t var_1 = (enum_element_metadata_t) {
-        .next = &var_0,
-        .name = "flag_type_boolean",
-        .value = flag_type_boolean
-    };
-    static enum_element_metadata_t var_2 = (enum_element_metadata_t) {
-        .next = &var_1,
-        .name = "flag_type_string",
-        .value = flag_type_string
-    };
-    static enum_element_metadata_t var_3 = (enum_element_metadata_t) {
-        .next = &var_2,
-        .name = "flag_type_uint64",
-        .value = flag_type_uint64
-    };
-    static enum_element_metadata_t var_4 = (enum_element_metadata_t) {
-        .next = &var_3,
-        .name = "flag_type_int64",
-        .value = flag_type_int64
-    };
-    static enum_element_metadata_t var_5 = (enum_element_metadata_t) {
-        .next = &var_4,
-        .name = "flag_type_double",
-        .value = flag_type_double
-    };
-    static enum_element_metadata_t var_6 = (enum_element_metadata_t) {
-        .next = &var_5,
-        .name = "flag_type_enum",
-        .value = flag_type_enum
-    };
-    static enum_element_metadata_t var_7 = (enum_element_metadata_t) {
-        .next = &var_6,
-        .name = "flag_type_custom",
-        .value = flag_type_custom
-    };
-    static enum_metadata_t enum_metadata_result = (enum_metadata_t) {
-        .name = "flag_type_t",
-        .elements = &var_7
-    };
-    return &enum_metadata_result;
+/* i=199 j=0 */
+__attribute__((format(printf, 3, 4))) void test_fail_and_exit(char* file_name, int line_number, char* format, ...){
+  va_list args;
+  fprintf(stdout, "%s:%d: ", file_name, line_number);
+  va_start(args, format);
+  vfprintf(stdout, format, args);
+  fprintf(stdout, "\n");
+  va_end(args);
+  exit(1);
 }
-/* i=198 j=0 */
+/* i=200 j=0 */
 char* error_code_to_string(error_code_t value){
   switch (value) {
     case ERROR_UKNOWN:
@@ -3547,7 +3652,7 @@ return "ERROR_ILLEGAL_TERMINAL_COORDINATES";
     return "<<unknown-error_code>>";
   }
 }
-/* i=199 j=0 */
+/* i=201 j=0 */
 error_code_t string_to_error_code(char* value){
   if (strcmp(value, "ERROR_UKNOWN") == 0) {
 return ERROR_UKNOWN;
@@ -3632,7 +3737,7 @@ return ERROR_ILLEGAL_TERMINAL_COORDINATES;
   }
   return 0;
 }
-/* i=200 j=0 */
+/* i=202 j=0 */
 enum_metadata_t* error_code_metadata(){
     static enum_element_metadata_t var_0 = (enum_element_metadata_t) {
         .next = NULL,
@@ -3775,7 +3880,7 @@ enum_metadata_t* error_code_metadata(){
     };
     return &enum_metadata_result;
 }
-/* i=201 j=0 */
+/* i=203 j=0 */
 char* non_fatal_error_code_to_string(non_fatal_error_code_t value){
   switch (value) {
     case NF_OK:
@@ -3790,7 +3895,7 @@ return "NF_ERROR_NOT_PARSED_AS_EXPECTED_ENUM";
     return "<<unknown-non_fatal_error_code>>";
   }
 }
-/* i=202 j=0 */
+/* i=204 j=0 */
 non_fatal_error_code_t string_to_non_fatal_error_code(char* value){
   if (strcmp(value, "NF_OK") == 0) {
 return NF_OK;
@@ -3806,7 +3911,7 @@ return NF_ERROR_NOT_PARSED_AS_EXPECTED_ENUM;
   }
   return 0;
 }
-/* i=203 j=0 */
+/* i=205 j=0 */
 enum_metadata_t* non_fatal_error_code_metadata(){
     static enum_element_metadata_t var_0 = (enum_element_metadata_t) {
         .next = NULL,
@@ -3831,6 +3936,105 @@ enum_metadata_t* non_fatal_error_code_metadata(){
     static enum_metadata_t enum_metadata_result = (enum_metadata_t) {
         .name = "non_fatal_error_code_t",
         .elements = &var_3
+    };
+    return &enum_metadata_result;
+}
+/* i=206 j=0 */
+char* flag_type_to_string(flag_type_t value){
+  switch (value) {
+    case flag_type_none:
+return "flag_type_none";
+  case flag_type_boolean:
+return "flag_type_boolean";
+  case flag_type_string:
+return "flag_type_string";
+  case flag_type_uint64:
+return "flag_type_uint64";
+  case flag_type_int64:
+return "flag_type_int64";
+  case flag_type_double:
+return "flag_type_double";
+  case flag_type_enum:
+return "flag_type_enum";
+  case flag_type_custom:
+return "flag_type_custom";
+  default:
+    return "<<unknown-flag_type>>";
+  }
+}
+/* i=207 j=0 */
+flag_type_t string_to_flag_type(char* value){
+  if (strcmp(value, "flag_type_none") == 0) {
+return flag_type_none;
+  }
+  if (strcmp(value, "flag_type_boolean") == 0) {
+return flag_type_boolean;
+  }
+  if (strcmp(value, "flag_type_string") == 0) {
+return flag_type_string;
+  }
+  if (strcmp(value, "flag_type_uint64") == 0) {
+return flag_type_uint64;
+  }
+  if (strcmp(value, "flag_type_int64") == 0) {
+return flag_type_int64;
+  }
+  if (strcmp(value, "flag_type_double") == 0) {
+return flag_type_double;
+  }
+  if (strcmp(value, "flag_type_enum") == 0) {
+return flag_type_enum;
+  }
+  if (strcmp(value, "flag_type_custom") == 0) {
+return flag_type_custom;
+  }
+  return 0;
+}
+/* i=208 j=0 */
+enum_metadata_t* flag_type_metadata(){
+    static enum_element_metadata_t var_0 = (enum_element_metadata_t) {
+        .next = NULL,
+        .name = "flag_type_none",
+        .value = flag_type_none
+    };
+    static enum_element_metadata_t var_1 = (enum_element_metadata_t) {
+        .next = &var_0,
+        .name = "flag_type_boolean",
+        .value = flag_type_boolean
+    };
+    static enum_element_metadata_t var_2 = (enum_element_metadata_t) {
+        .next = &var_1,
+        .name = "flag_type_string",
+        .value = flag_type_string
+    };
+    static enum_element_metadata_t var_3 = (enum_element_metadata_t) {
+        .next = &var_2,
+        .name = "flag_type_uint64",
+        .value = flag_type_uint64
+    };
+    static enum_element_metadata_t var_4 = (enum_element_metadata_t) {
+        .next = &var_3,
+        .name = "flag_type_int64",
+        .value = flag_type_int64
+    };
+    static enum_element_metadata_t var_5 = (enum_element_metadata_t) {
+        .next = &var_4,
+        .name = "flag_type_double",
+        .value = flag_type_double
+    };
+    static enum_element_metadata_t var_6 = (enum_element_metadata_t) {
+        .next = &var_5,
+        .name = "flag_type_enum",
+        .value = flag_type_enum
+    };
+    static enum_element_metadata_t var_7 = (enum_element_metadata_t) {
+        .next = &var_6,
+        .name = "flag_type_custom",
+        .value = flag_type_custom
+    };
+    static enum_metadata_t enum_metadata_result = (enum_metadata_t) {
+        .name = "flag_type_t",
+        .elements = &var_7
     };
     return &enum_metadata_result;
 }

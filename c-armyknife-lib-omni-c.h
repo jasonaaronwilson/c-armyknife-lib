@@ -90,25 +90,68 @@ typedef struct {
 #endif /* _REFLECTION_H_ */
 // ========== system includes ==========
 
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include <stdbool.h>
-#include <ctype.h>
+#include <stdint.h>
 #include <execinfo.h>
 #include <signal.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <unistd.h>
+#include <string.h>
+#include <stdarg.h>
+#include <ctype.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <limits.h>
 #include <sys/select.h>
 #include <sys/time.h>
 #include <sys/stat.h>
-#include <time.h>
 #include <termios.h>
+#include <time.h>
 
 // ========== defines ==========
+
+#define _MIN_MAX_H_
+
+#define min(a, b) ((a) < (b) ? (a) : (b))
+
+#define max(a, b) ((a) > (b) ? (a) : (b))
+
+#define _BOOLEAN_H_
+
+#define _COMPOUND_LITERAL_H_
+
+#define compound_literal(type, ...) ((type) __VA_ARGS__)
+
+#define _FN_H_
+
+#define fn_t(return_type, ...) typeof(return_type(*)(__VA_ARGS__))
+
+#define _LEB128_H_
+
+#define ERROR_INSUFFICIENT_INPUT -1
+
+#define ERROR_TOO_BIG -2
+
+#define _FATAL_ERROR_H_
+
+#define fatal_error(code) fatal_error_impl(__FILE__, __LINE__, code)
+
+#define _VALUE_H_
+
+#define boolean_to_value(x) compound_literal(value_t, {.u64 = x})
+
+#define u64_to_value(x) compound_literal(value_t, {.u64 = x})
+
+#define i64_to_value(x) compound_literal(value_t, {.i64 = x})
+
+#define str_to_value(x) compound_literal(value_t, {.str = x})
+
+#define ptr_to_value(x) compound_literal(value_t, {.ptr = x})
+
+#define dbl_to_value(x) compound_literal(value_t, {.dbl = x})
+
+#define cast(type, expr) ((type) (expr))
 
 #define _ALLOCATE_H_
 
@@ -134,45 +177,111 @@ typedef struct {
 
 #define END_PADDING_BYTE ((~START_PADDING_BYTE) & 0xff)
 
-#define _BOOLEAN_H_
+#define _UINT64_H_
+
+#define _STRING_UTIL_H_
+
+#define STRING_PRINTF_INITIAL_BUFFER_SIZE 1024
+
+#define _LOGGER_H_
+
+#define LOGGER_OFF 0
+
+#define LOGGER_TRACE 1
+
+#define LOGGER_DEBUG 2
+
+#define LOGGER_INFO 3
+
+#define LOGGER_WARN 4
+
+#define LOGGER_FATAL 5
+
+#define LOGGER_TEST 6
+
+#define LOGGER_DEFAULT_LEVEL LOGGER_WARN
+
+#define log_none(format, ...)                                                  \
+  do {                                                                         \
+  } while (0);
+
+#define log_off(format, ...)                                                   \
+  do {                                                                         \
+    if (0) {                                                                   \
+      logger_impl(__FILE__, __LINE__, __FUNCTION__, LOGGER_TRACE, format,      \
+                  ##__VA_ARGS__);                                              \
+    }                                                                          \
+  } while (0)
+
+#define log_trace(format, ...)                                                 \
+  do {                                                                         \
+    if (global_logger_state.level <= LOGGER_TRACE) {                           \
+      logger_impl(__FILE__, __LINE__, __FUNCTION__, LOGGER_TRACE, format,      \
+                  ##__VA_ARGS__);                                              \
+    }                                                                          \
+  } while (0)
+
+#define log_debug(format, ...)                                                 \
+  do {                                                                         \
+    if (global_logger_state.level <= LOGGER_DEBUG) {                           \
+      logger_impl(__FILE__, __LINE__, __FUNCTION__, LOGGER_DEBUG, format,      \
+                  ##__VA_ARGS__);                                              \
+    }                                                                          \
+  } while (0)
+
+#define log_info(format, ...)                                                  \
+  do {                                                                         \
+    if (global_logger_state.level <= LOGGER_INFO) {                            \
+      logger_impl(__FILE__, __LINE__, __FUNCTION__, LOGGER_INFO, format,       \
+                  ##__VA_ARGS__);                                              \
+    }                                                                          \
+  } while (0)
+
+#define log_warn(format, ...)                                                  \
+  do {                                                                         \
+    if (global_logger_state.level <= LOGGER_WARN) {                            \
+      logger_impl(__FILE__, __LINE__, __FUNCTION__, LOGGER_WARN, format,       \
+                  ##__VA_ARGS__);                                              \
+    }                                                                          \
+  } while (0)
+
+#define log_fatal(format, ...)                                                 \
+  do {                                                                         \
+    if (global_logger_state.level <= LOGGER_FATAL) {                           \
+      logger_impl(__FILE__, __LINE__, __FUNCTION__, LOGGER_FATAL, format,      \
+                  ##__VA_ARGS__);                                              \
+    }                                                                          \
+  } while (0)
+
+#define log_test(format, ...)                                                  \
+  do {                                                                         \
+    logger_impl(__FILE__, __LINE__, __FUNCTION__, LOGGER_TEST, format,         \
+                ##__VA_ARGS__);                                                \
+  } while (0)
+
+#define _UTF8_DECODER_H_
 
 #define _BUFFER_H_
 
 #define BUFFER_PRINTF_INITIAL_BUFFER_SIZE 1024
 
-#define _CDL_PRINTER_H_
+#define _VALUE_ARRAY_H_
 
-#define _COMPOUND_LITERAL_H_
+#define value_array_get_ptr(array, index_expression, cast_type)                \
+  (cast(cast_type, value_array_get(array, index_expression).ptr))
 
-#define compound_literal(type, ...) ((type) __VA_ARGS__)
+#define _VALUE_ALIST_H_
 
-#define _FN_H_
-
-#define fn_t(return_type, ...) typeof(return_type(*)(__VA_ARGS__))
-
-#define _FLAG_H_
-
-#define _FATAL_ERROR_H_
-
-#define fatal_error(code) fatal_error_impl(__FILE__, __LINE__, code)
-
-#define _IO_H_
-
-#define FILE_COPY_STREAM_BUFFER_SIZE 1024
-
-#define _LEB128_H_
-
-#define ERROR_INSUFFICIENT_INPUT -1
-
-#define ERROR_TOO_BIG -2
-
-#define _MIN_MAX_H_
-
-#define min(a, b) ((a) < (b) ? (a) : (b))
-
-#define max(a, b) ((a) > (b) ? (a) : (b))
-
-#define _RANDOM_H_
+#define value_alist_foreach(alist, key_var, value_var, statements)             \
+  do {                                                                         \
+    value_alist_t* head = alist;                                               \
+    while (head) {                                                             \
+      value_t key_var = head->key;                                             \
+      value_t value_var = head->value;                                         \
+      statements;                                                              \
+      head = head->next;                                                       \
+    }                                                                          \
+  } while (0)
 
 #define _STRING_ALIST_H_
 
@@ -185,6 +294,22 @@ typedef struct {
                         });                                                    \
   } while (0)
 
+#define _VALUE_HASHTABLE_H_
+
+#define ARMYKNIFE_HT_LOAD_FACTOR 0.75
+
+#define AK_HT_UPSCALE_MULTIPLIER 1.75
+
+#define value_ht_foreach(ht, key_var, value_var, statements)                   \
+  do {                                                                         \
+    for (int ht_index = 0; ht_index < ht->n_buckets; ht_index++) {             \
+      value_alist_t* alist = ht->buckets[ht_index];                            \
+      if (alist != NULL) {                                                     \
+        value_alist_foreach(alist, key_var, value_var, statements);            \
+      }                                                                        \
+    }                                                                          \
+  } while (0)
+
 #define _STRING_HASHTABLE_H_
 
 #define string_ht_foreach(ht, key_var, value_var, statements)                  \
@@ -193,6 +318,26 @@ typedef struct {
       char* key_var = (key_var##_value).str;                                   \
       statements;                                                              \
     });                                                                        \
+  } while (0)
+
+#define _VALUE_TREE_H_
+
+#define value_tree_foreach(tree, key_var, value_var, statements)               \
+  do {                                                                         \
+    int stack_n_elements = 0;                                                  \
+    value_tree_t* stack[64];                                                   \
+    value_tree_t* current = tree;                                              \
+    while (current != NULL || stack_n_elements > 0) {                          \
+      while (current != NULL) {                                                \
+        stack[stack_n_elements++] = current;                                   \
+        current = current->left;                                               \
+      }                                                                        \
+      current = stack[--stack_n_elements];                                     \
+      value_t key_var = current->key;                                          \
+      value_t value_var = current->value;                                      \
+      statements;                                                              \
+      current = current->right;                                                \
+    }                                                                          \
   } while (0)
 
 #define _STRING_TREE_H_
@@ -206,9 +351,11 @@ typedef struct {
                        });                                                     \
   } while (0)
 
-#define _STRING_UTIL_H_
+#define _FLAG_H_
 
-#define STRING_PRINTF_INITIAL_BUFFER_SIZE 1024
+#define _IO_H_
+
+#define FILE_COPY_STREAM_BUFFER_SIZE 1024
 
 #define _TERMINAL_H_
 
@@ -422,6 +569,12 @@ typedef struct {
 
 #define TERM_ESCAPE_END "m"
 
+#define _TOKENIZER_H_
+
+#define _RANDOM_H_
+
+#define _CDL_PRINTER_H_
+
 #define _TEST_H_
 
 #define test_fail(format, ...)                                                 \
@@ -464,114 +617,15 @@ typedef struct {
     }                                                                           \
   } while (0)
 
-#define _TOKENIZER_H_
-
-#define _UINT64_H_
-
-#define _UTF8_DECODER_H_
-
-#define _VALUE_H_
-
-#define boolean_to_value(x) compound_literal(value_t, {.u64 = x})
-
-#define u64_to_value(x) compound_literal(value_t, {.u64 = x})
-
-#define i64_to_value(x) compound_literal(value_t, {.i64 = x})
-
-#define str_to_value(x) compound_literal(value_t, {.str = x})
-
-#define ptr_to_value(x) compound_literal(value_t, {.ptr = x})
-
-#define dbl_to_value(x) compound_literal(value_t, {.dbl = x})
-
-#define cast(type, expr) ((type) (expr))
-
-#define _VALUE_ALIST_H_
-
-#define value_alist_foreach(alist, key_var, value_var, statements)             \
-  do {                                                                         \
-    value_alist_t* head = alist;                                               \
-    while (head) {                                                             \
-      value_t key_var = head->key;                                             \
-      value_t value_var = head->value;                                         \
-      statements;                                                              \
-      head = head->next;                                                       \
-    }                                                                          \
-  } while (0)
-
-#define _VALUE_ARRAY_H_
-
-#define value_array_get_ptr(array, index_expression, cast_type)                \
-  (cast(cast_type, value_array_get(array, index_expression).ptr))
-
-#define _VALUE_HASHTABLE_H_
-
-#define ARMYKNIFE_HT_LOAD_FACTOR 0.75
-
-#define AK_HT_UPSCALE_MULTIPLIER 1.75
-
-#define value_ht_foreach(ht, key_var, value_var, statements)                   \
-  do {                                                                         \
-    for (int ht_index = 0; ht_index < ht->n_buckets; ht_index++) {             \
-      value_alist_t* alist = ht->buckets[ht_index];                            \
-      if (alist != NULL) {                                                     \
-        value_alist_foreach(alist, key_var, value_var, statements);            \
-      }                                                                        \
-    }                                                                          \
-  } while (0)
-
-#define _VALUE_TREE_H_
-
-#define value_tree_foreach(tree, key_var, value_var, statements)               \
-  do {                                                                         \
-    int stack_n_elements = 0;                                                  \
-    value_tree_t* stack[64];                                                   \
-    value_tree_t* current = tree;                                              \
-    while (current != NULL || stack_n_elements > 0) {                          \
-      while (current != NULL) {                                                \
-        stack[stack_n_elements++] = current;                                   \
-        current = current->left;                                               \
-      }                                                                        \
-      current = stack[--stack_n_elements];                                     \
-      value_t key_var = current->key;                                          \
-      value_t value_var = current->value;                                      \
-      statements;                                                              \
-      current = current->right;                                                \
-    }                                                                          \
-  } while (0)
-
 // ========== enums ==========
 
 // ========== typedefs ==========
 
-typedef struct memory_hashtable_bucket_S memory_hashtable_bucket_t;
-
 typedef bool boolean_t;
 
-typedef struct buffer_S buffer_t;
+typedef struct unsigned_decode_result__generated_S unsigned_decode_result;
 
-typedef struct line_and_column_S line_and_column_t;
-
-typedef struct cdl_printer_t__generated_S cdl_printer_t;
-
-typedef enum {
-  flag_type_none,
-  flag_type_boolean,
-  flag_type_string,
-  flag_type_uint64,
-  flag_type_int64,
-  flag_type_double,
-  flag_type_enum,
-  flag_type_custom,
-} flag_type_t;
-
-typedef struct program_descriptor_S program_descriptor_t;
-
-typedef struct command_descriptor_S command_descriptor_t;
-
-typedef struct flag_descriptor_S flag_descriptor_t;
-
-typedef struct flag_key_value_S flag_key_value_t;
+typedef struct signed_decode_result__generated_S signed_decode_result;
 
 typedef struct fatal_error_config_S fatal_error_config_t;
 
@@ -605,24 +659,6 @@ typedef enum {
   ERROR_ILLEGAL_TERMINAL_COORDINATES,
 } error_code_t;
 
-typedef struct unsigned_decode_result__generated_S unsigned_decode_result;
-
-typedef struct signed_decode_result__generated_S signed_decode_result;
-
-typedef struct random_state_S random_state_t;
-
-typedef struct string_alist_S string_alist_t;
-
-typedef struct string_hashtable_S string_hashtable_t;
-
-typedef struct string_tree_S string_tree_t;
-
-typedef struct box_drawing_S box_drawing_t;
-
-typedef struct term_keypress_S term_keypress_t;
-
-typedef struct utf8_decode_result_S utf8_decode_result_t;
-
 typedef union  {
   uint64_t u64;
   uint64_t i64;
@@ -644,15 +680,62 @@ typedef fn_t(int, value_t, value_t) value_comparison_fn;
 
 typedef fn_t(uint64_t, value_t) value_hash_fn;
 
-typedef struct value_alist_S value_alist_t;
+typedef struct memory_hashtable_bucket_S memory_hashtable_bucket_t;
+
+typedef struct logger_state_S logger_state_t;
+
+typedef struct utf8_decode_result_S utf8_decode_result_t;
+
+typedef struct buffer_S buffer_t;
+
+typedef struct line_and_column_S line_and_column_t;
 
 typedef struct value_array_S value_array_t;
 
+typedef struct value_alist_S value_alist_t;
+
+typedef struct string_alist_S string_alist_t;
+
 typedef struct value_hashtable_S value_hashtable_t;
+
+typedef struct string_hashtable_S string_hashtable_t;
 
 typedef struct value_tree_S value_tree_t;
 
+typedef struct string_tree_S string_tree_t;
+
+typedef enum {
+  flag_type_none,
+  flag_type_boolean,
+  flag_type_string,
+  flag_type_uint64,
+  flag_type_int64,
+  flag_type_double,
+  flag_type_enum,
+  flag_type_custom,
+} flag_type_t;
+
+typedef struct program_descriptor_S program_descriptor_t;
+
+typedef struct command_descriptor_S command_descriptor_t;
+
+typedef struct flag_descriptor_S flag_descriptor_t;
+
+typedef struct flag_key_value_S flag_key_value_t;
+
+typedef struct box_drawing_S box_drawing_t;
+
+typedef struct term_keypress_S term_keypress_t;
+
+typedef struct random_state_S random_state_t;
+
+typedef struct cdl_printer_t__generated_S cdl_printer_t;
+
 // ========== stuctures/unions ==========
+
+struct fatal_error_config_S {
+  boolean_t catch_sigsegv;
+};
 
 struct memory_hashtable_bucket_S {
   uint64_t malloc_address;
@@ -661,10 +744,58 @@ struct memory_hashtable_bucket_S {
   uint64_t allocation_line_number;
 };
 
+struct logger_state_S {
+  boolean_t initialized;
+  int level;
+  char* logger_output_filename;
+  FILE* output;
+};
+
+struct utf8_decode_result_S {
+  uint32_t code_point;
+  uint8_t num_bytes;
+  boolean_t error;
+};
+
 struct buffer_S {
   uint32_t length;
   uint32_t capacity;
   uint8_t* elements;
+};
+
+struct value_array_S {
+  uint32_t length;
+  uint32_t capacity;
+  value_t* elements;
+};
+
+struct value_alist_S {
+  struct value_alist_S* next;
+  value_t key;
+  value_t value;
+};
+
+struct string_alist_S {
+};
+
+struct value_hashtable_S {
+  uint64_t n_buckets;
+  uint64_t n_entries;
+  value_alist_t** buckets;
+};
+
+struct string_hashtable_S {
+};
+
+struct value_tree_S {
+  value_t key;
+  value_t value;
+  uint32_t level;
+  struct value_tree_S* left;
+  struct value_tree_S* right;
+};
+
+struct string_tree_S {
 };
 
 struct program_descriptor_S {
@@ -699,24 +830,6 @@ struct flag_key_value_S {
   char* value;
 };
 
-struct fatal_error_config_S {
-  boolean_t catch_sigsegv;
-};
-
-struct random_state_S {
-  uint64_t a;
-  uint64_t b;
-};
-
-struct string_alist_S {
-};
-
-struct string_hashtable_S {
-};
-
-struct string_tree_S {
-};
-
 struct box_drawing_S {
   uint32_t upper_left_corner;
   uint32_t upper_right_corner;
@@ -739,47 +852,9 @@ struct term_keypress_S {
   uint8_t hyper;
 };
 
-struct utf8_decode_result_S {
-  uint32_t code_point;
-  uint8_t num_bytes;
-  boolean_t error;
-};
-
-struct value_alist_S {
-  struct value_alist_S* next;
-  value_t key;
-  value_t value;
-};
-
-struct value_array_S {
-  uint32_t length;
-  uint32_t capacity;
-  value_t* elements;
-};
-
-struct value_hashtable_S {
-  uint64_t n_buckets;
-  uint64_t n_entries;
-  value_alist_t** buckets;
-};
-
-struct value_tree_S {
-  value_t key;
-  value_t value;
-  uint32_t level;
-  struct value_tree_S* left;
-  struct value_tree_S* right;
-};
-
-struct line_and_column_S {
-  uint64_t line;
-  uint64_t column;
-};
-
-struct cdl_printer_t__generated_S {
-  buffer_t* buffer;
-  char* key_token;
-  int indention_level;
+struct random_state_S {
+  uint64_t a;
+  uint64_t b;
 };
 
 struct unsigned_decode_result__generated_S {
@@ -804,7 +879,20 @@ struct value_result_t__generated_S {
   non_fatal_error_code_t nf_error;
 };
 
+struct line_and_column_S {
+  uint64_t line;
+  uint64_t column;
+};
+
+struct cdl_printer_t__generated_S {
+  buffer_t* buffer;
+  char* key_token;
+  int indention_level;
+};
+
 // ========== global variables ==========
+
+extern fatal_error_config_t fatal_error_config;
 
 extern boolean_t is_initialized;
 
@@ -818,16 +906,31 @@ extern uint64_t number_of_free_calls;
 
 extern memory_hashtable_bucket_t memory_ht[ARMYKNIFE_MEMORY_ALLOCATION_HASHTABLE_SIZE];
 
+extern logger_state_t global_logger_state;
+
 extern program_descriptor_t* current_program;
 
 extern command_descriptor_t* current_command;
 
 extern flag_descriptor_t* current_flag;
 
-extern fatal_error_config_t fatal_error_config;
-
 // ========== function prototypes ==========
 
+extern unsigned encode_sleb_128(int64_t Value, uint8_t* p);
+extern unsigned encode_uleb_128(uint64_t Value, uint8_t* p);
+extern unsigned_decode_result decode_uleb_128(uint8_t* p, uint8_t* end);
+extern signed_decode_result decode_sleb_128(uint8_t* p, uint8_t* end);
+extern _Noreturn void fatal_error_impl(char* file, int line, int error_code);
+extern char* fatal_error_code_to_string(int error_code);
+extern void configure_fatal_errors(fatal_error_config_t config);
+void segmentation_fault_handler(int signal_number);
+void print_fatal_error_banner();
+void print_backtrace();
+void print_error_code_name(int error_code);
+char* get_command_line();
+char* get_program_path();
+int cmp_string_values(value_t value1, value_t value2);
+uint64_t hash_string_value(value_t value1);
 extern uint8_t* checked_malloc(char* file, int line, uint64_t amount);
 extern uint8_t* checked_malloc_copy_of(char* file, int line, uint8_t* source, uint64_t amount);
 extern void checked_free(char* file, int line, void* pointer);
@@ -837,6 +940,32 @@ void check_end_padding(uint8_t* address, char* filename, uint64_t line);
 uint64_t mumurhash64_mix(uint64_t h);
 void track_padding(char* file, int line, uint8_t* address, uint64_t amount);
 void untrack_padding(uint8_t* malloc_address);
+extern int uint64_highest_bit_set(uint64_t n);
+extern int string_is_null_or_empty(char* str1);
+extern int string_equal(char* str1, char* str2);
+extern int string_starts_with(char* str1, char* str2);
+extern int string_ends_with(char* str1, char* str2);
+extern boolean_t string_contains_char(char* str, char ch);
+extern int string_index_of_char(char* a, char ch);
+extern char* uint64_to_string(uint64_t number);
+extern uint64_t string_hash(char* str);
+extern char* string_substring(char* str, int start, int end);
+extern value_result_t string_parse_uint64(char* string);
+extern value_result_t string_parse_uint64_dec(char* string);
+extern value_result_t string_parse_uint64_hex(char* string);
+extern value_result_t string_parse_uint64_bin(char* string);
+extern char* string_duplicate(char* src);
+extern char* string_append(char* a, char* b);
+extern char* string_left_pad(char* a, int count, char ch);
+extern char* string_right_pad(char* a, int count, char ch);
+__attribute__((format(printf, 1, 2))) extern char* string_printf(char* format, ...);
+char* string_truncate(char* str, int limit, char* at_limit_suffix);
+uint64_t fasthash64(void* buf, size_t len, uint64_t seed);
+extern void logger_init(void);
+__attribute__((format(printf, 5, 6))) extern void logger_impl(char* file, int line_number, char* function, int level, char* format, ...);
+value_result_t parse_log_level_enum(char* str);
+char* logger_level_to_string(int level);
+extern utf8_decode_result_t utf8_decode(uint8_t* utf8_bytes);
 extern buffer_t* make_buffer(uint64_t initial_capacity);
 extern uint64_t buffer_length(buffer_t* buffer);
 extern uint8_t buffer_get(buffer_t* buffer, uint64_t position);
@@ -864,20 +993,33 @@ uint64_t buffer_end_of_line(buffer_t* buffer, uint64_t start);
 buffer_t* buffer_to_uppercase(buffer_t* buffer);
 buffer_t* buffer_to_lowercase(buffer_t* buffer);
 line_and_column_t buffer_position_to_line_and_column(buffer_t* buffer, uint64_t position);
-cdl_printer_t* make_cdl_printer(buffer_t* buffer);
-void cdl_boolean(cdl_printer_t* printer, boolean_t bolean);
-void cdl_string(cdl_printer_t* printer, char* string);
-void cdl_int64(cdl_printer_t* printer, int64_t number);
-void cdl_uint64(cdl_printer_t* printer, uint64_t number);
-void cdl_double(cdl_printer_t* printer, double number);
-void cdl_start_array(cdl_printer_t* printer);
-void cdl_end_array(cdl_printer_t* printer);
-void cdl_start_table(cdl_printer_t* printer);
-void cdl_key(cdl_printer_t* printer, char* key);
-void cdl_end_table(cdl_printer_t* printer);
-void cdl_indent(cdl_printer_t* printer);
-boolean_t is_symbol(char* string);
-void cdl_output_token(cdl_printer_t* printer, char* string);
+extern value_array_t* make_value_array(uint64_t initial_capacity);
+extern value_t value_array_get(value_array_t* array, uint32_t index);
+extern void value_array_replace(value_array_t* array, uint32_t index, value_t element);
+extern void value_array_add(value_array_t* array, value_t element);
+extern void value_array_push(value_array_t* array, value_t element);
+extern value_t value_array_pop(value_array_t* array);
+extern void value_array_insert_at(value_array_t* array, uint32_t position, value_t element);
+extern value_t value_array_delete_at(value_array_t* array, uint32_t position);
+void value_array_ensure_capacity(value_array_t* array, uint32_t required_capacity);
+extern value_result_t value_alist_find(value_alist_t* list, value_comparison_fn cmp_fn, value_t key);
+__attribute__((warn_unused_result)) extern value_alist_t* value_alist_insert(value_alist_t* list, value_comparison_fn cmp_fn, value_t key, value_t value);
+__attribute__((warn_unused_result)) extern value_alist_t* value_alist_delete(value_alist_t* list, value_comparison_fn cmp_fn, value_t key);
+__attribute__((warn_unused_result)) extern uint64_t value_alist_length(value_alist_t* list);
+extern value_hashtable_t* make_value_hashtable(uint64_t n_buckets);
+extern value_hashtable_t* value_ht_insert(value_hashtable_t* ht, value_hash_fn hash_fn, value_comparison_fn cmp_fn, value_t key, value_t value);
+extern value_hashtable_t* value_ht_delete(value_hashtable_t* ht, value_hash_fn hash_fn, value_comparison_fn cmp_fn, value_t key);
+extern value_result_t value_ht_find(value_hashtable_t* ht, value_hash_fn hash_fn, value_comparison_fn cmp_fn, value_t key);
+extern void value_hashtable_upsize_internal(value_hashtable_t* ht, value_hash_fn hash_fn, value_comparison_fn cmp_fn);
+extern value_result_t value_tree_find(value_tree_t* t, value_comparison_fn cmp_fn, value_t key);
+__attribute__((warn_unused_result)) extern value_tree_t* value_tree_insert(value_tree_t* t, value_comparison_fn cmp_fn, value_t key, value_t value);
+__attribute__((warn_unused_result)) extern value_tree_t* value_tree_delete(value_tree_t* t, value_comparison_fn cmp_fn, value_t key);
+value_tree_t* value_tree_skew(value_tree_t* t);
+value_tree_t* value_tree_split(value_tree_t* t);
+value_tree_t* make_value_tree_leaf(value_t key, value_t value);
+value_tree_t* value_tree_decrease_level(value_tree_t* t);
+value_tree_t* value_tree_predecessor(value_tree_t* t);
+value_tree_t* value_tree_successor(value_tree_t* t);
 extern void flag_program_name(char* name);
 extern void flag_description(char* description);
 extern void flag_file_args(value_array_t** write_back_ptr);
@@ -902,15 +1044,6 @@ char* parse_and_write_uint64(flag_descriptor_t* flag, flag_key_value_t key_value
 char* parse_and_write_enum(flag_descriptor_t* flag, flag_key_value_t key_value);
 void add_flag(char* name, void* write_back_ptr, flag_type_t flag_type);
 void flag_print_flags(FILE* out, char* header, string_tree_t* flags);
-extern _Noreturn void fatal_error_impl(char* file, int line, int error_code);
-extern char* fatal_error_code_to_string(int error_code);
-extern void configure_fatal_errors(fatal_error_config_t config);
-void segmentation_fault_handler(int signal_number);
-void print_fatal_error_banner();
-void print_backtrace();
-void print_error_code_name(int error_code);
-char* get_command_line();
-char* get_program_path();
 __attribute__((warn_unused_result)) extern buffer_t* buffer_append_file_contents(buffer_t* bytes, char* file_name);
 __attribute__((warn_unused_result)) extern buffer_t* buffer_append_all(buffer_t* buffer, FILE* input);
 extern void buffer_write_file(buffer_t* bytes, char* file_name);
@@ -920,35 +1053,6 @@ int file_peek_byte(FILE* input);
 boolean_t file_eof(FILE* input);
 void file_copy_stream(FILE* input, FILE* output, boolean_t until_eof, uint64_t size);
 void file_skip_bytes(FILE* input, uint64_t n_bytes);
-extern unsigned encode_sleb_128(int64_t Value, uint8_t* p);
-extern unsigned encode_uleb_128(uint64_t Value, uint8_t* p);
-extern unsigned_decode_result decode_uleb_128(uint8_t* p, uint8_t* end);
-extern signed_decode_result decode_sleb_128(uint8_t* p, uint8_t* end);
-extern random_state_t random_state_for_test(void);
-extern uint64_t random_next_uint64(random_state_t* state);
-extern uint64_t random_next_uint64_below(random_state_t* state, uint64_t maximum);
-random_state_t* random_state(void);
-uint64_t random_next(random_state_t* state);
-extern int string_is_null_or_empty(char* str1);
-extern int string_equal(char* str1, char* str2);
-extern int string_starts_with(char* str1, char* str2);
-extern int string_ends_with(char* str1, char* str2);
-extern boolean_t string_contains_char(char* str, char ch);
-extern int string_index_of_char(char* a, char ch);
-extern char* uint64_to_string(uint64_t number);
-extern uint64_t string_hash(char* str);
-extern char* string_substring(char* str, int start, int end);
-extern value_result_t string_parse_uint64(char* string);
-extern value_result_t string_parse_uint64_dec(char* string);
-extern value_result_t string_parse_uint64_hex(char* string);
-extern value_result_t string_parse_uint64_bin(char* string);
-extern char* string_duplicate(char* src);
-extern char* string_append(char* a, char* b);
-extern char* string_left_pad(char* a, int count, char ch);
-extern char* string_right_pad(char* a, int count, char ch);
-__attribute__((format(printf, 1, 2))) extern char* string_printf(char* format, ...);
-char* string_truncate(char* str, int limit, char* at_limit_suffix);
-uint64_t fasthash64(void* buf, size_t len, uint64_t seed);
 __attribute__((warn_unused_result)) extern buffer_t* term_clear_screen(buffer_t* buffer);
 __attribute__((warn_unused_result)) extern buffer_t* term_set_foreground_color(buffer_t* buffer, uint32_t color);
 __attribute__((warn_unused_result)) extern buffer_t* term_set_background_color(buffer_t* buffer, uint32_t color);
@@ -962,54 +1066,48 @@ __attribute__((warn_unused_result)) extern buffer_t* term_reset_formatting(buffe
 __attribute__((warn_unused_result)) extern buffer_t* term_draw_box(buffer_t* buffer, uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, box_drawing_t* box);
 extern struct termios term_echo_off();
 extern void term_echo_restore(struct termios oldt);
-__attribute__((format(printf, 3, 4))) void test_fail_and_exit(char* file_name, int line_number, char* format, ...);
 extern value_array_t* string_tokenize(char* str, char* delimiters);
 extern value_array_t* buffer_tokenize(buffer_t* buffer, char* delimiters);
 extern value_array_t* tokenize_memory_range(uint8_t* start, uint64_t length, char* delimiters);
 void add_duplicate(value_array_t* token_array, char* data);
-extern int uint64_highest_bit_set(uint64_t n);
-extern utf8_decode_result_t utf8_decode(uint8_t* utf8_bytes);
-int cmp_string_values(value_t value1, value_t value2);
-uint64_t hash_string_value(value_t value1);
-extern value_result_t value_alist_find(value_alist_t* list, value_comparison_fn cmp_fn, value_t key);
-__attribute__((warn_unused_result)) extern value_alist_t* value_alist_insert(value_alist_t* list, value_comparison_fn cmp_fn, value_t key, value_t value);
-__attribute__((warn_unused_result)) extern value_alist_t* value_alist_delete(value_alist_t* list, value_comparison_fn cmp_fn, value_t key);
-__attribute__((warn_unused_result)) extern uint64_t value_alist_length(value_alist_t* list);
-extern value_array_t* make_value_array(uint64_t initial_capacity);
-extern value_t value_array_get(value_array_t* array, uint32_t index);
-extern void value_array_replace(value_array_t* array, uint32_t index, value_t element);
-extern void value_array_add(value_array_t* array, value_t element);
-extern void value_array_push(value_array_t* array, value_t element);
-extern value_t value_array_pop(value_array_t* array);
-extern void value_array_insert_at(value_array_t* array, uint32_t position, value_t element);
-extern value_t value_array_delete_at(value_array_t* array, uint32_t position);
-void value_array_ensure_capacity(value_array_t* array, uint32_t required_capacity);
-extern value_hashtable_t* make_value_hashtable(uint64_t n_buckets);
-__attribute__((warn_unused_result)) extern value_hashtable_t* value_ht_insert(value_hashtable_t* ht, value_hash_fn hash_fn, value_comparison_fn cmp_fn, value_t key, value_t value);
-__attribute__((warn_unused_result)) extern value_hashtable_t* value_ht_delete(value_hashtable_t* ht, value_hash_fn hash_fn, value_comparison_fn cmp_fn, value_t key);
-extern value_result_t value_ht_find(value_hashtable_t* ht, value_hash_fn hash_fn, value_comparison_fn cmp_fn, value_t key);
-__attribute__((warn_unused_result)) extern value_hashtable_t* value_hashtable_upsize_internal(value_hashtable_t* ht, value_hash_fn hash_fn, value_comparison_fn cmp_fn);
-extern value_result_t value_tree_find(value_tree_t* t, value_comparison_fn cmp_fn, value_t key);
-__attribute__((warn_unused_result)) extern value_tree_t* value_tree_insert(value_tree_t* t, value_comparison_fn cmp_fn, value_t key, value_t value);
-__attribute__((warn_unused_result)) extern value_tree_t* value_tree_delete(value_tree_t* t, value_comparison_fn cmp_fn, value_t key);
-value_tree_t* value_tree_skew(value_tree_t* t);
-value_tree_t* value_tree_split(value_tree_t* t);
-value_tree_t* make_value_tree_leaf(value_t key, value_t value);
-value_tree_t* value_tree_decrease_level(value_tree_t* t);
-value_tree_t* value_tree_predecessor(value_tree_t* t);
-value_tree_t* value_tree_successor(value_tree_t* t);
-char* flag_type_to_string(flag_type_t value);
-flag_type_t string_to_flag_type(char* value);
-enum_metadata_t* flag_type_metadata();
+extern random_state_t random_state_for_test(void);
+extern uint64_t random_next_uint64(random_state_t* state);
+extern uint64_t random_next_uint64_below(random_state_t* state, uint64_t maximum);
+random_state_t* random_state(void);
+uint64_t random_next(random_state_t* state);
+cdl_printer_t* make_cdl_printer(buffer_t* buffer);
+void cdl_boolean(cdl_printer_t* printer, boolean_t bolean);
+void cdl_string(cdl_printer_t* printer, char* string);
+void cdl_int64(cdl_printer_t* printer, int64_t number);
+void cdl_uint64(cdl_printer_t* printer, uint64_t number);
+void cdl_double(cdl_printer_t* printer, double number);
+void cdl_start_array(cdl_printer_t* printer);
+void cdl_end_array(cdl_printer_t* printer);
+void cdl_start_table(cdl_printer_t* printer);
+void cdl_key(cdl_printer_t* printer, char* key);
+void cdl_end_table(cdl_printer_t* printer);
+void cdl_indent(cdl_printer_t* printer);
+boolean_t is_symbol(char* string);
+void cdl_output_token(cdl_printer_t* printer, char* string);
+__attribute__((format(printf, 3, 4))) void test_fail_and_exit(char* file_name, int line_number, char* format, ...);
 char* error_code_to_string(error_code_t value);
 error_code_t string_to_error_code(char* value);
 enum_metadata_t* error_code_metadata();
 char* non_fatal_error_code_to_string(non_fatal_error_code_t value);
 non_fatal_error_code_t string_to_non_fatal_error_code(char* value);
 enum_metadata_t* non_fatal_error_code_metadata();
+char* flag_type_to_string(flag_type_t value);
+flag_type_t string_to_flag_type(char* value);
+enum_metadata_t* flag_type_metadata();
 
 // ========== inlined functions ==========
 
+static inline boolean_t is_ok(value_result_t value){
+  return value.nf_error == NF_OK;
+}
+static inline boolean_t is_not_ok(value_result_t value){
+  return value.nf_error != NF_OK;
+}
 static inline boolean_t should_log_memory_allocation(){
   if (is_initialized) {
     return should_log_value;
@@ -1021,8 +1119,24 @@ static inline boolean_t should_log_memory_allocation(){
   }
   return should_log_value;
 }
-static inline uint64_t rotl(uint64_t x, int k){
-  return (x << k) | (x >> (64 - k));
+static inline boolean_t is_hex_digit(char ch){
+  return (ch >= '0' && ch <= '9') || (ch >= 'a' && ch <= 'f');
+}
+static inline uint64_t hex_digit_to_value(char ch){
+  if (ch >= '0' && ch <= '9') {
+    return ch - '0';
+  } else {
+    return (ch - 'a') + 10;
+  }
+}
+static inline uint64_t mix(uint64_t h){
+  h ^= h >> 23;
+  h *= 0x2127599bf4325c37ULL;
+  h ^= h >> 47;
+  return h;
+}
+static inline boolean_t should_log_info(){
+  return global_logger_state.level <= LOGGER_INFO;
 }
 static inline value_result_t alist_find(string_alist_t* list, char* key){
   return value_alist_find(cast(value_alist_t*, list), cmp_string_values,
@@ -1040,6 +1154,9 @@ __attribute__((warn_unused_result)) static inline string_alist_t* alist_delete(s
 }
 __attribute__((warn_unused_result)) static inline uint64_t alist_length(string_alist_t* list){
   return value_alist_length(cast(value_alist_t*, list));
+}
+static inline uint64_t value_ht_num_entries(value_hashtable_t* ht){
+  return ht->n_entries;
 }
 static inline value_hashtable_t* to_value_hashtable(string_hashtable_t* ht){
   return cast(value_hashtable_t*, ht);
@@ -1064,6 +1181,12 @@ static inline value_result_t string_ht_find(string_hashtable_t* ht, char* key){
 static inline uint64_t string_ht_num_entries(string_hashtable_t* ht){
   return value_ht_num_entries(to_value_hashtable(ht));
 }
+static inline uint64_t value_tree_min_level(uint32_t a, uint32_t b){
+  return a < b ? a : b;
+}
+static inline boolean_t value_tree_is_leaf(value_tree_t* t){
+  return t->left == NULL && t->right == NULL;
+}
 static inline value_result_t string_tree_find(string_tree_t* t, char* key){
   return value_tree_find(cast(value_tree_t*, t), cmp_string_values,
                          str_to_value(key));
@@ -1078,21 +1201,8 @@ __attribute__((warn_unused_result)) static inline string_tree_t* string_tree_del
               value_tree_delete(cast(value_tree_t*, t), cmp_string_values,
                                 str_to_value(key)));
 }
-static inline boolean_t is_hex_digit(char ch){
-  return (ch >= '0' && ch <= '9') || (ch >= 'a' && ch <= 'f');
-}
-static inline uint64_t hex_digit_to_value(char ch){
-  if (ch >= '0' && ch <= '9') {
-    return ch - '0';
-  } else {
-    return (ch - 'a') + 10;
-  }
-}
-static inline uint64_t mix(uint64_t h){
-  h ^= h >> 23;
-  h *= 0x2127599bf4325c37ULL;
-  h ^= h >> 47;
-  return h;
+static inline uint64_t rotl(uint64_t x, int k){
+  return (x << k) | (x >> (64 - k));
 }
 static inline void open_arena_for_test(void){
 #ifdef C_ARMYKNIFE_LIB_USE_ARENAS
@@ -1103,21 +1213,6 @@ static inline void close_arena_for_test(void){
 #ifdef C_ARMYKNIFE_LIB_USE_ARENAS
   arena_close();
 #endif
-}
-static inline boolean_t is_ok(value_result_t value){
-  return value.nf_error == NF_OK;
-}
-static inline boolean_t is_not_ok(value_result_t value){
-  return value.nf_error != NF_OK;
-}
-static inline uint64_t value_ht_num_entries(value_hashtable_t* ht){
-  return ht->n_entries;
-}
-static inline uint64_t value_tree_min_level(uint32_t a, uint32_t b){
-  return a < b ? a : b;
-}
-static inline boolean_t value_tree_is_leaf(value_tree_t* t){
-  return t->left == NULL && t->right == NULL;
 }
 
 

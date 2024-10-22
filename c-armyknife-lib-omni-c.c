@@ -1,5 +1,90 @@
-#include "runtime/reflection.h"
+#ifndef _REFLECTION_H_
+#define _REFLECTION_H_
 
+#include <string.h>
+
+/* ====================================================================== */
+// These are the reflection API data structures for a program compiled
+// with Omni C. We use linked lists instead of value_array_t to keep
+// compiled programs independent of any particular library
+// data-structures.
+/* ====================================================================== */
+
+// ----------------------------------------------------------------------
+// Enumerations
+// ----------------------------------------------------------------------
+
+typedef struct enum_element_metadata_S {
+  struct enum_element_metadata_S* next;
+  char* name;
+  long value;
+} enum_element_metadata_t;
+
+/**
+ * @structure enum_metadata_t
+ *
+ * The runtime metadata for a reflected enumeration.
+ */
+typedef struct {
+  char* name;
+  enum_element_metadata_t* elements;
+} enum_metadata_t;
+
+// ----------------------------------------------------------------------
+// Structures
+// ----------------------------------------------------------------------
+
+typedef struct field_metadata_S {
+  struct field_metadata_S* next;
+  char* name;
+  char* type_name_string;
+  int start_offset;
+} field_metadata_t;
+
+/**
+ * @structure structure_metadata_t
+ *
+ * The runtime metadata for a reflected structure.
+ */
+typedef struct {
+  char* name;
+  int size;
+  int alignment;
+  field_metadata_t* fields;
+} structure_metadata_t;
+
+// ----------------------------------------------------------------------
+// Unions 
+// ----------------------------------------------------------------------
+
+/*
+ * Unions could be treated exactly like structures however there is no
+ * uniform way to tag a union so making use of the metadata is a bit
+ * problematic. For that reason (and because omni-c doesn't need them
+ * yet), we are skipping them for now.
+ */
+
+// ----------------------------------------------------------------------
+// Functions
+// ----------------------------------------------------------------------
+
+typedef struct function_arg_metadata_S {
+  struct function_arg_metadata_t* next;
+  char* name;
+  char* type_string;
+} function_arg_metadata_t;
+
+/**
+ * @structure function_metadata_t
+ *
+ * The runtime metadata for a reflected structure.
+ */
+typedef struct {
+  char* name;
+  function_arg_metadata_t* arguments;
+} function_metadata_t;
+
+#endif /* _REFLECTION_H_ */
 // ========== system includes ==========
 
 #include <stdint.h>
@@ -52,6 +137,16 @@
 
 #define BUFFER_PRINTF_INITIAL_BUFFER_SIZE 1024
 
+#define _CDL_PRINTER_H_
+
+#define _COMPOUND_LITERAL_H_
+
+#define compound_literal(type, ...) ((type) __VA_ARGS__)
+
+#define _FN_H_
+
+#define fn_t(return_type, ...) typeof(return_type(*)(__VA_ARGS__))
+
 #define _FLAG_H_
 
 #define _FATAL_ERROR_H_
@@ -80,10 +175,11 @@
 
 #define string_alist_foreach(alist, key_var, value_var, statements)            \
   do {                                                                         \
-    value_alist_foreach((value_alist_t*) alist, key_var##_value, value_var, {  \
-      char* key_var = (key_var##_value).str;                                   \
-      statements;                                                              \
-    });                                                                        \
+    value_alist_foreach(cast(value_alist_t*, alist), key_var##_value,          \
+                        value_var, {                                           \
+                          char* key_var = (key_var##_value).str;               \
+                          statements;                                          \
+                        });                                                    \
   } while (0)
 
 #define _STRING_HASHTABLE_H_
@@ -371,6 +467,22 @@
 
 #define _UTF8_DECODER_H_
 
+#define _VALUE_H_
+
+#define boolean_to_value(x) compound_literal(value_t, {.u64 = x})
+
+#define u64_to_value(x) compound_literal(value_t, {.u64 = x})
+
+#define i64_to_value(x) compound_literal(value_t, {.i64 = x})
+
+#define str_to_value(x) compound_literal(value_t, {.str = x})
+
+#define ptr_to_value(x) compound_literal(value_t, {.ptr = x})
+
+#define dbl_to_value(x) compound_literal(value_t, {.dbl = x})
+
+#define cast(type, expr) ((type) (expr))
+
 #define _VALUE_ALIST_H_
 
 #define value_alist_foreach(alist, key_var, value_var, statements)             \
@@ -388,6 +500,22 @@
 
 #define value_array_get_ptr(array, index_expression, cast_type)                \
   (cast(cast_type, value_array_get(array, index_expression).ptr))
+
+#define _VALUE_HASHTABLE_H_
+
+#define ARMYKNIFE_HT_LOAD_FACTOR 0.75
+
+#define AK_HT_UPSCALE_MULTIPLIER 1.75
+
+#define value_ht_foreach(ht, key_var, value_var, statements)                   \
+  do {                                                                         \
+    for (int ht_index = 0; ht_index < ht->n_buckets; ht_index++) {             \
+      value_alist_t* alist = ht->buckets[ht_index];                            \
+      if (alist != NULL) {                                                     \
+        value_alist_foreach(alist, key_var, value_var, statements);            \
+      }                                                                        \
+    }                                                                          \
+  } while (0)
 
 #define _VALUE_TREE_H_
 
@@ -421,15 +549,17 @@ typedef struct buffer_S buffer_t;
 
 typedef struct line_and_column_S line_and_column_t;
 
+typedef struct cdl_printer_t__generated_S cdl_printer_t;
+
 typedef enum {
-    flag_type_none,
-    flag_type_boolean,
-    flag_type_string,
-    flag_type_uint64,
-    flag_type_int64,
-    flag_type_double,
-    flag_type_enum,
-    flag_type_custom,
+  flag_type_none,
+  flag_type_boolean,
+  flag_type_string,
+  flag_type_uint64,
+  flag_type_int64,
+  flag_type_double,
+  flag_type_enum,
+  flag_type_custom,
 } flag_type_t;
 
 typedef struct program_descriptor_S program_descriptor_t;
@@ -443,33 +573,33 @@ typedef struct flag_key_value_S flag_key_value_t;
 typedef struct fatal_error_config_S fatal_error_config_t;
 
 typedef enum {
-    ERROR_UKNOWN,
-    ERROR_SIGSEGV,
-    ERROR_ACCESS_OUT_OF_BOUNDS,
-    ERROR_BAD_COMMAND_LINE,
-    ERROR_DYNAMICALLY_SIZED_TYPE_ILLEGAL_IN_CONTAINER,
-    ERROR_ILLEGAL_ENUM_VALUE,
-    ERROR_ILLEGAL_INITIAL_CAPACITY,
-    ERROR_ILLEGAL_NULL_ARGUMENT,
-    ERROR_ILLEGAL_ZERO_HASHCODE_VALUE,
-    ERROR_ILLEGAL_RANGE,
-    ERROR_MEMORY_ALLOCATION,
-    ERROR_MEMORY_FREE_NULL,
-    ERROR_NOT_REACHED,
-    ERROR_REFERENCE_NOT_EXPECTED_TYPE,
-    ERROR_UNIMPLEMENTED,
-    ERROR_OPEN_LOG_FILE,
-    ERROR_TEST,
-    ERROR_INTERNAL_ASSERTION_FAILURE,
-    ERROR_BAD_ALLOCATION_SIZE,
-    ERROR_ILLEGAL_ARGUMENT,
-    ERROR_MEMORY_START_PADDING_ERROR,
-    ERROR_MEMORY_END_PADDING_ERROR,
-    ERROR_FATAL,
-    ERROR_ILLEGAL_STATE,
-    ERROR_ILLEGAL_INPUT,
-    ERROR_ILLEGAL_UTF_8_CODE_POINT,
-    ERROR_ILLEGAL_TERMINAL_COORDINATES,
+  ERROR_UKNOWN,
+  ERROR_SIGSEGV,
+  ERROR_ACCESS_OUT_OF_BOUNDS,
+  ERROR_BAD_COMMAND_LINE,
+  ERROR_DYNAMICALLY_SIZED_TYPE_ILLEGAL_IN_CONTAINER,
+  ERROR_ILLEGAL_ENUM_VALUE,
+  ERROR_ILLEGAL_INITIAL_CAPACITY,
+  ERROR_ILLEGAL_NULL_ARGUMENT,
+  ERROR_ILLEGAL_ZERO_HASHCODE_VALUE,
+  ERROR_ILLEGAL_RANGE,
+  ERROR_MEMORY_ALLOCATION,
+  ERROR_MEMORY_FREE_NULL,
+  ERROR_NOT_REACHED,
+  ERROR_REFERENCE_NOT_EXPECTED_TYPE,
+  ERROR_UNIMPLEMENTED,
+  ERROR_OPEN_LOG_FILE,
+  ERROR_TEST,
+  ERROR_INTERNAL_ASSERTION_FAILURE,
+  ERROR_BAD_ALLOCATION_SIZE,
+  ERROR_ILLEGAL_ARGUMENT,
+  ERROR_MEMORY_START_PADDING_ERROR,
+  ERROR_MEMORY_END_PADDING_ERROR,
+  ERROR_FATAL,
+  ERROR_ILLEGAL_STATE,
+  ERROR_ILLEGAL_INPUT,
+  ERROR_ILLEGAL_UTF_8_CODE_POINT,
+  ERROR_ILLEGAL_TERMINAL_COORDINATES,
 } error_code_t;
 
 typedef struct unsigned_decode_result__generated_S unsigned_decode_result;
@@ -490,66 +620,89 @@ typedef struct term_keypress_S term_keypress_t;
 
 typedef struct utf8_decode_result_S utf8_decode_result_t;
 
+typedef union  {
+  uint64_t u64;
+  uint64_t i64;
+  char* str;
+  void* ptr;
+  void* dbl;
+} value_t;
+
+typedef enum {
+  NF_OK,
+  NF_ERROR_NOT_FOUND,
+  NF_ERROR_NOT_PARSED_AS_NUMBER,
+  NF_ERROR_NOT_PARSED_AS_EXPECTED_ENUM,
+} non_fatal_error_code_t;
+
+typedef struct value_result_t__generated_S value_result_t;
+
+typedef fn_t(int, value_t, value_t) value_comparison_fn;
+
+typedef fn_t(uint64_t, value_t) value_hash_fn;
+
 typedef struct value_alist_S value_alist_t;
 
 typedef struct value_array_S value_array_t;
+
+typedef struct value_hashtable_S value_hashtable_t;
 
 typedef struct value_tree_S value_tree_t;
 
 // ========== stuctures/unions ==========
 
 struct memory_hashtable_bucket_S {
-    uint64_t malloc_address;
-    uint64_t malloc_size;
-    char* allocation_filename;
-    uint64_t allocation_line_number;
+  uint64_t malloc_address;
+  uint64_t malloc_size;
+  char* allocation_filename;
+  uint64_t allocation_line_number;
 };
 
 struct buffer_S {
-    uint32_t length;
-    uint32_t capacity;
-    uint8_t* elements;
+  uint32_t length;
+  uint32_t capacity;
+  uint8_t* elements;
 };
 
 struct program_descriptor_S {
-    char* name;
-    char* description;
-    string_tree_t* flags;
-    string_tree_t* commands;
-    value_array_t** write_back_file_args_ptr;
+  char* name;
+  char* description;
+  string_tree_t* flags;
+  string_tree_t* commands;
+  value_array_t** write_back_file_args_ptr;
 };
 
 struct command_descriptor_S {
-    program_descriptor_t* program;
-    char* name;
-    char* description;
-    char** write_back_ptr;
-    value_array_t** write_back_file_args_ptr;
-    string_tree_t* flags;
+  program_descriptor_t* program;
+  char* name;
+  char* description;
+  char** write_back_ptr;
+  value_array_t** write_back_file_args_ptr;
+  string_tree_t* flags;
 };
 
 struct flag_descriptor_S {
-    char* name;
-    char* description;
-    flag_type_t flag_type;
-    char* help_string;
-    void* write_back_ptr;
-    int enum_size;
-    string_tree_t* enum_values;
+  char* name;
+  char* description;
+  flag_type_t flag_type;
+  char* help_string;
+  void* write_back_ptr;
+  int enum_size;
+  string_tree_t* enum_values;
 };
 
 struct flag_key_value_S {
-    char* key;
-    char* value;
+  char* key;
+  char* value;
 };
 
 struct fatal_error_config_S {
-    boolean_t catch_sigsegv;
+  boolean_t catch_sigsegv;
 };
 
 struct random_state_S {
-    uint64_t a;
-    uint64_t b;
+  uint64_t a;
+  uint64_t b;
 };
 
 struct string_alist_S {
@@ -562,80 +715,114 @@ struct string_tree_S {
 };
 
 struct box_drawing_S {
-    uint32_t upper_left_corner;
-    uint32_t upper_right_corner;
-    uint32_t lower_left_corner;
-    uint32_t lower_right_corner;
-    uint32_t top_edge;
-    uint32_t left_edge;
-    uint32_t right_edge;
-    uint32_t bottom_edge;
+  uint32_t upper_left_corner;
+  uint32_t upper_right_corner;
+  uint32_t lower_left_corner;
+  uint32_t lower_right_corner;
+  uint32_t top_edge;
+  uint32_t left_edge;
+  uint32_t right_edge;
+  uint32_t bottom_edge;
 };
 
 struct term_keypress_S {
-    uint32_t code_point;
-    uint8_t key_code;
-    uint8_t n_bytes_consumed;
-    uint8_t shift;
-    uint8_t ctrl;
-    uint8_t meta;
-    uint8_t super;
-    uint8_t hyper;
+  uint32_t code_point;
+  uint8_t key_code;
+  uint8_t n_bytes_consumed;
+  uint8_t shift;
+  uint8_t ctrl;
+  uint8_t meta;
+  uint8_t super;
+  uint8_t hyper;
 };
 
 struct utf8_decode_result_S {
-    uint32_t code_point;
-    uint8_t num_bytes;
-    boolean_t error;
+  uint32_t code_point;
+  uint8_t num_bytes;
+  boolean_t error;
 };
 
 struct value_alist_S {
-    struct value_alist_S* next;
-    value_t key;
-    value_t value;
+  struct value_alist_S* next;
+  value_t key;
+  value_t value;
 };
 
 struct value_array_S {
-    uint32_t length;
-    uint32_t capacity;
-    value_t* elements;
+  uint32_t length;
+  uint32_t capacity;
+  value_t* elements;
+};
+
+struct value_hashtable_S {
+  uint64_t n_buckets;
+  uint64_t n_entries;
+  value_alist_t** buckets;
 };
 
 struct value_tree_S {
-    value_t key;
-    value_t value;
-    uint32_t level;
-    struct value_tree_S* left;
-    struct value_tree_S* right;
+  value_t key;
+  value_t value;
+  uint32_t level;
+  struct value_tree_S* left;
+  struct value_tree_S* right;
 };
 
 struct line_and_column_S {
-    uint64_t line;
-    uint64_t column;
+  uint64_t line;
+  uint64_t column;
+};
+
+struct cdl_printer_t__generated_S {
+  buffer_t* buffer;
+  char* key_token;
+  int indention_level;
 };
 
 struct unsigned_decode_result__generated_S {
-    uint64_t number;
-    int size;
+  uint64_t number;
+  int size;
 };
 
 struct signed_decode_result__generated_S {
-    uint64_t number;
-    int size;
+  uint64_t number;
+  int size;
+};
+
+struct value_result_t__generated_S {
+  union  {
+    uint64_t u64;
+    int64_t i64;
+    double dbl;
+    char* str;
+    void* ptr;
+    value_t val;
+} ;
+  non_fatal_error_code_t nf_error;
 };
 
 // ========== global variables ==========
 
 boolean_t is_initialized = false;
+
 boolean_t should_log_value = false;
+
 uint64_t number_of_bytes_allocated = 0;
+
 uint64_t number_of_malloc_calls = 0;
+
 uint64_t number_of_free_calls = 0;
+
 memory_hashtable_bucket_t memory_ht[ARMYKNIFE_MEMORY_ALLOCATION_HASHTABLE_SIZE];
+
 program_descriptor_t* current_program;
+
 command_descriptor_t* current_command;
+
 flag_descriptor_t* current_flag;
+
 fatal_error_config_t fatal_error_config = {0};
+
 // ========== function prototypes ==========
 
 extern uint8_t* checked_malloc(char* file, int line, uint64_t amount);
@@ -674,6 +861,20 @@ uint64_t buffer_end_of_line(buffer_t* buffer, uint64_t start);
 buffer_t* buffer_to_uppercase(buffer_t* buffer);
 buffer_t* buffer_to_lowercase(buffer_t* buffer);
 line_and_column_t buffer_position_to_line_and_column(buffer_t* buffer, uint64_t position);
+cdl_printer_t* make_cdl_printer(buffer_t* buffer);
+void cdl_boolean(cdl_printer_t* printer, boolean_t bolean);
+void cdl_string(cdl_printer_t* printer, char* string);
+void cdl_int64(cdl_printer_t* printer, int64_t number);
+void cdl_uint64(cdl_printer_t* printer, uint64_t number);
+void cdl_double(cdl_printer_t* printer, double number);
+void cdl_start_array(cdl_printer_t* printer);
+void cdl_end_array(cdl_printer_t* printer);
+void cdl_start_table(cdl_printer_t* printer);
+void cdl_key(cdl_printer_t* printer, char* key);
+void cdl_end_table(cdl_printer_t* printer);
+void cdl_indent(cdl_printer_t* printer);
+boolean_t is_symbol(char* string);
+void cdl_output_token(cdl_printer_t* printer, char* string);
 extern void flag_program_name(char* name);
 extern void flag_description(char* description);
 extern void flag_file_args(value_array_t** write_back_ptr);
@@ -765,6 +966,8 @@ extern value_array_t* tokenize_memory_range(uint8_t* start, uint64_t length, cha
 void add_duplicate(value_array_t* token_array, char* data);
 extern int uint64_highest_bit_set(uint64_t n);
 extern utf8_decode_result_t utf8_decode(uint8_t* utf8_bytes);
+int cmp_string_values(value_t value1, value_t value2);
+uint64_t hash_string_value(value_t value1);
 extern value_result_t value_alist_find(value_alist_t* list, value_comparison_fn cmp_fn, value_t key);
 __attribute__((warn_unused_result)) extern value_alist_t* value_alist_insert(value_alist_t* list, value_comparison_fn cmp_fn, value_t key, value_t value);
 __attribute__((warn_unused_result)) extern value_alist_t* value_alist_delete(value_alist_t* list, value_comparison_fn cmp_fn, value_t key);
@@ -778,6 +981,11 @@ extern value_t value_array_pop(value_array_t* array);
 extern void value_array_insert_at(value_array_t* array, uint32_t position, value_t element);
 extern value_t value_array_delete_at(value_array_t* array, uint32_t position);
 void value_array_ensure_capacity(value_array_t* array, uint32_t required_capacity);
+extern value_hashtable_t* make_value_hashtable(uint64_t n_buckets);
+__attribute__((warn_unused_result)) extern value_hashtable_t* value_ht_insert(value_hashtable_t* ht, value_hash_fn hash_fn, value_comparison_fn cmp_fn, value_t key, value_t value);
+__attribute__((warn_unused_result)) extern value_hashtable_t* value_ht_delete(value_hashtable_t* ht, value_hash_fn hash_fn, value_comparison_fn cmp_fn, value_t key);
+extern value_result_t value_ht_find(value_hashtable_t* ht, value_hash_fn hash_fn, value_comparison_fn cmp_fn, value_t key);
+__attribute__((warn_unused_result)) extern value_hashtable_t* value_hashtable_upsize_internal(value_hashtable_t* ht, value_hash_fn hash_fn, value_comparison_fn cmp_fn);
 extern value_result_t value_tree_find(value_tree_t* t, value_comparison_fn cmp_fn, value_t key);
 __attribute__((warn_unused_result)) extern value_tree_t* value_tree_insert(value_tree_t* t, value_comparison_fn cmp_fn, value_t key, value_t value);
 __attribute__((warn_unused_result)) extern value_tree_t* value_tree_delete(value_tree_t* t, value_comparison_fn cmp_fn, value_t key);
@@ -793,6 +1001,9 @@ enum_metadata_t* flag_type_metadata();
 char* error_code_to_string(error_code_t value);
 error_code_t string_to_error_code(char* value);
 enum_metadata_t* error_code_metadata();
+char* non_fatal_error_code_to_string(non_fatal_error_code_t value);
+non_fatal_error_code_t string_to_non_fatal_error_code(char* value);
+enum_metadata_t* non_fatal_error_code_metadata();
 
 // ========== inlined functions ==========
 
@@ -811,35 +1022,37 @@ static inline uint64_t rotl(uint64_t x, int k){
   return (x << k) | (x >> (64 - k));
 }
 static inline value_result_t alist_find(string_alist_t* list, char* key){
-  return value_alist_find((value_alist_t*) list, cmp_string_values,
+  return value_alist_find(cast(value_alist_t*, list), cmp_string_values,
                           str_to_value(key));
 }
 __attribute__((warn_unused_result)) static inline string_alist_t* alist_insert(string_alist_t* list, char* key, value_t value){
-  return (string_alist_t*) value_alist_insert(
-      (value_alist_t*) list, cmp_string_values, str_to_value(key), value);
+  return cast(string_alist_t*,
+              value_alist_insert(cast(value_alist_t*, list), cmp_string_values,
+                                 str_to_value(key), value));
 }
 __attribute__((warn_unused_result)) static inline string_alist_t* alist_delete(string_alist_t* list, char* key){
-  return (string_alist_t*) value_alist_delete(
-      (value_alist_t*) list, cmp_string_values, str_to_value(key));
+  return cast(string_alist_t*,
+              value_alist_delete(cast(value_alist_t*, list), cmp_string_values,
+                                 str_to_value(key)));
 }
 __attribute__((warn_unused_result)) static inline uint64_t alist_length(string_alist_t* list){
-  return value_alist_length((value_alist_t*) list);
+  return value_alist_length(cast(value_alist_t*, list));
 }
 static inline value_hashtable_t* to_value_hashtable(string_hashtable_t* ht){
-  return (value_hashtable_t*) ht;
+  return cast(value_hashtable_t*, ht);
 }
 static inline string_hashtable_t* make_string_hashtable(uint64_t n_buckets){
-  return (string_hashtable_t*) make_value_hashtable(n_buckets);
+  return cast(string_hashtable_t*, make_value_hashtable(n_buckets));
 }
 __attribute__((warn_unused_result)) static inline string_hashtable_t* string_ht_insert(string_hashtable_t* ht, char* key, value_t value){
-  return (string_hashtable_t*) value_ht_insert(
-      to_value_hashtable(ht), hash_string_value, cmp_string_values,
-      str_to_value(key), value);
+  return cast(string_hashtable_t*,
+              value_ht_insert(to_value_hashtable(ht), hash_string_value,
+                              cmp_string_values, str_to_value(key), value));
 }
 __attribute__((warn_unused_result)) static inline string_hashtable_t* string_ht_delete(string_hashtable_t* ht, char* key){
-  return (string_hashtable_t*) value_ht_delete(
-      to_value_hashtable(ht), hash_string_value, cmp_string_values,
-      str_to_value(key));
+  return cast(string_hashtable_t*,
+              value_ht_delete(to_value_hashtable(ht), hash_string_value,
+                              cmp_string_values, str_to_value(key)));
 }
 static inline value_result_t string_ht_find(string_hashtable_t* ht, char* key){
   return value_ht_find(to_value_hashtable(ht), hash_string_value,
@@ -853,12 +1066,14 @@ static inline value_result_t string_tree_find(string_tree_t* t, char* key){
                          str_to_value(key));
 }
 __attribute__((warn_unused_result)) static inline string_tree_t* string_tree_insert(string_tree_t* t, char* key, value_t value){
-  return (string_tree_t*) (value_tree_insert(
-      cast(value_tree_t*, t), cmp_string_values, str_to_value(key), value));
+  return cast(string_tree_t*,
+              value_tree_insert(cast(value_tree_t*, t), cmp_string_values,
+                                str_to_value(key), value));
 }
 __attribute__((warn_unused_result)) static inline string_tree_t* string_tree_delete(string_tree_t* t, char* key){
-  return (string_tree_t*) (value_tree_delete(
-      cast(value_tree_t*, t), cmp_string_values, str_to_value(key)));
+  return cast(string_tree_t*,
+              value_tree_delete(cast(value_tree_t*, t), cmp_string_values,
+                                str_to_value(key)));
 }
 static inline boolean_t is_hex_digit(char ch){
   return (ch >= '0' && ch <= '9') || (ch >= 'a' && ch <= 'f');
@@ -885,6 +1100,15 @@ static inline void close_arena_for_test(void){
 #ifdef C_ARMYKNIFE_LIB_USE_ARENAS
   arena_close();
 #endif
+}
+static inline boolean_t is_ok(value_result_t value){
+  return value.nf_error == NF_OK;
+}
+static inline boolean_t is_not_ok(value_result_t value){
+  return value.nf_error != NF_OK;
+}
+static inline uint64_t value_ht_num_entries(value_hashtable_t* ht){
+  return ht->n_entries;
 }
 static inline uint64_t value_tree_min_level(uint32_t a, uint32_t b){
   return a < b ? a : b;
@@ -921,7 +1145,7 @@ uint8_t* checked_malloc(char* file, int line, uint64_t amount){
 
   if (should_log_memory_allocation()) {
     fprintf(stderr, "ALLOCATE %s:%d -- %lu -- ptr=%lu\n", file, line, amount,
-            (unsigned long) result);
+            cast(unsigned long, result));
   }
 
   memset(result, 0, amount_with_padding);
@@ -952,7 +1176,7 @@ void checked_free(char* file, int line, void* pointer){
   check_memory_hashtable_padding();
 
   uint8_t* malloc_pointer
-      = ((uint8_t*) pointer) - ARMYKNIFE_MEMORY_ALLOCATION_START_PADDING;
+      = cast(uint8_t*, pointer) - ARMYKNIFE_MEMORY_ALLOCATION_START_PADDING;
 
   // Check this entries padding (in case it got lossed from the global
   // hashtable), and also remove it from the hashtable if it was
@@ -967,12 +1191,13 @@ void check_memory_hashtable_padding(){
     if (memory_ht[i].malloc_address != 0) {
       uint64_t malloc_start_address = memory_ht[i].malloc_address;
       uint64_t malloc_size = memory_ht[i].malloc_size;
-      check_start_padding((uint8_t*) malloc_start_address);
-      check_end_padding((uint8_t*) (malloc_start_address
-                                    + ARMYKNIFE_MEMORY_ALLOCATION_START_PADDING
-                                    + malloc_size),
-                        memory_ht[i].allocation_filename,
-                        memory_ht[i].allocation_line_number);
+      check_start_padding(cast(uint8_t*, malloc_start_address));
+      check_end_padding(
+          cast(uint8_t*,
+               (malloc_start_address + ARMYKNIFE_MEMORY_ALLOCATION_START_PADDING
+                + malloc_size)),
+          memory_ht[i].allocation_filename,
+          memory_ht[i].allocation_line_number);
     }
   }
 }
@@ -991,7 +1216,7 @@ void check_end_padding(uint8_t* address, char* filename, uint64_t line){
       fprintf(stderr,
               "FATAL: someone clobbered past an allocation %lu. (allocated "
               "here: %s:%lu)\n",
-              ((uint64_t) address), filename, line);
+              cast(uint64_t, address), filename, line);
       fatal_error(ERROR_MEMORY_END_PADDING_ERROR);
     }
   }
@@ -1023,7 +1248,7 @@ void track_padding(char* file, int line, uint8_t* address, uint64_t amount){
     // probalistically delay updating the hashtable when the bucket is
     // already occupied but I think LRU might work well most of the
     // time. (Mostly a hunch I will admit.).
-    int bucket = mumurhash64_mix((uint64_t) address)
+    int bucket = mumurhash64_mix(cast(uint64_t, address))
                  % ARMYKNIFE_MEMORY_ALLOCATION_HASHTABLE_SIZE;
     memory_ht[bucket].malloc_address = (uint64_t) address;
     memory_ht[bucket].malloc_size = amount;
@@ -1044,7 +1269,7 @@ void untrack_padding(uint8_t* malloc_address){
 
   if (ARMYKNIFE_MEMORY_ALLOCATION_HASHTABLE_SIZE > 0) {
     // Now finally zero-out the memory hashtable.
-    int bucket = mumurhash64_mix((uint64_t) malloc_address)
+    int bucket = mumurhash64_mix(cast(uint64_t, malloc_address))
                  % ARMYKNIFE_MEMORY_ALLOCATION_HASHTABLE_SIZE;
     memory_ht[bucket].malloc_address = 0;
     memory_ht[bucket].malloc_size = 0;
@@ -1089,7 +1314,7 @@ char* buffer_c_substring(buffer_t* buffer, uint64_t start, uint64_t end){
   }
 
   uint64_t copy_length = (end - start);
-  char* result = (char*) (malloc_bytes(copy_length + 1));
+  char* result = cast(char*, malloc_bytes(copy_length + 1));
   if (copy_length > 0) {
     memcpy(result, &buffer->elements[start], copy_length);
   }
@@ -1153,7 +1378,7 @@ extern buffer_t* buffer_append_sub_buffer(buffer_t* buffer, uint64_t start_posit
 }
 /* i=21 j=1 */
 buffer_t* buffer_append_string(buffer_t* buffer, char* str){
-  return buffer_append_bytes(buffer, (uint8_t*) str, strlen(str));
+  return buffer_append_bytes(buffer, cast(uint8_t*, str), strlen(str));
 }
 /* i=22 j=1 */
 __attribute__((format(printf, 2, 3))) buffer_t* buffer_printf(buffer_t* buffer, char* format, ...){
@@ -1173,7 +1398,7 @@ __attribute__((format(printf, 2, 3))) buffer_t* buffer_printf(buffer_t* buffer, 
     // Be lazy for now and just copy the code from string_printf for
     // this case but we should be able to do ensure capacity and just
     // put the bytes directly at the end of the buffer...
-    char* result = (char*) malloc_bytes(n_bytes + 1);
+    char* result = cast(char*, malloc_bytes(n_bytes + 1));
     va_list args;
     va_start(args, format);
     int n_bytes_second = vsnprintf(result, n_bytes + 1, format, args);
@@ -1381,13 +1606,95 @@ line_and_column_t buffer_position_to_line_and_column(buffer_t* buffer, uint64_t 
   };
 }
 /* i=37 j=1 */
+cdl_printer_t* make_cdl_printer(buffer_t* buffer){
+  cdl_printer_t* result = malloc_struct(cdl_printer_t);
+  result->buffer = buffer;
+  return result;
+}
+/* i=38 j=1 */
+void cdl_boolean(cdl_printer_t* printer, boolean_t boolean){
+  cdl_output_token(printer, boolean ? "true" : "false");
+}
+/* i=39 j=1 */
+void cdl_string(cdl_printer_t* printer, char* string){
+  if (!is_symbol(string)) {
+    cdl_output_token(printer, string_printf("\"%s\"", string));
+  } else {
+    cdl_output_token(printer, string);
+  }
+}
+/* i=40 j=1 */
+void cdl_int64(cdl_printer_t* printer, int64_t number){
+  cdl_output_token(printer, string_printf("%ld", number));
+}
+/* i=41 j=1 */
+void cdl_uint64(cdl_printer_t* printer, uint64_t number){
+  cdl_output_token(printer, uint64_to_string(number));
+}
+/* i=42 j=1 */
+void cdl_double(cdl_printer_t* printer, double number){
+  cdl_output_token(printer, string_printf("%lf", number));
+}
+/* i=43 j=1 */
+void cdl_start_array(cdl_printer_t* printer){
+  cdl_output_token(printer, "[");
+  printer->indention_level += 1;
+}
+/* i=44 j=1 */
+void cdl_end_array(cdl_printer_t* printer){
+  printer->indention_level -= 1;
+  cdl_output_token(printer, "]");
+}
+/* i=45 j=1 */
+void cdl_start_table(cdl_printer_t* printer){
+  cdl_output_token(printer, "{");
+  printer->indention_level += 1;
+}
+/* i=46 j=1 */
+void cdl_key(cdl_printer_t* printer, char* key){ printer->key_token = key; }
+/* i=47 j=1 */
+void cdl_end_table(cdl_printer_t* printer){
+  printer->indention_level -= 1;
+  cdl_output_token(printer, "}");
+}
+/* i=48 j=0 */
+void cdl_indent(cdl_printer_t* printer){
+  buffer_append_repeated_byte(printer->buffer, ' ',
+                              4 * printer->indention_level);
+}
+/* i=49 j=0 */
+boolean_t is_symbol(char* string){
+  for (int i = 0; string[i] != 0; i++) {
+    if (i == 0) {
+      if (!isalpha(string[i])) {
+        return false;
+      }
+    } else {
+      if (!(isalnum(string[i]) || string[i] == '_')) {
+        return false;
+      }
+    }
+  }
+  return true;
+}
+/* i=50 j=0 */
+void cdl_output_token(cdl_printer_t* printer, char* string){
+  cdl_indent(printer);
+  if (printer->key_token != NULL) {
+    buffer_printf(printer->buffer, "%s = %s\n", printer->key_token, string);
+    printer->key_token = NULL;
+  } else {
+    buffer_printf(printer->buffer, "%s\n", string);
+  }
+}
+/* i=51 j=1 */
 void flag_program_name(char* name){
   current_program = malloc_struct(program_descriptor_t);
   current_program->name = name;
   current_command = NULL;
   current_flag = NULL;
 }
-/* i=38 j=1 */
+/* i=52 j=1 */
 void flag_description(char* description){
   if (current_flag != NULL) {
     current_flag->description = description;
@@ -1400,7 +1707,7 @@ void flag_description(char* description){
     fatal_error(ERROR_ILLEGAL_STATE);
   }
 }
-/* i=39 j=1 */
+/* i=53 j=1 */
 void flag_file_args(value_array_t** write_back_file_args_ptr){
   if (current_command != NULL) {
     current_command->write_back_file_args_ptr = write_back_file_args_ptr;
@@ -1411,7 +1718,7 @@ void flag_file_args(value_array_t** write_back_file_args_ptr){
     fatal_error(ERROR_ILLEGAL_STATE);
   }
 }
-/* i=40 j=1 */
+/* i=54 j=1 */
 void flag_command(char* name, char** write_back_ptr){
   current_command = malloc_struct(command_descriptor_t);
   current_command->name = name;
@@ -1420,37 +1727,37 @@ void flag_command(char* name, char** write_back_ptr){
   current_program->commands = string_tree_insert(
       current_program->commands, name, ptr_to_value(current_command));
 }
-/* i=41 j=1 */
+/* i=55 j=1 */
 void flag_boolean(char* name, boolean_t* write_back_ptr){
   add_flag(name, write_back_ptr, flag_type_boolean);
 }
-/* i=42 j=1 */
+/* i=56 j=1 */
 void flag_string(char* name, char** write_back_ptr){
   add_flag(name, write_back_ptr, flag_type_string);
 }
-/* i=43 j=1 */
+/* i=57 j=1 */
 void flag_uint64(char* name, uint64_t* write_back_ptr){
   add_flag(name, write_back_ptr, flag_type_uint64);
 }
-/* i=44 j=1 */
+/* i=58 j=1 */
 void flag_int64(char* name, int64_t* write_back_ptr){
   add_flag(name, write_back_ptr, flag_type_int64);
 }
-/* i=45 j=1 */
+/* i=59 j=1 */
 void flag_double(char* name, double* write_back_ptr){
   add_flag(name, write_back_ptr, flag_type_double);
 }
-/* i=46 j=1 */
+/* i=60 j=1 */
 void flag_enum(char* name, int* write_back_ptr){
   add_flag(name, write_back_ptr, flag_type_enum);
   current_flag->enum_size = sizeof(int) * 8;
 }
-/* i=47 j=1 */
+/* i=61 j=1 */
 void flag_enum_64(char* name, uint64_t* write_back_ptr){
   add_flag(name, write_back_ptr, flag_type_enum);
   current_flag->enum_size = 64;
 }
-/* i=48 j=1 */
+/* i=62 j=1 */
 void flag_enum_value(char* name, uint64_t value){
   if (!current_flag || current_flag->flag_type != flag_type_enum) {
     log_fatal("The current flag is not an enum type");
@@ -1460,7 +1767,7 @@ void flag_enum_value(char* name, uint64_t value){
   current_flag->enum_values = string_tree_insert(current_flag->enum_values,
                                                  name, u64_to_value(value));
 }
-/* i=49 j=1 */
+/* i=63 j=1 */
 void flag_alias(char* alias){
   if (current_flag != NULL) {
     // TODO(jawilson): check for a flag with the same name?
@@ -1479,7 +1786,7 @@ void flag_alias(char* alias){
     fatal_error(ERROR_ILLEGAL_STATE);
   }
 }
-/* i=50 j=1 */
+/* i=64 j=1 */
 char* flag_parse_command_line(int argc, char** argv){
   if (current_program == NULL) {
     log_fatal(
@@ -1563,7 +1870,7 @@ char* flag_parse_command_line(int argc, char** argv){
   }
   return NULL;
 }
-/* i=51 j=1 */
+/* i=65 j=1 */
 void flag_print_help(FILE* out, char* message){
   fprintf(out, "\nMessage: %s\n", message);
 
@@ -1594,7 +1901,7 @@ void flag_print_help(FILE* out, char* message){
     flag_print_flags(out, "Flags:", current_program->flags);
   }
 }
-/* i=52 j=1 */
+/* i=66 j=1 */
 command_descriptor_t* flag_find_command_descriptor(char* name){
   if (current_program->commands == NULL) {
     log_fatal(
@@ -1605,12 +1912,12 @@ command_descriptor_t* flag_find_command_descriptor(char* name){
   value_result_t command_value
       = string_tree_find(current_program->commands, name);
   if (is_ok(command_value)) {
-    return ((command_descriptor_t*) (command_value.ptr));
+    return cast(command_descriptor_t*, command_value.ptr);
   } else {
     return NULL;
   }
 }
-/* i=53 j=1 */
+/* i=67 j=1 */
 flag_descriptor_t* flag_find_flag_descriptor(command_descriptor_t* command, char* name){
   if (command != NULL) {
     value_result_t command_flag_value = string_tree_find(command->flags, name);
@@ -1627,7 +1934,7 @@ flag_descriptor_t* flag_find_flag_descriptor(command_descriptor_t* command, char
 
   return NULL;
 }
-/* i=54 j=1 */
+/* i=68 j=1 */
 flag_key_value_t flag_split_argument(char* arg){
   int equal_sign_index = string_index_of_char(arg, '=');
   if (equal_sign_index >= 0) {
@@ -1637,11 +1944,11 @@ flag_key_value_t flag_split_argument(char* arg){
     // the next argument. So --foo and --foo=, will *not* be treeated
     // the same way.
     char* value = string_substring(arg, equal_sign_index + 1, strlen(arg));
-    return (flag_key_value_t){.key = key, .value = value};
+    return compound_literal(flag_key_value_t, {.key = key, .value = value});
   }
-  return (flag_key_value_t){.key = arg, .value = NULL};
+  return compound_literal(flag_key_value_t, {.key = arg, .value = NULL});
 }
-/* i=55 j=1 */
+/* i=69 j=1 */
 char* parse_and_write_value(flag_descriptor_t* flag, flag_key_value_t key_value){
   switch (flag->flag_type) {
   case flag_type_boolean:
@@ -1663,7 +1970,7 @@ char* parse_and_write_value(flag_descriptor_t* flag, flag_key_value_t key_value)
   }
   return "<ILLEGAL-STATE-NOT-REACHED>";
 }
-/* i=56 j=1 */
+/* i=70 j=1 */
 char* parse_and_write_boolean(flag_descriptor_t* flag, flag_key_value_t key_value){
   char* val = key_value.value;
   if (string_equal("true", val) || string_equal("t", val)
@@ -1678,7 +1985,7 @@ char* parse_and_write_boolean(flag_descriptor_t* flag, flag_key_value_t key_valu
   }
   return NULL;
 }
-/* i=57 j=1 */
+/* i=71 j=1 */
 char* parse_and_write_uint64(flag_descriptor_t* flag, flag_key_value_t key_value){
   value_result_t val_result = string_parse_uint64(key_value.value);
   if (is_ok(val_result)) {
@@ -1689,7 +1996,7 @@ char* parse_and_write_uint64(flag_descriptor_t* flag, flag_key_value_t key_value
   }
   return NULL;
 }
-/* i=58 j=1 */
+/* i=72 j=1 */
 char* parse_and_write_enum(flag_descriptor_t* flag, flag_key_value_t key_value){
   value_result_t val_result
       = string_tree_find(flag->enum_values, key_value.value);
@@ -1722,7 +2029,7 @@ char* parse_and_write_enum(flag_descriptor_t* flag, flag_key_value_t key_value){
   }
   */
 }
-/* i=59 j=0 */
+/* i=73 j=0 */
 void add_flag(char* name, void* write_back_ptr, flag_type_t flag_type){
   current_flag = malloc_struct(flag_descriptor_t);
   current_flag->flag_type = flag_type;
@@ -1741,7 +2048,7 @@ void add_flag(char* name, void* write_back_ptr, flag_type_t flag_type){
     fatal_error(ERROR_ILLEGAL_STATE);
   }
 }
-/* i=60 j=0 */
+/* i=74 j=0 */
 void flag_print_flags(FILE* out, char* header, string_tree_t* flags){
   fprintf(out, "%s\n", header);
   // clang-format off
@@ -1750,7 +2057,7 @@ void flag_print_flags(FILE* out, char* header, string_tree_t* flags){
     });
   // clang-format on
 }
-/* i=61 j=1 */
+/* i=75 j=1 */
 _Noreturn void fatal_error_impl(char* file, int line, int error_code){
   print_fatal_error_banner();
   print_backtrace();
@@ -1773,7 +2080,7 @@ _Noreturn void fatal_error_impl(char* file, int line, int error_code){
   fprintf(stderr, "Necessaria Morte Mori...\n");
   exit(-(error_code + 100));
 }
-/* i=62 j=1 */
+/* i=76 j=1 */
 char* fatal_error_code_to_string(int error_code){
   switch (error_code) {
   case ERROR_UKNOWN:
@@ -1809,24 +2116,24 @@ char* fatal_error_code_to_string(int error_code){
     return "error";
   }
 }
-/* i=63 j=1 */
+/* i=77 j=1 */
 void configure_fatal_errors(fatal_error_config_t config){
   fatal_error_config = config;
   if (config.catch_sigsegv) {
     signal(SIGSEGV, segmentation_fault_handler);
   }
 }
-/* i=64 j=0 */
+/* i=78 j=0 */
 void segmentation_fault_handler(int signal_number){
   fatal_error(ERROR_SIGSEGV);
 }
-/* i=65 j=1 */
+/* i=79 j=1 */
 void print_fatal_error_banner(){
   // As the first thing we print, also responsible for at least one
   // newline to start a new line if we may not be at one.
   fprintf(stderr, "\n========== FATAL_ERROR ==========\n");
 }
-/* i=66 j=1 */
+/* i=80 j=1 */
 void print_backtrace(){
 #ifndef NO_VM_BACKTRACE_ON_FATAL_ERROR
   do {
@@ -1841,21 +2148,21 @@ void print_backtrace(){
   } while (0);
 #endif /* NO_VM_BACKTRACE_ON_FATAL_ERROR */
 }
-/* i=67 j=1 */
+/* i=81 j=1 */
 void print_error_code_name(int error_code){
   fprintf(stderr, " ");
   fprintf(stderr, "*** ");
   fprintf(stderr, "%s", fatal_error_code_to_string(error_code));
   fprintf(stderr, " ***\n");
 }
-/* i=68 j=0 */
+/* i=82 j=0 */
 char* get_command_line(){
   buffer_t* buffer
       = buffer_append_file_contents(make_buffer(1), "/proc/self/cmdline");
   buffer_replace_matching_byte(buffer, 0, ' ');
   return buffer_to_c_string(buffer);
 }
-/* i=69 j=0 */
+/* i=83 j=0 */
 char* get_program_path(){
   char buf[4096];
   int n = readlink("/proc/self/exe", buf, sizeof(buf));
@@ -1865,7 +2172,7 @@ char* get_program_path(){
     return "<program-path-unknown>";
   }
 }
-/* i=70 j=1 */
+/* i=84 j=1 */
 __attribute__((warn_unused_result)) buffer_t* buffer_append_file_contents(buffer_t* bytes, char* file_name){
 
   uint64_t capacity = bytes->capacity;
@@ -1888,7 +2195,7 @@ __attribute__((warn_unused_result)) buffer_t* buffer_append_file_contents(buffer
 
   return bytes;
 }
-/* i=71 j=1 */
+/* i=85 j=1 */
 __attribute__((warn_unused_result)) extern buffer_t* buffer_append_all(buffer_t* bytes, FILE* input){
   uint8_t buffer[1024];
   while (1) {
@@ -1900,7 +2207,7 @@ __attribute__((warn_unused_result)) extern buffer_t* buffer_append_all(buffer_t*
   }
   return bytes;
 }
-/* i=72 j=1 */
+/* i=86 j=1 */
 void buffer_write_file(buffer_t* bytes, char* file_name){
   FILE* file = fopen(file_name, "w");
   if (file == NULL) {
@@ -1920,7 +2227,7 @@ void buffer_write_file(buffer_t* bytes, char* file_name){
     fatal_error(ERROR_ILLEGAL_STATE);
   }
 }
-/* i=73 j=1 */
+/* i=87 j=1 */
 buffer_t* buffer_read_until(buffer_t* buffer, FILE* input, char end_of_line){
   while (!feof(input)) {
     int ch = fgetc(input);
@@ -1934,7 +2241,7 @@ buffer_t* buffer_read_until(buffer_t* buffer, FILE* input, char end_of_line){
   }
   return buffer;
 }
-/* i=74 j=1 */
+/* i=88 j=1 */
 __attribute__((warn_unused_result)) extern buffer_t* buffer_read_ready_bytes(buffer_t* buffer, FILE* input, uint64_t max_bytes){
   int file_number = fileno(input);
   fcntl(file_number, F_SETFL, fcntl(file_number, F_GETFL) | O_NONBLOCK);
@@ -1970,7 +2277,7 @@ __attribute__((warn_unused_result)) extern buffer_t* buffer_read_ready_bytes(buf
       // size_t bytes_read = fread(read_buffer, 1, 1, input);
       int bytes_read = read(file_number, read_buffer, sizeof(read_buffer));
       for (int i = 0; i < bytes_read; i++) {
-        buffer = buffer_append_byte(buffer, (uint8_t) read_buffer[i]);
+        buffer = buffer_append_byte(buffer, cast(uint8_t, read_buffer[i]));
         bytes_remaining--;
       }
       if (bytes_read > 0) {
@@ -1985,7 +2292,7 @@ __attribute__((warn_unused_result)) extern buffer_t* buffer_read_ready_bytes(buf
 
   return buffer;
 }
-/* i=75 j=1 */
+/* i=89 j=1 */
 int file_peek_byte(FILE* input){
   if (feof(input)) {
     return -1;
@@ -1999,11 +2306,11 @@ int file_peek_byte(FILE* input){
   }
   return result;
 }
-/* i=76 j=1 */
+/* i=90 j=1 */
 boolean_t file_eof(FILE* input){
   return feof(input) || file_peek_byte(input) < 0;
 }
-/* i=77 j=1 */
+/* i=91 j=1 */
 void file_copy_stream(FILE* input, FILE* output, boolean_t until_eof, uint64_t size){
   if (until_eof) {
     size = ULLONG_MAX;
@@ -2022,7 +2329,7 @@ void file_copy_stream(FILE* input, FILE* output, boolean_t until_eof, uint64_t s
     size -= n_read;
   }
 }
-/* i=78 j=1 */
+/* i=92 j=1 */
 void file_skip_bytes(FILE* input, uint64_t n_bytes){
 
   // We'd try to do it like this but Gemini claims that this doesn't
@@ -2042,7 +2349,7 @@ void file_skip_bytes(FILE* input, uint64_t n_bytes){
     n_bytes--;
   }
 }
-/* i=79 j=1 */
+/* i=93 j=1 */
 unsigned encode_sleb_128(int64_t Value, uint8_t* p){
   uint8_t* orig_p = p;
   int More;
@@ -2057,9 +2364,9 @@ unsigned encode_sleb_128(int64_t Value, uint8_t* p){
     *p++ = Byte;
   } while (More);
 
-  return (unsigned) (p - orig_p);
+  return cast(unsigned, p - orig_p);
 }
-/* i=80 j=1 */
+/* i=94 j=1 */
 unsigned encode_uleb_128(uint64_t Value, uint8_t* p){
   uint8_t* orig_p = p;
   do {
@@ -2070,9 +2377,9 @@ unsigned encode_uleb_128(uint64_t Value, uint8_t* p){
     *p++ = Byte;
   } while (Value != 0);
 
-  return (unsigned) (p - orig_p);
+  return cast(unsigned, (p - orig_p));
 }
-/* i=81 j=1 */
+/* i=95 j=1 */
 unsigned_decode_result decode_uleb_128(uint8_t* p, uint8_t* end){
   const uint8_t* orig_p = p;
   uint64_t Value = 0;
@@ -2090,10 +2397,10 @@ unsigned_decode_result decode_uleb_128(uint8_t* p, uint8_t* end){
     Value += Slice << Shift;
     Shift += 7;
   } while (*p++ >= 128);
-  unsigned_decode_result result = {Value, (unsigned) (p - orig_p)};
+  unsigned_decode_result result = {Value, cast(unsigned, p - orig_p)};
   return result;
 }
-/* i=82 j=1 */
+/* i=96 j=1 */
 signed_decode_result decode_sleb_128(uint8_t* p, uint8_t* end){
   const uint8_t* orig_p = p;
   int64_t Value = 0;
@@ -2123,11 +2430,11 @@ signed_decode_result decode_sleb_128(uint8_t* p, uint8_t* end){
   signed_decode_result result = {Value, (p - orig_p)};
   return result;
 }
-/* i=83 j=1 */
+/* i=97 j=1 */
 random_state_t random_state_for_test(void){
   return (random_state_t){.a = 0x1E1D43C2CA44B1F5, .b = 0x4FDD267452CEDBAC};
 }
-/* i=85 j=1 */
+/* i=99 j=1 */
 uint64_t random_next_uint64_below(random_state_t* state, uint64_t maximum){
   if (maximum == 0) {
     fatal_error(ERROR_ILLEGAL_ARGUMENT);
@@ -2148,18 +2455,18 @@ uint64_t random_next_uint64_below(random_state_t* state, uint64_t maximum){
   }
 #endif /* 0 */
 }
-/* i=86 j=0 */
+/* i=100 j=0 */
 random_state_t* random_state(void){
   static random_state_t shared_random_state = {0};
 
   if (shared_random_state.a == 0) {
-    shared_random_state.a = 0x1E1D43C2CA44B1F5 ^ ((uint64_t) time(NULL));
-    shared_random_state.b = 0x4FDD267452CEDBAC ^ ((uint64_t) time(NULL));
+    shared_random_state.a = 0x1E1D43C2CA44B1F5 ^ cast(uint64_t, time(NULL));
+    shared_random_state.b = 0x4FDD267452CEDBAC ^ cast(uint64_t, time(NULL));
   }
 
   return &shared_random_state;
 }
-/* i=88 j=0 */
+/* i=102 j=0 */
 uint64_t random_next(random_state_t* state){
   uint64_t s0 = state->a;
   uint64_t s1 = state->b;
@@ -2170,22 +2477,22 @@ uint64_t random_next(random_state_t* state){
 
   return result;
 }
-/* i=102 j=1 */
+/* i=116 j=1 */
 int string_is_null_or_empty(char* str){
   return (str == NULL) || (strlen(str) == 0);
 }
-/* i=103 j=1 */
+/* i=117 j=1 */
 int string_equal(char* str1, char* str2){
   if (string_is_null_or_empty(str1)) {
     return string_is_null_or_empty(str2);
   }
   return strcmp(str1, str2) == 0;
 }
-/* i=104 j=1 */
+/* i=118 j=1 */
 int string_starts_with(char* str1, char* str2){
   return strncmp(str1, str2, strlen(str2)) == 0;
 }
-/* i=105 j=1 */
+/* i=119 j=1 */
 int string_ends_with(char* str1, char* str2){
   size_t len1 = strlen(str1);
   size_t len2 = strlen(str2);
@@ -2196,11 +2503,11 @@ int string_ends_with(char* str1, char* str2){
 
   return strcmp(str1 + (len1 - len2), str2) == 0;
 }
-/* i=106 j=1 */
+/* i=120 j=1 */
 boolean_t string_contains_char(char* str, char ch){
   return string_index_of_char(str, ch) >= 0;
 }
-/* i=107 j=1 */
+/* i=121 j=1 */
 int string_index_of_char(char* str, char ch){
   if (string_is_null_or_empty(str)) {
     return -1;
@@ -2213,31 +2520,31 @@ int string_index_of_char(char* str, char ch){
   }
   return -1;
 }
-/* i=108 j=1 */
+/* i=122 j=1 */
 char* uint64_to_string(uint64_t number){
   char buffer[32];
   sprintf(buffer, "%lu", number);
   return string_duplicate(buffer);
 }
-/* i=109 j=1 */
+/* i=123 j=1 */
 uint64_t string_hash(char* str){
   return fasthash64(str, strlen(str), 0);
 }
-/* i=110 j=1 */
+/* i=124 j=1 */
 char* string_substring(char* str, int start, int end){
   uint64_t len = strlen(str);
   if (start >= len || start >= end || end < start) {
     fatal_error(ERROR_ILLEGAL_ARGUMENT);
   }
   int result_size = end - start + 1;
-  char* result = (char*) (malloc_bytes(result_size));
+  char* result = cast(char*, malloc_bytes(result_size));
   for (int i = start; (i < end); i++) {
     result[i - start] = str[i];
   }
   result[result_size - 1] = '\0';
   return result;
 }
-/* i=111 j=1 */
+/* i=125 j=1 */
 value_result_t string_parse_uint64(char* string){
   if (string_starts_with(string, "0x")) {
     return string_parse_uint64_hex(&string[2]);
@@ -2247,7 +2554,7 @@ value_result_t string_parse_uint64(char* string){
     return string_parse_uint64_dec(string);
   }
 }
-/* i=112 j=1 */
+/* i=126 j=1 */
 value_result_t string_parse_uint64_dec(char* string){
   uint64_t len = strlen(string);
   uint64_t integer = 0;
@@ -2269,73 +2576,75 @@ value_result_t string_parse_uint64_dec(char* string){
 
   return (value_result_t){.u64 = integer, .nf_error = NF_OK};
 }
-/* i=113 j=1 */
+/* i=127 j=1 */
 value_result_t string_parse_uint64_hex(char* string){
   uint64_t len = strlen(string);
   uint64_t integer = 0;
 
   if (len == 0) {
-    return (value_result_t){.u64 = 0,
-                            .nf_error = NF_ERROR_NOT_PARSED_AS_NUMBER};
+    return compound_literal(
+        value_result_t, {.u64 = 0, .nf_error = NF_ERROR_NOT_PARSED_AS_NUMBER});
   }
 
   for (int i = 0; i < len; i++) {
     char ch = string[i];
     if (!is_hex_digit(ch)) {
-      return (value_result_t){.u64 = 0,
-                              .nf_error = NF_ERROR_NOT_PARSED_AS_NUMBER};
+      return compound_literal(
+          value_result_t,
+          {.u64 = 0, .nf_error = NF_ERROR_NOT_PARSED_AS_NUMBER});
     }
     uint64_t digit = hex_digit_to_value(ch);
     integer = integer << 4 | digit;
   }
 
-  return (value_result_t){.u64 = integer, .nf_error = NF_OK};
+  return compound_literal(value_result_t, {.u64 = integer, .nf_error = NF_OK});
 }
-/* i=114 j=1 */
+/* i=128 j=1 */
 value_result_t string_parse_uint64_bin(char* string){
   uint64_t len = strlen(string);
   uint64_t integer = 0;
 
   if (len == 0) {
-    return (value_result_t){.u64 = 0,
-                            .nf_error = NF_ERROR_NOT_PARSED_AS_NUMBER};
+    return compound_literal(
+        value_result_t, {.u64 = 0, .nf_error = NF_ERROR_NOT_PARSED_AS_NUMBER});
   }
 
   for (int i = 0; i < len; i++) {
     char ch = string[i];
     if (ch < '0' || ch > '1') {
-      return (value_result_t){.u64 = 0,
-                              .nf_error = NF_ERROR_NOT_PARSED_AS_NUMBER};
+      return compound_literal(
+          value_result_t,
+          {.u64 = 0, .nf_error = NF_ERROR_NOT_PARSED_AS_NUMBER});
     }
     uint64_t digit = string[i] - '0';
     integer = integer << 1 | digit;
   }
 
-  return (value_result_t){.u64 = integer, .nf_error = NF_OK};
+  return compound_literal(value_result_t, {.u64 = integer, .nf_error = NF_OK});
 }
-/* i=115 j=1 */
+/* i=129 j=1 */
 char* string_duplicate(char* src){
   if (src == NULL) {
     return NULL;
   }
   int len = strlen(src) + 1;
-  char* result = (char*) malloc_bytes(len);
+  char* result = cast(char*, malloc_bytes(len));
   memcpy(result, src, len);
 
   return result;
 }
-/* i=116 j=1 */
+/* i=130 j=1 */
 char* string_append(char* a, char* b){
   if (a == NULL || b == NULL) {
     fatal_error(ERROR_ILLEGAL_NULL_ARGUMENT);
   }
   int total_length = strlen(a) + strlen(b) + 1;
-  char* result = (char*) (malloc_bytes(total_length));
+  char* result = cast(char*, malloc_bytes(total_length));
   strcat(result, a);
   strcat(result, b);
   return result;
 }
-/* i=117 j=1 */
+/* i=131 j=1 */
 char* string_left_pad(char* str, int n, char ch){
   if (n < 0) {
     fatal_error(ERROR_ILLEGAL_RANGE);
@@ -2363,7 +2672,7 @@ char* string_left_pad(char* str, int n, char ch){
   free_bytes(buffer);
   return result;
 }
-/* i=118 j=1 */
+/* i=132 j=1 */
 char* string_right_pad(char* str, int n, char ch){
   if (n < 0) {
     fatal_error(ERROR_ILLEGAL_RANGE);
@@ -2391,7 +2700,7 @@ char* string_right_pad(char* str, int n, char ch){
   free_bytes(buffer);
   return result;
 }
-/* i=119 j=1 */
+/* i=133 j=1 */
 __attribute__((format(printf, 1, 2))) char* string_printf(char* format, ...){
   char buffer[STRING_PRINTF_INITIAL_BUFFER_SIZE];
   int n_bytes = 0;
@@ -2404,11 +2713,11 @@ __attribute__((format(printf, 1, 2))) char* string_printf(char* format, ...){
   } while (0);
 
   if (n_bytes < STRING_PRINTF_INITIAL_BUFFER_SIZE) {
-    char* result = (char*) malloc_bytes(n_bytes + 1);
+    char* result = cast(char*, malloc_bytes(n_bytes + 1));
     strcat(result, buffer);
     return result;
   } else {
-    char* result = (char*) malloc_bytes(n_bytes + 1);
+    char* result = cast(char*, malloc_bytes(n_bytes + 1));
     va_list args;
     va_start(args, format);
     int n_bytes_second = vsnprintf(result, n_bytes + 1, format, args);
@@ -2419,7 +2728,7 @@ __attribute__((format(printf, 1, 2))) char* string_printf(char* format, ...){
     return result;
   }
 }
-/* i=120 j=1 */
+/* i=134 j=1 */
 char* string_truncate(char* str, int limit, char* at_limit_suffix){
   // limit is just a guess, buffer's always grow as needed.
   buffer_t* buffer = make_buffer(limit);
@@ -2439,10 +2748,10 @@ char* string_truncate(char* str, int limit, char* at_limit_suffix){
   free_bytes(buffer);
   return result;
 }
-/* i=121 j=1 */
+/* i=135 j=1 */
 uint64_t fasthash64(void* buf, size_t len, uint64_t seed){
   const uint64_t m = 0x880355f21e6d1965ULL;
-  const uint64_t* pos = (const uint64_t*) buf;
+  const uint64_t* pos = cast(const uint64_t*, buf);
   const uint64_t* end = pos + (len / 8);
   const unsigned char* pos2;
   uint64_t h = seed ^ (len * m);
@@ -2454,7 +2763,7 @@ uint64_t fasthash64(void* buf, size_t len, uint64_t seed){
     h *= m;
   }
 
-  pos2 = (const unsigned char*) pos;
+  pos2 = cast(const unsigned char*, pos);
   v = 0;
 
   switch (len & 7) {
@@ -2478,11 +2787,11 @@ uint64_t fasthash64(void* buf, size_t len, uint64_t seed){
 
   return mix(h);
 }
-/* i=125 j=1 */
+/* i=139 j=1 */
 __attribute__((warn_unused_result)) extern buffer_t* term_clear_screen(buffer_t* buffer){
   return buffer_printf(buffer, TERM_ESCAPE_START "2J");
 }
-/* i=126 j=1 */
+/* i=140 j=1 */
 __attribute__((warn_unused_result)) extern buffer_t* term_set_foreground_color(buffer_t* buffer, uint32_t color){
   uint8_t blue = color & 0xff;
   uint8_t green = (color >> 8) & 0xff;
@@ -2493,7 +2802,7 @@ __attribute__((warn_unused_result)) extern buffer_t* term_set_foreground_color(b
                        TERM_ESCAPE_START "38;2;%d;%d;%d" TERM_ESCAPE_END, red,
                        green, blue);
 }
-/* i=127 j=1 */
+/* i=141 j=1 */
 __attribute__((warn_unused_result)) extern buffer_t* term_set_background_color(buffer_t* buffer, uint32_t color){
   uint8_t blue = color & 0xff;
   uint8_t green = (color >> 8) & 0xff;
@@ -2504,12 +2813,12 @@ __attribute__((warn_unused_result)) extern buffer_t* term_set_background_color(b
                        TERM_ESCAPE_START "48;2;%d;%d;%d" TERM_ESCAPE_END, red,
                        green, blue);
 }
-/* i=128 j=1 */
+/* i=142 j=1 */
 __attribute__((warn_unused_result)) extern buffer_t* term_move_cursor_absolute(buffer_t* buffer, int x, int y){
   // Escape sequence for cursor movement (ESC [ y; x H)
   return buffer_printf(buffer, TERM_ESCAPE_START "%d;%dH", y + 1, x + 1);
 }
-/* i=129 j=1 */
+/* i=143 j=1 */
 __attribute__((warn_unused_result)) extern buffer_t* term_move_cursor_relative(buffer_t* buffer, int x, int y){
   // First handle the x position
   if (x > 0) {
@@ -2524,27 +2833,27 @@ __attribute__((warn_unused_result)) extern buffer_t* term_move_cursor_relative(b
   }
   return buffer;
 }
-/* i=130 j=1 */
+/* i=144 j=1 */
 __attribute__((warn_unused_result)) extern buffer_t* term_bold(buffer_t* buffer){
   return buffer_printf(buffer, TERM_ESCAPE_START "1m");
 }
-/* i=131 j=1 */
+/* i=145 j=1 */
 __attribute__((warn_unused_result)) extern buffer_t* term_dim(buffer_t* buffer){
   return buffer_printf(buffer, TERM_ESCAPE_START "2m");
 }
-/* i=132 j=1 */
+/* i=146 j=1 */
 __attribute__((warn_unused_result)) extern buffer_t* term_italic(buffer_t* buffer){
   return buffer_printf(buffer, TERM_ESCAPE_START "3m");
 }
-/* i=133 j=1 */
+/* i=147 j=1 */
 __attribute__((warn_unused_result)) extern buffer_t* term_underline(buffer_t* buffer){
   return buffer_printf(buffer, TERM_ESCAPE_START "4m");
 }
-/* i=134 j=1 */
+/* i=148 j=1 */
 __attribute__((warn_unused_result)) extern buffer_t* term_reset_formatting(buffer_t* buffer){
   return buffer_printf(buffer, TERM_ESCAPE_START "0m");
 }
-/* i=135 j=1 */
+/* i=149 j=1 */
 __attribute__((warn_unused_result)) extern buffer_t* term_draw_box(buffer_t* buffer, uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, box_drawing_t* box){
   // top
   buffer = term_move_cursor_absolute(buffer, x0, y0);
@@ -2577,7 +2886,7 @@ __attribute__((warn_unused_result)) extern buffer_t* term_draw_box(buffer_t* buf
 
   return buffer;
 }
-/* i=136 j=1 */
+/* i=150 j=1 */
 extern struct termios term_echo_off(){
   struct termios oldt;
   struct termios newt;
@@ -2594,12 +2903,12 @@ extern struct termios term_echo_off(){
 
   return oldt;
 }
-/* i=137 j=1 */
+/* i=151 j=1 */
 extern void term_echo_restore(struct termios oldt){
   // Restore the original terminal settings
   tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
 }
-/* i=140 j=0 */
+/* i=154 j=0 */
 __attribute__((format(printf, 3, 4))) void test_fail_and_exit(char* file_name, int line_number, char* format, ...){
   va_list args;
   fprintf(stdout, "%s:%d: ", file_name, line_number);
@@ -2609,16 +2918,16 @@ __attribute__((format(printf, 3, 4))) void test_fail_and_exit(char* file_name, i
   va_end(args);
   exit(1);
 }
-/* i=141 j=1 */
+/* i=155 j=1 */
 value_array_t* string_tokenize(char* str, char* delimiters){
-  return tokenize_memory_range((uint8_t*) str, strlen(str), delimiters);
+  return tokenize_memory_range(cast(uint8_t*, str), strlen(str), delimiters);
 }
-/* i=142 j=1 */
+/* i=156 j=1 */
 value_array_t* buffer_tokenize(buffer_t* buffer, char* delimiters){
   return tokenize_memory_range(&(buffer->elements[0]), buffer->length,
                                delimiters);
 }
-/* i=143 j=1 */
+/* i=157 j=1 */
 value_array_t* tokenize_memory_range(uint8_t* str, uint64_t length, char* delimiters){
   value_array_t* result = make_value_array(1);
   char token_data[1024];
@@ -2642,11 +2951,11 @@ value_array_t* tokenize_memory_range(uint8_t* str, uint64_t length, char* delimi
 
   return result;
 }
-/* i=144 j=1 */
+/* i=158 j=1 */
 void add_duplicate(value_array_t* token_array, char* data){
   value_array_add(token_array, str_to_value(string_duplicate(data)));
 }
-/* i=145 j=1 */
+/* i=159 j=1 */
 int uint64_highest_bit_set(uint64_t n){
   if (n >= 1ULL << 32) {
     return uint64_highest_bit_set(n >> 32) + 32;
@@ -2664,48 +2973,58 @@ int uint64_highest_bit_set(uint64_t n){
     return 0;
   }
 }
-/* i=146 j=1 */
+/* i=160 j=1 */
 utf8_decode_result_t utf8_decode(uint8_t* array){
   uint8_t firstByte = array[0];
   if ((firstByte & 0x80) == 0) {
-    return (utf8_decode_result_t){.code_point = firstByte, .num_bytes = 1};
+    return compound_literal(utf8_decode_result_t,
+                            {.code_point = firstByte, .num_bytes = 1});
   } else if ((firstByte & 0xE0) == 0xC0) {
-    return (utf8_decode_result_t){.code_point = ((firstByte & 0x1F) << 6)
-                                                | (array[1] & 0x3F),
-                                  .num_bytes = 2};
+    return compound_literal(
+        utf8_decode_result_t,
+        {.code_point = ((firstByte & 0x1F) << 6) | (array[1] & 0x3F),
+         .num_bytes = 2});
   } else if ((firstByte & 0xF0) == 0xE0) {
-    return (utf8_decode_result_t){.code_point = ((firstByte & 0x0F) << 12)
-                                                | ((array[1] & 0x3F) << 6)
-                                                | (array[2] & 0x3F),
-                                  .num_bytes = 3};
+    return compound_literal(utf8_decode_result_t,
+                            {.code_point = ((firstByte & 0x0F) << 12)
+                                           | ((array[1] & 0x3F) << 6)
+                                           | (array[2] & 0x3F),
+                             .num_bytes = 3});
   } else if ((firstByte & 0xF8) == 0xF0) {
-    return (utf8_decode_result_t){
-        .code_point = ((firstByte & 0x07) << 18) | ((array[1] & 0x3F) << 12)
-                      | ((array[2] & 0x3F) << 6) | (array[3] & 0x3F),
-        .num_bytes = 4};
+    return compound_literal(
+        utf8_decode_result_t,
+        {.code_point = ((firstByte & 0x07) << 18) | ((array[1] & 0x3F) << 12)
+                       | ((array[2] & 0x3F) << 6) | (array[3] & 0x3F),
+         .num_bytes = 4});
   } else {
-    return (utf8_decode_result_t){.error = true};
+    return compound_literal(utf8_decode_result_t, {.error = true});
   }
 }
-/* i=147 j=1 */
+/* i=163 j=1 */
+int cmp_string_values(value_t value1, value_t value2){
+  return strcmp(value1.str, value2.str);
+}
+/* i=164 j=1 */
+uint64_t hash_string_value(value_t value1){ return string_hash(value1.str); }
+/* i=165 j=1 */
 value_result_t value_alist_find(value_alist_t* list, value_comparison_fn cmp_fn, value_t key){
   while (list) {
     if (cmp_fn(key, list->key) == 0) {
-      return (value_result_t){.val = list->value};
+      return compound_literal(value_result_t, {.val = list->value});
     }
     list = list->next;
   }
-  return (value_result_t){.nf_error = NF_ERROR_NOT_FOUND};
+  return compound_literal(value_result_t, {.nf_error = NF_ERROR_NOT_FOUND});
 }
-/* i=148 j=1 */
+/* i=166 j=1 */
 value_alist_t* value_alist_insert(value_alist_t* list, value_comparison_fn cmp_fn, value_t key, value_t value){
-  value_alist_t* result = (malloc_struct(value_alist_t));
+  value_alist_t* result = malloc_struct(value_alist_t);
   result->next = value_alist_delete(list, cmp_fn, key);
   result->key = key;
   result->value = value;
   return result;
 }
-/* i=149 j=1 */
+/* i=167 j=1 */
 value_alist_t* value_alist_delete(value_alist_t* list, value_comparison_fn cmp_fn, value_t key){
   // This appears to be logically correct but could easily blow out
   // the stack with a long list.
@@ -2720,7 +3039,7 @@ value_alist_t* value_alist_delete(value_alist_t* list, value_comparison_fn cmp_f
   list->next = value_alist_delete(list->next, cmp_fn, key);
   return list;
 }
-/* i=150 j=1 */
+/* i=168 j=1 */
 __attribute__((warn_unused_result)) extern uint64_t value_alist_length(value_alist_t* list){
   uint64_t result = 0;
   while (list) {
@@ -2729,7 +3048,7 @@ __attribute__((warn_unused_result)) extern uint64_t value_alist_length(value_ali
   }
   return result;
 }
-/* i=151 j=1 */
+/* i=169 j=1 */
 value_array_t* make_value_array(uint64_t initial_capacity){
   if (initial_capacity == 0) {
     initial_capacity = 1;
@@ -2738,11 +3057,11 @@ value_array_t* make_value_array(uint64_t initial_capacity){
   value_array_t* result = malloc_struct(value_array_t);
   result->capacity = initial_capacity;
   result->elements
-      = (value_t*) malloc_bytes(sizeof(value_t) * initial_capacity);
+      = cast(value_t*, malloc_bytes(sizeof(value_t) * initial_capacity));
 
   return result;
 }
-/* i=152 j=1 */
+/* i=170 j=1 */
 value_t value_array_get(value_array_t* array, uint32_t index){
   if (index < array->length) {
     return array->elements[index];
@@ -2753,7 +3072,7 @@ value_t value_array_get(value_array_t* array, uint32_t index){
   return (value_t){.u64 = 0};
 #endif
 }
-/* i=153 j=1 */
+/* i=171 j=1 */
 void value_array_replace(value_array_t* array, uint32_t index, value_t element){
   if (index < array->length) {
     array->elements[index] = element;
@@ -2761,16 +3080,16 @@ void value_array_replace(value_array_t* array, uint32_t index, value_t element){
   }
   fatal_error(ERROR_ACCESS_OUT_OF_BOUNDS);
 }
-/* i=154 j=1 */
+/* i=172 j=1 */
 void value_array_add(value_array_t* array, value_t element){
   value_array_ensure_capacity(array, array->length + 1);
   array->elements[(array->length)++] = element;
 }
-/* i=155 j=1 */
+/* i=173 j=1 */
 void value_array_push(value_array_t* array, value_t element){
   value_array_add(array, element);
 }
-/* i=156 j=1 */
+/* i=174 j=1 */
 value_t value_array_pop(value_array_t* array){
   if (array->length == 0) {
     fatal_error(ERROR_ACCESS_OUT_OF_BOUNDS);
@@ -2781,7 +3100,7 @@ value_t value_array_pop(value_array_t* array){
   array->length--;
   return result;
 }
-/* i=157 j=1 */
+/* i=175 j=1 */
 void value_array_insert_at(value_array_t* array, uint32_t position, value_t element){
   if (position == array->length) {
     value_array_add(array, element);
@@ -2804,7 +3123,7 @@ void value_array_insert_at(value_array_t* array, uint32_t position, value_t elem
   array->length++;
   array->elements[position] = element;
 }
-/* i=158 j=1 */
+/* i=176 j=1 */
 value_t value_array_delete_at(value_array_t* array, uint32_t position){
   value_t result = value_array_get(array, position);
   for (int i = position; i < array->length - 1; i++) {
@@ -2813,7 +3132,7 @@ value_t value_array_delete_at(value_array_t* array, uint32_t position){
   array->length--;
   return result;
 }
-/* i=159 j=0 */
+/* i=177 j=0 */
 void value_array_ensure_capacity(value_array_t* array, uint32_t required_capacity){
   if (array->capacity < required_capacity) {
     uint32_t new_capacity = array->capacity * 2;
@@ -2821,7 +3140,7 @@ void value_array_ensure_capacity(value_array_t* array, uint32_t required_capacit
       new_capacity = required_capacity;
     }
     value_t* new_elements
-        = (value_t*) (malloc_bytes(sizeof(value_t) * new_capacity));
+        = cast(value_t*, malloc_bytes(sizeof(value_t) * new_capacity));
     for (int i = 0; i < array->length; i++) {
       new_elements[i] = array->elements[i];
     }
@@ -2831,10 +3150,82 @@ void value_array_ensure_capacity(value_array_t* array, uint32_t required_capacit
     return;
   }
 }
-/* i=160 j=1 */
+/* i=178 j=1 */
+value_hashtable_t* make_value_hashtable(uint64_t n_buckets){
+  if (n_buckets < 2) {
+    n_buckets = 2;
+  }
+  value_hashtable_t* result = malloc_struct(value_hashtable_t);
+  result->n_buckets = n_buckets;
+  result->buckets = cast(value_alist_t**, malloc_bytes(sizeof(value_alist_t*) * n_buckets));
+  return result;
+}
+/* i=179 j=1 */
+value_hashtable_t* value_ht_insert(value_hashtable_t* ht, value_hash_fn hash_fn, value_comparison_fn cmp_fn, value_t key, value_t value){
+  uint64_t hashcode = hash_fn(key);
+  int bucket = hashcode % ht->n_buckets;
+  value_alist_t* list = ht->buckets[bucket];
+  uint64_t len = value_alist_length(list);
+  list = value_alist_insert(list, cmp_fn, key, value);
+  ht->buckets[bucket] = list;
+  uint64_t len_after = value_alist_length(list);
+  if (len_after > len) {
+    ht->n_entries++;
+    // Without this, a hash table would never grow and thus as the
+    // number of entries grows large, the hashtable would only improve
+    // performance over an alist by a constant amount (which could
+    // still be an impressive speedup...)
+    if (ht->n_entries >= (ht->n_buckets * ARMYKNIFE_HT_LOAD_FACTOR)) {
+      ht = value_hashtable_upsize_internal(ht, hash_fn, cmp_fn);
+    }
+  }
+  return ht;
+}
+/* i=180 j=1 */
+value_hashtable_t* value_ht_delete(value_hashtable_t* ht, value_hash_fn hash_fn, value_comparison_fn cmp_fn, value_t key){
+  uint64_t hashcode = hash_fn(key);
+  int bucket = hashcode % ht->n_buckets;
+  value_alist_t* list = ht->buckets[bucket];
+  uint64_t len = value_alist_length(list);
+  list = value_alist_delete(list, cmp_fn, key);
+  ht->buckets[bucket] = list;
+  uint64_t len_after = value_alist_length(list);
+  if (len_after < len) {
+    ht->n_entries--;
+  }
+  return ht;
+}
+/* i=181 j=1 */
+value_result_t value_ht_find(value_hashtable_t* ht, value_hash_fn hash_fn, value_comparison_fn cmp_fn, value_t key){
+  uint64_t hashcode = hash_fn(key);
+  int bucket = hashcode % ht->n_buckets;
+  value_alist_t* list = ht->buckets[bucket];
+  return value_alist_find(list, cmp_fn, key);
+}
+/* i=182 j=1 */
+value_hashtable_t* value_hashtable_upsize_internal(value_hashtable_t* ht, value_hash_fn hash_fn, value_comparison_fn cmp_fn){
+  uint64_t new_num_buckets = ht->n_buckets * AK_HT_UPSCALE_MULTIPLIER;
+  value_hashtable_t* result = make_value_hashtable(new_num_buckets);
+  // clang-format off
+  value_ht_foreach(ht, key, value, {
+      value_hashtable_t* should_be_result = value_ht_insert(result, hash_fn, cmp_fn, key, value);
+      // If an insertion into the bigger hashtable results in it's own
+      // resize, then the results will be unpredictable (at least
+      // without more code). This is likely to only happen when
+      // growing a very small hashtable and depends on values choosen
+      // for ARMYKNIFE_HT_LOAD_FACTOR and AK_HT_UPSCALE_MULTIPLIER.
+      if (result != should_be_result) {
+	fatal_error(ERROR_ILLEGAL_STATE);
+      }
+  });
+  free_bytes(ht);
+  // clang-format on
+  return result;
+}
+/* i=184 j=1 */
 value_result_t value_tree_find(value_tree_t* t, value_comparison_fn cmp_fn, value_t key){
   if (t == NULL) {
-    return (value_result_t){.nf_error = NF_ERROR_NOT_FOUND};
+    return compound_literal(value_result_t, {.nf_error = NF_ERROR_NOT_FOUND});
   }
 
   int cmp_result = cmp_fn(key, t->key);
@@ -2843,12 +3234,12 @@ value_result_t value_tree_find(value_tree_t* t, value_comparison_fn cmp_fn, valu
   } else if (cmp_result > 0) {
     return value_tree_find(t->right, cmp_fn, key);
   } else {
-    return (value_result_t){
-        .val = t->value,
-    };
+    return compound_literal(value_result_t, {
+                                                .val = t->value,
+                                            });
   }
 }
-/* i=161 j=1 */
+/* i=185 j=1 */
 value_tree_t* value_tree_insert(value_tree_t* t, value_comparison_fn cmp_fn, value_t key, value_t value){
   if (t == NULL) {
     // Create a new leaf node
@@ -2872,7 +3263,7 @@ value_tree_t* value_tree_insert(value_tree_t* t, value_comparison_fn cmp_fn, val
 
   return t;
 }
-/* i=162 j=1 */
+/* i=186 j=1 */
 value_tree_t* value_tree_delete(value_tree_t* t, value_comparison_fn cmp_fn, value_t key){
 
   if (t == NULL) {
@@ -2923,7 +3314,7 @@ value_tree_t* value_tree_delete(value_tree_t* t, value_comparison_fn cmp_fn, val
   t->right = value_tree_split(t->right);
   return t;
 }
-/* i=163 j=0 */
+/* i=187 j=0 */
 value_tree_t* value_tree_skew(value_tree_t* t){
   if (t == NULL) {
     return NULL;
@@ -2939,7 +3330,7 @@ value_tree_t* value_tree_skew(value_tree_t* t){
   }
   return t;
 }
-/* i=164 j=0 */
+/* i=188 j=0 */
 value_tree_t* value_tree_split(value_tree_t* t){
   if (t == NULL) {
     return NULL;
@@ -2958,7 +3349,7 @@ value_tree_t* value_tree_split(value_tree_t* t){
   }
   return t;
 }
-/* i=165 j=0 */
+/* i=189 j=0 */
 value_tree_t* make_value_tree_leaf(value_t key, value_t value){
   value_tree_t* result = malloc_struct(value_tree_t);
   result->level = 1;
@@ -2966,7 +3357,7 @@ value_tree_t* make_value_tree_leaf(value_t key, value_t value){
   result->value = value;
   return result;
 }
-/* i=167 j=0 */
+/* i=191 j=0 */
 value_tree_t* value_tree_decrease_level(value_tree_t* t){
   if (t->left && t->right) {
     uint32_t should_be
@@ -2980,7 +3371,7 @@ value_tree_t* value_tree_decrease_level(value_tree_t* t){
   }
   return t;
 }
-/* i=168 j=0 */
+/* i=192 j=0 */
 value_tree_t* value_tree_predecessor(value_tree_t* t){
   t = t->left;
   while (t->right != NULL) {
@@ -2988,7 +3379,7 @@ value_tree_t* value_tree_predecessor(value_tree_t* t){
   }
   return t;
 }
-/* i=169 j=0 */
+/* i=193 j=0 */
 value_tree_t* value_tree_successor(value_tree_t* t){
   t = t->right;
   while (t->left != NULL) {
@@ -2996,58 +3387,58 @@ value_tree_t* value_tree_successor(value_tree_t* t){
   }
   return t;
 }
-/* i=171 j=0 */
+/* i=195 j=0 */
 char* flag_type_to_string(flag_type_t value){
   switch (value) {
     case flag_type_none:
-      return "flag_type_none";
-    case flag_type_boolean:
-      return "flag_type_boolean";
-    case flag_type_string:
-      return "flag_type_string";
-    case flag_type_uint64:
-      return "flag_type_uint64";
-    case flag_type_int64:
-      return "flag_type_int64";
-    case flag_type_double:
-      return "flag_type_double";
-    case flag_type_enum:
-      return "flag_type_enum";
-    case flag_type_custom:
-      return "flag_type_custom";
-    default:
-      return "<<unknown-flag_type>>";
+return "flag_type_none";
+  case flag_type_boolean:
+return "flag_type_boolean";
+  case flag_type_string:
+return "flag_type_string";
+  case flag_type_uint64:
+return "flag_type_uint64";
+  case flag_type_int64:
+return "flag_type_int64";
+  case flag_type_double:
+return "flag_type_double";
+  case flag_type_enum:
+return "flag_type_enum";
+  case flag_type_custom:
+return "flag_type_custom";
+  default:
+    return "<<unknown-flag_type>>";
   }
 }
-/* i=172 j=0 */
+/* i=196 j=0 */
 flag_type_t string_to_flag_type(char* value){
   if (strcmp(value, "flag_type_none") == 0) {
-    return flag_type_none;
+return flag_type_none;
   }
   if (strcmp(value, "flag_type_boolean") == 0) {
-    return flag_type_boolean;
+return flag_type_boolean;
   }
   if (strcmp(value, "flag_type_string") == 0) {
-    return flag_type_string;
+return flag_type_string;
   }
   if (strcmp(value, "flag_type_uint64") == 0) {
-    return flag_type_uint64;
+return flag_type_uint64;
   }
   if (strcmp(value, "flag_type_int64") == 0) {
-    return flag_type_int64;
+return flag_type_int64;
   }
   if (strcmp(value, "flag_type_double") == 0) {
-    return flag_type_double;
+return flag_type_double;
   }
   if (strcmp(value, "flag_type_enum") == 0) {
-    return flag_type_enum;
+return flag_type_enum;
   }
   if (strcmp(value, "flag_type_custom") == 0) {
-    return flag_type_custom;
+return flag_type_custom;
   }
   return 0;
 }
-/* i=173 j=0 */
+/* i=197 j=0 */
 enum_metadata_t* flag_type_metadata(){
     static enum_element_metadata_t var_0 = (enum_element_metadata_t) {
         .next = NULL,
@@ -3095,153 +3486,153 @@ enum_metadata_t* flag_type_metadata(){
     };
     return &enum_metadata_result;
 }
-/* i=174 j=0 */
+/* i=198 j=0 */
 char* error_code_to_string(error_code_t value){
   switch (value) {
     case ERROR_UKNOWN:
-      return "ERROR_UKNOWN";
-    case ERROR_SIGSEGV:
-      return "ERROR_SIGSEGV";
-    case ERROR_ACCESS_OUT_OF_BOUNDS:
-      return "ERROR_ACCESS_OUT_OF_BOUNDS";
-    case ERROR_BAD_COMMAND_LINE:
-      return "ERROR_BAD_COMMAND_LINE";
-    case ERROR_DYNAMICALLY_SIZED_TYPE_ILLEGAL_IN_CONTAINER:
-      return "ERROR_DYNAMICALLY_SIZED_TYPE_ILLEGAL_IN_CONTAINER";
-    case ERROR_ILLEGAL_ENUM_VALUE:
-      return "ERROR_ILLEGAL_ENUM_VALUE";
-    case ERROR_ILLEGAL_INITIAL_CAPACITY:
-      return "ERROR_ILLEGAL_INITIAL_CAPACITY";
-    case ERROR_ILLEGAL_NULL_ARGUMENT:
-      return "ERROR_ILLEGAL_NULL_ARGUMENT";
-    case ERROR_ILLEGAL_ZERO_HASHCODE_VALUE:
-      return "ERROR_ILLEGAL_ZERO_HASHCODE_VALUE";
-    case ERROR_ILLEGAL_RANGE:
-      return "ERROR_ILLEGAL_RANGE";
-    case ERROR_MEMORY_ALLOCATION:
-      return "ERROR_MEMORY_ALLOCATION";
-    case ERROR_MEMORY_FREE_NULL:
-      return "ERROR_MEMORY_FREE_NULL";
-    case ERROR_NOT_REACHED:
-      return "ERROR_NOT_REACHED";
-    case ERROR_REFERENCE_NOT_EXPECTED_TYPE:
-      return "ERROR_REFERENCE_NOT_EXPECTED_TYPE";
-    case ERROR_UNIMPLEMENTED:
-      return "ERROR_UNIMPLEMENTED";
-    case ERROR_OPEN_LOG_FILE:
-      return "ERROR_OPEN_LOG_FILE";
-    case ERROR_TEST:
-      return "ERROR_TEST";
-    case ERROR_INTERNAL_ASSERTION_FAILURE:
-      return "ERROR_INTERNAL_ASSERTION_FAILURE";
-    case ERROR_BAD_ALLOCATION_SIZE:
-      return "ERROR_BAD_ALLOCATION_SIZE";
-    case ERROR_ILLEGAL_ARGUMENT:
-      return "ERROR_ILLEGAL_ARGUMENT";
-    case ERROR_MEMORY_START_PADDING_ERROR:
-      return "ERROR_MEMORY_START_PADDING_ERROR";
-    case ERROR_MEMORY_END_PADDING_ERROR:
-      return "ERROR_MEMORY_END_PADDING_ERROR";
-    case ERROR_FATAL:
-      return "ERROR_FATAL";
-    case ERROR_ILLEGAL_STATE:
-      return "ERROR_ILLEGAL_STATE";
-    case ERROR_ILLEGAL_INPUT:
-      return "ERROR_ILLEGAL_INPUT";
-    case ERROR_ILLEGAL_UTF_8_CODE_POINT:
-      return "ERROR_ILLEGAL_UTF_8_CODE_POINT";
-    case ERROR_ILLEGAL_TERMINAL_COORDINATES:
-      return "ERROR_ILLEGAL_TERMINAL_COORDINATES";
-    default:
-      return "<<unknown-error_code>>";
+return "ERROR_UKNOWN";
+  case ERROR_SIGSEGV:
+return "ERROR_SIGSEGV";
+  case ERROR_ACCESS_OUT_OF_BOUNDS:
+return "ERROR_ACCESS_OUT_OF_BOUNDS";
+  case ERROR_BAD_COMMAND_LINE:
+return "ERROR_BAD_COMMAND_LINE";
+  case ERROR_DYNAMICALLY_SIZED_TYPE_ILLEGAL_IN_CONTAINER:
+return "ERROR_DYNAMICALLY_SIZED_TYPE_ILLEGAL_IN_CONTAINER";
+  case ERROR_ILLEGAL_ENUM_VALUE:
+return "ERROR_ILLEGAL_ENUM_VALUE";
+  case ERROR_ILLEGAL_INITIAL_CAPACITY:
+return "ERROR_ILLEGAL_INITIAL_CAPACITY";
+  case ERROR_ILLEGAL_NULL_ARGUMENT:
+return "ERROR_ILLEGAL_NULL_ARGUMENT";
+  case ERROR_ILLEGAL_ZERO_HASHCODE_VALUE:
+return "ERROR_ILLEGAL_ZERO_HASHCODE_VALUE";
+  case ERROR_ILLEGAL_RANGE:
+return "ERROR_ILLEGAL_RANGE";
+  case ERROR_MEMORY_ALLOCATION:
+return "ERROR_MEMORY_ALLOCATION";
+  case ERROR_MEMORY_FREE_NULL:
+return "ERROR_MEMORY_FREE_NULL";
+  case ERROR_NOT_REACHED:
+return "ERROR_NOT_REACHED";
+  case ERROR_REFERENCE_NOT_EXPECTED_TYPE:
+return "ERROR_REFERENCE_NOT_EXPECTED_TYPE";
+  case ERROR_UNIMPLEMENTED:
+return "ERROR_UNIMPLEMENTED";
+  case ERROR_OPEN_LOG_FILE:
+return "ERROR_OPEN_LOG_FILE";
+  case ERROR_TEST:
+return "ERROR_TEST";
+  case ERROR_INTERNAL_ASSERTION_FAILURE:
+return "ERROR_INTERNAL_ASSERTION_FAILURE";
+  case ERROR_BAD_ALLOCATION_SIZE:
+return "ERROR_BAD_ALLOCATION_SIZE";
+  case ERROR_ILLEGAL_ARGUMENT:
+return "ERROR_ILLEGAL_ARGUMENT";
+  case ERROR_MEMORY_START_PADDING_ERROR:
+return "ERROR_MEMORY_START_PADDING_ERROR";
+  case ERROR_MEMORY_END_PADDING_ERROR:
+return "ERROR_MEMORY_END_PADDING_ERROR";
+  case ERROR_FATAL:
+return "ERROR_FATAL";
+  case ERROR_ILLEGAL_STATE:
+return "ERROR_ILLEGAL_STATE";
+  case ERROR_ILLEGAL_INPUT:
+return "ERROR_ILLEGAL_INPUT";
+  case ERROR_ILLEGAL_UTF_8_CODE_POINT:
+return "ERROR_ILLEGAL_UTF_8_CODE_POINT";
+  case ERROR_ILLEGAL_TERMINAL_COORDINATES:
+return "ERROR_ILLEGAL_TERMINAL_COORDINATES";
+  default:
+    return "<<unknown-error_code>>";
   }
 }
-/* i=175 j=0 */
+/* i=199 j=0 */
 error_code_t string_to_error_code(char* value){
   if (strcmp(value, "ERROR_UKNOWN") == 0) {
-    return ERROR_UKNOWN;
+return ERROR_UKNOWN;
   }
   if (strcmp(value, "ERROR_SIGSEGV") == 0) {
-    return ERROR_SIGSEGV;
+return ERROR_SIGSEGV;
   }
   if (strcmp(value, "ERROR_ACCESS_OUT_OF_BOUNDS") == 0) {
-    return ERROR_ACCESS_OUT_OF_BOUNDS;
+return ERROR_ACCESS_OUT_OF_BOUNDS;
   }
   if (strcmp(value, "ERROR_BAD_COMMAND_LINE") == 0) {
-    return ERROR_BAD_COMMAND_LINE;
+return ERROR_BAD_COMMAND_LINE;
   }
   if (strcmp(value, "ERROR_DYNAMICALLY_SIZED_TYPE_ILLEGAL_IN_CONTAINER") == 0) {
-    return ERROR_DYNAMICALLY_SIZED_TYPE_ILLEGAL_IN_CONTAINER;
+return ERROR_DYNAMICALLY_SIZED_TYPE_ILLEGAL_IN_CONTAINER;
   }
   if (strcmp(value, "ERROR_ILLEGAL_ENUM_VALUE") == 0) {
-    return ERROR_ILLEGAL_ENUM_VALUE;
+return ERROR_ILLEGAL_ENUM_VALUE;
   }
   if (strcmp(value, "ERROR_ILLEGAL_INITIAL_CAPACITY") == 0) {
-    return ERROR_ILLEGAL_INITIAL_CAPACITY;
+return ERROR_ILLEGAL_INITIAL_CAPACITY;
   }
   if (strcmp(value, "ERROR_ILLEGAL_NULL_ARGUMENT") == 0) {
-    return ERROR_ILLEGAL_NULL_ARGUMENT;
+return ERROR_ILLEGAL_NULL_ARGUMENT;
   }
   if (strcmp(value, "ERROR_ILLEGAL_ZERO_HASHCODE_VALUE") == 0) {
-    return ERROR_ILLEGAL_ZERO_HASHCODE_VALUE;
+return ERROR_ILLEGAL_ZERO_HASHCODE_VALUE;
   }
   if (strcmp(value, "ERROR_ILLEGAL_RANGE") == 0) {
-    return ERROR_ILLEGAL_RANGE;
+return ERROR_ILLEGAL_RANGE;
   }
   if (strcmp(value, "ERROR_MEMORY_ALLOCATION") == 0) {
-    return ERROR_MEMORY_ALLOCATION;
+return ERROR_MEMORY_ALLOCATION;
   }
   if (strcmp(value, "ERROR_MEMORY_FREE_NULL") == 0) {
-    return ERROR_MEMORY_FREE_NULL;
+return ERROR_MEMORY_FREE_NULL;
   }
   if (strcmp(value, "ERROR_NOT_REACHED") == 0) {
-    return ERROR_NOT_REACHED;
+return ERROR_NOT_REACHED;
   }
   if (strcmp(value, "ERROR_REFERENCE_NOT_EXPECTED_TYPE") == 0) {
-    return ERROR_REFERENCE_NOT_EXPECTED_TYPE;
+return ERROR_REFERENCE_NOT_EXPECTED_TYPE;
   }
   if (strcmp(value, "ERROR_UNIMPLEMENTED") == 0) {
-    return ERROR_UNIMPLEMENTED;
+return ERROR_UNIMPLEMENTED;
   }
   if (strcmp(value, "ERROR_OPEN_LOG_FILE") == 0) {
-    return ERROR_OPEN_LOG_FILE;
+return ERROR_OPEN_LOG_FILE;
   }
   if (strcmp(value, "ERROR_TEST") == 0) {
-    return ERROR_TEST;
+return ERROR_TEST;
   }
   if (strcmp(value, "ERROR_INTERNAL_ASSERTION_FAILURE") == 0) {
-    return ERROR_INTERNAL_ASSERTION_FAILURE;
+return ERROR_INTERNAL_ASSERTION_FAILURE;
   }
   if (strcmp(value, "ERROR_BAD_ALLOCATION_SIZE") == 0) {
-    return ERROR_BAD_ALLOCATION_SIZE;
+return ERROR_BAD_ALLOCATION_SIZE;
   }
   if (strcmp(value, "ERROR_ILLEGAL_ARGUMENT") == 0) {
-    return ERROR_ILLEGAL_ARGUMENT;
+return ERROR_ILLEGAL_ARGUMENT;
   }
   if (strcmp(value, "ERROR_MEMORY_START_PADDING_ERROR") == 0) {
-    return ERROR_MEMORY_START_PADDING_ERROR;
+return ERROR_MEMORY_START_PADDING_ERROR;
   }
   if (strcmp(value, "ERROR_MEMORY_END_PADDING_ERROR") == 0) {
-    return ERROR_MEMORY_END_PADDING_ERROR;
+return ERROR_MEMORY_END_PADDING_ERROR;
   }
   if (strcmp(value, "ERROR_FATAL") == 0) {
-    return ERROR_FATAL;
+return ERROR_FATAL;
   }
   if (strcmp(value, "ERROR_ILLEGAL_STATE") == 0) {
-    return ERROR_ILLEGAL_STATE;
+return ERROR_ILLEGAL_STATE;
   }
   if (strcmp(value, "ERROR_ILLEGAL_INPUT") == 0) {
-    return ERROR_ILLEGAL_INPUT;
+return ERROR_ILLEGAL_INPUT;
   }
   if (strcmp(value, "ERROR_ILLEGAL_UTF_8_CODE_POINT") == 0) {
-    return ERROR_ILLEGAL_UTF_8_CODE_POINT;
+return ERROR_ILLEGAL_UTF_8_CODE_POINT;
   }
   if (strcmp(value, "ERROR_ILLEGAL_TERMINAL_COORDINATES") == 0) {
-    return ERROR_ILLEGAL_TERMINAL_COORDINATES;
+return ERROR_ILLEGAL_TERMINAL_COORDINATES;
   }
   return 0;
 }
-/* i=176 j=0 */
+/* i=200 j=0 */
 enum_metadata_t* error_code_metadata(){
     static enum_element_metadata_t var_0 = (enum_element_metadata_t) {
         .next = NULL,
@@ -3381,6 +3772,65 @@ enum_metadata_t* error_code_metadata(){
     static enum_metadata_t enum_metadata_result = (enum_metadata_t) {
         .name = "error_code_t",
         .elements = &var_26
+    };
+    return &enum_metadata_result;
+}
+/* i=201 j=0 */
+char* non_fatal_error_code_to_string(non_fatal_error_code_t value){
+  switch (value) {
+    case NF_OK:
+return "NF_OK";
+  case NF_ERROR_NOT_FOUND:
+return "NF_ERROR_NOT_FOUND";
+  case NF_ERROR_NOT_PARSED_AS_NUMBER:
+return "NF_ERROR_NOT_PARSED_AS_NUMBER";
+  case NF_ERROR_NOT_PARSED_AS_EXPECTED_ENUM:
+return "NF_ERROR_NOT_PARSED_AS_EXPECTED_ENUM";
+  default:
+    return "<<unknown-non_fatal_error_code>>";
+  }
+}
+/* i=202 j=0 */
+non_fatal_error_code_t string_to_non_fatal_error_code(char* value){
+  if (strcmp(value, "NF_OK") == 0) {
+return NF_OK;
+  }
+  if (strcmp(value, "NF_ERROR_NOT_FOUND") == 0) {
+return NF_ERROR_NOT_FOUND;
+  }
+  if (strcmp(value, "NF_ERROR_NOT_PARSED_AS_NUMBER") == 0) {
+return NF_ERROR_NOT_PARSED_AS_NUMBER;
+  }
+  if (strcmp(value, "NF_ERROR_NOT_PARSED_AS_EXPECTED_ENUM") == 0) {
+return NF_ERROR_NOT_PARSED_AS_EXPECTED_ENUM;
+  }
+  return 0;
+}
+/* i=203 j=0 */
+enum_metadata_t* non_fatal_error_code_metadata(){
+    static enum_element_metadata_t var_0 = (enum_element_metadata_t) {
+        .next = NULL,
+        .name = "NF_OK",
+        .value = NF_OK
+    };
+    static enum_element_metadata_t var_1 = (enum_element_metadata_t) {
+        .next = &var_0,
+        .name = "NF_ERROR_NOT_FOUND",
+        .value = NF_ERROR_NOT_FOUND
+    };
+    static enum_element_metadata_t var_2 = (enum_element_metadata_t) {
+        .next = &var_1,
+        .name = "NF_ERROR_NOT_PARSED_AS_NUMBER",
+        .value = NF_ERROR_NOT_PARSED_AS_NUMBER
+    };
+    static enum_element_metadata_t var_3 = (enum_element_metadata_t) {
+        .next = &var_2,
+        .name = "NF_ERROR_NOT_PARSED_AS_EXPECTED_ENUM",
+        .value = NF_ERROR_NOT_PARSED_AS_EXPECTED_ENUM
+    };
+    static enum_metadata_t enum_metadata_result = (enum_metadata_t) {
+        .name = "non_fatal_error_code_t",
+        .elements = &var_3
     };
     return &enum_metadata_result;
 }

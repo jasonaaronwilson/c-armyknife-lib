@@ -108,7 +108,7 @@ typedef bool boolean_t;
  *
  * Notice how the name of the type now appears all the way to the
  * right.
- * 
+ *
  * (Omni C will eventually allow "=" for typedefs so:
  *
  * ```
@@ -133,8 +133,7 @@ typedef bool boolean_t;
 `* ```
  */
 
-#define fn_t(return_type, ...) \
-    typeof(return_type (*)(__VA_ARGS__))
+#define fn_t(return_type, ...) typeof(return_type(*)(__VA_ARGS__))
 
 #endif /* _FN_H_ */
 // SSCF generated file from: leb128.c
@@ -1032,7 +1031,7 @@ __attribute__((warn_unused_result)) static inline uint64_t
 struct value_hashtable_S {
   uint64_t n_buckets;
   uint64_t n_entries;
-  value_alist_t* buckets[0];
+  value_alist_t** buckets;
 };
 
 typedef struct value_hashtable_S value_hashtable_t;
@@ -3031,7 +3030,7 @@ void cdl_end_table(cdl_printer_t* printer) {
  *
  * Notice how the name of the type now appears all the way to the
  * right.
- * 
+ *
  * (Omni C will eventually allow "=" for typedefs so:
  *
  * ```
@@ -3056,8 +3055,7 @@ void cdl_end_table(cdl_printer_t* printer) {
 `* ```
  */
 
-#define fn_t(return_type, ...) \
-    typeof(return_type (*)(__VA_ARGS__))
+#define fn_t(return_type, ...) typeof(return_type(*)(__VA_ARGS__))
 
 #endif /* _FN_H_ */
 #line 2 "flag.c"
@@ -7055,7 +7053,7 @@ value_t value_array_delete_at(value_array_t* array, uint32_t position) {
 struct value_hashtable_S {
   uint64_t n_buckets;
   uint64_t n_entries;
-  value_alist_t* buckets[0];
+  value_alist_t** buckets;
 };
 
 typedef struct value_hashtable_S value_hashtable_t;
@@ -7120,10 +7118,9 @@ value_hashtable_t* make_value_hashtable(uint64_t n_buckets) {
   if (n_buckets < 2) {
     n_buckets = 2;
   }
-  value_hashtable_t* result = cast(
-      value_hashtable_t*, malloc_bytes(sizeof(value_hashtable_t)
-                                       + sizeof(value_alist_t*) * n_buckets));
+  value_hashtable_t* result = malloc_struct(value_hashtable_t);
   result->n_buckets = n_buckets;
+  result->buckets = cast(value_alist_t**, malloc_bytes(sizeof(value_alist_t*) * n_buckets));
   return result;
 }
 
@@ -7222,6 +7219,7 @@ value_hashtable_t* value_hashtable_upsize_internal(value_hashtable_t* ht,
 	fatal_error(ERROR_ILLEGAL_STATE);
       }
   });
+  free_bytes(ht->buckets);
   free_bytes(ht);
   // clang-format on
   return result;

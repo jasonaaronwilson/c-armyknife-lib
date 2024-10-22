@@ -38,7 +38,7 @@
 struct value_hashtable_S {
   uint64_t n_buckets;
   uint64_t n_entries;
-  value_alist_t* buckets[0];
+  value_alist_t** buckets;
 };
 
 typedef struct value_hashtable_S value_hashtable_t;
@@ -103,10 +103,9 @@ value_hashtable_t* make_value_hashtable(uint64_t n_buckets) {
   if (n_buckets < 2) {
     n_buckets = 2;
   }
-  value_hashtable_t* result = cast(
-      value_hashtable_t*, malloc_bytes(sizeof(value_hashtable_t)
-                                       + sizeof(value_alist_t*) * n_buckets));
+  value_hashtable_t* result = malloc_struct(value_hashtable_t);
   result->n_buckets = n_buckets;
+  result->buckets = cast(value_alist_t**, malloc_bytes(sizeof(value_alist_t*) * n_buckets));
   return result;
 }
 
@@ -205,6 +204,7 @@ value_hashtable_t* value_hashtable_upsize_internal(value_hashtable_t* ht,
 	fatal_error(ERROR_ILLEGAL_STATE);
       }
   });
+  free_bytes(ht->buckets);
   free_bytes(ht);
   // clang-format on
   return result;

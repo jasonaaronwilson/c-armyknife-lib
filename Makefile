@@ -73,7 +73,7 @@ c-armyknife-lib: ${SRC_C} generate-header-files
 	cat c-armyknife-lib.h | grep -v "#line" >c-armyknife-lib-no-lines.h
 
 # value.c 
-SRC_C_FILTERED := $(filter-out logger.c value-hashtable.c, $(SRC_C))
+SRC_C_FILTERED := $(filter-out logger.c, $(SRC_C))
 
 # This doesn't work yet but this is the goal 
 c-armyknife-lib-omni-c:

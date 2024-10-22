@@ -1038,22 +1038,23 @@ typedef struct value_hashtable_S value_hashtable_t;
 
 extern value_hashtable_t* make_value_hashtable(uint64_t n_buckets);
 
-__attribute__((warn_unused_result)) extern value_hashtable_t*
-    value_ht_insert(value_hashtable_t* ht, value_hash_fn hash_fn,
-                    value_comparison_fn cmp_fn, value_t key, value_t value);
+extern value_hashtable_t* value_ht_insert(value_hashtable_t* ht,
+                                          value_hash_fn hash_fn,
+                                          value_comparison_fn cmp_fn,
+                                          value_t key, value_t value);
 
-__attribute__((warn_unused_result)) extern value_hashtable_t*
-    value_ht_delete(value_hashtable_t* ht, value_hash_fn hash_fn,
-                    value_comparison_fn cmp_fn, value_t key);
+extern value_hashtable_t* value_ht_delete(value_hashtable_t* ht,
+                                          value_hash_fn hash_fn,
+                                          value_comparison_fn cmp_fn,
+                                          value_t key);
 
 extern value_result_t value_ht_find(value_hashtable_t* ht,
                                     value_hash_fn hash_fn,
                                     value_comparison_fn cmp_fn, value_t key);
 
-__attribute__((warn_unused_result)) extern value_hashtable_t*
-    value_hashtable_upsize_internal(value_hashtable_t* ht,
-                                    value_hash_fn hash_fn,
-                                    value_comparison_fn cmp_fn);
+extern void value_hashtable_upsize_internal(value_hashtable_t* ht,
+                                            value_hash_fn hash_fn,
+                                            value_comparison_fn cmp_fn);
 
 /**
  * @function value_ht_num_entries
@@ -7060,22 +7061,23 @@ typedef struct value_hashtable_S value_hashtable_t;
 
 extern value_hashtable_t* make_value_hashtable(uint64_t n_buckets);
 
-__attribute__((warn_unused_result)) extern value_hashtable_t*
-    value_ht_insert(value_hashtable_t* ht, value_hash_fn hash_fn,
-                    value_comparison_fn cmp_fn, value_t key, value_t value);
+extern value_hashtable_t* value_ht_insert(value_hashtable_t* ht,
+                                          value_hash_fn hash_fn,
+                                          value_comparison_fn cmp_fn,
+                                          value_t key, value_t value);
 
-__attribute__((warn_unused_result)) extern value_hashtable_t*
-    value_ht_delete(value_hashtable_t* ht, value_hash_fn hash_fn,
-                    value_comparison_fn cmp_fn, value_t key);
+extern value_hashtable_t* value_ht_delete(value_hashtable_t* ht,
+                                          value_hash_fn hash_fn,
+                                          value_comparison_fn cmp_fn,
+                                          value_t key);
 
 extern value_result_t value_ht_find(value_hashtable_t* ht,
                                     value_hash_fn hash_fn,
                                     value_comparison_fn cmp_fn, value_t key);
 
-__attribute__((warn_unused_result)) extern value_hashtable_t*
-    value_hashtable_upsize_internal(value_hashtable_t* ht,
-                                    value_hash_fn hash_fn,
-                                    value_comparison_fn cmp_fn);
+extern void value_hashtable_upsize_internal(value_hashtable_t* ht,
+                                            value_hash_fn hash_fn,
+                                            value_comparison_fn cmp_fn);
 
 /**
  * @function value_ht_num_entries
@@ -7120,7 +7122,8 @@ value_hashtable_t* make_value_hashtable(uint64_t n_buckets) {
   }
   value_hashtable_t* result = malloc_struct(value_hashtable_t);
   result->n_buckets = n_buckets;
-  result->buckets = cast(value_alist_t**, malloc_bytes(sizeof(value_alist_t*) * n_buckets));
+  result->buckets
+      = cast(value_alist_t**, malloc_bytes(sizeof(value_alist_t*) * n_buckets));
   return result;
 }
 
@@ -7146,7 +7149,7 @@ value_hashtable_t* value_ht_insert(value_hashtable_t* ht, value_hash_fn hash_fn,
     // performance over an alist by a constant amount (which could
     // still be an impressive speedup...)
     if (ht->n_entries >= (ht->n_buckets * ARMYKNIFE_HT_LOAD_FACTOR)) {
-      ht = value_hashtable_upsize_internal(ht, hash_fn, cmp_fn);
+      value_hashtable_upsize_internal(ht, hash_fn, cmp_fn);
     }
   }
   return ht;
@@ -7202,27 +7205,30 @@ by making a new larger hashtable using
  * AK_HT_UPSCALE_MULTIPLIER to compute the new number of buckets
  * (currently 1.75).
  */
-value_hashtable_t* value_hashtable_upsize_internal(value_hashtable_t* ht,
-                                                   value_hash_fn hash_fn,
-                                                   value_comparison_fn cmp_fn) {
+void value_hashtable_upsize_internal(value_hashtable_t* ht,
+                                     value_hash_fn hash_fn,
+                                     value_comparison_fn cmp_fn) {
   uint64_t new_num_buckets = ht->n_buckets * AK_HT_UPSCALE_MULTIPLIER;
-  value_hashtable_t* result = make_value_hashtable(new_num_buckets);
+  value_hashtable_t* new_ht = make_value_hashtable(new_num_buckets);
   // clang-format off
   value_ht_foreach(ht, key, value, {
-      value_hashtable_t* should_be_result = value_ht_insert(result, hash_fn, cmp_fn, key, value);
+      value_hashtable_t* should_be_result = value_ht_insert(new_ht, hash_fn, cmp_fn, key, value);
       // If an insertion into the bigger hashtable results in it's own
       // resize, then the results will be unpredictable (at least
       // without more code). This is likely to only happen when
       // growing a very small hashtable and depends on values choosen
       // for ARMYKNIFE_HT_LOAD_FACTOR and AK_HT_UPSCALE_MULTIPLIER.
-      if (result != should_be_result) {
+      if (new_ht != should_be_result) {
 	fatal_error(ERROR_ILLEGAL_STATE);
       }
   });
-  free_bytes(ht->buckets);
-  free_bytes(ht);
   // clang-format on
-  return result;
+  value_alist_t** old_buckets = ht->buckets;
+  ht->buckets = new_ht->buckets;
+  ht->n_buckets = new_ht->n_buckets;
+  ht->n_entries = new_ht->n_entries;
+  free_bytes(old_buckets);
+  free_bytes(new_ht);
 }
 #line 2 "value-tree.c"
 

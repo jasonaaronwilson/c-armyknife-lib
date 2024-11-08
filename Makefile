@@ -1,10 +1,25 @@
 all: c-armyknife-lib
 
+# MODE should be "traditional" or "omni-c".
+#
+# Frankly this only matter if you are making *changes* to
+# c-armyknife-lib and since no one has every sent me a pull request,
+# maybe c-armyknife-lib isn't popular.
+
+MODE = omni-c
+
+### TODO(jawilson): also build and install a library in case someone
+### wants to use c-armyknife-lib in a bigger project without ever
+### defining C_ARMYKNIFE_LIB_IMPL.
+
 install: c-armyknife-lib
 	sudo install -m 755 c-armyknife-lib.h /usr/local/include/
-	sudo install -m 755 c-armyknife-lib-no-lines.h /usr/local/include/
 
-# Define the ordered list of source files
+# Define the source files and a particular order. This is critical in
+# "traditional" mode but AFAIK this ordering is only necessary in
+# omni-c mode because of inline functions which omni-c will eventually
+# address.
+
 SRC_C = \
 	min-max.c \
 	boolean.c \
@@ -32,9 +47,31 @@ SRC_C = \
 	tokenizer.c \
 	random.c \
 	cdl-printer.c \
+	sub-process.c \
 	test.c
 
 ORDERED_H = $(SRC_C:.c=.h)
+
+### ----------------------------------------------------------------------
+### Omni C Mode
+### ----------------------------------------------------------------------
+
+ifeq ($(MODE),omni-c)
+
+c-armyknife-lib:
+	../omni-c/src/build/bin/omni-c generate-header-file --output-file=c-armyknife-lib-omni-c.h ${SRC_C}
+	../omni-c/src/build/bin/omni-c generate-library --output-file=c-armyknife-lib-omni-c.c ${SRC_C}
+	cat header-comment.txt  >c-armyknife-lib.h
+	echo '#ifdef C_ARMYKNIFE_LIB_IMPL' >>c-armyknife-lib.h
+	cat c-armyknife-lib-omni-c.c >>c-armyknife-lib.h
+	echo '#endif /* C_ARMYKNIFE_LIB_IMPL */' >>c-armyknife-lib.h
+	cat c-armyknife-lib.h | grep -v "#line" >c-armyknife-lib-no-lines.h
+
+else ifeq ($(MODE),traditional)
+
+### ----------------------------------------------------------------------
+### Traditional Mode
+### ----------------------------------------------------------------------
 
 generate-header-files: ${SRC_C}
 	/usr/local/bin/generate-header-file ${SRC_C}
@@ -47,29 +84,17 @@ c-armyknife-lib: ${SRC_C} generate-header-files
 	echo '#endif /* C_ARMYKNIFE_LIB_IMPL */' >>c-armyknife-lib.h
 	cat c-armyknife-lib.h | grep -v "#line" >c-armyknife-lib-no-lines.h
 
-# value.c 
-SRC_C_FILTERED := $(SRC_C)
-# SRC_C_FILTERED := $(filter-out logger.c, $(SRC_C))
+else
+    $(error MODE must be set to 'omni-c' or 'traditional')
+endif
 
-# This doesn't work yet but this is the goal 
-c-armyknife-lib-omni-c:
-	../omni-c/src/build/bin/omni-c generate-library --output-file=c-armyknife-lib-omni-c.c ${SRC_C_FILTERED}
-	../omni-c/src/build/bin/omni-c generate-header-file --output-file=c-armyknife-lib-omni-c.h ${SRC_C_FILTERED}
-	gcc -o /tmp/armyknife-lib c-armyknife-lib-omni-c.c
+### ======================================================================
 
 format:
 	clang-format -i ${SRC_C} ${SRC_H} tests/*.c examples/*.c
 
 clean:
 	rm -rf *~ docs/*~ tests/*~ examples/*~ TAGS doxygen-docs *.o ${ORDERED_H} tests/build/* examples/build/*
-
-# These are generated files that I happen to check-in to make it
-# easier for people to use this as a "single source file" but seem to
-# diverge a bit which should be investigated (maybe as simple as I
-# started using lazygit and I didn't include them like git add --all
-# would do?)
-very-clean: clean
-	git checkout c-armyknife-lib-no-lines.h c-armyknife-lib.h	
 
 diff: clean
 	git difftool HEAD
@@ -98,7 +123,8 @@ TESTS= \
 	./string-tree-test.sh \
 	./logger-test.sh \
 	./terminal-test.sh \
-	./cdl-printer-test.sh
+	./cdl-printer-test.sh \
+	./sub-process-test.sh
 
 test:
 	(cd tests && mkdir -p build && ../run-tests.sh ${TESTS})
@@ -109,3 +135,12 @@ doc:
 cfd:	clean format diff
 
 cf:	clean format
+
+# These are generated files that I happen to check-in to make it
+# easier for people to use this as a "single source file" but seem to
+# diverge a bit which should be investigated (maybe as simple as I
+# started using lazygit and I didn't include them like git add --all
+# would do?)
+very-clean: clean
+	git checkout c-armyknife-lib-no-lines.h c-armyknife-lib.h	
+

@@ -1,7 +1,7 @@
 # C Armyknife Library
 
-A small fully open sourced C library with a focus on writing small
-text based command line utilities using only essential POSIX
+A small fully open sourced C library. My initial focus is writing
+small text based command line utilities using only essential POSIX
 functionality.
 
 ## Features
@@ -12,16 +12,25 @@ functionality.
   (and commands).
 
 * a logging mechanism that's literally as easy to use as "printf"
-  (though not really more "powerful" than printf...)
 
+```
+    log_info("Splitting %s off from %s", token_to_string(node->name),
+              token_to_string(struct_node->name));
+```
+
+   (It's near zero cost when logging at that level isn't
+   enabled...)
+  
 * a fatal error mechanism (potentially with backtraces though not
   close to Java quality yet; also easily catch segmentation faults
   turning them into fatal errors; and make it trivial to attach a
   debugger on error by delaying exit if requested)
 
+  (Either Ubuntu or Mint locked this down...)
+
 * a somewhat safer take on memory allocation
 
-   * always zeroing
+   * always zero on init if you use my safe allocator
 
    * an optional debug LRU based over-write/under-write checker
      perfect for small programs like tests that caught errors that
@@ -32,23 +41,36 @@ functionality.
   string_left_pad)
 
 * growable arrays of primitive values (that can be trivally used as a
-  stack)
+  stack though don't expect such an array to ever shrink)
 
 * three similar interfaces for "maps" that provide time/space
   tradeoffs
   * string_alist for small maps
   * string_ht for large maps
-  * string_tree for sorted maps
+  * string_tree for (large) sorted maps
 
-* a cross-platform deterministic random, and a few other small but
-  useful routines.
+* cross-platform *deterministic* random. Useful for unit tests.
 
 * a [companion documentation
   projecct](https://github.com/jasonaaronwilson/c-javadoc-extractor)
   so you can write your Javadoc style documentation in markdown and
   extract them to simple markdown files.
 
-* a test suite and sample applications. 
+* a quasi corporate quality test suite (but not thread safe, that's
+    not yet a property I'm going after yet)
+
+  * My test runner makes it seems like there are only 18 tests. If you
+    search for "void test_" in this directory you'll get more like
+    74.
+
+    A metric that is interesting is "points of test failure" so if you
+    look for test_assert, you'll find more than than 225.
+
+    Since I'm testing collections there are loops that do work and
+    then a loop that does test_asserts and so the true number of test
+    asserts is much higher than than the static number. (I'm going to
+    totally waste effort mesuaring this once I figure out how to
+    side-channel it...)
 
 ## Links
 
@@ -62,6 +84,8 @@ syntax is mostly convenient when working with "values", the compiler
 is NOT able to do meaningful type checking. I'm considering several
 ways of generating code (which is what the C preprocessors does after
 all) and it would be nice if all of that was also written in C.
+
+(We never want to force you to change code, Omni C 
 
 ### Memory Deallocation
 

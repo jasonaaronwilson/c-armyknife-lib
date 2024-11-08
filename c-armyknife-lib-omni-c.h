@@ -108,6 +108,8 @@ typedef struct {
 #include <sys/stat.h>
 #include <termios.h>
 #include <time.h>
+#include <sys/types.h>
+#include <sys/wait.h>
 
 // ========== defines ==========
 
@@ -575,6 +577,8 @@ typedef struct {
 
 #define _CDL_PRINTER_H_
 
+#define _SUB_PROCESS_H_
+
 #define _TEST_H_
 
 #define test_fail(format, ...)                                                 \
@@ -730,6 +734,15 @@ typedef struct term_keypress_S term_keypress_t;
 typedef struct random_state_S random_state_t;
 
 typedef struct cdl_printer_t__generated_S cdl_printer_t;
+
+typedef enum {
+  EXIT_STATUS_UNKNOWN,
+  EXIT_STATUS_NORMAL_EXIT,
+  EXIT_STATUS_SIGNAL,
+  EXIT_STATUS_ABNORMAL,
+} sub_process_exit_status_t;
+
+typedef struct sub_process_t__generated_S sub_process_t;
 
 // ========== stuctures/unions ==========
 
@@ -890,6 +903,17 @@ struct cdl_printer_t__generated_S {
   int indention_level;
 };
 
+struct sub_process_t__generated_S {
+  value_array_t* argv;
+  pid_t pid;
+  int stdin;
+  int stdout;
+  int stderr;
+  sub_process_exit_status_t exit_status;
+  int exit_code;
+  int exit_signal;
+};
+
 // ========== global variables ==========
 
 extern fatal_error_config_t fatal_error_config;
@@ -918,10 +942,10 @@ extern flag_descriptor_t* current_flag;
 
 extern unsigned encode_sleb_128(int64_t Value, uint8_t* p);
 extern unsigned encode_uleb_128(uint64_t Value, uint8_t* p);
-extern unsigned_decode_result decode_uleb_128(uint8_t* p, uint8_t* end);
-extern signed_decode_result decode_sleb_128(uint8_t* p, uint8_t* end);
+extern unsigned_decode_result decode_uleb_128(const uint8_t* p, const uint8_t* end);
+extern signed_decode_result decode_sleb_128(const uint8_t* p, const uint8_t* end);
 extern _Noreturn void fatal_error_impl(char* file, int line, int error_code);
-extern char* fatal_error_code_to_string(int error_code);
+extern const char* fatal_error_code_to_string(int error_code);
 extern void configure_fatal_errors(fatal_error_config_t config);
 void segmentation_fault_handler(int signal_number);
 void print_fatal_error_banner();
@@ -941,31 +965,31 @@ uint64_t mumurhash64_mix(uint64_t h);
 void track_padding(char* file, int line, uint8_t* address, uint64_t amount);
 void untrack_padding(uint8_t* malloc_address);
 extern int uint64_highest_bit_set(uint64_t n);
-extern int string_is_null_or_empty(char* str1);
-extern int string_equal(char* str1, char* str2);
-extern int string_starts_with(char* str1, char* str2);
-extern int string_ends_with(char* str1, char* str2);
-extern boolean_t string_contains_char(char* str, char ch);
-extern int string_index_of_char(char* a, char ch);
+extern int string_is_null_or_empty(const char* str1);
+extern int string_equal(const char* str1, const char* str2);
+extern int string_starts_with(const char* str1, const char* str2);
+extern int string_ends_with(const char* str1, const char* str2);
+extern boolean_t string_contains_char(const char* str, char ch);
+extern int string_index_of_char(const char* a, char ch);
 extern char* uint64_to_string(uint64_t number);
-extern uint64_t string_hash(char* str);
-extern char* string_substring(char* str, int start, int end);
-extern value_result_t string_parse_uint64(char* string);
-extern value_result_t string_parse_uint64_dec(char* string);
-extern value_result_t string_parse_uint64_hex(char* string);
-extern value_result_t string_parse_uint64_bin(char* string);
-extern char* string_duplicate(char* src);
-extern char* string_append(char* a, char* b);
-extern char* string_left_pad(char* a, int count, char ch);
-extern char* string_right_pad(char* a, int count, char ch);
+extern uint64_t string_hash(const char* str);
+extern char* string_substring(const char* str, int start, int end);
+extern value_result_t string_parse_uint64(const char* string);
+extern value_result_t string_parse_uint64_dec(const char* string);
+extern value_result_t string_parse_uint64_hex(const char* string);
+extern value_result_t string_parse_uint64_bin(const char* string);
+extern char* string_duplicate(const char* src);
+extern char* string_append(const char* a, const char* b);
+extern char* string_left_pad(const char* a, int count, char ch);
+extern char* string_right_pad(const char* a, int count, char ch);
 __attribute__((format(printf, 1, 2))) extern char* string_printf(char* format, ...);
 char* string_truncate(char* str, int limit, char* at_limit_suffix);
-uint64_t fasthash64(void* buf, size_t len, uint64_t seed);
+uint64_t fasthash64(const void* buf, size_t len, uint64_t seed);
 extern void logger_init(void);
-__attribute__((format(printf, 5, 6))) extern void logger_impl(char* file, int line_number, char* function, int level, char* format, ...);
+__attribute__((format(printf, 5, 6))) extern void logger_impl(char* file, int line_number, const char* function, int level, char* format, ...);
 value_result_t parse_log_level_enum(char* str);
 char* logger_level_to_string(int level);
-extern utf8_decode_result_t utf8_decode(uint8_t* utf8_bytes);
+extern utf8_decode_result_t utf8_decode(const uint8_t* utf8_bytes);
 extern buffer_t* make_buffer(uint64_t initial_capacity);
 extern uint64_t buffer_length(buffer_t* buffer);
 extern uint8_t buffer_get(buffer_t* buffer, uint64_t position);
@@ -977,7 +1001,7 @@ extern buffer_t* buffer_append_byte(buffer_t* buffer, uint8_t byte);
 extern buffer_t* buffer_append_bytes(buffer_t* buffer, uint8_t* bytes, uint64_t n_bytes);
 extern buffer_t* buffer_append_buffer(buffer_t* buffer, buffer_t* src_buffer);
 extern buffer_t* buffer_append_sub_buffer(buffer_t* buffer, uint64_t start_position, uint64_t end_position, buffer_t* src_buffer);
-extern buffer_t* buffer_append_string(buffer_t* buffer, char* str);
+extern buffer_t* buffer_append_string(buffer_t* buffer, const char* str);
 __attribute__((format(printf, 2, 3))) extern buffer_t* buffer_printf(buffer_t* buffer, char* format, ...);
 extern buffer_t* buffer_append_repeated_byte(buffer_t* buffer, uint8_t byte, int count);
 utf8_decode_result_t buffer_utf8_decode(buffer_t* buffer, uint64_t position);
@@ -1048,7 +1072,8 @@ __attribute__((warn_unused_result)) extern buffer_t* buffer_append_file_contents
 __attribute__((warn_unused_result)) extern buffer_t* buffer_append_all(buffer_t* buffer, FILE* input);
 extern void buffer_write_file(buffer_t* bytes, char* file_name);
 __attribute__((warn_unused_result)) extern buffer_t* buffer_read_until(buffer_t* buffer, FILE* input, char end_of_line);
-__attribute__((warn_unused_result)) extern buffer_t* buffer_read_ready_bytes(buffer_t* buffer, FILE* input, uint64_t max_bytes);
+extern buffer_t* buffer_read_ready_bytes(buffer_t* buffer, FILE* input, uint64_t max_bytes);
+extern buffer_t* buffer_read_ready_bytes_file_number(buffer_t* buffer, int file_number, uint64_t max_bytes);
 int file_peek_byte(FILE* input);
 boolean_t file_eof(FILE* input);
 void file_copy_stream(FILE* input, FILE* output, boolean_t until_eof, uint64_t size);
@@ -1066,10 +1091,10 @@ __attribute__((warn_unused_result)) extern buffer_t* term_reset_formatting(buffe
 __attribute__((warn_unused_result)) extern buffer_t* term_draw_box(buffer_t* buffer, uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, box_drawing_t* box);
 extern struct termios term_echo_off();
 extern void term_echo_restore(struct termios oldt);
-extern value_array_t* string_tokenize(char* str, char* delimiters);
-extern value_array_t* buffer_tokenize(buffer_t* buffer, char* delimiters);
-extern value_array_t* tokenize_memory_range(uint8_t* start, uint64_t length, char* delimiters);
-void add_duplicate(value_array_t* token_array, char* data);
+extern value_array_t* string_tokenize(const char* str, const char* delimiters);
+extern value_array_t* buffer_tokenize(buffer_t* buffer, const char* delimiters);
+extern value_array_t* tokenize_memory_range(uint8_t* start, uint64_t length, const char* delimiters);
+void add_duplicate(value_array_t* token_array, const char* data);
 extern random_state_t random_state_for_test(void);
 extern uint64_t random_next_uint64(random_state_t* state);
 extern uint64_t random_next_uint64_below(random_state_t* state, uint64_t maximum);
@@ -1089,6 +1114,12 @@ void cdl_end_table(cdl_printer_t* printer);
 void cdl_indent(cdl_printer_t* printer);
 boolean_t is_symbol(char* string);
 void cdl_output_token(cdl_printer_t* printer, char* string);
+sub_process_t* make_sub_process(value_array_t* argv);
+boolean_t sub_process_launch(sub_process_t* sub_process);
+void sub_process_write(sub_process_t* sub_process, buffer_t* data);
+void sub_process_read(sub_process_t* sub_process, buffer_t* stdout, buffer_t* stderr);
+void sub_process_wait(sub_process_t* sub_process);
+boolean_t is_sub_process_running(sub_process_t* sub_process);
 __attribute__((format(printf, 3, 4))) void test_fail_and_exit(char* file_name, int line_number, char* format, ...);
 char* error_code_to_string(error_code_t value);
 error_code_t string_to_error_code(char* value);
@@ -1099,6 +1130,9 @@ enum_metadata_t* non_fatal_error_code_metadata();
 char* flag_type_to_string(flag_type_t value);
 flag_type_t string_to_flag_type(char* value);
 enum_metadata_t* flag_type_metadata();
+char* sub_process_exit_status_to_string(sub_process_exit_status_t value);
+sub_process_exit_status_t string_to_sub_process_exit_status(char* value);
+enum_metadata_t* sub_process_exit_status_metadata();
 
 // ========== inlined functions ==========
 

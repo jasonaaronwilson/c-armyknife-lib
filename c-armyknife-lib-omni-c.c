@@ -105,6 +105,8 @@ typedef struct {
 #include <sys/stat.h>
 #include <termios.h>
 #include <time.h>
+#include <sys/types.h>
+#include <sys/wait.h>
 
 // ========== defines ==========
 
@@ -572,6 +574,8 @@ typedef struct {
 
 #define _CDL_PRINTER_H_
 
+#define _SUB_PROCESS_H_
+
 #define _TEST_H_
 
 #define test_fail(format, ...)                                                 \
@@ -727,6 +731,15 @@ typedef struct term_keypress_S term_keypress_t;
 typedef struct random_state_S random_state_t;
 
 typedef struct cdl_printer_t__generated_S cdl_printer_t;
+
+typedef enum {
+  EXIT_STATUS_UNKNOWN,
+  EXIT_STATUS_NORMAL_EXIT,
+  EXIT_STATUS_SIGNAL,
+  EXIT_STATUS_ABNORMAL,
+} sub_process_exit_status_t;
+
+typedef struct sub_process_t__generated_S sub_process_t;
 
 // ========== stuctures/unions ==========
 
@@ -887,6 +900,17 @@ struct cdl_printer_t__generated_S {
   int indention_level;
 };
 
+struct sub_process_t__generated_S {
+  value_array_t* argv;
+  pid_t pid;
+  int stdin;
+  int stdout;
+  int stderr;
+  sub_process_exit_status_t exit_status;
+  int exit_code;
+  int exit_signal;
+};
+
 // ========== global variables ==========
 
 fatal_error_config_t fatal_error_config = {0};
@@ -915,10 +939,10 @@ flag_descriptor_t* current_flag;
 
 extern unsigned encode_sleb_128(int64_t Value, uint8_t* p);
 extern unsigned encode_uleb_128(uint64_t Value, uint8_t* p);
-extern unsigned_decode_result decode_uleb_128(uint8_t* p, uint8_t* end);
-extern signed_decode_result decode_sleb_128(uint8_t* p, uint8_t* end);
+extern unsigned_decode_result decode_uleb_128(const uint8_t* p, const uint8_t* end);
+extern signed_decode_result decode_sleb_128(const uint8_t* p, const uint8_t* end);
 extern _Noreturn void fatal_error_impl(char* file, int line, int error_code);
-extern char* fatal_error_code_to_string(int error_code);
+extern const char* fatal_error_code_to_string(int error_code);
 extern void configure_fatal_errors(fatal_error_config_t config);
 void segmentation_fault_handler(int signal_number);
 void print_fatal_error_banner();
@@ -938,31 +962,31 @@ uint64_t mumurhash64_mix(uint64_t h);
 void track_padding(char* file, int line, uint8_t* address, uint64_t amount);
 void untrack_padding(uint8_t* malloc_address);
 extern int uint64_highest_bit_set(uint64_t n);
-extern int string_is_null_or_empty(char* str1);
-extern int string_equal(char* str1, char* str2);
-extern int string_starts_with(char* str1, char* str2);
-extern int string_ends_with(char* str1, char* str2);
-extern boolean_t string_contains_char(char* str, char ch);
-extern int string_index_of_char(char* a, char ch);
+extern int string_is_null_or_empty(const char* str1);
+extern int string_equal(const char* str1, const char* str2);
+extern int string_starts_with(const char* str1, const char* str2);
+extern int string_ends_with(const char* str1, const char* str2);
+extern boolean_t string_contains_char(const char* str, char ch);
+extern int string_index_of_char(const char* a, char ch);
 extern char* uint64_to_string(uint64_t number);
-extern uint64_t string_hash(char* str);
-extern char* string_substring(char* str, int start, int end);
-extern value_result_t string_parse_uint64(char* string);
-extern value_result_t string_parse_uint64_dec(char* string);
-extern value_result_t string_parse_uint64_hex(char* string);
-extern value_result_t string_parse_uint64_bin(char* string);
-extern char* string_duplicate(char* src);
-extern char* string_append(char* a, char* b);
-extern char* string_left_pad(char* a, int count, char ch);
-extern char* string_right_pad(char* a, int count, char ch);
+extern uint64_t string_hash(const char* str);
+extern char* string_substring(const char* str, int start, int end);
+extern value_result_t string_parse_uint64(const char* string);
+extern value_result_t string_parse_uint64_dec(const char* string);
+extern value_result_t string_parse_uint64_hex(const char* string);
+extern value_result_t string_parse_uint64_bin(const char* string);
+extern char* string_duplicate(const char* src);
+extern char* string_append(const char* a, const char* b);
+extern char* string_left_pad(const char* a, int count, char ch);
+extern char* string_right_pad(const char* a, int count, char ch);
 __attribute__((format(printf, 1, 2))) extern char* string_printf(char* format, ...);
 char* string_truncate(char* str, int limit, char* at_limit_suffix);
-uint64_t fasthash64(void* buf, size_t len, uint64_t seed);
+uint64_t fasthash64(const void* buf, size_t len, uint64_t seed);
 extern void logger_init(void);
-__attribute__((format(printf, 5, 6))) extern void logger_impl(char* file, int line_number, char* function, int level, char* format, ...);
+__attribute__((format(printf, 5, 6))) extern void logger_impl(char* file, int line_number, const char* function, int level, char* format, ...);
 value_result_t parse_log_level_enum(char* str);
 char* logger_level_to_string(int level);
-extern utf8_decode_result_t utf8_decode(uint8_t* utf8_bytes);
+extern utf8_decode_result_t utf8_decode(const uint8_t* utf8_bytes);
 extern buffer_t* make_buffer(uint64_t initial_capacity);
 extern uint64_t buffer_length(buffer_t* buffer);
 extern uint8_t buffer_get(buffer_t* buffer, uint64_t position);
@@ -974,7 +998,7 @@ extern buffer_t* buffer_append_byte(buffer_t* buffer, uint8_t byte);
 extern buffer_t* buffer_append_bytes(buffer_t* buffer, uint8_t* bytes, uint64_t n_bytes);
 extern buffer_t* buffer_append_buffer(buffer_t* buffer, buffer_t* src_buffer);
 extern buffer_t* buffer_append_sub_buffer(buffer_t* buffer, uint64_t start_position, uint64_t end_position, buffer_t* src_buffer);
-extern buffer_t* buffer_append_string(buffer_t* buffer, char* str);
+extern buffer_t* buffer_append_string(buffer_t* buffer, const char* str);
 __attribute__((format(printf, 2, 3))) extern buffer_t* buffer_printf(buffer_t* buffer, char* format, ...);
 extern buffer_t* buffer_append_repeated_byte(buffer_t* buffer, uint8_t byte, int count);
 utf8_decode_result_t buffer_utf8_decode(buffer_t* buffer, uint64_t position);
@@ -1045,7 +1069,8 @@ __attribute__((warn_unused_result)) extern buffer_t* buffer_append_file_contents
 __attribute__((warn_unused_result)) extern buffer_t* buffer_append_all(buffer_t* buffer, FILE* input);
 extern void buffer_write_file(buffer_t* bytes, char* file_name);
 __attribute__((warn_unused_result)) extern buffer_t* buffer_read_until(buffer_t* buffer, FILE* input, char end_of_line);
-__attribute__((warn_unused_result)) extern buffer_t* buffer_read_ready_bytes(buffer_t* buffer, FILE* input, uint64_t max_bytes);
+extern buffer_t* buffer_read_ready_bytes(buffer_t* buffer, FILE* input, uint64_t max_bytes);
+extern buffer_t* buffer_read_ready_bytes_file_number(buffer_t* buffer, int file_number, uint64_t max_bytes);
 int file_peek_byte(FILE* input);
 boolean_t file_eof(FILE* input);
 void file_copy_stream(FILE* input, FILE* output, boolean_t until_eof, uint64_t size);
@@ -1063,10 +1088,10 @@ __attribute__((warn_unused_result)) extern buffer_t* term_reset_formatting(buffe
 __attribute__((warn_unused_result)) extern buffer_t* term_draw_box(buffer_t* buffer, uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, box_drawing_t* box);
 extern struct termios term_echo_off();
 extern void term_echo_restore(struct termios oldt);
-extern value_array_t* string_tokenize(char* str, char* delimiters);
-extern value_array_t* buffer_tokenize(buffer_t* buffer, char* delimiters);
-extern value_array_t* tokenize_memory_range(uint8_t* start, uint64_t length, char* delimiters);
-void add_duplicate(value_array_t* token_array, char* data);
+extern value_array_t* string_tokenize(const char* str, const char* delimiters);
+extern value_array_t* buffer_tokenize(buffer_t* buffer, const char* delimiters);
+extern value_array_t* tokenize_memory_range(uint8_t* start, uint64_t length, const char* delimiters);
+void add_duplicate(value_array_t* token_array, const char* data);
 extern random_state_t random_state_for_test(void);
 extern uint64_t random_next_uint64(random_state_t* state);
 extern uint64_t random_next_uint64_below(random_state_t* state, uint64_t maximum);
@@ -1086,6 +1111,12 @@ void cdl_end_table(cdl_printer_t* printer);
 void cdl_indent(cdl_printer_t* printer);
 boolean_t is_symbol(char* string);
 void cdl_output_token(cdl_printer_t* printer, char* string);
+sub_process_t* make_sub_process(value_array_t* argv);
+boolean_t sub_process_launch(sub_process_t* sub_process);
+void sub_process_write(sub_process_t* sub_process, buffer_t* data);
+void sub_process_read(sub_process_t* sub_process, buffer_t* stdout, buffer_t* stderr);
+void sub_process_wait(sub_process_t* sub_process);
+boolean_t is_sub_process_running(sub_process_t* sub_process);
 __attribute__((format(printf, 3, 4))) void test_fail_and_exit(char* file_name, int line_number, char* format, ...);
 char* error_code_to_string(error_code_t value);
 error_code_t string_to_error_code(char* value);
@@ -1096,6 +1127,9 @@ enum_metadata_t* non_fatal_error_code_metadata();
 char* flag_type_to_string(flag_type_t value);
 flag_type_t string_to_flag_type(char* value);
 enum_metadata_t* flag_type_metadata();
+char* sub_process_exit_status_to_string(sub_process_exit_status_t value);
+sub_process_exit_status_t string_to_sub_process_exit_status(char* value);
+enum_metadata_t* sub_process_exit_status_metadata();
 
 // ========== inlined functions ==========
 
@@ -1245,7 +1279,7 @@ unsigned encode_uleb_128(uint64_t Value, uint8_t* p){
   return cast(unsigned, (p - orig_p));
 }
 /* i=2 j=1 */
-unsigned_decode_result decode_uleb_128(uint8_t* p, uint8_t* end){
+unsigned_decode_result decode_uleb_128(const uint8_t* p, const uint8_t* end){
   const uint8_t* orig_p = p;
   uint64_t Value = 0;
   unsigned Shift = 0;
@@ -1266,7 +1300,7 @@ unsigned_decode_result decode_uleb_128(uint8_t* p, uint8_t* end){
   return result;
 }
 /* i=3 j=1 */
-signed_decode_result decode_sleb_128(uint8_t* p, uint8_t* end){
+signed_decode_result decode_sleb_128(const uint8_t* p, const uint8_t* end){
   const uint8_t* orig_p = p;
   int64_t Value = 0;
   unsigned Shift = 0;
@@ -1319,7 +1353,7 @@ _Noreturn void fatal_error_impl(char* file, int line, int error_code){
   exit(-(error_code + 100));
 }
 /* i=5 j=1 */
-char* fatal_error_code_to_string(int error_code){
+const char* fatal_error_code_to_string(int error_code){
   switch (error_code) {
   case ERROR_UKNOWN:
     return "ERROR_UKNOWN";
@@ -1593,22 +1627,22 @@ int uint64_highest_bit_set(uint64_t n){
   }
 }
 /* i=28 j=1 */
-int string_is_null_or_empty(char* str){
+int string_is_null_or_empty(const char* str){
   return (str == NULL) || (strlen(str) == 0);
 }
 /* i=29 j=1 */
-int string_equal(char* str1, char* str2){
+int string_equal(const char* str1, const char* str2){
   if (string_is_null_or_empty(str1)) {
     return string_is_null_or_empty(str2);
   }
   return strcmp(str1, str2) == 0;
 }
 /* i=30 j=1 */
-int string_starts_with(char* str1, char* str2){
+int string_starts_with(const char* str1, const char* str2){
   return strncmp(str1, str2, strlen(str2)) == 0;
 }
 /* i=31 j=1 */
-int string_ends_with(char* str1, char* str2){
+int string_ends_with(const char* str1, const char* str2){
   size_t len1 = strlen(str1);
   size_t len2 = strlen(str2);
 
@@ -1619,11 +1653,11 @@ int string_ends_with(char* str1, char* str2){
   return strcmp(str1 + (len1 - len2), str2) == 0;
 }
 /* i=32 j=1 */
-boolean_t string_contains_char(char* str, char ch){
+boolean_t string_contains_char(const char* str, char ch){
   return string_index_of_char(str, ch) >= 0;
 }
 /* i=33 j=1 */
-int string_index_of_char(char* str, char ch){
+int string_index_of_char(const char* str, char ch){
   if (string_is_null_or_empty(str)) {
     return -1;
   }
@@ -1642,11 +1676,11 @@ char* uint64_to_string(uint64_t number){
   return string_duplicate(buffer);
 }
 /* i=35 j=1 */
-uint64_t string_hash(char* str){
+uint64_t string_hash(const char* str){
   return fasthash64(str, strlen(str), 0);
 }
 /* i=36 j=1 */
-char* string_substring(char* str, int start, int end){
+char* string_substring(const char* str, int start, int end){
   uint64_t len = strlen(str);
   if (start >= len || start >= end || end < start) {
     fatal_error(ERROR_ILLEGAL_ARGUMENT);
@@ -1660,7 +1694,7 @@ char* string_substring(char* str, int start, int end){
   return result;
 }
 /* i=37 j=1 */
-value_result_t string_parse_uint64(char* string){
+value_result_t string_parse_uint64(const char* string){
   if (string_starts_with(string, "0x")) {
     return string_parse_uint64_hex(&string[2]);
   } else if (string_starts_with(string, "0b")) {
@@ -1670,7 +1704,7 @@ value_result_t string_parse_uint64(char* string){
   }
 }
 /* i=38 j=1 */
-value_result_t string_parse_uint64_dec(char* string){
+value_result_t string_parse_uint64_dec(const char* string){
   uint64_t len = strlen(string);
   uint64_t integer = 0;
 
@@ -1692,7 +1726,7 @@ value_result_t string_parse_uint64_dec(char* string){
   return (value_result_t){.u64 = integer, .nf_error = NF_OK};
 }
 /* i=39 j=1 */
-value_result_t string_parse_uint64_hex(char* string){
+value_result_t string_parse_uint64_hex(const char* string){
   uint64_t len = strlen(string);
   uint64_t integer = 0;
 
@@ -1715,7 +1749,7 @@ value_result_t string_parse_uint64_hex(char* string){
   return compound_literal(value_result_t, {.u64 = integer, .nf_error = NF_OK});
 }
 /* i=40 j=1 */
-value_result_t string_parse_uint64_bin(char* string){
+value_result_t string_parse_uint64_bin(const char* string){
   uint64_t len = strlen(string);
   uint64_t integer = 0;
 
@@ -1738,7 +1772,7 @@ value_result_t string_parse_uint64_bin(char* string){
   return compound_literal(value_result_t, {.u64 = integer, .nf_error = NF_OK});
 }
 /* i=41 j=1 */
-char* string_duplicate(char* src){
+char* string_duplicate(const char* src){
   if (src == NULL) {
     return NULL;
   }
@@ -1749,7 +1783,7 @@ char* string_duplicate(char* src){
   return result;
 }
 /* i=42 j=1 */
-char* string_append(char* a, char* b){
+char* string_append(const char* a, const char* b){
   if (a == NULL || b == NULL) {
     fatal_error(ERROR_ILLEGAL_NULL_ARGUMENT);
   }
@@ -1760,7 +1794,7 @@ char* string_append(char* a, char* b){
   return result;
 }
 /* i=43 j=1 */
-char* string_left_pad(char* str, int n, char ch){
+char* string_left_pad(const char* str, int n, char ch){
   if (n < 0) {
     fatal_error(ERROR_ILLEGAL_RANGE);
   }
@@ -1788,7 +1822,7 @@ char* string_left_pad(char* str, int n, char ch){
   return result;
 }
 /* i=44 j=1 */
-char* string_right_pad(char* str, int n, char ch){
+char* string_right_pad(const char* str, int n, char ch){
   if (n < 0) {
     fatal_error(ERROR_ILLEGAL_RANGE);
   }
@@ -1864,7 +1898,7 @@ char* string_truncate(char* str, int limit, char* at_limit_suffix){
   return result;
 }
 /* i=47 j=1 */
-uint64_t fasthash64(void* buf, size_t len, uint64_t seed){
+uint64_t fasthash64(const void* buf, size_t len, uint64_t seed){
   const uint64_t m = 0x880355f21e6d1965ULL;
   const uint64_t* pos = cast(const uint64_t*, buf);
   const uint64_t* end = pos + (len / 8);
@@ -1947,7 +1981,7 @@ void logger_init(void){
   }
 }
 /* i=52 j=1 */
-__attribute__((format(printf, 5, 6))) void logger_impl(char* file, int line_number, char* function, int level, char* format, ...){
+__attribute__((format(printf, 5, 6))) void logger_impl(char* file, int line_number, const char* function, int level, char* format, ...){
 
   FILE* output = global_logger_state.output;
 
@@ -2007,7 +2041,7 @@ char* logger_level_to_string(int level){
   }
 }
 /* i=56 j=1 */
-utf8_decode_result_t utf8_decode(uint8_t* array){
+utf8_decode_result_t utf8_decode(const uint8_t* array){
   uint8_t firstByte = array[0];
   if ((firstByte & 0x80) == 0) {
     return compound_literal(utf8_decode_result_t,
@@ -2133,7 +2167,7 @@ extern buffer_t* buffer_append_sub_buffer(buffer_t* buffer, uint64_t start_posit
   return buffer;
 }
 /* i=68 j=1 */
-buffer_t* buffer_append_string(buffer_t* buffer, char* str){
+buffer_t* buffer_append_string(buffer_t* buffer, const char* str){
   return buffer_append_bytes(buffer, cast(uint8_t*, str), strlen(str));
 }
 /* i=69 j=1 */
@@ -3187,8 +3221,12 @@ buffer_t* buffer_read_until(buffer_t* buffer, FILE* input, char end_of_line){
   return buffer;
 }
 /* i=155 j=1 */
-__attribute__((warn_unused_result)) extern buffer_t* buffer_read_ready_bytes(buffer_t* buffer, FILE* input, uint64_t max_bytes){
+extern buffer_t* buffer_read_ready_bytes(buffer_t* buffer, FILE* input, uint64_t max_bytes){
   int file_number = fileno(input);
+  return buffer_read_ready_bytes_file_number(buffer, file_number, max_bytes);
+}
+/* i=156 j=1 */
+extern buffer_t* buffer_read_ready_bytes_file_number(buffer_t* buffer, int file_number, uint64_t max_bytes){
   fcntl(file_number, F_SETFL, fcntl(file_number, F_GETFL) | O_NONBLOCK);
 
   uint64_t bytes_remaining = max_bytes - buffer_length(buffer);
@@ -3201,7 +3239,7 @@ __attribute__((warn_unused_result)) extern buffer_t* buffer_read_ready_bytes(buf
     struct timeval tv;
 
     FD_ZERO(&rfds);
-    FD_SET(fileno(input), &rfds);
+    FD_SET(file_number, &rfds);
 
     tv.tv_sec = 0;
     tv.tv_usec = 0;
@@ -3212,14 +3250,12 @@ __attribute__((warn_unused_result)) extern buffer_t* buffer_read_ready_bytes(buf
     // better. Additionally putting the file into non-blocking mode
     // might allow reading more than one byte at a time but this is OK
     // to just get something working.
-    int retval = select(fileno(input) + 1, &rfds, NULL, NULL, &tv);
+    int retval = select(file_number + 1, &rfds, NULL, NULL, &tv);
 
     if (retval == -1) {
       fatal_error(ERROR_ILLEGAL_STATE);
     } else if (retval) {
       // Data available to be read
-      // // sizeof(read_buffer)
-      // size_t bytes_read = fread(read_buffer, 1, 1, input);
       int bytes_read = read(file_number, read_buffer, sizeof(read_buffer));
       for (int i = 0; i < bytes_read; i++) {
         buffer = buffer_append_byte(buffer, cast(uint8_t, read_buffer[i]));
@@ -3237,7 +3273,7 @@ __attribute__((warn_unused_result)) extern buffer_t* buffer_read_ready_bytes(buf
 
   return buffer;
 }
-/* i=156 j=1 */
+/* i=157 j=1 */
 int file_peek_byte(FILE* input){
   if (feof(input)) {
     return -1;
@@ -3251,11 +3287,11 @@ int file_peek_byte(FILE* input){
   }
   return result;
 }
-/* i=157 j=1 */
+/* i=158 j=1 */
 boolean_t file_eof(FILE* input){
   return feof(input) || file_peek_byte(input) < 0;
 }
-/* i=158 j=1 */
+/* i=159 j=1 */
 void file_copy_stream(FILE* input, FILE* output, boolean_t until_eof, uint64_t size){
   if (until_eof) {
     size = ULLONG_MAX;
@@ -3274,7 +3310,7 @@ void file_copy_stream(FILE* input, FILE* output, boolean_t until_eof, uint64_t s
     size -= n_read;
   }
 }
-/* i=159 j=1 */
+/* i=160 j=1 */
 void file_skip_bytes(FILE* input, uint64_t n_bytes){
 
   // We'd try to do it like this but Gemini claims that this doesn't
@@ -3294,11 +3330,11 @@ void file_skip_bytes(FILE* input, uint64_t n_bytes){
     n_bytes--;
   }
 }
-/* i=160 j=1 */
+/* i=161 j=1 */
 __attribute__((warn_unused_result)) extern buffer_t* term_clear_screen(buffer_t* buffer){
   return buffer_printf(buffer, TERM_ESCAPE_START "2J");
 }
-/* i=161 j=1 */
+/* i=162 j=1 */
 __attribute__((warn_unused_result)) extern buffer_t* term_set_foreground_color(buffer_t* buffer, uint32_t color){
   uint8_t blue = color & 0xff;
   uint8_t green = (color >> 8) & 0xff;
@@ -3309,7 +3345,7 @@ __attribute__((warn_unused_result)) extern buffer_t* term_set_foreground_color(b
                        TERM_ESCAPE_START "38;2;%d;%d;%d" TERM_ESCAPE_END, red,
                        green, blue);
 }
-/* i=162 j=1 */
+/* i=163 j=1 */
 __attribute__((warn_unused_result)) extern buffer_t* term_set_background_color(buffer_t* buffer, uint32_t color){
   uint8_t blue = color & 0xff;
   uint8_t green = (color >> 8) & 0xff;
@@ -3320,12 +3356,12 @@ __attribute__((warn_unused_result)) extern buffer_t* term_set_background_color(b
                        TERM_ESCAPE_START "48;2;%d;%d;%d" TERM_ESCAPE_END, red,
                        green, blue);
 }
-/* i=163 j=1 */
+/* i=164 j=1 */
 __attribute__((warn_unused_result)) extern buffer_t* term_move_cursor_absolute(buffer_t* buffer, int x, int y){
   // Escape sequence for cursor movement (ESC [ y; x H)
   return buffer_printf(buffer, TERM_ESCAPE_START "%d;%dH", y + 1, x + 1);
 }
-/* i=164 j=1 */
+/* i=165 j=1 */
 __attribute__((warn_unused_result)) extern buffer_t* term_move_cursor_relative(buffer_t* buffer, int x, int y){
   // First handle the x position
   if (x > 0) {
@@ -3340,27 +3376,27 @@ __attribute__((warn_unused_result)) extern buffer_t* term_move_cursor_relative(b
   }
   return buffer;
 }
-/* i=165 j=1 */
+/* i=166 j=1 */
 __attribute__((warn_unused_result)) extern buffer_t* term_bold(buffer_t* buffer){
   return buffer_printf(buffer, TERM_ESCAPE_START "1m");
 }
-/* i=166 j=1 */
+/* i=167 j=1 */
 __attribute__((warn_unused_result)) extern buffer_t* term_dim(buffer_t* buffer){
   return buffer_printf(buffer, TERM_ESCAPE_START "2m");
 }
-/* i=167 j=1 */
+/* i=168 j=1 */
 __attribute__((warn_unused_result)) extern buffer_t* term_italic(buffer_t* buffer){
   return buffer_printf(buffer, TERM_ESCAPE_START "3m");
 }
-/* i=168 j=1 */
+/* i=169 j=1 */
 __attribute__((warn_unused_result)) extern buffer_t* term_underline(buffer_t* buffer){
   return buffer_printf(buffer, TERM_ESCAPE_START "4m");
 }
-/* i=169 j=1 */
+/* i=170 j=1 */
 __attribute__((warn_unused_result)) extern buffer_t* term_reset_formatting(buffer_t* buffer){
   return buffer_printf(buffer, TERM_ESCAPE_START "0m");
 }
-/* i=170 j=1 */
+/* i=171 j=1 */
 __attribute__((warn_unused_result)) extern buffer_t* term_draw_box(buffer_t* buffer, uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, box_drawing_t* box){
   // top
   buffer = term_move_cursor_absolute(buffer, x0, y0);
@@ -3393,7 +3429,7 @@ __attribute__((warn_unused_result)) extern buffer_t* term_draw_box(buffer_t* buf
 
   return buffer;
 }
-/* i=171 j=1 */
+/* i=172 j=1 */
 extern struct termios term_echo_off(){
   struct termios oldt;
   struct termios newt;
@@ -3410,22 +3446,22 @@ extern struct termios term_echo_off(){
 
   return oldt;
 }
-/* i=172 j=1 */
+/* i=173 j=1 */
 extern void term_echo_restore(struct termios oldt){
   // Restore the original terminal settings
   tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
 }
-/* i=173 j=1 */
-value_array_t* string_tokenize(char* str, char* delimiters){
+/* i=174 j=1 */
+value_array_t* string_tokenize(const char* str, const char* delimiters){
   return tokenize_memory_range(cast(uint8_t*, str), strlen(str), delimiters);
 }
-/* i=174 j=1 */
-value_array_t* buffer_tokenize(buffer_t* buffer, char* delimiters){
+/* i=175 j=1 */
+value_array_t* buffer_tokenize(buffer_t* buffer, const char* delimiters){
   return tokenize_memory_range(&(buffer->elements[0]), buffer->length,
                                delimiters);
 }
-/* i=175 j=1 */
-value_array_t* tokenize_memory_range(uint8_t* str, uint64_t length, char* delimiters){
+/* i=176 j=1 */
+value_array_t* tokenize_memory_range(uint8_t* str, uint64_t length, const char* delimiters){
   value_array_t* result = make_value_array(1);
   char token_data[1024];
   int cpos = 0;
@@ -3448,15 +3484,15 @@ value_array_t* tokenize_memory_range(uint8_t* str, uint64_t length, char* delimi
 
   return result;
 }
-/* i=176 j=1 */
-void add_duplicate(value_array_t* token_array, char* data){
+/* i=177 j=1 */
+void add_duplicate(value_array_t* token_array, const char* data){
   value_array_add(token_array, str_to_value(string_duplicate(data)));
 }
-/* i=177 j=1 */
+/* i=178 j=1 */
 random_state_t random_state_for_test(void){
   return (random_state_t){.a = 0x1E1D43C2CA44B1F5, .b = 0x4FDD267452CEDBAC};
 }
-/* i=179 j=1 */
+/* i=180 j=1 */
 uint64_t random_next_uint64_below(random_state_t* state, uint64_t maximum){
   if (maximum == 0) {
     fatal_error(ERROR_ILLEGAL_ARGUMENT);
@@ -3477,7 +3513,7 @@ uint64_t random_next_uint64_below(random_state_t* state, uint64_t maximum){
   }
 #endif /* 0 */
 }
-/* i=180 j=0 */
+/* i=181 j=0 */
 random_state_t* random_state(void){
   static random_state_t shared_random_state = {0};
 
@@ -3488,7 +3524,7 @@ random_state_t* random_state(void){
 
   return &shared_random_state;
 }
-/* i=182 j=0 */
+/* i=183 j=0 */
 uint64_t random_next(random_state_t* state){
   uint64_t s0 = state->a;
   uint64_t s1 = state->b;
@@ -3499,17 +3535,17 @@ uint64_t random_next(random_state_t* state){
 
   return result;
 }
-/* i=183 j=1 */
+/* i=184 j=1 */
 cdl_printer_t* make_cdl_printer(buffer_t* buffer){
   cdl_printer_t* result = malloc_struct(cdl_printer_t);
   result->buffer = buffer;
   return result;
 }
-/* i=184 j=1 */
+/* i=185 j=1 */
 void cdl_boolean(cdl_printer_t* printer, boolean_t boolean){
   cdl_output_token(printer, boolean ? "true" : "false");
 }
-/* i=185 j=1 */
+/* i=186 j=1 */
 void cdl_string(cdl_printer_t* printer, char* string){
   if (!is_symbol(string)) {
     cdl_output_token(printer, string_printf("\"%s\"", string));
@@ -3517,46 +3553,46 @@ void cdl_string(cdl_printer_t* printer, char* string){
     cdl_output_token(printer, string);
   }
 }
-/* i=186 j=1 */
+/* i=187 j=1 */
 void cdl_int64(cdl_printer_t* printer, int64_t number){
   cdl_output_token(printer, string_printf("%ld", number));
 }
-/* i=187 j=1 */
+/* i=188 j=1 */
 void cdl_uint64(cdl_printer_t* printer, uint64_t number){
   cdl_output_token(printer, uint64_to_string(number));
 }
-/* i=188 j=1 */
+/* i=189 j=1 */
 void cdl_double(cdl_printer_t* printer, double number){
   cdl_output_token(printer, string_printf("%lf", number));
 }
-/* i=189 j=1 */
+/* i=190 j=1 */
 void cdl_start_array(cdl_printer_t* printer){
   cdl_output_token(printer, "[");
   printer->indention_level += 1;
 }
-/* i=190 j=1 */
+/* i=191 j=1 */
 void cdl_end_array(cdl_printer_t* printer){
   printer->indention_level -= 1;
   cdl_output_token(printer, "]");
 }
-/* i=191 j=1 */
+/* i=192 j=1 */
 void cdl_start_table(cdl_printer_t* printer){
   cdl_output_token(printer, "{");
   printer->indention_level += 1;
 }
-/* i=192 j=1 */
-void cdl_key(cdl_printer_t* printer, char* key){ printer->key_token = key; }
 /* i=193 j=1 */
+void cdl_key(cdl_printer_t* printer, char* key){ printer->key_token = key; }
+/* i=194 j=1 */
 void cdl_end_table(cdl_printer_t* printer){
   printer->indention_level -= 1;
   cdl_output_token(printer, "}");
 }
-/* i=194 j=0 */
+/* i=195 j=0 */
 void cdl_indent(cdl_printer_t* printer){
   buffer_append_repeated_byte(printer->buffer, ' ',
                               4 * printer->indention_level);
 }
-/* i=195 j=0 */
+/* i=196 j=0 */
 boolean_t is_symbol(char* string){
   for (int i = 0; string[i] != 0; i++) {
     if (i == 0) {
@@ -3571,7 +3607,7 @@ boolean_t is_symbol(char* string){
   }
   return true;
 }
-/* i=196 j=0 */
+/* i=197 j=0 */
 void cdl_output_token(cdl_printer_t* printer, char* string){
   cdl_indent(printer);
   if (printer->key_token != NULL) {
@@ -3581,7 +3617,139 @@ void cdl_output_token(cdl_printer_t* printer, char* string){
     buffer_printf(printer->buffer, "%s\n", string);
   }
 }
-/* i=199 j=0 */
+/* i=198 j=1 */
+sub_process_t* make_sub_process(value_array_t* argv){
+  sub_process_t* result = malloc_struct(sub_process_t);
+  result->argv = argv;
+  result->exit_code = -1;
+  return result;
+}
+/* i=199 j=1 */
+boolean_t sub_process_launch(sub_process_t* sub_process){
+  uint64_t length = sub_process->argv->length;
+  if (length < 1) {
+    log_fatal("Expected at least the program path in argv");
+    fatal_error(ERROR_ILLEGAL_STATE);
+  }
+
+  // 1. Convert value_array_t to char** for execvp
+  char** argv = cast(char**, malloc_bytes((length + 1) * sizeof(char*)));
+  for (int i = 0; i < length; i++) {
+    argv[i] = value_array_get_ptr(sub_process->argv, i, typeof(char*));
+  }
+  char** envp = NULL;
+
+  // 2. Create pipes for stdin of the sub process as well as to
+  // capture stdout and stderr.
+  int stdin_pipe[2];
+  int stdout_pipe[2];
+  int stderr_pipe[2];
+  if (pipe(stdin_pipe) == -1
+      || pipe(stdout_pipe) == -1
+      || pipe(stderr_pipe) == -1) {
+    log_fatal("Failed to create pipe for stdin, stdout or stderr");
+    fatal_error(ERROR_ILLEGAL_STATE);
+    return false;
+  }
+
+  // 3. Fork the process
+  pid_t pid = fork();
+  if (pid == -1) {
+    log_fatal("fork() failed.");
+    fatal_error(ERROR_ILLEGAL_STATE);
+    return false;
+  }
+
+  if (pid == 0) {
+    /* ====================================================================== */
+    /* Child Process */
+    /* ====================================================================== */
+
+    // 4. Redirect stdin, stdout and stderr to pipes
+    dup2(stdin_pipe[0], STDIN_FILENO);
+    dup2(stdout_pipe[1], STDOUT_FILENO);
+    dup2(stderr_pipe[1], STDERR_FILENO);
+    close(stdin_pipe[0]);
+    close(stdin_pipe[1]);
+    close(stdout_pipe[0]);
+    close(stdout_pipe[1]);
+    close(stderr_pipe[0]);
+    close(stderr_pipe[1]);
+
+    // 5. Final "exec" to the command
+    execvp(argv[0], argv);
+
+    // execvp should not return!
+    fatal_error(ERROR_ILLEGAL_STATE);
+    return false;
+  } else {
+    /* ====================================================================== */
+    /* Parent Process */
+    /* ====================================================================== */
+
+    // 6. Close write ends of the pipes in the parent since we will
+    // only be reading from the pipe.
+    close(stdin_pipe[0]);   // Close read end of stdin pipe
+    close(stdout_pipe[1]);  // Close write end of stdout pipe
+    close(stderr_pipe[1]);  // Close write end of stderr pipe
+
+    // 7. Record the pid, stdout, and stderr.
+    sub_process->pid = pid;
+    sub_process->stdin = stdin_pipe[1];
+    sub_process->stdout = stdout_pipe[0];
+    sub_process->stderr = stderr_pipe[0];
+
+    free_bytes(argv);
+
+    return true;
+  }
+}
+/* i=200 j=1 */
+void sub_process_write(sub_process_t* sub_process, buffer_t* data){
+  // FIXME
+}
+/* i=201 j=1 */
+void sub_process_read(sub_process_t* sub_process, buffer_t* stdout, buffer_t* stderr){
+  if (stdout != NULL) {
+    buffer_read_ready_bytes_file_number(stdout, sub_process->stdin, 0xffffffff);
+  }
+  if (stderr != NULL) {
+    buffer_read_ready_bytes_file_number(stderr, sub_process->stderr, 0xffffffff);
+  }
+}
+/* i=202 j=1 */
+void sub_process_wait(sub_process_t* sub_process){
+  int status = 0;
+  if (waitpid(sub_process->pid, &status, 0) == -1) {
+    sub_process->exit_status = EXIT_STATUS_ABNORMAL;
+    return;
+  }
+  
+  // Check the exit status and return the exit code
+  if (WIFEXITED(status)) {
+    sub_process->exit_status = EXIT_STATUS_NORMAL_EXIT;
+    sub_process->exit_code = WEXITSTATUS(status);
+  } else if (WIFSIGNALED(status)) {
+    sub_process->exit_status = EXIT_STATUS_SIGNAL;
+    sub_process->exit_signal = WTERMSIG(status);
+  } else {
+    sub_process->exit_status = EXIT_STATUS_ABNORMAL;
+  }
+}
+/* i=203 j=0 */
+boolean_t is_sub_process_running(sub_process_t* sub_process){
+  int status;
+  pid_t result = waitpid(sub_process->pid, &status, WNOHANG);
+
+  if (result == sub_process->pid) { 
+    return false;
+  } else if (result == 0) {
+    return true;
+  } else { 
+    return false;
+  }
+}
+/* i=206 j=0 */
 __attribute__((format(printf, 3, 4))) void test_fail_and_exit(char* file_name, int line_number, char* format, ...){
   va_list args;
   fprintf(stdout, "%s:%d: ", file_name, line_number);
@@ -3591,7 +3759,7 @@ __attribute__((format(printf, 3, 4))) void test_fail_and_exit(char* file_name, i
   va_end(args);
   exit(1);
 }
-/* i=200 j=0 */
+/* i=207 j=0 */
 char* error_code_to_string(error_code_t value){
   switch (value) {
     case ERROR_UKNOWN:
@@ -3652,7 +3820,7 @@ return "ERROR_ILLEGAL_TERMINAL_COORDINATES";
     return "<<unknown-error_code>>";
   }
 }
-/* i=201 j=0 */
+/* i=208 j=0 */
 error_code_t string_to_error_code(char* value){
   if (strcmp(value, "ERROR_UKNOWN") == 0) {
 return ERROR_UKNOWN;
@@ -3737,7 +3905,7 @@ return ERROR_ILLEGAL_TERMINAL_COORDINATES;
   }
   return 0;
 }
-/* i=202 j=0 */
+/* i=209 j=0 */
 enum_metadata_t* error_code_metadata(){
     static enum_element_metadata_t var_0 = (enum_element_metadata_t) {
         .next = NULL,
@@ -3880,7 +4048,7 @@ enum_metadata_t* error_code_metadata(){
     };
     return &enum_metadata_result;
 }
-/* i=203 j=0 */
+/* i=210 j=0 */
 char* non_fatal_error_code_to_string(non_fatal_error_code_t value){
   switch (value) {
     case NF_OK:
@@ -3895,7 +4063,7 @@ return "NF_ERROR_NOT_PARSED_AS_EXPECTED_ENUM";
     return "<<unknown-non_fatal_error_code>>";
   }
 }
-/* i=204 j=0 */
+/* i=211 j=0 */
 non_fatal_error_code_t string_to_non_fatal_error_code(char* value){
   if (strcmp(value, "NF_OK") == 0) {
 return NF_OK;
@@ -3911,7 +4079,7 @@ return NF_ERROR_NOT_PARSED_AS_EXPECTED_ENUM;
   }
   return 0;
 }
-/* i=205 j=0 */
+/* i=212 j=0 */
 enum_metadata_t* non_fatal_error_code_metadata(){
     static enum_element_metadata_t var_0 = (enum_element_metadata_t) {
         .next = NULL,
@@ -3939,7 +4107,7 @@ enum_metadata_t* non_fatal_error_code_metadata(){
     };
     return &enum_metadata_result;
 }
-/* i=206 j=0 */
+/* i=213 j=0 */
 char* flag_type_to_string(flag_type_t value){
   switch (value) {
     case flag_type_none:
@@ -3962,7 +4130,7 @@ return "flag_type_custom";
     return "<<unknown-flag_type>>";
   }
 }
-/* i=207 j=0 */
+/* i=214 j=0 */
 flag_type_t string_to_flag_type(char* value){
   if (strcmp(value, "flag_type_none") == 0) {
 return flag_type_none;
@@ -3990,7 +4158,7 @@ return flag_type_custom;
   }
   return 0;
 }
-/* i=208 j=0 */
+/* i=215 j=0 */
 enum_metadata_t* flag_type_metadata(){
     static enum_element_metadata_t var_0 = (enum_element_metadata_t) {
         .next = NULL,
@@ -4035,6 +4203,65 @@ enum_metadata_t* flag_type_metadata(){
     static enum_metadata_t enum_metadata_result = (enum_metadata_t) {
         .name = "flag_type_t",
         .elements = &var_7
+    };
+    return &enum_metadata_result;
+}
+/* i=216 j=0 */
+char* sub_process_exit_status_to_string(sub_process_exit_status_t value){
+  switch (value) {
+    case EXIT_STATUS_UNKNOWN:
+return "EXIT_STATUS_UNKNOWN";
+  case EXIT_STATUS_NORMAL_EXIT:
+return "EXIT_STATUS_NORMAL_EXIT";
+  case EXIT_STATUS_SIGNAL:
+return "EXIT_STATUS_SIGNAL";
+  case EXIT_STATUS_ABNORMAL:
+return "EXIT_STATUS_ABNORMAL";
+  default:
+    return "<<unknown-sub_process_exit_status>>";
+  }
+}
+/* i=217 j=0 */
+sub_process_exit_status_t string_to_sub_process_exit_status(char* value){
+  if (strcmp(value, "EXIT_STATUS_UNKNOWN") == 0) {
+return EXIT_STATUS_UNKNOWN;
+  }
+  if (strcmp(value, "EXIT_STATUS_NORMAL_EXIT") == 0) {
+return EXIT_STATUS_NORMAL_EXIT;
+  }
+  if (strcmp(value, "EXIT_STATUS_SIGNAL") == 0) {
+return EXIT_STATUS_SIGNAL;
+  }
+  if (strcmp(value, "EXIT_STATUS_ABNORMAL") == 0) {
+return EXIT_STATUS_ABNORMAL;
+  }
+  return 0;
+}
+/* i=218 j=0 */
+enum_metadata_t* sub_process_exit_status_metadata(){
+    static enum_element_metadata_t var_0 = (enum_element_metadata_t) {
+        .next = NULL,
+        .name = "EXIT_STATUS_UNKNOWN",
+        .value = EXIT_STATUS_UNKNOWN
+    };
+    static enum_element_metadata_t var_1 = (enum_element_metadata_t) {
+        .next = &var_0,
+        .name = "EXIT_STATUS_NORMAL_EXIT",
+        .value = EXIT_STATUS_NORMAL_EXIT
+    };
+    static enum_element_metadata_t var_2 = (enum_element_metadata_t) {
+        .next = &var_1,
+        .name = "EXIT_STATUS_SIGNAL",
+        .value = EXIT_STATUS_SIGNAL
+    };
+    static enum_element_metadata_t var_3 = (enum_element_metadata_t) {
+        .next = &var_2,
+        .name = "EXIT_STATUS_ABNORMAL",
+        .value = EXIT_STATUS_ABNORMAL
+    };
+    static enum_metadata_t enum_metadata_result = (enum_metadata_t) {
+        .name = "sub_process_exit_status_t",
+        .elements = &var_3
     };
     return &enum_metadata_result;
 }

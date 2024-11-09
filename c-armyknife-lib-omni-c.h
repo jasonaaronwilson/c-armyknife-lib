@@ -1119,6 +1119,7 @@ boolean_t sub_process_launch(sub_process_t* sub_process);
 void sub_process_write(sub_process_t* sub_process, buffer_t* data);
 void sub_process_read(sub_process_t* sub_process, buffer_t* stdout, buffer_t* stderr);
 void sub_process_wait(sub_process_t* sub_process);
+void sub_process_record_exit_status(sub_process_t* sub_process, pid_t pid, int status);
 boolean_t is_sub_process_running(sub_process_t* sub_process);
 __attribute__((format(printf, 3, 4))) void test_fail_and_exit(char* file_name, int line_number, char* format, ...);
 char* error_code_to_string(error_code_t value);

@@ -1143,6 +1143,7 @@ boolean_t sub_process_launch(sub_process_t* sub_process);
 void sub_process_write(sub_process_t* sub_process, buffer_t* data);
 void sub_process_read(sub_process_t* sub_process, buffer_t* stdout, buffer_t* stderr);
 void sub_process_wait(sub_process_t* sub_process);
+void sub_process_record_exit_status(sub_process_t* sub_process, pid_t pid, int status);
 boolean_t is_sub_process_running(sub_process_t* sub_process);
 __attribute__((format(printf, 3, 4))) void test_fail_and_exit(char* file_name, int line_number, char* format, ...);
 char* error_code_to_string(error_code_t value);
@@ -3261,39 +3262,24 @@ extern buffer_t* buffer_read_ready_bytes_file_number(buffer_t* buffer, int file_
 
   // Loop until either blocking would occur or max_bytes have been added
   while (bytes_remaining > 0) {
-    // Use select to check if there's data available to be read
-    fd_set rfds;
-    struct timeval tv;
-
-    FD_ZERO(&rfds);
-    FD_SET(file_number, &rfds);
-
-    tv.tv_sec = 0;
-    tv.tv_usec = 0;
-
-    // The first argument to select must be one greater than the
-    // highest-numbered file descriptor we are selecting on. This
-    // feels kind of dumb so epoll or poll might work
-    // better. Additionally putting the file into non-blocking mode
-    // might allow reading more than one byte at a time but this is OK
-    // to just get something working.
-    int retval = select(file_number + 1, &rfds, NULL, NULL, &tv);
-
-    if (retval == -1) {
-      fatal_error(ERROR_ILLEGAL_STATE);
-    } else if (retval) {
-      // Data available to be read
-      int bytes_read = read(file_number, read_buffer, sizeof(read_buffer));
+    int bytes_read = read(file_number, read_buffer, sizeof(read_buffer));
+    if (bytes_read > 0) {
       for (int i = 0; i < bytes_read; i++) {
         buffer = buffer_append_byte(buffer, cast(uint8_t, read_buffer[i]));
         bytes_remaining--;
       }
-      if (bytes_read > 0) {
-        break;
-      }
-      // log_trace("buffer_length = %d", buffer_length(buffer));
+    } else if (bytes_read == 0) {
+      // End-of-file (write end of pipe closed)
+      break;
     } else {
-      // No data available without blocking.
+      // bytes_read < 0 (so presumably -1).
+      if (errno != EAGAIN && errno != EWOULDBLOCK) {
+        // A real error occurred
+        log_fatal("Error reading from file descriptor %d: %s", file_number,
+                  strerror(errno));
+        fatal_error(ERROR_ILLEGAL_STATE);
+      }
+      // No data available without blocking, so break out of the loop
       break;
     }
   }
@@ -3664,15 +3650,17 @@ boolean_t sub_process_launch(sub_process_t* sub_process){
   for (int i = 0; i < length; i++) {
     argv[i] = value_array_get_ptr(sub_process->argv, i, typeof(char*));
   }
-  char** envp = NULL;
+  // This shouldn't be necessary because we used malloc_bytes which
+  // zeros allocations but it might look like an error.
+  argv[length] = NULL;
+  // char** envp = NULL;
 
   // 2. Create pipes for stdin of the sub process as well as to
   // capture stdout and stderr.
   int stdin_pipe[2];
   int stdout_pipe[2];
   int stderr_pipe[2];
-  if (pipe(stdin_pipe) == -1
-      || pipe(stdout_pipe) == -1
+  if (pipe(stdin_pipe) == -1 || pipe(stdout_pipe) == -1
       || pipe(stderr_pipe) == -1) {
     log_fatal("Failed to create pipe for stdin, stdout or stderr");
     fatal_error(ERROR_ILLEGAL_STATE);
@@ -3704,9 +3692,9 @@ boolean_t sub_process_launch(sub_process_t* sub_process){
     close(stderr_pipe[1]);
 
     // 5. Final "exec" to the command
-    execvp(argv[0], argv);
-
+    int exec_exit_status = execvp(argv[0], argv);
     // execvp should not return!
+    log_fatal("execvp returned non zero exit status %d", exec_exit_status);
     fatal_error(ERROR_ILLEGAL_STATE);
     return false;
   } else {
@@ -3716,9 +3704,9 @@ boolean_t sub_process_launch(sub_process_t* sub_process){
 
     // 6. Close write ends of the pipes in the parent since we will
     // only be reading from the pipe.
-    close(stdin_pipe[0]);   // Close read end of stdin pipe
-    close(stdout_pipe[1]);  // Close write end of stdout pipe
-    close(stderr_pipe[1]);  // Close write end of stderr pipe
+    close(stdin_pipe[0]);  // Close read end of stdin pipe
+    close(stdout_pipe[1]); // Close write end of stdout pipe
+    close(stderr_pipe[1]); // Close write end of stderr pipe
 
     // 7. Record the pid, stdout, and stderr.
     sub_process->pid = pid;
@@ -3738,20 +3726,29 @@ void sub_process_write(sub_process_t* sub_process, buffer_t* data){
 /* i=201 j=1 */
 void sub_process_read(sub_process_t* sub_process, buffer_t* stdout, buffer_t* stderr){
   if (stdout != NULL) {
-    buffer_read_ready_bytes_file_number(stdout, sub_process->stdin, 0xffffffff);
+    buffer_read_ready_bytes_file_number(stdout, sub_process->stdout,
+                                        0xffffffff);
   }
   if (stderr != NULL) {
-    buffer_read_ready_bytes_file_number(stderr, sub_process->stderr, 0xffffffff);
+    buffer_read_ready_bytes_file_number(stderr, sub_process->stderr,
+                                        0xffffffff);
   }
 }
 /* i=202 j=1 */
 void sub_process_wait(sub_process_t* sub_process){
-  int status = 0;
-  if (waitpid(sub_process->pid, &status, 0) == -1) {
+  if (sub_process->exit_status != EXIT_STATUS_UNKNOWN) {
+    int status = 0;
+    pid_t result = waitpid(sub_process->pid, &status, 0);
+    sub_process_record_exit_status(sub_process, result, status);
+  }
+}
+/* i=203 j=0 */
+void sub_process_record_exit_status(sub_process_t* sub_process, pid_t pid, int status){
+  if (pid == -1) {
     sub_process->exit_status = EXIT_STATUS_ABNORMAL;
     return;
   }
-  
+
   // Check the exit status and return the exit code
   if (WIFEXITED(status)) {
     sub_process->exit_status = EXIT_STATUS_NORMAL_EXIT;
@@ -3763,20 +3760,21 @@ void sub_process_wait(sub_process_t* sub_process){
     sub_process->exit_status = EXIT_STATUS_ABNORMAL;
   }
 }
-/* i=203 j=0 */
+/* i=204 j=0 */
 boolean_t is_sub_process_running(sub_process_t* sub_process){
-  int status;
-  pid_t result = waitpid(sub_process->pid, &status, WNOHANG);
-
-  if (result == sub_process->pid) { 
-    return false;
-  } else if (result == 0) {
-    return true;
-  } else { 
+  if (sub_process->exit_status != EXIT_STATUS_UNKNOWN) {
     return false;
   }
+
+  int status = 0;
+  pid_t result = waitpid(sub_process->pid, &status, WNOHANG);
+  if (result == 0) {
+    return true;
+  }
+  sub_process_record_exit_status(sub_process, result, status);
+  return false;
 }
-/* i=206 j=0 */
+/* i=207 j=0 */
 __attribute__((format(printf, 3, 4))) void test_fail_and_exit(char* file_name, int line_number, char* format, ...){
   va_list args;
   fprintf(stdout, "%s:%d: ", file_name, line_number);
@@ -3786,7 +3784,7 @@ __attribute__((format(printf, 3, 4))) void test_fail_and_exit(char* file_name, i
   va_end(args);
   exit(1);
 }
-/* i=207 j=0 */
+/* i=208 j=0 */
 char* error_code_to_string(error_code_t value){
   switch (value) {
     case ERROR_UKNOWN:
@@ -3847,7 +3845,7 @@ return "ERROR_ILLEGAL_TERMINAL_COORDINATES";
     return "<<unknown-error_code>>";
   }
 }
-/* i=208 j=0 */
+/* i=209 j=0 */
 error_code_t string_to_error_code(char* value){
   if (strcmp(value, "ERROR_UKNOWN") == 0) {
 return ERROR_UKNOWN;
@@ -3932,7 +3930,7 @@ return ERROR_ILLEGAL_TERMINAL_COORDINATES;
   }
   return 0;
 }
-/* i=209 j=0 */
+/* i=210 j=0 */
 enum_metadata_t* error_code_metadata(){
     static enum_element_metadata_t var_0 = (enum_element_metadata_t) {
         .next = NULL,
@@ -4075,7 +4073,7 @@ enum_metadata_t* error_code_metadata(){
     };
     return &enum_metadata_result;
 }
-/* i=210 j=0 */
+/* i=211 j=0 */
 char* non_fatal_error_code_to_string(non_fatal_error_code_t value){
   switch (value) {
     case NF_OK:
@@ -4090,7 +4088,7 @@ return "NF_ERROR_NOT_PARSED_AS_EXPECTED_ENUM";
     return "<<unknown-non_fatal_error_code>>";
   }
 }
-/* i=211 j=0 */
+/* i=212 j=0 */
 non_fatal_error_code_t string_to_non_fatal_error_code(char* value){
   if (strcmp(value, "NF_OK") == 0) {
 return NF_OK;
@@ -4106,7 +4104,7 @@ return NF_ERROR_NOT_PARSED_AS_EXPECTED_ENUM;
   }
   return 0;
 }
-/* i=212 j=0 */
+/* i=213 j=0 */
 enum_metadata_t* non_fatal_error_code_metadata(){
     static enum_element_metadata_t var_0 = (enum_element_metadata_t) {
         .next = NULL,
@@ -4134,7 +4132,7 @@ enum_metadata_t* non_fatal_error_code_metadata(){
     };
     return &enum_metadata_result;
 }
-/* i=213 j=0 */
+/* i=214 j=0 */
 char* flag_type_to_string(flag_type_t value){
   switch (value) {
     case flag_type_none:
@@ -4157,7 +4155,7 @@ return "flag_type_custom";
     return "<<unknown-flag_type>>";
   }
 }
-/* i=214 j=0 */
+/* i=215 j=0 */
 flag_type_t string_to_flag_type(char* value){
   if (strcmp(value, "flag_type_none") == 0) {
 return flag_type_none;
@@ -4185,7 +4183,7 @@ return flag_type_custom;
   }
   return 0;
 }
-/* i=215 j=0 */
+/* i=216 j=0 */
 enum_metadata_t* flag_type_metadata(){
     static enum_element_metadata_t var_0 = (enum_element_metadata_t) {
         .next = NULL,
@@ -4233,7 +4231,7 @@ enum_metadata_t* flag_type_metadata(){
     };
     return &enum_metadata_result;
 }
-/* i=216 j=0 */
+/* i=217 j=0 */
 char* sub_process_exit_status_to_string(sub_process_exit_status_t value){
   switch (value) {
     case EXIT_STATUS_UNKNOWN:
@@ -4248,7 +4246,7 @@ return "EXIT_STATUS_ABNORMAL";
     return "<<unknown-sub_process_exit_status>>";
   }
 }
-/* i=217 j=0 */
+/* i=218 j=0 */
 sub_process_exit_status_t string_to_sub_process_exit_status(char* value){
   if (strcmp(value, "EXIT_STATUS_UNKNOWN") == 0) {
 return EXIT_STATUS_UNKNOWN;
@@ -4264,7 +4262,7 @@ return EXIT_STATUS_ABNORMAL;
   }
   return 0;
 }
-/* i=218 j=0 */
+/* i=219 j=0 */
 enum_metadata_t* sub_process_exit_status_metadata(){
     static enum_element_metadata_t var_0 = (enum_element_metadata_t) {
         .next = NULL,

@@ -33,11 +33,12 @@ extern void buffer_write_file(buffer_t* bytes, char* file_name);
 __attribute__((warn_unused_result)) extern buffer_t*
     buffer_read_until(buffer_t* buffer, FILE* input, char end_of_line);
 
-extern buffer_t*
-    buffer_read_ready_bytes(buffer_t* buffer, FILE* input, uint64_t max_bytes);
+extern buffer_t* buffer_read_ready_bytes(buffer_t* buffer, FILE* input,
+                                         uint64_t max_bytes);
 
-extern buffer_t*
-buffer_read_ready_bytes_file_number(buffer_t* buffer, int file_number, uint64_t max_bytes);
+extern buffer_t* buffer_read_ready_bytes_file_number(buffer_t* buffer,
+                                                     int file_number,
+                                                     uint64_t max_bytes);
 
 int file_peek_byte(FILE* input);
 
@@ -169,8 +170,8 @@ buffer_t* buffer_read_until(buffer_t* buffer, FILE* input, char end_of_line) {
  * max_bytes has been read, or there are no ready bytes. This function
  * should never block.
  */
-extern buffer_t*
-    buffer_read_ready_bytes(buffer_t* buffer, FILE* input, uint64_t max_bytes) {
+extern buffer_t* buffer_read_ready_bytes(buffer_t* buffer, FILE* input,
+                                         uint64_t max_bytes) {
   int file_number = fileno(input);
   return buffer_read_ready_bytes_file_number(buffer, file_number, max_bytes);
 }
@@ -182,8 +183,9 @@ extern buffer_t*
  * max_bytes has been read, or there are no ready bytes. This function
  * should never block.
  */
-extern buffer_t*
-    buffer_read_ready_bytes_file_number(buffer_t* buffer, int file_number, uint64_t max_bytes) {
+extern buffer_t* buffer_read_ready_bytes_file_number(buffer_t* buffer,
+                                                     int file_number,
+                                                     uint64_t max_bytes) {
   fcntl(file_number, F_SETFL, fcntl(file_number, F_GETFL) | O_NONBLOCK);
 
   uint64_t bytes_remaining = max_bytes - buffer_length(buffer);
@@ -191,39 +193,24 @@ extern buffer_t*
 
   // Loop until either blocking would occur or max_bytes have been added
   while (bytes_remaining > 0) {
-    // Use select to check if there's data available to be read
-    fd_set rfds;
-    struct timeval tv;
-
-    FD_ZERO(&rfds);
-    FD_SET(file_number, &rfds);
-
-    tv.tv_sec = 0;
-    tv.tv_usec = 0;
-
-    // The first argument to select must be one greater than the
-    // highest-numbered file descriptor we are selecting on. This
-    // feels kind of dumb so epoll or poll might work
-    // better. Additionally putting the file into non-blocking mode
-    // might allow reading more than one byte at a time but this is OK
-    // to just get something working.
-    int retval = select(file_number + 1, &rfds, NULL, NULL, &tv);
-
-    if (retval == -1) {
-      fatal_error(ERROR_ILLEGAL_STATE);
-    } else if (retval) {
-      // Data available to be read
-      int bytes_read = read(file_number, read_buffer, sizeof(read_buffer));
+    int bytes_read = read(file_number, read_buffer, sizeof(read_buffer));
+    if (bytes_read > 0) {
       for (int i = 0; i < bytes_read; i++) {
         buffer = buffer_append_byte(buffer, cast(uint8_t, read_buffer[i]));
         bytes_remaining--;
       }
-      if (bytes_read > 0) {
-        break;
-      }
-      // log_trace("buffer_length = %d", buffer_length(buffer));
+    } else if (bytes_read == 0) {
+      // End-of-file (write end of pipe closed)
+      break;
     } else {
-      // No data available without blocking.
+      // bytes_read < 0 (so presumably -1).
+      if (errno != EAGAIN && errno != EWOULDBLOCK) {
+        // A real error occurred
+        log_fatal("Error reading from file descriptor %d: %s", file_number,
+                  strerror(errno));
+        fatal_error(ERROR_ILLEGAL_STATE);
+      }
+      // No data available without blocking, so break out of the loop
       break;
     }
   }

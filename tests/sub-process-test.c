@@ -15,9 +15,7 @@ void test_sub_process(void) {
   sub_process_launch(sub_process);
   buffer_t* buffer = make_buffer(1);
   do {
-    log_info("Sleeping...");
-    sleep(1);
-    log_info("Reading from sub_process");
+    log_info("(Non-blocking) read from sub_process");
     sub_process_read(sub_process, buffer, NULL);
     log_info("Done reading from sub_process");
   } while (is_sub_process_running(sub_process));

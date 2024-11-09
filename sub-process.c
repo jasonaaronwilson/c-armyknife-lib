@@ -24,14 +24,14 @@ typedef enum {
 
 typedef struct {
   // launch parameters
-  value_array_t* argv;             // argv[0] is the program executable path
+  value_array_t* argv; // argv[0] is the program executable path
 
   // child process information
   pid_t pid;
   int stdin;
   int stdout;
   int stderr;
-  
+
   // exit info
   sub_process_exit_status_t exit_status;
   int exit_code;
@@ -44,16 +44,17 @@ boolean_t sub_process_launch(sub_process_t* sub_process);
 
 void sub_process_write(sub_process_t* sub_process, buffer_t* data);
 
-void sub_process_read(sub_process_t* sub_process, buffer_t* stdout, buffer_t* stderr);
+void sub_process_read(sub_process_t* sub_process, buffer_t* stdout,
+                      buffer_t* stderr);
 
 void sub_process_wait(sub_process_t* sub_process);
 
 #endif /* _SUB_PROCESS_H_ */
 
-#include <unistd.h>
+#include <errno.h>
 #include <sys/types.h>
 #include <sys/wait.h>
-#include <errno.h>
+#include <unistd.h>
 
 /**
  * @function make_sub_process
@@ -85,15 +86,17 @@ boolean_t sub_process_launch(sub_process_t* sub_process) {
   for (int i = 0; i < length; i++) {
     argv[i] = value_array_get_ptr(sub_process->argv, i, typeof(char*));
   }
-  char** envp = NULL;
+  // This shouldn't be necessary because we used malloc_bytes which
+  // zeros allocations but it might look like an error.
+  argv[length] = NULL;
+  // char** envp = NULL;
 
   // 2. Create pipes for stdin of the sub process as well as to
   // capture stdout and stderr.
   int stdin_pipe[2];
   int stdout_pipe[2];
   int stderr_pipe[2];
-  if (pipe(stdin_pipe) == -1
-      || pipe(stdout_pipe) == -1
+  if (pipe(stdin_pipe) == -1 || pipe(stdout_pipe) == -1
       || pipe(stderr_pipe) == -1) {
     log_fatal("Failed to create pipe for stdin, stdout or stderr");
     fatal_error(ERROR_ILLEGAL_STATE);
@@ -125,9 +128,9 @@ boolean_t sub_process_launch(sub_process_t* sub_process) {
     close(stderr_pipe[1]);
 
     // 5. Final "exec" to the command
-    execvp(argv[0], argv);
-
+    int exec_exit_status = execvp(argv[0], argv);
     // execvp should not return!
+    log_fatal("execvp returned non zero exit status %d", exec_exit_status);
     fatal_error(ERROR_ILLEGAL_STATE);
     return false;
   } else {
@@ -137,9 +140,9 @@ boolean_t sub_process_launch(sub_process_t* sub_process) {
 
     // 6. Close write ends of the pipes in the parent since we will
     // only be reading from the pipe.
-    close(stdin_pipe[0]);   // Close read end of stdin pipe
-    close(stdout_pipe[1]);  // Close write end of stdout pipe
-    close(stderr_pipe[1]);  // Close write end of stderr pipe
+    close(stdin_pipe[0]);  // Close read end of stdin pipe
+    close(stdout_pipe[1]); // Close write end of stdout pipe
+    close(stderr_pipe[1]); // Close write end of stderr pipe
 
     // 7. Record the pid, stdout, and stderr.
     sub_process->pid = pid;
@@ -157,35 +160,27 @@ void sub_process_write(sub_process_t* sub_process, buffer_t* data) {
   // FIXME
 }
 
-void sub_process_read(sub_process_t* sub_process, buffer_t* stdout, buffer_t* stderr) {
+void sub_process_read(sub_process_t* sub_process, buffer_t* stdout,
+                      buffer_t* stderr) {
   if (stdout != NULL) {
-    buffer_read_ready_bytes_file_number(stdout, sub_process->stdin, 0xffffffff);
+    buffer_read_ready_bytes_file_number(stdout, sub_process->stdout,
+                                        0xffffffff);
   }
   if (stderr != NULL) {
-    buffer_read_ready_bytes_file_number(stderr, sub_process->stderr, 0xffffffff);
+    buffer_read_ready_bytes_file_number(stderr, sub_process->stderr,
+                                        0xffffffff);
   }
 }
 
-boolean_t is_sub_process_running(sub_process_t* sub_process) {
-  int status;
-  pid_t result = waitpid(sub_process->pid, &status, WNOHANG);
-
-  if (result == sub_process->pid) { 
-    return false;
-  } else if (result == 0) {
-    return true;
-  } else { 
-    return false;
-  }
-}
-
-void sub_process_wait(sub_process_t* sub_process) {
-  int status = 0;
-  if (waitpid(sub_process->pid, &status, 0) == -1) {
+// (Private) common tail to is_sub_process_running and
+// sub_process_wait. This should only be called once per sub-process.
+void sub_process_record_exit_status(sub_process_t* sub_process, pid_t pid,
+                                    int status) {
+  if (pid == -1) {
     sub_process->exit_status = EXIT_STATUS_ABNORMAL;
     return;
   }
-  
+
   // Check the exit status and return the exit code
   if (WIFEXITED(status)) {
     sub_process->exit_status = EXIT_STATUS_NORMAL_EXIT;
@@ -195,5 +190,41 @@ void sub_process_wait(sub_process_t* sub_process) {
     sub_process->exit_signal = WTERMSIG(status);
   } else {
     sub_process->exit_status = EXIT_STATUS_ABNORMAL;
+  }
+}
+
+/**
+ * @function is_sub_process_running
+ *
+ * Return true if we recorded that the process already exited or else
+ * do a non-blocking call to waitpid to see if it has already
+ * exited. This function is idempotent once we reach the exit state.
+ */
+boolean_t is_sub_process_running(sub_process_t* sub_process) {
+  if (sub_process->exit_status != EXIT_STATUS_UNKNOWN) {
+    return false;
+  }
+
+  int status = 0;
+  pid_t result = waitpid(sub_process->pid, &status, WNOHANG);
+  if (result == 0) {
+    return true;
+  }
+  sub_process_record_exit_status(sub_process, result, status);
+  return false;
+}
+
+/**
+ * @function sub_process_wait
+ *
+ * Do a blocking call to waitpid unless we've already recorded that
+ * this sub-process has exited in which case it is a NOP. This
+ * function is idempotent once we reach the exit state.
+ */
+void sub_process_wait(sub_process_t* sub_process) {
+  if (sub_process->exit_status != EXIT_STATUS_UNKNOWN) {
+    int status = 0;
+    pid_t result = waitpid(sub_process->pid, &status, 0);
+    sub_process_record_exit_status(sub_process, result, status);
   }
 }

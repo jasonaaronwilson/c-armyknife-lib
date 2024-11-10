@@ -1140,7 +1140,8 @@ boolean_t is_symbol(char* string);
 void cdl_output_token(cdl_printer_t* printer, char* string);
 sub_process_t* make_sub_process(value_array_t* argv);
 boolean_t sub_process_launch(sub_process_t* sub_process);
-void sub_process_write(sub_process_t* sub_process, buffer_t* data);
+uint64_t sub_process_write(sub_process_t* sub_process, buffer_t* data, uint64_t start_position);
+void sub_process_close_stdin(sub_process_t* sub_process);
 void sub_process_read(sub_process_t* sub_process, buffer_t* stdout, buffer_t* stderr);
 void sub_process_wait(sub_process_t* sub_process);
 void sub_process_record_exit_status(sub_process_t* sub_process, pid_t pid, int status);
@@ -3720,10 +3721,39 @@ boolean_t sub_process_launch(sub_process_t* sub_process){
   }
 }
 /* i=200 j=1 */
-void sub_process_write(sub_process_t* sub_process, buffer_t* data){
-  // FIXME
+uint64_t sub_process_write(sub_process_t* sub_process, buffer_t* data, uint64_t start_position){
+  int stdin_fd = sub_process->stdin;
+
+  // Set the file descriptor to non-blocking mode
+  int flags = fcntl(stdin_fd, F_GETFL, 0);
+  fcntl(stdin_fd, F_SETFL, flags | O_NONBLOCK);
+
+  ssize_t bytes_written = write(stdin_fd, &data->elements[start_position],
+                                (data->length - start_position));
+
+  if (bytes_written == -1) {
+    if (errno == EAGAIN || errno == EWOULDBLOCK) {
+      return 0;
+    } else {
+      // An actual error occurred
+      log_fatal("Error writing to subprocess stdin: %s", strerror(errno));
+      fatal_error(ERROR_ILLEGAL_STATE);
+    }
+  }
+
+  return bytes_written;
 }
 /* i=201 j=1 */
+void sub_process_close_stdin(sub_process_t* sub_process){
+  if (sub_process->stdin != -1) { // Check if stdin is still open
+    if (close(sub_process->stdin) == -1) {
+      log_fatal("Error closing subprocess stdin: %s", strerror(errno));
+      fatal_error(ERROR_ILLEGAL_STATE);
+    }
+    sub_process->stdin = -1; // Mark stdin as closed
+  }
+}
+/* i=202 j=1 */
 void sub_process_read(sub_process_t* sub_process, buffer_t* stdout, buffer_t* stderr){
   if (stdout != NULL) {
     buffer_read_ready_bytes_file_number(stdout, sub_process->stdout,
@@ -3734,7 +3764,7 @@ void sub_process_read(sub_process_t* sub_process, buffer_t* stdout, buffer_t* st
                                         0xffffffff);
   }
 }
-/* i=202 j=1 */
+/* i=203 j=1 */
 void sub_process_wait(sub_process_t* sub_process){
   if (sub_process->exit_status != EXIT_STATUS_UNKNOWN) {
     int status = 0;
@@ -3742,7 +3772,7 @@ void sub_process_wait(sub_process_t* sub_process){
     sub_process_record_exit_status(sub_process, result, status);
   }
 }
-/* i=203 j=0 */
+/* i=204 j=0 */
 void sub_process_record_exit_status(sub_process_t* sub_process, pid_t pid, int status){
   if (pid == -1) {
     sub_process->exit_status = EXIT_STATUS_ABNORMAL;
@@ -3760,7 +3790,7 @@ void sub_process_record_exit_status(sub_process_t* sub_process, pid_t pid, int s
     sub_process->exit_status = EXIT_STATUS_ABNORMAL;
   }
 }
-/* i=204 j=0 */
+/* i=205 j=0 */
 boolean_t is_sub_process_running(sub_process_t* sub_process){
   if (sub_process->exit_status != EXIT_STATUS_UNKNOWN) {
     return false;
@@ -3774,7 +3804,7 @@ boolean_t is_sub_process_running(sub_process_t* sub_process){
   sub_process_record_exit_status(sub_process, result, status);
   return false;
 }
-/* i=207 j=0 */
+/* i=208 j=0 */
 __attribute__((format(printf, 3, 4))) void test_fail_and_exit(char* file_name, int line_number, char* format, ...){
   va_list args;
   fprintf(stdout, "%s:%d: ", file_name, line_number);
@@ -3784,7 +3814,7 @@ __attribute__((format(printf, 3, 4))) void test_fail_and_exit(char* file_name, i
   va_end(args);
   exit(1);
 }
-/* i=208 j=0 */
+/* i=209 j=0 */
 char* error_code_to_string(error_code_t value){
   switch (value) {
     case ERROR_UKNOWN:
@@ -3845,7 +3875,7 @@ return "ERROR_ILLEGAL_TERMINAL_COORDINATES";
     return "<<unknown-error_code>>";
   }
 }
-/* i=209 j=0 */
+/* i=210 j=0 */
 error_code_t string_to_error_code(char* value){
   if (strcmp(value, "ERROR_UKNOWN") == 0) {
 return ERROR_UKNOWN;
@@ -3930,7 +3960,7 @@ return ERROR_ILLEGAL_TERMINAL_COORDINATES;
   }
   return 0;
 }
-/* i=210 j=0 */
+/* i=211 j=0 */
 enum_metadata_t* error_code_metadata(){
     static enum_element_metadata_t var_0 = (enum_element_metadata_t) {
         .next = NULL,
@@ -4073,7 +4103,7 @@ enum_metadata_t* error_code_metadata(){
     };
     return &enum_metadata_result;
 }
-/* i=211 j=0 */
+/* i=212 j=0 */
 char* non_fatal_error_code_to_string(non_fatal_error_code_t value){
   switch (value) {
     case NF_OK:
@@ -4088,7 +4118,7 @@ return "NF_ERROR_NOT_PARSED_AS_EXPECTED_ENUM";
     return "<<unknown-non_fatal_error_code>>";
   }
 }
-/* i=212 j=0 */
+/* i=213 j=0 */
 non_fatal_error_code_t string_to_non_fatal_error_code(char* value){
   if (strcmp(value, "NF_OK") == 0) {
 return NF_OK;
@@ -4104,7 +4134,7 @@ return NF_ERROR_NOT_PARSED_AS_EXPECTED_ENUM;
   }
   return 0;
 }
-/* i=213 j=0 */
+/* i=214 j=0 */
 enum_metadata_t* non_fatal_error_code_metadata(){
     static enum_element_metadata_t var_0 = (enum_element_metadata_t) {
         .next = NULL,
@@ -4132,7 +4162,7 @@ enum_metadata_t* non_fatal_error_code_metadata(){
     };
     return &enum_metadata_result;
 }
-/* i=214 j=0 */
+/* i=215 j=0 */
 char* flag_type_to_string(flag_type_t value){
   switch (value) {
     case flag_type_none:
@@ -4155,7 +4185,7 @@ return "flag_type_custom";
     return "<<unknown-flag_type>>";
   }
 }
-/* i=215 j=0 */
+/* i=216 j=0 */
 flag_type_t string_to_flag_type(char* value){
   if (strcmp(value, "flag_type_none") == 0) {
 return flag_type_none;
@@ -4183,7 +4213,7 @@ return flag_type_custom;
   }
   return 0;
 }
-/* i=216 j=0 */
+/* i=217 j=0 */
 enum_metadata_t* flag_type_metadata(){
     static enum_element_metadata_t var_0 = (enum_element_metadata_t) {
         .next = NULL,
@@ -4231,7 +4261,7 @@ enum_metadata_t* flag_type_metadata(){
     };
     return &enum_metadata_result;
 }
-/* i=217 j=0 */
+/* i=218 j=0 */
 char* sub_process_exit_status_to_string(sub_process_exit_status_t value){
   switch (value) {
     case EXIT_STATUS_UNKNOWN:
@@ -4246,7 +4276,7 @@ return "EXIT_STATUS_ABNORMAL";
     return "<<unknown-sub_process_exit_status>>";
   }
 }
-/* i=218 j=0 */
+/* i=219 j=0 */
 sub_process_exit_status_t string_to_sub_process_exit_status(char* value){
   if (strcmp(value, "EXIT_STATUS_UNKNOWN") == 0) {
 return EXIT_STATUS_UNKNOWN;
@@ -4262,7 +4292,7 @@ return EXIT_STATUS_ABNORMAL;
   }
   return 0;
 }
-/* i=219 j=0 */
+/* i=220 j=0 */
 enum_metadata_t* sub_process_exit_status_metadata(){
     static enum_element_metadata_t var_0 = (enum_element_metadata_t) {
         .next = NULL,

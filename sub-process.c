@@ -42,7 +42,10 @@ sub_process_t* make_sub_process(value_array_t* argv);
 
 boolean_t sub_process_launch(sub_process_t* sub_process);
 
-void sub_process_write(sub_process_t* sub_process, buffer_t* data);
+uint64_t sub_process_write(sub_process_t* sub_process, buffer_t* data,
+                           uint64_t start_position);
+
+void sub_process_close_stdin(sub_process_t* sub_process);
 
 void sub_process_read(sub_process_t* sub_process, buffer_t* stdout,
                       buffer_t* stderr);
@@ -156,8 +159,38 @@ boolean_t sub_process_launch(sub_process_t* sub_process) {
   }
 }
 
-void sub_process_write(sub_process_t* sub_process, buffer_t* data) {
-  // FIXME
+uint64_t sub_process_write(sub_process_t* sub_process, buffer_t* data,
+                           uint64_t start_position) {
+  int stdin_fd = sub_process->stdin;
+
+  // Set the file descriptor to non-blocking mode
+  int flags = fcntl(stdin_fd, F_GETFL, 0);
+  fcntl(stdin_fd, F_SETFL, flags | O_NONBLOCK);
+
+  ssize_t bytes_written = write(stdin_fd, &data->elements[start_position],
+                                (data->length - start_position));
+
+  if (bytes_written == -1) {
+    if (errno == EAGAIN || errno == EWOULDBLOCK) {
+      return 0;
+    } else {
+      // An actual error occurred
+      log_fatal("Error writing to subprocess stdin: %s", strerror(errno));
+      fatal_error(ERROR_ILLEGAL_STATE);
+    }
+  }
+
+  return bytes_written;
+}
+
+void sub_process_close_stdin(sub_process_t* sub_process) {
+  if (sub_process->stdin != -1) { // Check if stdin is still open
+    if (close(sub_process->stdin) == -1) {
+      log_fatal("Error closing subprocess stdin: %s", strerror(errno));
+      fatal_error(ERROR_ILLEGAL_STATE);
+    }
+    sub_process->stdin = -1; // Mark stdin as closed
+  }
 }
 
 void sub_process_read(sub_process_t* sub_process, buffer_t* stdout,

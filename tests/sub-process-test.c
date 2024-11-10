@@ -18,7 +18,10 @@ void test_sub_process_read(void) {
     log_info("(Non-blocking) read from sub_process");
     sub_process_read(sub_process, buffer, NULL);
     log_info("Done reading from sub_process");
+    sleep(1);
   } while (is_sub_process_running(sub_process));
+  sub_process_read(sub_process, buffer, NULL);
+
   sub_process_wait(sub_process);
   test_assert(sub_process->exit_code == 0);
 

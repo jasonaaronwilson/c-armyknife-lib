@@ -3,7 +3,7 @@
 # omni-c mode because of inline functions which omni-c will eventually
 # address.
 
-SRC_C = \
+SRC_C := \
 	min-max.c \
 	boolean.c \
 	compound-literal.c \

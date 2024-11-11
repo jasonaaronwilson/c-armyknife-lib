@@ -6,8 +6,8 @@ all: c-armyknife-lib
 # c-armyknife-lib and since no one has every sent me a pull request,
 # maybe c-armyknife-lib isn't popular.
 
-# MODE = omni-c
-MODE = traditional
+# MODE := omni-c
+MODE := traditional
 
 ### TODO(jawilson): also build and install a library in case someone
 ### wants to use c-armyknife-lib in a bigger project without ever
@@ -18,7 +18,7 @@ install: c-armyknife-lib
 
 include Makefile.sources
 
-ORDERED_H = $(SRC_C:.c=.h)
+ORDERED_H := $(SRC_C:.c=.h)
 
 ### ----------------------------------------------------------------------
 ### Omni C Mode
@@ -75,7 +75,7 @@ how-big: clean
 tags:
 	etags ${SRC_C} ${SRC_H}
 
-TESTS= \
+TESTS := \
 	./compile-test.sh \
 	./uint64-test.sh \
 	./string-util-test.sh \

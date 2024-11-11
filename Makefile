@@ -6,7 +6,8 @@ all: c-armyknife-lib
 # c-armyknife-lib and since no one has every sent me a pull request,
 # maybe c-armyknife-lib isn't popular.
 
-MODE = omni-c
+# MODE = omni-c
+MODE = traditional
 
 ### TODO(jawilson): also build and install a library in case someone
 ### wants to use c-armyknife-lib in a bigger project without ever
@@ -64,7 +65,9 @@ c-armyknife-lib:
 	cat header-comment.txt  >c-armyknife-lib.h
 	echo '#ifdef C_ARMYKNIFE_LIB_IMPL' >>c-armyknife-lib.h
 	cat c-armyknife-lib-omni-c.c >>c-armyknife-lib.h
-	echo '#endif /* C_ARMYKNIFE_LIB_IMPL */' >>c-armyknife-lib.h
+	echo '#else /* C_ARMYKNIFE_LIB_IMPL */' >>c-armyknife-lib.h
+	cat c-armyknife-lib-omni-c.h >>c-armyknife-lib.h
+	echo '#endif /* C_ARMYKNIFE_LIB_IMPL */\n' >>c-armyknife-lib.h
 	cat c-armyknife-lib.h | grep -v "#line" >c-armyknife-lib-no-lines.h
 
 else ifeq ($(MODE),traditional)

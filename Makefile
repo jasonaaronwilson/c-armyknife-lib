@@ -16,40 +16,7 @@ MODE = traditional
 install: c-armyknife-lib
 	sudo install -m 755 c-armyknife-lib.h /usr/local/include/
 
-# Define the source files and a particular order. This is critical in
-# "traditional" mode but AFAIK this ordering is only necessary in
-# omni-c mode because of inline functions which omni-c will eventually
-# address.
-
-SRC_C = \
-	min-max.c \
-	boolean.c \
-	compound-literal.c \
-	fn.c \
-	leb128.c \
-	fatal-error.c \
-	value.c \
-	allocate.c \
-	uint64.c \
-	string-util.c \
-	logger.c \
-	utf8-decoder.c \
-	buffer.c \
-	value-array.c \
-	value-alist.c \
-	string-alist.c \
-	value-hashtable.c \
-	string-hashtable.c \
-	value-tree.c \
-	string-tree.c \
-	flag.c \
-	io.c \
-	terminal.c \
-	tokenizer.c \
-	random.c \
-	cdl-printer.c \
-	sub-process.c \
-	test.c
+include Makefile.sources
 
 ORDERED_H = $(SRC_C:.c=.h)
 

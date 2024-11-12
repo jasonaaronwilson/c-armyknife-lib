@@ -125,18 +125,21 @@ unsigned_decode_result decode_uleb_128(const uint8_t* p, const uint8_t* end) {
   unsigned Shift = 0;
   do {
     if (p == end) {
-      unsigned_decode_result result = {0, ERROR_INSUFFICIENT_INPUT};
+      unsigned_decode_result result = compound_literal(
+          unsigned_decode_result, {0, ERROR_INSUFFICIENT_INPUT});
       return result;
     }
     uint64_t Slice = *p & 0x7f;
     if ((Shift >= 64 && Slice != 0) || Slice << Shift >> Shift != Slice) {
-      unsigned_decode_result result = {0, ERROR_TOO_BIG};
+      unsigned_decode_result result
+          = compound_literal(unsigned_decode_result, {0, ERROR_TOO_BIG});
       return result;
     }
     Value += Slice << Shift;
     Shift += 7;
   } while (*p++ >= 128);
-  unsigned_decode_result result = {Value, cast(unsigned, p - orig_p)};
+  unsigned_decode_result result = compound_literal(
+      unsigned_decode_result, {Value, cast(unsigned, p - orig_p)});
   return result;
 }
 
@@ -152,7 +155,8 @@ signed_decode_result decode_sleb_128(const uint8_t* p, const uint8_t* end) {
   uint8_t Byte;
   do {
     if (p == end) {
-      signed_decode_result result = {0, ERROR_INSUFFICIENT_INPUT};
+      signed_decode_result result = compound_literal(
+          signed_decode_result, {0, ERROR_INSUFFICIENT_INPUT});
       return result;
     }
     Byte = *p;
@@ -161,7 +165,8 @@ signed_decode_result decode_sleb_128(const uint8_t* p, const uint8_t* end) {
     // able to test very easily at the end of the loop.
     if ((Shift >= 64 && Slice != (Value < 0 ? 0x7f : 0x00))
         || (Shift == 63 && Slice != 0 && Slice != 0x7f)) {
-      signed_decode_result result = {0, ERROR_TOO_BIG};
+      signed_decode_result result
+          = compound_literal(signed_decode_result, {0, ERROR_TOO_BIG});
       return result;
     }
     Value |= Slice << Shift;
@@ -171,6 +176,7 @@ signed_decode_result decode_sleb_128(const uint8_t* p, const uint8_t* end) {
   // Sign extend negative numbers if needed.
   if (Shift < 64 && (Byte & 0x40))
     Value |= (-1ULL) << Shift;
-  signed_decode_result result = {Value, (p - orig_p)};
+  signed_decode_result result
+      = compound_literal(signed_decode_result, {Value, (p - orig_p)});
   return result;
 }

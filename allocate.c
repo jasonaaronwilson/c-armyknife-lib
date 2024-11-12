@@ -250,7 +250,7 @@ void track_padding(char* file, int line, uint8_t* address, uint64_t amount) {
     // time. (Mostly a hunch I will admit.).
     int bucket = mumurhash64_mix(cast(uint64_t, address))
                  % ARMYKNIFE_MEMORY_ALLOCATION_HASHTABLE_SIZE;
-    memory_ht[bucket].malloc_address = (uint64_t) address;
+    memory_ht[bucket].malloc_address = cast(uint64_t, address);
     memory_ht[bucket].malloc_size = amount;
     memory_ht[bucket].allocation_filename = file;
     memory_ht[bucket].allocation_line_number = line;
@@ -351,7 +351,7 @@ uint8_t* checked_malloc_copy_of(char* file, int line, uint8_t* source,
 void checked_free(char* file, int line, void* pointer) {
   if (should_log_memory_allocation()) {
     fprintf(stderr, "DEALLOCATE %s:%d -- %lu\n", file, line,
-            (uint64_t) pointer);
+            cast(uint64_t, pointer));
   }
   if (pointer == NULL) {
     fatal_error_impl(file, line, ERROR_MEMORY_FREE_NULL);

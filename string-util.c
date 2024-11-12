@@ -157,21 +157,22 @@ value_result_t string_parse_uint64_dec(const char* string) {
   uint64_t integer = 0;
 
   if (len == 0) {
-    return (value_result_t){.u64 = 0,
-                            .nf_error = NF_ERROR_NOT_PARSED_AS_NUMBER};
+    return compound_literal(
+        value_result_t, {.u64 = 0, .nf_error = NF_ERROR_NOT_PARSED_AS_NUMBER});
   }
 
   for (int i = 0; i < len; i++) {
     char ch = string[i];
     if (ch < '0' || ch > '9') {
-      return (value_result_t){.u64 = 0,
-                              .nf_error = NF_ERROR_NOT_PARSED_AS_NUMBER};
+      return compound_literal(
+          value_result_t,
+          {.u64 = 0, .nf_error = NF_ERROR_NOT_PARSED_AS_NUMBER});
     }
     uint64_t digit = string[i] - '0';
     integer = integer * 10 + digit;
   }
 
-  return (value_result_t){.u64 = integer, .nf_error = NF_OK};
+  return compound_literal(value_result_t, {.u64 = integer, .nf_error = NF_OK});
 }
 
 /**
@@ -512,19 +513,19 @@ uint64_t fasthash64(const void* buf, size_t len, uint64_t seed) {
 
   switch (len & 7) {
   case 7:
-    v ^= (uint64_t) pos2[6] << 48;
+    v ^= cast(uint64_t, pos2[6]) << 48;
   case 6:
-    v ^= (uint64_t) pos2[5] << 40;
+    v ^= cast(uint64_t, pos2[5]) << 40;
   case 5:
-    v ^= (uint64_t) pos2[4] << 32;
+    v ^= cast(uint64_t, pos2[4]) << 32;
   case 4:
-    v ^= (uint64_t) pos2[3] << 24;
+    v ^= cast(uint64_t, pos2[3]) << 24;
   case 3:
-    v ^= (uint64_t) pos2[2] << 16;
+    v ^= cast(uint64_t, pos2[2]) << 16;
   case 2:
-    v ^= (uint64_t) pos2[1] << 8;
+    v ^= cast(uint64_t, pos2[1]) << 8;
   case 1:
-    v ^= (uint64_t) pos2[0];
+    v ^= cast(uint64_t, pos2[0]);
     h ^= mix(v);
     h *= m;
   }

@@ -2138,18 +2138,21 @@ unsigned_decode_result decode_uleb_128(const uint8_t* p, const uint8_t* end) {
   unsigned Shift = 0;
   do {
     if (p == end) {
-      unsigned_decode_result result = {0, ERROR_INSUFFICIENT_INPUT};
+      unsigned_decode_result result = compound_literal(
+          unsigned_decode_result, {0, ERROR_INSUFFICIENT_INPUT});
       return result;
     }
     uint64_t Slice = *p & 0x7f;
     if ((Shift >= 64 && Slice != 0) || Slice << Shift >> Shift != Slice) {
-      unsigned_decode_result result = {0, ERROR_TOO_BIG};
+      unsigned_decode_result result
+          = compound_literal(unsigned_decode_result, {0, ERROR_TOO_BIG});
       return result;
     }
     Value += Slice << Shift;
     Shift += 7;
   } while (*p++ >= 128);
-  unsigned_decode_result result = {Value, cast(unsigned, p - orig_p)};
+  unsigned_decode_result result = compound_literal(
+      unsigned_decode_result, {Value, cast(unsigned, p - orig_p)});
   return result;
 }
 
@@ -2165,7 +2168,8 @@ signed_decode_result decode_sleb_128(const uint8_t* p, const uint8_t* end) {
   uint8_t Byte;
   do {
     if (p == end) {
-      signed_decode_result result = {0, ERROR_INSUFFICIENT_INPUT};
+      signed_decode_result result = compound_literal(
+          signed_decode_result, {0, ERROR_INSUFFICIENT_INPUT});
       return result;
     }
     Byte = *p;
@@ -2174,7 +2178,8 @@ signed_decode_result decode_sleb_128(const uint8_t* p, const uint8_t* end) {
     // able to test very easily at the end of the loop.
     if ((Shift >= 64 && Slice != (Value < 0 ? 0x7f : 0x00))
         || (Shift == 63 && Slice != 0 && Slice != 0x7f)) {
-      signed_decode_result result = {0, ERROR_TOO_BIG};
+      signed_decode_result result
+          = compound_literal(signed_decode_result, {0, ERROR_TOO_BIG});
       return result;
     }
     Value |= Slice << Shift;
@@ -2184,7 +2189,8 @@ signed_decode_result decode_sleb_128(const uint8_t* p, const uint8_t* end) {
   // Sign extend negative numbers if needed.
   if (Shift < 64 && (Byte & 0x40))
     Value |= (-1ULL) << Shift;
-  signed_decode_result result = {Value, (p - orig_p)};
+  signed_decode_result result
+      = compound_literal(signed_decode_result, {Value, (p - orig_p)});
   return result;
 }
 #line 2 "fatal-error.c"
@@ -2853,7 +2859,7 @@ void track_padding(char* file, int line, uint8_t* address, uint64_t amount) {
     // time. (Mostly a hunch I will admit.).
     int bucket = mumurhash64_mix(cast(uint64_t, address))
                  % ARMYKNIFE_MEMORY_ALLOCATION_HASHTABLE_SIZE;
-    memory_ht[bucket].malloc_address = (uint64_t) address;
+    memory_ht[bucket].malloc_address = cast(uint64_t, address);
     memory_ht[bucket].malloc_size = amount;
     memory_ht[bucket].allocation_filename = file;
     memory_ht[bucket].allocation_line_number = line;
@@ -2954,7 +2960,7 @@ uint8_t* checked_malloc_copy_of(char* file, int line, uint8_t* source,
 void checked_free(char* file, int line, void* pointer) {
   if (should_log_memory_allocation()) {
     fprintf(stderr, "DEALLOCATE %s:%d -- %lu\n", file, line,
-            (uint64_t) pointer);
+            cast(uint64_t, pointer));
   }
   if (pointer == NULL) {
     fatal_error_impl(file, line, ERROR_MEMORY_FREE_NULL);
@@ -3170,21 +3176,21 @@ value_result_t string_parse_uint64_dec(const char* string) {
   uint64_t integer = 0;
 
   if (len == 0) {
-    return (value_result_t){.u64 = 0,
-                            .nf_error = NF_ERROR_NOT_PARSED_AS_NUMBER};
+    return compound_literal(value_result_t, {.u64 = 0,
+					     .nf_error = NF_ERROR_NOT_PARSED_AS_NUMBER});
   }
 
   for (int i = 0; i < len; i++) {
     char ch = string[i];
     if (ch < '0' || ch > '9') {
-      return (value_result_t){.u64 = 0,
-                              .nf_error = NF_ERROR_NOT_PARSED_AS_NUMBER};
+      return compound_literal(value_result_t, {.u64 = 0,
+					       .nf_error = NF_ERROR_NOT_PARSED_AS_NUMBER});
     }
     uint64_t digit = string[i] - '0';
     integer = integer * 10 + digit;
   }
 
-  return (value_result_t){.u64 = integer, .nf_error = NF_OK};
+  return compound_literal(value_result_t, {.u64 = integer, .nf_error = NF_OK});
 }
 
 /**
@@ -3525,19 +3531,19 @@ uint64_t fasthash64(const void* buf, size_t len, uint64_t seed) {
 
   switch (len & 7) {
   case 7:
-    v ^= (uint64_t) pos2[6] << 48;
+    v ^= cast(uint64_t, pos2[6]) << 48;
   case 6:
-    v ^= (uint64_t) pos2[5] << 40;
+    v ^= cast(uint64_t, pos2[5]) << 40;
   case 5:
-    v ^= (uint64_t) pos2[4] << 32;
+    v ^= cast(uint64_t, pos2[4]) << 32;
   case 4:
-    v ^= (uint64_t) pos2[3] << 24;
+    v ^= cast(uint64_t, pos2[3]) << 24;
   case 3:
-    v ^= (uint64_t) pos2[2] << 16;
+    v ^= cast(uint64_t, pos2[2]) << 16;
   case 2:
-    v ^= (uint64_t) pos2[1] << 8;
+    v ^= cast(uint64_t, pos2[1]) << 8;
   case 1:
-    v ^= (uint64_t) pos2[0];
+    v ^= cast(uint64_t, pos2[0]);
     h ^= mix(v);
     h *= m;
   }

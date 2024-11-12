@@ -426,7 +426,6 @@ buffer_t* buffer_from_string(char* string) {
 buffer_t* buffer_adjust_region(buffer_t* buffer, uint64_t start, uint64_t end,
                                uint64_t new_width) {
   // TODO(jawilson): more range testing.
-  uint64_t len = buffer->length;
   if (start > end) {
     fatal_error(ERROR_ILLEGAL_RANGE);
   }

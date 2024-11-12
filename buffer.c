@@ -325,14 +325,14 @@ extern buffer_t* buffer_append_repeated_byte(buffer_t* buffer, uint8_t byte,
  */
 utf8_decode_result_t buffer_utf8_decode(buffer_t* buffer, uint64_t position) {
   if (position >= buffer->length) {
-    return (utf8_decode_result_t){.error = true};
+    return compound_literal(utf8_decode_result_t, {.error = true});
   }
   utf8_decode_result_t result = utf8_decode(&buffer->elements[position]);
   if (result.error) {
     return result;
   }
   if ((position + result.num_bytes) > buffer->length) {
-    return (utf8_decode_result_t){.error = true};
+    return compound_literal(utf8_decode_result_t, {.error = true});
   }
   return result;
 }
@@ -493,10 +493,10 @@ line_and_column_t buffer_position_to_line_and_column(buffer_t* buffer,
       column++;
     }
   }
-  return (line_and_column_t){
-      .line = line,
-      .column = column,
-  };
+  return compound_literal(line_and_column_t, {
+                                                 .line = line,
+                                                 .column = column,
+                                             });
 }
 
 /**

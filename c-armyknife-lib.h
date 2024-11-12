@@ -3176,15 +3176,16 @@ value_result_t string_parse_uint64_dec(const char* string) {
   uint64_t integer = 0;
 
   if (len == 0) {
-    return compound_literal(value_result_t, {.u64 = 0,
-					     .nf_error = NF_ERROR_NOT_PARSED_AS_NUMBER});
+    return compound_literal(
+        value_result_t, {.u64 = 0, .nf_error = NF_ERROR_NOT_PARSED_AS_NUMBER});
   }
 
   for (int i = 0; i < len; i++) {
     char ch = string[i];
     if (ch < '0' || ch > '9') {
-      return compound_literal(value_result_t, {.u64 = 0,
-					       .nf_error = NF_ERROR_NOT_PARSED_AS_NUMBER});
+      return compound_literal(
+          value_result_t,
+          {.u64 = 0, .nf_error = NF_ERROR_NOT_PARSED_AS_NUMBER});
     }
     uint64_t digit = string[i] - '0';
     integer = integer * 10 + digit;
@@ -3779,19 +3780,20 @@ logger_state_t global_logger_state
 
 value_result_t parse_log_level_enum(char* str) {
   if (strcmp("FATAL", str) == 0 || strcmp("fatal", str) == 0) {
-    return (value_result_t){.u64 = LOGGER_FATAL};
+    return compound_literal(value_result_t, {.u64 = LOGGER_FATAL});
   } else if (strcmp("WARN", str) == 0 || strcmp("warn", str) == 0) {
-    return (value_result_t){.u64 = LOGGER_WARN};
+    return compound_literal(value_result_t, {.u64 = LOGGER_WARN});
   } else if (strcmp("INFO", str) == 0 || strcmp("info", str) == 0) {
-    return (value_result_t){.u64 = LOGGER_INFO};
+    return compound_literal(value_result_t, {.u64 = LOGGER_INFO});
   } else if (strcmp("DEBUG", str) == 0 || strcmp("debug", str) == 0) {
-    return (value_result_t){.u64 = LOGGER_DEBUG};
+    return compound_literal(value_result_t, {.u64 = LOGGER_DEBUG});
   } else if (strcmp("TRACE", str) == 0 || strcmp("trace", str) == 0) {
-    return (value_result_t){.u64 = LOGGER_TRACE};
+    return compound_literal(value_result_t, {.u64 = LOGGER_TRACE});
   } else if (strcmp("OFF", str) == 0 || strcmp("off", str) == 0) {
-    return (value_result_t){.u64 = LOGGER_OFF};
+    return compound_literal(value_result_t, {.u64 = LOGGER_OFF});
   } else {
-    return (value_result_t){.nf_error = NF_ERROR_NOT_PARSED_AS_EXPECTED_ENUM};
+    return compound_literal(value_result_t,
+                            {.nf_error = NF_ERROR_NOT_PARSED_AS_EXPECTED_ENUM});
   }
 }
 
@@ -4292,14 +4294,14 @@ extern buffer_t* buffer_append_repeated_byte(buffer_t* buffer, uint8_t byte,
  */
 utf8_decode_result_t buffer_utf8_decode(buffer_t* buffer, uint64_t position) {
   if (position >= buffer->length) {
-    return (utf8_decode_result_t){.error = true};
+    return compound_literal(utf8_decode_result_t, {.error = true});
   }
   utf8_decode_result_t result = utf8_decode(&buffer->elements[position]);
   if (result.error) {
     return result;
   }
   if ((position + result.num_bytes) > buffer->length) {
-    return (utf8_decode_result_t){.error = true};
+    return compound_literal(utf8_decode_result_t, {.error = true});
   }
   return result;
 }
@@ -4460,10 +4462,10 @@ line_and_column_t buffer_position_to_line_and_column(buffer_t* buffer,
       column++;
     }
   }
-  return (line_and_column_t){
-      .line = line,
-      .column = column,
-  };
+  return compound_literal(line_and_column_t, {
+                                                 .line = line,
+                                                 .column = column,
+                                             });
 }
 
 /**
@@ -4705,10 +4707,8 @@ value_t value_array_get(value_array_t* array, uint32_t index) {
     return array->elements[index];
   }
   fatal_error(ERROR_ACCESS_OUT_OF_BOUNDS);
-#ifdef __TINYC__
   /* gcc and clang know fatal_error is _Noreturn but tcc doesn't */
-  return (value_t){.u64 = 0};
-#endif
+  return compound_literal(value_t, {0});
 }
 
 /**
@@ -5133,8 +5133,8 @@ static inline uint64_t value_ht_num_entries(value_hashtable_t* ht) {
  *
  * When the initial number of buckets is less than a small integer
  * (currently 2), then we automatically increase the initial number of
- * buckets to that number to make the fractional growth algorithm work
- * and maintain big-O properties.
+ * buckets to make the fractional growth algorithm work and maintain
+ * big-O properties.
  */
 value_hashtable_t* make_value_hashtable(uint64_t n_buckets) {
   if (n_buckets < 2) {

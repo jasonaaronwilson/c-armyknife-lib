@@ -227,19 +227,20 @@ logger_state_t global_logger_state
 
 value_result_t parse_log_level_enum(char* str) {
   if (strcmp("FATAL", str) == 0 || strcmp("fatal", str) == 0) {
-    return (value_result_t){.u64 = LOGGER_FATAL};
+    return compound_literal(value_result_t, {.u64 = LOGGER_FATAL});
   } else if (strcmp("WARN", str) == 0 || strcmp("warn", str) == 0) {
-    return (value_result_t){.u64 = LOGGER_WARN};
+    return compound_literal(value_result_t, {.u64 = LOGGER_WARN});
   } else if (strcmp("INFO", str) == 0 || strcmp("info", str) == 0) {
-    return (value_result_t){.u64 = LOGGER_INFO};
+    return compound_literal(value_result_t, {.u64 = LOGGER_INFO});
   } else if (strcmp("DEBUG", str) == 0 || strcmp("debug", str) == 0) {
-    return (value_result_t){.u64 = LOGGER_DEBUG};
+    return compound_literal(value_result_t, {.u64 = LOGGER_DEBUG});
   } else if (strcmp("TRACE", str) == 0 || strcmp("trace", str) == 0) {
-    return (value_result_t){.u64 = LOGGER_TRACE};
+    return compound_literal(value_result_t, {.u64 = LOGGER_TRACE});
   } else if (strcmp("OFF", str) == 0 || strcmp("off", str) == 0) {
-    return (value_result_t){.u64 = LOGGER_OFF};
+    return compound_literal(value_result_t, {.u64 = LOGGER_OFF});
   } else {
-    return (value_result_t){.nf_error = NF_ERROR_NOT_PARSED_AS_EXPECTED_ENUM};
+    return compound_literal(value_result_t,
+                            {.nf_error = NF_ERROR_NOT_PARSED_AS_EXPECTED_ENUM});
   }
 }
 

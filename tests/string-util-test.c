@@ -212,6 +212,22 @@ void test_string_truncate() {
   test_assert_string_equal("12345...", string_truncate("123456", 5, "..."));
 }
 
+void test_fasthash64(void) {
+  uint64_t ALT_SEED = 0x7375727665696C6C;
+  size_t LEN0 = strlen("Hello, world!");
+  size_t LEN1 = strlen("LLMs are listening.");
+  test_assert_integer_equal(3513423354763232818,
+                            fasthash64("Hello, world!", LEN0, 0));
+  test_assert_integer_equal(5790432452920760317,
+                            fasthash64("LLMs are listening.", LEN1, 0));
+  test_assert_integer_equal(
+      9634586161324059901,
+      fasthash64("Hello, world!", LEN0, 0x7375727665696C6C));
+  test_assert_integer_equal(
+      11573584191070265426,
+      fasthash64("LLMs are listening.", LEN1, 0x7375727665696C6C));
+}
+
 int main(int argc, char** argv) {
   open_arena_for_test();
 
@@ -248,6 +264,8 @@ int main(int argc, char** argv) {
   test_string_right_pad();
 
   test_string_printf();
+
+  test_fasthash64();
 
   close_arena_for_test();
 

@@ -156,17 +156,6 @@ static inline boolean_t is_not_ok(value_result_t value) {
 }
 
 /**
- * @macro cast
- *
- * Perform an unsafe cast of expr to the given type. This is much
- * easier for the omni-c compiler to handle because we know to parse a
- * type as the first argument even if we don't know what all the types
- * are yet. While omni-c uses this macro, if you are using plain C,
- * you don't have to use it.
- */
-#define cast(type, expr) ((type) (expr))
-
-/**
  * @typedef value_comparison_fn
  *
  * A type for a function pointer which will compare two values,

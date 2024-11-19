@@ -4,6 +4,7 @@
 # address.
 
 SRC_C := \
+        omni-c.c \
 	min-max.c \
 	boolean.c \
 	compound-literal.c \

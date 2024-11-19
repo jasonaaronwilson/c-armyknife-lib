@@ -24,6 +24,33 @@
  * correctly.
  */
 
+// SSCF generated file from: omni-c.c
+
+#ifndef _OMNI_C_H_
+#define _OMNI_C_H_
+
+/**
+ * @file omni-c.c
+ *
+ * These macros help c-armyknife-lib conform to what omni-c can
+ * (currently) handle. If you are writing code within c-armyknife-lib,
+ * then you must use these macros but if you are just using
+ * c-amryknife-lib within your own C project, then you can ignore
+ * these macros unless you strictly want to use them.
+ */
+
+/**
+ * @macro cast
+ *
+ * Perform an unsafe cast of expr to the given type. This is much
+ * easier for the omni-c compiler to handle because we know to parse a
+ * type as the first argument even if we don't know what all the types
+ * are yet. While omni-c uses this macro, if you are using plain C,
+ * you don't have to use it.
+ */
+#define cast(type, expr) ((type) (expr))
+
+#endif /* _OMNI_C_H_ */
 // SSCF generated file from: min-max.c
 
 #ifndef _MIN_MAX_H_
@@ -402,17 +429,6 @@ static inline boolean_t is_ok(value_result_t value) {
 static inline boolean_t is_not_ok(value_result_t value) {
   return value.nf_error != NF_OK;
 }
-
-/**
- * @macro cast
- *
- * Perform an unsafe cast of expr to the given type. This is much
- * easier for the omni-c compiler to handle because we know to parse a
- * type as the first argument even if we don't know what all the types
- * are yet. While omni-c uses this macro, if you are using plain C,
- * you don't have to use it.
- */
-#define cast(type, expr) ((type) (expr))
 
 /**
  * @typedef value_comparison_fn
@@ -1827,6 +1843,32 @@ static inline void close_arena_for_test(void) {
 
 #endif /* _TEST_H_ */
 #ifdef C_ARMYKNIFE_LIB_IMPL
+
+#ifndef _OMNI_C_H_
+#define _OMNI_C_H_
+
+/**
+ * @file omni-c.c
+ *
+ * These macros help c-armyknife-lib conform to what omni-c can
+ * (currently) handle. If you are writing code within c-armyknife-lib,
+ * then you must use these macros but if you are just using
+ * c-amryknife-lib within your own C project, then you can ignore
+ * these macros unless you strictly want to use them.
+ */
+
+/**
+ * @macro cast
+ *
+ * Perform an unsafe cast of expr to the given type. This is much
+ * easier for the omni-c compiler to handle because we know to parse a
+ * type as the first argument even if we don't know what all the types
+ * are yet. While omni-c uses this macro, if you are using plain C,
+ * you don't have to use it.
+ */
+#define cast(type, expr) ((type) (expr))
+
+#endif /* _OMNI_C_H_ */
 /**
  * @file min-max.c
  *
@@ -2519,17 +2561,6 @@ static inline boolean_t is_ok(value_result_t value) {
 static inline boolean_t is_not_ok(value_result_t value) {
   return value.nf_error != NF_OK;
 }
-
-/**
- * @macro cast
- *
- * Perform an unsafe cast of expr to the given type. This is much
- * easier for the omni-c compiler to handle because we know to parse a
- * type as the first argument even if we don't know what all the types
- * are yet. While omni-c uses this macro, if you are using plain C,
- * you don't have to use it.
- */
-#define cast(type, expr) ((type) (expr))
 
 /**
  * @typedef value_comparison_fn
@@ -5098,7 +5129,8 @@ value_hashtable_t* make_value_hashtable(uint64_t n_buckets) {
   value_hashtable_t* result = malloc_struct(value_hashtable_t);
   result->n_buckets = n_buckets;
   result->buckets
-    = cast(value_alist_t**, malloc_bytes(sizeof(typeof(value_alist_t*)) * n_buckets));
+      = cast(value_alist_t**,
+             malloc_bytes(sizeof(typeof(value_alist_t*)) * n_buckets));
   return result;
 }
 
@@ -7265,8 +7297,10 @@ uint64_t random_next_uint64_below(random_state_t* state, uint64_t maximum) {
 /**
  * @file cdl-printer.c
  *
- * There isn't a formal specification for CDL but it's easy to pretty
- * print and parse.
+ * There isn't a formal specification for CDL however it's very easy
+ * to *pretty print* and definitely on the simpler side for
+ * parsing. Most importantly, it tends to look "clean" or "open"
+ * versus other formats.
  *
  * At first glance, CDL looks just like JSON if you imagine removing
  * all commas and replacing ":" with the more readable " = " sequence.
@@ -7274,24 +7308,24 @@ uint64_t random_next_uint64_below(random_state_t* state, uint64_t maximum) {
  * CDL is like TOML where the "inline" format is used for all tables,
  * commas are eliminated, and there is no support for dates.
  *
- * CDL "can" represent (for most statically typed languages):
+ * CDL "can" represent:
  *
  * 1. comments ==> # extends to the end of the line
  * 1. booleans ===> true and false
- * 1. symbols ==> foo, bar element_name, etc. (covers C identifiers)
- * 1. strings ==> "example\n"
- * 1. numbers ==> 123.5, 120, etc.
- * 1. arrays ==> [ hello world 123 54.9]
+ * 1. strings/symbols ==> "c style strings\n", c_style_identifiers
+ * 1. numbers ==> 123.5, 120, 0xff, 0b11100, etc. (No octal strings.)
+ * 1. arrays ==> [ hello world 123 54.9] (length would be 4)
  * 1. tables ==> { x = 100 y = 50 }
  *
- * keys in the table must be symbols or strings (possibly numbers in
- * the future?)
+ * Currently keys in the table must be symbols or strings (possibly
+ * integer numbers in the future?)
  *
  * This library only provides a printer. For reading, we'll delay that
  * until Omni C can use it's reflection API to automatically write
  * readers for us.
  *
- * CDL stands for "clear data language" or "C data language"
+ * CDL stands for "clear data language", "C data language", or
+ * "comma-less data language", take your pick!
  */
 
 #ifndef _CDL_PRINTER_H_

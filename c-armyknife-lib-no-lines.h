@@ -5098,7 +5098,7 @@ value_hashtable_t* make_value_hashtable(uint64_t n_buckets) {
   value_hashtable_t* result = malloc_struct(value_hashtable_t);
   result->n_buckets = n_buckets;
   result->buckets
-      = cast(value_alist_t**, malloc_bytes(sizeof(value_alist_t*) * n_buckets));
+    = cast(value_alist_t**, malloc_bytes(sizeof(typeof(value_alist_t*)) * n_buckets));
   return result;
 }
 
@@ -5174,11 +5174,9 @@ value_result_t value_ht_find(value_hashtable_t* ht, value_hash_fn hash_fn,
  *
  * Hopefully based on the name you can infer this function will only
  * ever "grow" a hashtable by deciding on a size of the new larger
- * hash-table and copying
-
-by making a new larger hashtable using
- * AK_HT_UPSCALE_MULTIPLIER to compute the new number of buckets
- * (currently 1.75).
+ * hash-table and copying all of the entries to the bigger hashtable
+ * (using AK_HT_UPSCALE_MULTIPLIER to compute the new number of
+ * buckets, currently 1.75).
  */
 void value_hashtable_upsize_internal(value_hashtable_t* ht,
                                      value_hash_fn hash_fn,
@@ -7267,10 +7265,16 @@ uint64_t random_next_uint64_below(random_state_t* state, uint64_t maximum) {
 /**
  * @file cdl-printer.c
  *
+ * There isn't a formal specification for CDL but it's easy to pretty
+ * print and parse.
+ *
+ * At first glance, CDL looks just like JSON if you imagine removing
+ * all commas and replacing ":" with the more readable " = " sequence.
+ *
  * CDL is like TOML where the "inline" format is used for all tables,
  * commas are eliminated, and there is no support for dates.
  *
- * CDL can represent:
+ * CDL "can" represent (for most statically typed languages):
  *
  * 1. comments ==> # extends to the end of the line
  * 1. booleans ===> true and false

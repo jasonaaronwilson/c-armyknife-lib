@@ -3,27 +3,35 @@
 /**
  * @file cdl-printer.c
  *
+ * There isn't a formal specification for CDL however it's very easy
+ * to *pretty print* and definitely on the simpler side for
+ * parsing. Most importantly, it tends to look "clean" or "open"
+ * versus other formats.
+ *
+ * At first glance, CDL looks just like JSON if you imagine removing
+ * all commas and replacing ":" with the more readable " = " sequence.
+ *
  * CDL is like TOML where the "inline" format is used for all tables,
  * commas are eliminated, and there is no support for dates.
  *
- * CDL can represent:
+ * CDL "can" represent:
  *
  * 1. comments ==> # extends to the end of the line
  * 1. booleans ===> true and false
- * 1. symbols ==> foo, bar element_name, etc. (covers C identifiers)
- * 1. strings ==> "example\n"
- * 1. numbers ==> 123.5, 120, etc.
- * 1. arrays ==> [ hello world 123 54.9]
+ * 1. strings/symbols ==> "c style strings\n", c_style_identifiers
+ * 1. numbers ==> 123.5, 120, 0xff, 0b11100, etc. (No octal strings.)
+ * 1. arrays ==> [ hello world 123 54.9] (length would be 4)
  * 1. tables ==> { x = 100 y = 50 }
  *
- * keys in the table must be symbols or strings (possibly numbers in
- * the future?)
+ * Currently keys in the table must be symbols or strings (possibly
+ * integer numbers in the future?)
  *
  * This library only provides a printer. For reading, we'll delay that
  * until Omni C can use it's reflection API to automatically write
  * readers for us.
  *
- * CDL stands for "clear data language" or "C data language"
+ * CDL stands for "clear data language", "C data language", or
+ * "comma-less data language", take your pick!
  */
 
 #ifndef _CDL_PRINTER_H_

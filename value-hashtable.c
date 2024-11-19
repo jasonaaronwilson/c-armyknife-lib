@@ -107,7 +107,8 @@ value_hashtable_t* make_value_hashtable(uint64_t n_buckets) {
   value_hashtable_t* result = malloc_struct(value_hashtable_t);
   result->n_buckets = n_buckets;
   result->buckets
-      = cast(value_alist_t**, malloc_bytes(sizeof(value_alist_t*) * n_buckets));
+      = cast(value_alist_t**,
+             malloc_bytes(sizeof(typeof(value_alist_t*)) * n_buckets));
   return result;
 }
 
@@ -183,11 +184,9 @@ value_result_t value_ht_find(value_hashtable_t* ht, value_hash_fn hash_fn,
  *
  * Hopefully based on the name you can infer this function will only
  * ever "grow" a hashtable by deciding on a size of the new larger
- * hash-table and copying
-
-by making a new larger hashtable using
- * AK_HT_UPSCALE_MULTIPLIER to compute the new number of buckets
- * (currently 1.75).
+ * hash-table and copying all of the entries to the bigger hashtable
+ * (using AK_HT_UPSCALE_MULTIPLIER to compute the new number of
+ * buckets, currently 1.75).
  */
 void value_hashtable_upsize_internal(value_hashtable_t* ht,
                                      value_hash_fn hash_fn,

@@ -623,9 +623,9 @@ char* parse_and_write_enum(flag_descriptor_t* flag,
 void flag_print_flags(FILE* out, char* header, string_tree_t* flags) {
   fprintf(out, "%s\n", header);
   // clang-format off
-  string_tree_foreach(flags, key, value, {
+  string_tree_foreach(flags, key, value, block_expr({
       fprintf(out, "      %s\t%s\n", key, cast(flag_descriptor_t*, value.ptr)->description);
-    });
+  }));
   // clang-format on
 }
 
@@ -654,10 +654,10 @@ void flag_print_help(FILE* out, char* message) {
 
     fprintf(out, "\nCommands:\n");
     // clang-format off
-    string_tree_foreach(current_program->commands, key, value, {
+    string_tree_foreach(current_program->commands, key, value, block_expr({
 	fprintf(out, "\n    %s\t%s\n", key, cast(command_descriptor_t*, value.ptr)->description);
 	flag_print_flags(out, "      Flags:", cast(command_descriptor_t*, value.ptr)->flags);
-      });
+    }));
     // clang-format on
   } else {
     fprintf(out, "\nUsage: %s <flags> <files>\n", current_program->name);

@@ -38,7 +38,8 @@ extern uint64_t random_next_uint64_below(random_state_t* state,
  * Return a consistent initial random state for tests.
  */
 random_state_t random_state_for_test(void) {
-  return (random_state_t){.a = 0x1E1D43C2CA44B1F5, .b = 0x4FDD267452CEDBAC};
+  return compound_literal(random_state_t,
+                          {.a = 0x1E1D43C2CA44B1F5, .b = 0x4FDD267452CEDBAC});
 }
 
 /**

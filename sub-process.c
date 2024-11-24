@@ -85,7 +85,8 @@ boolean_t sub_process_launch(sub_process_t* sub_process) {
   }
 
   // 1. Convert value_array_t to char** for execvp
-  char** argv = cast(char**, malloc_bytes((length + 1) * sizeof(char*)));
+  char** argv
+      = cast(typeof(char**), malloc_bytes((length + 1) * sizeof(char*)));
   for (int i = 0; i < length; i++) {
     argv[i] = value_array_get_ptr(sub_process->argv, i, typeof(char*));
   }
@@ -96,9 +97,9 @@ boolean_t sub_process_launch(sub_process_t* sub_process) {
 
   // 2. Create pipes for stdin of the sub process as well as to
   // capture stdout and stderr.
-  int stdin_pipe[2];
-  int stdout_pipe[2];
-  int stderr_pipe[2];
+  int stdin_pipe[2] = {0};
+  int stdout_pipe[2] = {0};
+  int stderr_pipe[2] = {0};
   if (pipe(stdin_pipe) == -1 || pipe(stdout_pipe) == -1
       || pipe(stderr_pipe) == -1) {
     log_fatal("Failed to create pipe for stdin, stdout or stderr");

@@ -194,7 +194,7 @@ void value_hashtable_upsize_internal(value_hashtable_t* ht,
   uint64_t new_num_buckets = ht->n_buckets * AK_HT_UPSCALE_MULTIPLIER;
   value_hashtable_t* new_ht = make_value_hashtable(new_num_buckets);
   // clang-format off
-  value_ht_foreach(ht, key, value, {
+  value_ht_foreach(ht, key, value, block_expr({
       value_hashtable_t* should_be_result = value_ht_insert(new_ht, hash_fn, cmp_fn, key, value);
       // If an insertion into the bigger hashtable results in it's own
       // resize, then the results will be unpredictable (at least
@@ -204,7 +204,7 @@ void value_hashtable_upsize_internal(value_hashtable_t* ht,
       if (new_ht != should_be_result) {
 	fatal_error(ERROR_ILLEGAL_STATE);
       }
-  });
+  }));
   // clang-format on
   value_alist_t** old_buckets = ht->buckets;
   ht->buckets = new_ht->buckets;

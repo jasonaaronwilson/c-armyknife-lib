@@ -50,6 +50,15 @@
  */
 #define cast(type, expr) ((type) (expr))
 
+/**
+ * @macro block_expr
+ *
+ * The omni-c compiler isn't smart enough to handle a statement block
+ * passed to a macro yet but marking such blocks with this macro makes
+ * it much easier to handle for now.
+ */
+#define block_expr(block) block
+
 #endif /* _OMNI_C_H_ */
 // SSCF generated file from: min-max.c
 
@@ -1867,6 +1876,15 @@ static inline void close_arena_for_test(void) {
  * you don't have to use it.
  */
 #define cast(type, expr) ((type) (expr))
+
+/**
+ * @macro block_expr
+ *
+ * The omni-c compiler isn't smart enough to handle a statement block
+ * passed to a macro yet but marking such blocks with this macro makes
+ * it much easier to handle for now.
+ */
+#define block_expr(block) block
 
 #endif /* _OMNI_C_H_ */
 /**
@@ -5216,7 +5234,7 @@ void value_hashtable_upsize_internal(value_hashtable_t* ht,
   uint64_t new_num_buckets = ht->n_buckets * AK_HT_UPSCALE_MULTIPLIER;
   value_hashtable_t* new_ht = make_value_hashtable(new_num_buckets);
   // clang-format off
-  value_ht_foreach(ht, key, value, {
+  value_ht_foreach(ht, key, value, block_expr({
       value_hashtable_t* should_be_result = value_ht_insert(new_ht, hash_fn, cmp_fn, key, value);
       // If an insertion into the bigger hashtable results in it's own
       // resize, then the results will be unpredictable (at least
@@ -5226,7 +5244,7 @@ void value_hashtable_upsize_internal(value_hashtable_t* ht,
       if (new_ht != should_be_result) {
 	fatal_error(ERROR_ILLEGAL_STATE);
       }
-  });
+  }));
   // clang-format on
   value_alist_t** old_buckets = ht->buckets;
   ht->buckets = new_ht->buckets;
@@ -6310,9 +6328,9 @@ char* parse_and_write_enum(flag_descriptor_t* flag,
 void flag_print_flags(FILE* out, char* header, string_tree_t* flags) {
   fprintf(out, "%s\n", header);
   // clang-format off
-  string_tree_foreach(flags, key, value, {
+  string_tree_foreach(flags, key, value, block_expr({
       fprintf(out, "      %s\t%s\n", key, cast(flag_descriptor_t*, value.ptr)->description);
-    });
+  }));
   // clang-format on
 }
 
@@ -6341,10 +6359,10 @@ void flag_print_help(FILE* out, char* message) {
 
     fprintf(out, "\nCommands:\n");
     // clang-format off
-    string_tree_foreach(current_program->commands, key, value, {
+    string_tree_foreach(current_program->commands, key, value, block_expr({
 	fprintf(out, "\n    %s\t%s\n", key, cast(command_descriptor_t*, value.ptr)->description);
 	flag_print_flags(out, "      Flags:", cast(command_descriptor_t*, value.ptr)->flags);
-      });
+    }));
     // clang-format on
   } else {
     fprintf(out, "\nUsage: %s <flags> <files>\n", current_program->name);
@@ -6866,8 +6884,11 @@ extern void term_echo_restore(struct termios oldt);
 
 #endif /* _TERMINAL_H_ */
 
-#define TERM_ESCAPE_START "\033["
-#define TERM_ESCAPE_END "m"
+#define TERM_ESCAPE_START_STR "\033["
+#define TERM_ESCAPE_END_STR "m"
+
+#define TERM_ESCAPE_STRING_START_AND_END(str) (TERM_ESCAPE_START_STR str TERM_ESCAPE_END_STR)
+#define TERM_ESCAPE_STRING(str) (TERM_ESCAPE_START_STR str)
 
 /**
  * @function term_set_foreground_color
@@ -6886,7 +6907,7 @@ __attribute__((warn_unused_result)) extern buffer_t*
 
   // Escape sequence for setting foreground color (ESC [ 38; 2; r; g; b m)
   return buffer_printf(buffer,
-                       TERM_ESCAPE_START "38;2;%d;%d;%d" TERM_ESCAPE_END, red,
+                       TERM_ESCAPE_STRING_START_AND_END("38;2;%d;%d;%d"), red,
                        green, blue);
 }
 
@@ -6907,7 +6928,7 @@ __attribute__((warn_unused_result)) extern buffer_t*
 
   // Escape sequence for setting background color (ESC [ 48; 2; r; g; b m)
   return buffer_printf(buffer,
-                       TERM_ESCAPE_START "48;2;%d;%d;%d" TERM_ESCAPE_END, red,
+                       TERM_ESCAPE_STRING_START_AND_END("48;2;%d;%d;%d"), red,
                        green, blue);
 }
 
@@ -6925,7 +6946,7 @@ __attribute__((warn_unused_result)) extern buffer_t*
 __attribute__((warn_unused_result)) extern buffer_t*
     term_move_cursor_absolute(buffer_t* buffer, int x, int y) {
   // Escape sequence for cursor movement (ESC [ y; x H)
-  return buffer_printf(buffer, TERM_ESCAPE_START "%d;%dH", y + 1, x + 1);
+  return buffer_printf(buffer, TERM_ESCAPE_STRING("%d;%dH"), y + 1, x + 1);
 }
 
 /**
@@ -6941,14 +6962,14 @@ __attribute__((warn_unused_result)) extern buffer_t*
     term_move_cursor_relative(buffer_t* buffer, int x, int y) {
   // First handle the x position
   if (x > 0) {
-    buffer = buffer_printf(buffer, TERM_ESCAPE_START "%dC", x);
+    buffer = buffer_printf(buffer, TERM_ESCAPE_STRING("%dC"), x);
   } else if (x < 0) {
-    buffer = buffer_printf(buffer, TERM_ESCAPE_START "%dD", -x);
+    buffer = buffer_printf(buffer, TERM_ESCAPE_STRING("%dD"), -x);
   }
   if (y > 0) {
-    buffer = buffer_printf(buffer, TERM_ESCAPE_START "%dB", y);
+    buffer = buffer_printf(buffer, TERM_ESCAPE_STRING("%dB"), y);
   } else {
-    buffer = buffer_printf(buffer, TERM_ESCAPE_START "%dA", -y);
+    buffer = buffer_printf(buffer, TERM_ESCAPE_STRING("%dA"), -y);
   }
   return buffer;
 }
@@ -6961,7 +6982,7 @@ __attribute__((warn_unused_result)) extern buffer_t*
  */
 __attribute__((warn_unused_result)) extern buffer_t*
     term_bold(buffer_t* buffer) {
-  return buffer_printf(buffer, TERM_ESCAPE_START "1m");
+  return buffer_printf(buffer, TERM_ESCAPE_STRING("1m"));
 }
 
 /**
@@ -6972,7 +6993,7 @@ __attribute__((warn_unused_result)) extern buffer_t*
  */
 __attribute__((warn_unused_result)) extern buffer_t*
     term_dim(buffer_t* buffer) {
-  return buffer_printf(buffer, TERM_ESCAPE_START "2m");
+  return buffer_printf(buffer, TERM_ESCAPE_STRING("2m"));
 }
 
 /**
@@ -6983,7 +7004,7 @@ __attribute__((warn_unused_result)) extern buffer_t*
  */
 __attribute__((warn_unused_result)) extern buffer_t*
     term_italic(buffer_t* buffer) {
-  return buffer_printf(buffer, TERM_ESCAPE_START "3m");
+  return buffer_printf(buffer, TERM_ESCAPE_STRING("3m"));
 }
 
 /**
@@ -6994,7 +7015,7 @@ __attribute__((warn_unused_result)) extern buffer_t*
  */
 __attribute__((warn_unused_result)) extern buffer_t*
     term_underline(buffer_t* buffer) {
-  return buffer_printf(buffer, TERM_ESCAPE_START "4m");
+  return buffer_printf(buffer, TERM_ESCAPE_STRING("4m"));
 }
 
 /**
@@ -7006,7 +7027,7 @@ __attribute__((warn_unused_result)) extern buffer_t*
  */
 __attribute__((warn_unused_result)) extern buffer_t*
     term_reset_formatting(buffer_t* buffer) {
-  return buffer_printf(buffer, TERM_ESCAPE_START "0m");
+  return buffer_printf(buffer, TERM_ESCAPE_STRING("0m"));
 }
 
 /**
@@ -7017,7 +7038,7 @@ __attribute__((warn_unused_result)) extern buffer_t*
  */
 __attribute__((warn_unused_result)) extern buffer_t*
     term_clear_screen(buffer_t* buffer) {
-  return buffer_printf(buffer, TERM_ESCAPE_START "2J");
+  return buffer_printf(buffer, TERM_ESCAPE_STRING("2J"));
 }
 
 /**
@@ -7224,7 +7245,7 @@ extern uint64_t random_next_uint64_below(random_state_t* state,
  * Return a consistent initial random state for tests.
  */
 random_state_t random_state_for_test(void) {
-  return (random_state_t){.a = 0x1E1D43C2CA44B1F5, .b = 0x4FDD267452CEDBAC};
+  return compound_literal(random_state_t, {.a = 0x1E1D43C2CA44B1F5, .b = 0x4FDD267452CEDBAC});
 }
 
 /**
@@ -7521,7 +7542,7 @@ boolean_t sub_process_launch(sub_process_t* sub_process) {
   }
 
   // 1. Convert value_array_t to char** for execvp
-  char** argv = cast(char**, malloc_bytes((length + 1) * sizeof(char*)));
+  char** argv = cast(typeof(char**), malloc_bytes((length + 1) * sizeof(char*)));
   for (int i = 0; i < length; i++) {
     argv[i] = value_array_get_ptr(sub_process->argv, i, typeof(char*));
   }
@@ -7532,9 +7553,9 @@ boolean_t sub_process_launch(sub_process_t* sub_process) {
 
   // 2. Create pipes for stdin of the sub process as well as to
   // capture stdout and stderr.
-  int stdin_pipe[2];
-  int stdout_pipe[2];
-  int stderr_pipe[2];
+  int stdin_pipe[2] = {0};
+  int stdout_pipe[2] = {0};
+  int stderr_pipe[2] = {0};
   if (pipe(stdin_pipe) == -1 || pipe(stdout_pipe) == -1
       || pipe(stderr_pipe) == -1) {
     log_fatal("Failed to create pipe for stdin, stdout or stderr");

@@ -205,8 +205,12 @@ extern void term_echo_restore(struct termios oldt);
 
 #endif /* _TERMINAL_H_ */
 
-#define TERM_ESCAPE_START "\033["
-#define TERM_ESCAPE_END "m"
+#define TERM_ESCAPE_START_STR "\033["
+#define TERM_ESCAPE_END_STR "m"
+
+#define TERM_ESCAPE_STRING_START_AND_END(str)                                  \
+  (TERM_ESCAPE_START_STR str TERM_ESCAPE_END_STR)
+#define TERM_ESCAPE_STRING(str) (TERM_ESCAPE_START_STR str)
 
 /**
  * @function term_set_foreground_color
@@ -225,7 +229,7 @@ __attribute__((warn_unused_result)) extern buffer_t*
 
   // Escape sequence for setting foreground color (ESC [ 38; 2; r; g; b m)
   return buffer_printf(buffer,
-                       TERM_ESCAPE_START "38;2;%d;%d;%d" TERM_ESCAPE_END, red,
+                       TERM_ESCAPE_STRING_START_AND_END("38;2;%d;%d;%d"), red,
                        green, blue);
 }
 
@@ -246,7 +250,7 @@ __attribute__((warn_unused_result)) extern buffer_t*
 
   // Escape sequence for setting background color (ESC [ 48; 2; r; g; b m)
   return buffer_printf(buffer,
-                       TERM_ESCAPE_START "48;2;%d;%d;%d" TERM_ESCAPE_END, red,
+                       TERM_ESCAPE_STRING_START_AND_END("48;2;%d;%d;%d"), red,
                        green, blue);
 }
 
@@ -264,7 +268,7 @@ __attribute__((warn_unused_result)) extern buffer_t*
 __attribute__((warn_unused_result)) extern buffer_t*
     term_move_cursor_absolute(buffer_t* buffer, int x, int y) {
   // Escape sequence for cursor movement (ESC [ y; x H)
-  return buffer_printf(buffer, TERM_ESCAPE_START "%d;%dH", y + 1, x + 1);
+  return buffer_printf(buffer, TERM_ESCAPE_STRING("%d;%dH"), y + 1, x + 1);
 }
 
 /**
@@ -280,14 +284,14 @@ __attribute__((warn_unused_result)) extern buffer_t*
     term_move_cursor_relative(buffer_t* buffer, int x, int y) {
   // First handle the x position
   if (x > 0) {
-    buffer = buffer_printf(buffer, TERM_ESCAPE_START "%dC", x);
+    buffer = buffer_printf(buffer, TERM_ESCAPE_STRING("%dC"), x);
   } else if (x < 0) {
-    buffer = buffer_printf(buffer, TERM_ESCAPE_START "%dD", -x);
+    buffer = buffer_printf(buffer, TERM_ESCAPE_STRING("%dD"), -x);
   }
   if (y > 0) {
-    buffer = buffer_printf(buffer, TERM_ESCAPE_START "%dB", y);
+    buffer = buffer_printf(buffer, TERM_ESCAPE_STRING("%dB"), y);
   } else {
-    buffer = buffer_printf(buffer, TERM_ESCAPE_START "%dA", -y);
+    buffer = buffer_printf(buffer, TERM_ESCAPE_STRING("%dA"), -y);
   }
   return buffer;
 }
@@ -300,7 +304,7 @@ __attribute__((warn_unused_result)) extern buffer_t*
  */
 __attribute__((warn_unused_result)) extern buffer_t*
     term_bold(buffer_t* buffer) {
-  return buffer_printf(buffer, TERM_ESCAPE_START "1m");
+  return buffer_printf(buffer, TERM_ESCAPE_STRING("1m"));
 }
 
 /**
@@ -311,7 +315,7 @@ __attribute__((warn_unused_result)) extern buffer_t*
  */
 __attribute__((warn_unused_result)) extern buffer_t*
     term_dim(buffer_t* buffer) {
-  return buffer_printf(buffer, TERM_ESCAPE_START "2m");
+  return buffer_printf(buffer, TERM_ESCAPE_STRING("2m"));
 }
 
 /**
@@ -322,7 +326,7 @@ __attribute__((warn_unused_result)) extern buffer_t*
  */
 __attribute__((warn_unused_result)) extern buffer_t*
     term_italic(buffer_t* buffer) {
-  return buffer_printf(buffer, TERM_ESCAPE_START "3m");
+  return buffer_printf(buffer, TERM_ESCAPE_STRING("3m"));
 }
 
 /**
@@ -333,7 +337,7 @@ __attribute__((warn_unused_result)) extern buffer_t*
  */
 __attribute__((warn_unused_result)) extern buffer_t*
     term_underline(buffer_t* buffer) {
-  return buffer_printf(buffer, TERM_ESCAPE_START "4m");
+  return buffer_printf(buffer, TERM_ESCAPE_STRING("4m"));
 }
 
 /**
@@ -345,7 +349,7 @@ __attribute__((warn_unused_result)) extern buffer_t*
  */
 __attribute__((warn_unused_result)) extern buffer_t*
     term_reset_formatting(buffer_t* buffer) {
-  return buffer_printf(buffer, TERM_ESCAPE_START "0m");
+  return buffer_printf(buffer, TERM_ESCAPE_STRING("0m"));
 }
 
 /**
@@ -356,7 +360,7 @@ __attribute__((warn_unused_result)) extern buffer_t*
  */
 __attribute__((warn_unused_result)) extern buffer_t*
     term_clear_screen(buffer_t* buffer) {
-  return buffer_printf(buffer, TERM_ESCAPE_START "2J");
+  return buffer_printf(buffer, TERM_ESCAPE_STRING("2J"));
 }
 
 /**

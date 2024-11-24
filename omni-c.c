@@ -24,4 +24,13 @@
  */
 #define cast(type, expr) ((type) (expr))
 
+/**
+ * @macro block_expr
+ *
+ * The omni-c compiler isn't smart enough to handle a statement block
+ * passed to a macro yet but marking such blocks with this macro makes
+ * it much easier to handle for now.
+ */
+#define block_expr(block) block
+
 #endif /* _OMNI_C_H_ */

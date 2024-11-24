@@ -85,8 +85,8 @@ boolean_t sub_process_launch(sub_process_t* sub_process) {
   }
 
   // 1. Convert value_array_t to char** for execvp
-  char** argv
-    = cast(typeof(char**), malloc_bytes((length + 1) * sizeof(typeof(char*))));
+  char** argv = cast(typeof(char**),
+                     malloc_bytes((length + 1) * sizeof(typeof(char*))));
   for (int i = 0; i < length; i++) {
     argv[i] = value_array_get_ptr(sub_process->argv, i, typeof(char*));
   }

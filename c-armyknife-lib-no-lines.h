@@ -1839,15 +1839,19 @@ void sub_process_wait(sub_process_t* sub_process);
   } while (0)
 
 static inline void open_arena_for_test(void) {
+  /*
 #ifdef C_ARMYKNIFE_LIB_USE_ARENAS
   arena_open(4096 * 256);
 #endif
+  */
 }
 
 static inline void close_arena_for_test(void) {
+  /*
 #ifdef C_ARMYKNIFE_LIB_USE_ARENAS
   arena_close();
 #endif
+  */
 }
 
 #endif /* _TEST_H_ */
@@ -6887,7 +6891,8 @@ extern void term_echo_restore(struct termios oldt);
 #define TERM_ESCAPE_START_STR "\033["
 #define TERM_ESCAPE_END_STR "m"
 
-#define TERM_ESCAPE_STRING_START_AND_END(str) (TERM_ESCAPE_START_STR str TERM_ESCAPE_END_STR)
+#define TERM_ESCAPE_STRING_START_AND_END(str)                                  \
+  (TERM_ESCAPE_START_STR str TERM_ESCAPE_END_STR)
 #define TERM_ESCAPE_STRING(str) (TERM_ESCAPE_START_STR str)
 
 /**
@@ -7245,8 +7250,11 @@ extern uint64_t random_next_uint64_below(random_state_t* state,
  * Return a consistent initial random state for tests.
  */
 random_state_t random_state_for_test(void) {
-  return compound_literal(random_state_t, {.a = 0x1E1D43C2CA44B1F5, .b = 0x4FDD267452CEDBAC});
+  return compound_literal(random_state_t,
+                          {.a = 0x1E1D43C2CA44B1F5, .b = 0x4FDD267452CEDBAC});
 }
+
+static random_state_t shared_random_state = {0};
 
 /**
  * @function random_state
@@ -7255,8 +7263,6 @@ random_state_t random_state_for_test(void) {
  * initialized yet, it is initialized based off the timestamp.
  */
 random_state_t* random_state(void) {
-  static random_state_t shared_random_state = {0};
-
   if (shared_random_state.a == 0) {
     shared_random_state.a = 0x1E1D43C2CA44B1F5 ^ cast(uint64_t, time(NULL));
     shared_random_state.b = 0x4FDD267452CEDBAC ^ cast(uint64_t, time(NULL));
@@ -7542,7 +7548,8 @@ boolean_t sub_process_launch(sub_process_t* sub_process) {
   }
 
   // 1. Convert value_array_t to char** for execvp
-  char** argv = cast(typeof(char**), malloc_bytes((length + 1) * sizeof(char*)));
+  char** argv = cast(typeof(char**),
+                     malloc_bytes((length + 1) * sizeof(typeof(char*))));
   for (int i = 0; i < length; i++) {
     argv[i] = value_array_get_ptr(sub_process->argv, i, typeof(char*));
   }
@@ -7810,15 +7817,19 @@ void sub_process_wait(sub_process_t* sub_process) {
   } while (0)
 
 static inline void open_arena_for_test(void) {
+  /*
 #ifdef C_ARMYKNIFE_LIB_USE_ARENAS
   arena_open(4096 * 256);
 #endif
+  */
 }
 
 static inline void close_arena_for_test(void) {
+  /*
 #ifdef C_ARMYKNIFE_LIB_USE_ARENAS
   arena_close();
 #endif
+  */
 }
 
 #endif /* _TEST_H_ */

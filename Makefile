@@ -26,15 +26,21 @@ ORDERED_H := $(SRC_C:.c=.h)
 
 ifeq ($(MODE),omni-c)
 
+OMNI_CC := ../omni-c/src/build/bin/omni-c
+
+# This flag is currently optional since c-armyknife-lib doesn't use
+# any special features of omni-c yet.
+OMNI_C_FLAGS := --use-statement-parser=true
+
 c-armyknife-lib:
-	../omni-c/src/build/bin/omni-c generate-header-file --output-file=c-armyknife-lib-omni-c.h ${SRC_C}
-	../omni-c/src/build/bin/omni-c generate-library --output-file=c-armyknife-lib-omni-c.c ${SRC_C}
-	cat header-comment.txt  >c-armyknife-lib.h
+	${OMNI_CC} generate-header-file ${OMNI_C_FLAGS} --output-file=c-armyknife-lib-omni-c.h ${SRC_C}
+	${OMNI_CC} generate-library ${OMNI_C_FLAGS} --output-file=c-armyknife-lib-omni-c.c ${SRC_C}
+	cat header-comment.txt >c-armyknife-lib.h
 	echo '#ifdef C_ARMYKNIFE_LIB_IMPL' >>c-armyknife-lib.h
 	cat c-armyknife-lib-omni-c.c >>c-armyknife-lib.h
 	echo '#else /* C_ARMYKNIFE_LIB_IMPL */' >>c-armyknife-lib.h
 	cat c-armyknife-lib-omni-c.h >>c-armyknife-lib.h
-	echo '#endif /* C_ARMYKNIFE_LIB_IMPL */\n' >>c-armyknife-lib.h
+	echo '#endif /* C_ARMYKNIFE_LIB_IMPL */' >>c-armyknife-lib.h
 	cat c-armyknife-lib.h | grep -v "#line" >c-armyknife-lib-no-lines.h
 
 else ifeq ($(MODE),traditional)

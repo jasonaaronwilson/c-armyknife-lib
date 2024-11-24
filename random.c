@@ -42,6 +42,8 @@ random_state_t random_state_for_test(void) {
                           {.a = 0x1E1D43C2CA44B1F5, .b = 0x4FDD267452CEDBAC});
 }
 
+static random_state_t shared_random_state = {0};
+
 /**
  * @function random_state
  *
@@ -49,8 +51,6 @@ random_state_t random_state_for_test(void) {
  * initialized yet, it is initialized based off the timestamp.
  */
 random_state_t* random_state(void) {
-  static random_state_t shared_random_state = {0};
-
   if (shared_random_state.a == 0) {
     shared_random_state.a = 0x1E1D43C2CA44B1F5 ^ cast(uint64_t, time(NULL));
     shared_random_state.b = 0x4FDD267452CEDBAC ^ cast(uint64_t, time(NULL));

@@ -113,6 +113,12 @@ typedef struct {
 
 // ========== defines ==========
 
+#define _OMNI_C_H_
+
+#define cast(type, expr) ((type) (expr))
+
+#define block_expr(block) block
+
 #define _MIN_MAX_H_
 
 #define min(a, b) ((a) < (b) ? (a) : (b))
@@ -152,8 +158,6 @@ typedef struct {
 #define ptr_to_value(x) compound_literal(value_t, {.ptr = x})
 
 #define dbl_to_value(x) compound_literal(value_t, {.dbl = x})
-
-#define cast(type, expr) ((type) (expr))
 
 #define _ALLOCATE_H_
 
@@ -567,9 +571,14 @@ typedef struct {
 
 #define KEY_RESIZE 103   /* Terminal resize event */
 
-#define TERM_ESCAPE_START "\033["
+#define TERM_ESCAPE_START_STR "\033["
 
-#define TERM_ESCAPE_END "m"
+#define TERM_ESCAPE_END_STR "m"
+
+#define TERM_ESCAPE_STRING_START_AND_END(str)                                  \
+  (TERM_ESCAPE_START_STR str TERM_ESCAPE_END_STR)
+
+#define TERM_ESCAPE_STRING(str) (TERM_ESCAPE_START_STR str)
 
 #define _TOKENIZER_H_
 
@@ -938,6 +947,8 @@ extern command_descriptor_t* current_command;
 
 extern flag_descriptor_t* current_flag;
 
+extern random_state_t shared_random_state;
+
 // ========== function prototypes ==========
 
 extern unsigned encode_sleb_128(int64_t Value, uint8_t* p);
@@ -1139,117 +1150,127 @@ enum_metadata_t* sub_process_exit_status_metadata();
 // ========== inlined functions ==========
 
 static inline boolean_t is_ok(value_result_t value){
-  return value.nf_error == NF_OK;
+  return ((value.nf_error)==NF_OK);
 }
+
 static inline boolean_t is_not_ok(value_result_t value){
-  return value.nf_error != NF_OK;
+  return ((value.nf_error)!=NF_OK);
 }
+
 static inline boolean_t should_log_memory_allocation(){
-  if (is_initialized) {
+  if (is_initialized)
+  {
     return should_log_value;
   }
   char* var = getenv("ARMYKNIFE_LOG_MEMORY_ALLOCATION");
-  is_initialized = true;
-  if (var != NULL && strcmp(var, "true") == 0) {
-    should_log_value = true;
+  (is_initialized=true);
+  if (((var!=NULL)&&(strcmp(var, "true")==0)))
+  {
+    (should_log_value=true);
   }
   return should_log_value;
 }
+
 static inline boolean_t is_hex_digit(char ch){
-  return (ch >= '0' && ch <= '9') || (ch >= 'a' && ch <= 'f');
+  return (((ch>='0')&&(ch<='9'))||((ch>='a')&&(ch<='f')));
 }
+
 static inline uint64_t hex_digit_to_value(char ch){
-  if (ch >= '0' && ch <= '9') {
-    return ch - '0';
-  } else {
-    return (ch - 'a') + 10;
+  if (((ch>='0')&&(ch<='9')))
+  {
+    return (ch-'0');
+  }
+  else
+  {
+    return ((ch-'a')+10);
   }
 }
+
 static inline uint64_t mix(uint64_t h){
-  h ^= h >> 23;
-  h *= 0x2127599bf4325c37ULL;
-  h ^= h >> 47;
+  (h^=(h>>23));
+  (h*=0x2127599bf4325c37ULL);
+  (h^=(h>>47));
   return h;
 }
+
 static inline boolean_t should_log_info(){
-  return global_logger_state.level <= LOGGER_INFO;
+  return ((global_logger_state.level)<=LOGGER_INFO);
 }
+
 static inline value_result_t alist_find(string_alist_t* list, char* key){
-  return value_alist_find(cast(value_alist_t*, list), cmp_string_values,
-                          str_to_value(key));
+  return value_alist_find((/*CAST*/(value_alist_t*) list), cmp_string_values, str_to_value(key));
 }
+
 __attribute__((warn_unused_result)) static inline string_alist_t* alist_insert(string_alist_t* list, char* key, value_t value){
-  return cast(string_alist_t*,
-              value_alist_insert(cast(value_alist_t*, list), cmp_string_values,
-                                 str_to_value(key), value));
+  return (/*CAST*/(string_alist_t*) value_alist_insert((/*CAST*/(value_alist_t*) list), cmp_string_values, str_to_value(key), value));
 }
+
 __attribute__((warn_unused_result)) static inline string_alist_t* alist_delete(string_alist_t* list, char* key){
-  return cast(string_alist_t*,
-              value_alist_delete(cast(value_alist_t*, list), cmp_string_values,
-                                 str_to_value(key)));
+  return (/*CAST*/(string_alist_t*) value_alist_delete((/*CAST*/(value_alist_t*) list), cmp_string_values, str_to_value(key)));
 }
+
 __attribute__((warn_unused_result)) static inline uint64_t alist_length(string_alist_t* list){
-  return value_alist_length(cast(value_alist_t*, list));
+  return value_alist_length((/*CAST*/(value_alist_t*) list));
 }
+
 static inline uint64_t value_ht_num_entries(value_hashtable_t* ht){
-  return ht->n_entries;
+  return (ht->n_entries);
 }
+
 static inline value_hashtable_t* to_value_hashtable(string_hashtable_t* ht){
-  return cast(value_hashtable_t*, ht);
+  return (/*CAST*/(value_hashtable_t*) ht);
 }
+
 static inline string_hashtable_t* make_string_hashtable(uint64_t n_buckets){
-  return cast(string_hashtable_t*, make_value_hashtable(n_buckets));
+  return (/*CAST*/(string_hashtable_t*) make_value_hashtable(n_buckets));
 }
+
 __attribute__((warn_unused_result)) static inline string_hashtable_t* string_ht_insert(string_hashtable_t* ht, char* key, value_t value){
-  return cast(string_hashtable_t*,
-              value_ht_insert(to_value_hashtable(ht), hash_string_value,
-                              cmp_string_values, str_to_value(key), value));
+  return (/*CAST*/(string_hashtable_t*) value_ht_insert(to_value_hashtable(ht), hash_string_value, cmp_string_values, str_to_value(key), value));
 }
+
 __attribute__((warn_unused_result)) static inline string_hashtable_t* string_ht_delete(string_hashtable_t* ht, char* key){
-  return cast(string_hashtable_t*,
-              value_ht_delete(to_value_hashtable(ht), hash_string_value,
-                              cmp_string_values, str_to_value(key)));
+  return (/*CAST*/(string_hashtable_t*) value_ht_delete(to_value_hashtable(ht), hash_string_value, cmp_string_values, str_to_value(key)));
 }
+
 static inline value_result_t string_ht_find(string_hashtable_t* ht, char* key){
-  return value_ht_find(to_value_hashtable(ht), hash_string_value,
-                       cmp_string_values, str_to_value(key));
+  return value_ht_find(to_value_hashtable(ht), hash_string_value, cmp_string_values, str_to_value(key));
 }
+
 static inline uint64_t string_ht_num_entries(string_hashtable_t* ht){
   return value_ht_num_entries(to_value_hashtable(ht));
 }
+
 static inline uint64_t value_tree_min_level(uint32_t a, uint32_t b){
-  return a < b ? a : b;
+  return ((a<b) ? a : b);
 }
+
 static inline boolean_t value_tree_is_leaf(value_tree_t* t){
-  return t->left == NULL && t->right == NULL;
+  return (((t->left)==NULL)&&((t->right)==NULL));
 }
+
 static inline value_result_t string_tree_find(string_tree_t* t, char* key){
-  return value_tree_find(cast(value_tree_t*, t), cmp_string_values,
-                         str_to_value(key));
+  return value_tree_find((/*CAST*/(value_tree_t*) t), cmp_string_values, str_to_value(key));
 }
+
 __attribute__((warn_unused_result)) static inline string_tree_t* string_tree_insert(string_tree_t* t, char* key, value_t value){
-  return cast(string_tree_t*,
-              value_tree_insert(cast(value_tree_t*, t), cmp_string_values,
-                                str_to_value(key), value));
+  return (/*CAST*/(string_tree_t*) value_tree_insert((/*CAST*/(value_tree_t*) t), cmp_string_values, str_to_value(key), value));
 }
+
 __attribute__((warn_unused_result)) static inline string_tree_t* string_tree_delete(string_tree_t* t, char* key){
-  return cast(string_tree_t*,
-              value_tree_delete(cast(value_tree_t*, t), cmp_string_values,
-                                str_to_value(key)));
+  return (/*CAST*/(string_tree_t*) value_tree_delete((/*CAST*/(value_tree_t*) t), cmp_string_values, str_to_value(key)));
 }
+
 static inline uint64_t rotl(uint64_t x, int k){
-  return (x << k) | (x >> (64 - k));
+  return ((x<<k)|(x>>(64-k)));
 }
+
 static inline void open_arena_for_test(void){
-#ifdef C_ARMYKNIFE_LIB_USE_ARENAS
-  arena_open(4096 * 256);
-#endif
 }
+
 static inline void close_arena_for_test(void){
-#ifdef C_ARMYKNIFE_LIB_USE_ARENAS
-  arena_close();
-#endif
 }
+
 
 
 #endif /* _HEADER_FILE_GUARD_ */

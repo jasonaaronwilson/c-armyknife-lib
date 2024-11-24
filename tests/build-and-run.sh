@@ -7,7 +7,18 @@ shift
 
 echo ${C_FILE}
 
-CC_FLAGS="-g -rdynamic"
+# In omni-c mode and with flag, --use-statement-parser=true, we always
+# add parens around all binary operators, even in cases where it isn't
+# necessary like inside of an if conditional so
+# -Wno-parentheses-equality turns off some frequent warnings that
+# appear. Other options would be clang format or to special case this
+# with a little work in the C code generator.
+#
+# -Wno-return-stack-address avoids a warning in random_state() which
+# is potentially something sub-optimal and easy enough to get rid of
+# I'm just being lazy for a bit.
+
+CC_FLAGS="-g -rdynamic -Wno-parentheses-equality"
 
 AT_LEAST_ONE_COMPILER=0
 

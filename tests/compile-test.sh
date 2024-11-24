@@ -1,12 +1,13 @@
 #!/bin/bash
 
-# CC=gcc
-CC=clang
+CC=gcc
+# CC=clang
+CC_FLAGS="-Wno-parentheses-equality"
 
-${CC} compile-test.c -o build/compile-test
+${CC} ${CC_FLAGS} compile-test.c -o build/compile-test
 
 if [[ $? != 0 ]] ; then
-    echo "-- gcc failed to compile a trivial use case."
+    echo "-- ${CC} failed to compile a trivial use case."
     exit 1
 fi
 

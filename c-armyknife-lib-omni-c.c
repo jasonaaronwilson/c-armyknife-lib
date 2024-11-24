@@ -110,6 +110,12 @@ typedef struct {
 
 // ========== defines ==========
 
+#define _OMNI_C_H_
+
+#define cast(type, expr) ((type) (expr))
+
+#define block_expr(block) block
+
 #define _MIN_MAX_H_
 
 #define min(a, b) ((a) < (b) ? (a) : (b))
@@ -149,8 +155,6 @@ typedef struct {
 #define ptr_to_value(x) compound_literal(value_t, {.ptr = x})
 
 #define dbl_to_value(x) compound_literal(value_t, {.dbl = x})
-
-#define cast(type, expr) ((type) (expr))
 
 #define _ALLOCATE_H_
 
@@ -564,9 +568,14 @@ typedef struct {
 
 #define KEY_RESIZE 103   /* Terminal resize event */
 
-#define TERM_ESCAPE_START "\033["
+#define TERM_ESCAPE_START_STR "\033["
 
-#define TERM_ESCAPE_END "m"
+#define TERM_ESCAPE_END_STR "m"
+
+#define TERM_ESCAPE_STRING_START_AND_END(str)                                  \
+  (TERM_ESCAPE_START_STR str TERM_ESCAPE_END_STR)
+
+#define TERM_ESCAPE_STRING(str) (TERM_ESCAPE_START_STR str)
 
 #define _TOKENIZER_H_
 
@@ -935,6 +944,8 @@ command_descriptor_t* current_command;
 
 flag_descriptor_t* current_flag;
 
+random_state_t shared_random_state = {0};
+
 // ========== function prototypes ==========
 
 extern unsigned encode_sleb_128(int64_t Value, uint8_t* p);
@@ -1136,117 +1147,127 @@ enum_metadata_t* sub_process_exit_status_metadata();
 // ========== inlined functions ==========
 
 static inline boolean_t is_ok(value_result_t value){
-  return value.nf_error == NF_OK;
+  return ((value.nf_error)==NF_OK);
 }
+
 static inline boolean_t is_not_ok(value_result_t value){
-  return value.nf_error != NF_OK;
+  return ((value.nf_error)!=NF_OK);
 }
+
 static inline boolean_t should_log_memory_allocation(){
-  if (is_initialized) {
+  if (is_initialized)
+  {
     return should_log_value;
   }
   char* var = getenv("ARMYKNIFE_LOG_MEMORY_ALLOCATION");
-  is_initialized = true;
-  if (var != NULL && strcmp(var, "true") == 0) {
-    should_log_value = true;
+  (is_initialized=true);
+  if (((var!=NULL)&&(strcmp(var, "true")==0)))
+  {
+    (should_log_value=true);
   }
   return should_log_value;
 }
+
 static inline boolean_t is_hex_digit(char ch){
-  return (ch >= '0' && ch <= '9') || (ch >= 'a' && ch <= 'f');
+  return (((ch>='0')&&(ch<='9'))||((ch>='a')&&(ch<='f')));
 }
+
 static inline uint64_t hex_digit_to_value(char ch){
-  if (ch >= '0' && ch <= '9') {
-    return ch - '0';
-  } else {
-    return (ch - 'a') + 10;
+  if (((ch>='0')&&(ch<='9')))
+  {
+    return (ch-'0');
+  }
+  else
+  {
+    return ((ch-'a')+10);
   }
 }
+
 static inline uint64_t mix(uint64_t h){
-  h ^= h >> 23;
-  h *= 0x2127599bf4325c37ULL;
-  h ^= h >> 47;
+  (h^=(h>>23));
+  (h*=0x2127599bf4325c37ULL);
+  (h^=(h>>47));
   return h;
 }
+
 static inline boolean_t should_log_info(){
-  return global_logger_state.level <= LOGGER_INFO;
+  return ((global_logger_state.level)<=LOGGER_INFO);
 }
+
 static inline value_result_t alist_find(string_alist_t* list, char* key){
-  return value_alist_find(cast(value_alist_t*, list), cmp_string_values,
-                          str_to_value(key));
+  return value_alist_find((/*CAST*/(value_alist_t*) list), cmp_string_values, str_to_value(key));
 }
+
 __attribute__((warn_unused_result)) static inline string_alist_t* alist_insert(string_alist_t* list, char* key, value_t value){
-  return cast(string_alist_t*,
-              value_alist_insert(cast(value_alist_t*, list), cmp_string_values,
-                                 str_to_value(key), value));
+  return (/*CAST*/(string_alist_t*) value_alist_insert((/*CAST*/(value_alist_t*) list), cmp_string_values, str_to_value(key), value));
 }
+
 __attribute__((warn_unused_result)) static inline string_alist_t* alist_delete(string_alist_t* list, char* key){
-  return cast(string_alist_t*,
-              value_alist_delete(cast(value_alist_t*, list), cmp_string_values,
-                                 str_to_value(key)));
+  return (/*CAST*/(string_alist_t*) value_alist_delete((/*CAST*/(value_alist_t*) list), cmp_string_values, str_to_value(key)));
 }
+
 __attribute__((warn_unused_result)) static inline uint64_t alist_length(string_alist_t* list){
-  return value_alist_length(cast(value_alist_t*, list));
+  return value_alist_length((/*CAST*/(value_alist_t*) list));
 }
+
 static inline uint64_t value_ht_num_entries(value_hashtable_t* ht){
-  return ht->n_entries;
+  return (ht->n_entries);
 }
+
 static inline value_hashtable_t* to_value_hashtable(string_hashtable_t* ht){
-  return cast(value_hashtable_t*, ht);
+  return (/*CAST*/(value_hashtable_t*) ht);
 }
+
 static inline string_hashtable_t* make_string_hashtable(uint64_t n_buckets){
-  return cast(string_hashtable_t*, make_value_hashtable(n_buckets));
+  return (/*CAST*/(string_hashtable_t*) make_value_hashtable(n_buckets));
 }
+
 __attribute__((warn_unused_result)) static inline string_hashtable_t* string_ht_insert(string_hashtable_t* ht, char* key, value_t value){
-  return cast(string_hashtable_t*,
-              value_ht_insert(to_value_hashtable(ht), hash_string_value,
-                              cmp_string_values, str_to_value(key), value));
+  return (/*CAST*/(string_hashtable_t*) value_ht_insert(to_value_hashtable(ht), hash_string_value, cmp_string_values, str_to_value(key), value));
 }
+
 __attribute__((warn_unused_result)) static inline string_hashtable_t* string_ht_delete(string_hashtable_t* ht, char* key){
-  return cast(string_hashtable_t*,
-              value_ht_delete(to_value_hashtable(ht), hash_string_value,
-                              cmp_string_values, str_to_value(key)));
+  return (/*CAST*/(string_hashtable_t*) value_ht_delete(to_value_hashtable(ht), hash_string_value, cmp_string_values, str_to_value(key)));
 }
+
 static inline value_result_t string_ht_find(string_hashtable_t* ht, char* key){
-  return value_ht_find(to_value_hashtable(ht), hash_string_value,
-                       cmp_string_values, str_to_value(key));
+  return value_ht_find(to_value_hashtable(ht), hash_string_value, cmp_string_values, str_to_value(key));
 }
+
 static inline uint64_t string_ht_num_entries(string_hashtable_t* ht){
   return value_ht_num_entries(to_value_hashtable(ht));
 }
+
 static inline uint64_t value_tree_min_level(uint32_t a, uint32_t b){
-  return a < b ? a : b;
+  return ((a<b) ? a : b);
 }
+
 static inline boolean_t value_tree_is_leaf(value_tree_t* t){
-  return t->left == NULL && t->right == NULL;
+  return (((t->left)==NULL)&&((t->right)==NULL));
 }
+
 static inline value_result_t string_tree_find(string_tree_t* t, char* key){
-  return value_tree_find(cast(value_tree_t*, t), cmp_string_values,
-                         str_to_value(key));
+  return value_tree_find((/*CAST*/(value_tree_t*) t), cmp_string_values, str_to_value(key));
 }
+
 __attribute__((warn_unused_result)) static inline string_tree_t* string_tree_insert(string_tree_t* t, char* key, value_t value){
-  return cast(string_tree_t*,
-              value_tree_insert(cast(value_tree_t*, t), cmp_string_values,
-                                str_to_value(key), value));
+  return (/*CAST*/(string_tree_t*) value_tree_insert((/*CAST*/(value_tree_t*) t), cmp_string_values, str_to_value(key), value));
 }
+
 __attribute__((warn_unused_result)) static inline string_tree_t* string_tree_delete(string_tree_t* t, char* key){
-  return cast(string_tree_t*,
-              value_tree_delete(cast(value_tree_t*, t), cmp_string_values,
-                                str_to_value(key)));
+  return (/*CAST*/(string_tree_t*) value_tree_delete((/*CAST*/(value_tree_t*) t), cmp_string_values, str_to_value(key)));
 }
+
 static inline uint64_t rotl(uint64_t x, int k){
-  return (x << k) | (x >> (64 - k));
+  return ((x<<k)|(x>>(64-k)));
 }
+
 static inline void open_arena_for_test(void){
-#ifdef C_ARMYKNIFE_LIB_USE_ARENAS
-  arena_open(4096 * 256);
-#endif
 }
+
 static inline void close_arena_for_test(void){
-#ifdef C_ARMYKNIFE_LIB_USE_ARENAS
-  arena_close();
-#endif
 }
+
 
 // ========== functions ==========
 
@@ -1254,83 +1275,87 @@ static inline void close_arena_for_test(void){
 unsigned encode_sleb_128(int64_t Value, uint8_t* p){
   uint8_t* orig_p = p;
   int More;
-  do {
-    uint8_t Byte = Value & 0x7f;
-    // NOTE: this assumes that this signed shift is an arithmetic right shift.
-    Value >>= 7;
-    More = !((((Value == 0) && ((Byte & 0x40) == 0))
-              || ((Value == -1) && ((Byte & 0x40) != 0))));
+  do  {
+    uint8_t Byte = (Value&0x7f);
+    (Value>>=7);
+    (More=(!(((Value==0)&&((Byte&0x40)==0))||((Value==(-1))&&((Byte&0x40)!=0)))));
     if (More)
-      Byte |= 0x80; // Mark this byte to show that more bytes will follow.
-    *p++ = Byte;
-  } while (More);
-
-  return cast(unsigned, p - orig_p);
+    (Byte|=0x80);
+    ((*(p++))=Byte);
+  }
+while (More);
+  return (/*CAST*/(unsigned) (p-orig_p));
 }
+
 /* i=1 j=1 */
 unsigned encode_uleb_128(uint64_t Value, uint8_t* p){
   uint8_t* orig_p = p;
-  do {
-    uint8_t Byte = Value & 0x7f;
-    Value >>= 7;
-    if (Value != 0)
-      Byte |= 0x80; // Mark this byte to show that more bytes will follow.
-    *p++ = Byte;
-  } while (Value != 0);
-
-  return cast(unsigned, (p - orig_p));
+  do  {
+    uint8_t Byte = (Value&0x7f);
+    (Value>>=7);
+    if ((Value!=0))
+    (Byte|=0x80);
+    ((*(p++))=Byte);
+  }
+while ((Value!=0));
+  return (/*CAST*/(unsigned) (p-orig_p));
 }
+
 /* i=2 j=1 */
 unsigned_decode_result decode_uleb_128(const uint8_t* p, const uint8_t* end){
   const uint8_t* orig_p = p;
   uint64_t Value = 0;
   unsigned Shift = 0;
-  do {
-    if (p == end) {
-      unsigned_decode_result result = {0, ERROR_INSUFFICIENT_INPUT};
+  do  {
+    if ((p==end))
+    {
+      unsigned_decode_result result = ((unsigned_decode_result) {0, ERROR_INSUFFICIENT_INPUT});
       return result;
     }
-    uint64_t Slice = *p & 0x7f;
-    if ((Shift >= 64 && Slice != 0) || Slice << Shift >> Shift != Slice) {
-      unsigned_decode_result result = {0, ERROR_TOO_BIG};
+    uint64_t Slice = ((*p)&0x7f);
+    if ((((Shift>=64)&&(Slice!=0))||(((Slice<<Shift)>>Shift)!=Slice)))
+    {
+      unsigned_decode_result result = ((unsigned_decode_result) {0, ERROR_TOO_BIG});
       return result;
     }
-    Value += Slice << Shift;
-    Shift += 7;
-  } while (*p++ >= 128);
-  unsigned_decode_result result = {Value, cast(unsigned, p - orig_p)};
+    (Value+=(Slice<<Shift));
+    (Shift+=7);
+  }
+while (((*(p++))>=128));
+  unsigned_decode_result result = ((unsigned_decode_result) {Value, cast(unsigned, p - orig_p)});
   return result;
 }
+
 /* i=3 j=1 */
 signed_decode_result decode_sleb_128(const uint8_t* p, const uint8_t* end){
   const uint8_t* orig_p = p;
   int64_t Value = 0;
   unsigned Shift = 0;
   uint8_t Byte;
-  do {
-    if (p == end) {
-      signed_decode_result result = {0, ERROR_INSUFFICIENT_INPUT};
+  do  {
+    if ((p==end))
+    {
+      signed_decode_result result = ((signed_decode_result) {0, ERROR_INSUFFICIENT_INPUT});
       return result;
     }
-    Byte = *p;
-    uint64_t Slice = Byte & 0x7f;
-    // This handles decoding padded numbers, otherwise we might be
-    // able to test very easily at the end of the loop.
-    if ((Shift >= 64 && Slice != (Value < 0 ? 0x7f : 0x00))
-        || (Shift == 63 && Slice != 0 && Slice != 0x7f)) {
-      signed_decode_result result = {0, ERROR_TOO_BIG};
+    (Byte=(*p));
+    uint64_t Slice = (Byte&0x7f);
+    if ((((Shift>=64)&&(Slice!=((Value<0) ? 0x7f : 0x00)))||(((Shift==63)&&(Slice!=0))&&(Slice!=0x7f))))
+    {
+      signed_decode_result result = ((signed_decode_result) {0, ERROR_TOO_BIG});
       return result;
     }
-    Value |= Slice << Shift;
-    Shift += 7;
-    ++p;
-  } while (Byte >= 128);
-  // Sign extend negative numbers if needed.
-  if (Shift < 64 && (Byte & 0x40))
-    Value |= (-1ULL) << Shift;
-  signed_decode_result result = {Value, (p - orig_p)};
+    (Value|=(Slice<<Shift));
+    (Shift+=7);
+    (++p);
+  }
+while ((Byte>=128));
+  if (((Shift<64)&&(Byte&0x40)))
+  (Value|=((-1ULL)<<Shift));
+  signed_decode_result result = ((signed_decode_result) {Value, (p - orig_p)});
   return result;
 }
+
 /* i=4 j=1 */
 _Noreturn void fatal_error_impl(char* file, int line, int error_code){
   print_fatal_error_banner();
@@ -1339,89 +1364,97 @@ _Noreturn void fatal_error_impl(char* file, int line, int error_code){
   print_error_code_name(error_code);
   fprintf(stderr, "\nCommand line: %s\n\n", get_command_line());
   char* sleep_str = getenv("ARMYKNIFE_FATAL_ERROR_SLEEP_SECONDS");
-  if (sleep_str != NULL) {
+  if ((sleep_str!=NULL))
+  {
     value_result_t sleep_time = string_parse_uint64(sleep_str);
-    if (is_ok(sleep_time)) {
-      fprintf(stderr,
-              "Sleeping for %lu seconds so you can attach a debugger.\n",
-              sleep_time.u64);
+    if (is_ok(sleep_time))
+    {
+      fprintf(stderr, "Sleeping for %lu seconds so you can attach a debugger.\n", (sleep_time.u64));
       fprintf(stderr, "  gdb -tui %s %d\n", get_program_path(), getpid());
-      sleep(sleep_time.u64);
+      sleep((sleep_time.u64));
     }
-  } else {
+  }
+  else
+  {
     fprintf(stderr, "(ARMYKNIFE_FATAL_ERROR_SLEEP_SECONDS is not set)\n");
   }
   fprintf(stderr, "Necessaria Morte Mori...\n");
-  exit(-(error_code + 100));
+  exit((-(error_code+100)));
 }
+
 /* i=5 j=1 */
 const char* fatal_error_code_to_string(int error_code){
-  switch (error_code) {
-  case ERROR_UKNOWN:
+  switch (error_code)
+  {
+    case ERROR_UKNOWN:
     return "ERROR_UKNOWN";
-  case ERROR_MEMORY_ALLOCATION:
+    case ERROR_MEMORY_ALLOCATION:
     return "ERROR_MEMORY_ALLOCATION";
-  case ERROR_MEMORY_FREE_NULL:
+    case ERROR_MEMORY_FREE_NULL:
     return "ERROR_MEMORY_FREE_NULL";
-  case ERROR_REFERENCE_NOT_EXPECTED_TYPE:
+    case ERROR_REFERENCE_NOT_EXPECTED_TYPE:
     return "ERROR_REFERENCE_NOT_EXPECTED_TYPE";
-  case ERROR_ILLEGAL_INITIAL_CAPACITY:
+    case ERROR_ILLEGAL_INITIAL_CAPACITY:
     return "ERROR_ILLEGAL_INITIAL_CAPACITY";
-  case ERROR_DYNAMICALLY_SIZED_TYPE_ILLEGAL_IN_CONTAINER:
+    case ERROR_DYNAMICALLY_SIZED_TYPE_ILLEGAL_IN_CONTAINER:
     return "ERROR_DYNAMICALLY_SIZED_TYPE_ILLEGAL_IN_CONTAINER";
-  case ERROR_ACCESS_OUT_OF_BOUNDS:
+    case ERROR_ACCESS_OUT_OF_BOUNDS:
     return "ERROR_ACCESS_OUT_OF_BOUNDS";
-  case ERROR_NOT_REACHED:
+    case ERROR_NOT_REACHED:
     return "ERROR_NOT_REACHED";
-  case ERROR_ILLEGAL_ZERO_HASHCODE_VALUE:
+    case ERROR_ILLEGAL_ZERO_HASHCODE_VALUE:
     return "ERROR_ILLEGAL_ZERO_HASHCODE_VALUE";
-  case ERROR_UNIMPLEMENTED:
+    case ERROR_UNIMPLEMENTED:
     return "ERROR_UNIMPLEMENTED";
-  case ERROR_ILLEGAL_NULL_ARGUMENT:
+    case ERROR_ILLEGAL_NULL_ARGUMENT:
     return "ERROR_ILLEGAL_NULL_ARGUMENT";
-  case ERROR_ILLEGAL_ARGUMENT:
+    case ERROR_ILLEGAL_ARGUMENT:
     return "ERROR_ILLEGAL_ARGUMENT";
-  case ERROR_MEMORY_START_PADDING_ERROR:
+    case ERROR_MEMORY_START_PADDING_ERROR:
     return "ERROR_MEMORY_START_PADDING_ERROR";
-  case ERROR_MEMORY_END_PADDING_ERROR:
+    case ERROR_MEMORY_END_PADDING_ERROR:
     return "ERROR_MEMORY_END_PADDING_ERROR";
-
-  default:
+    default:
     return "error";
   }
 }
+
 /* i=6 j=1 */
 void configure_fatal_errors(fatal_error_config_t config){
-  fatal_error_config = config;
-  if (config.catch_sigsegv) {
+  (fatal_error_config=config);
+  if ((config.catch_sigsegv))
+  {
     signal(SIGSEGV, segmentation_fault_handler);
   }
 }
+
 /* i=7 j=0 */
 void segmentation_fault_handler(int signal_number){
   fatal_error(ERROR_SIGSEGV);
 }
+
 /* i=8 j=1 */
 void print_fatal_error_banner(){
-  // As the first thing we print, also responsible for at least one
-  // newline to start a new line if we may not be at one.
   fprintf(stderr, "\n========== FATAL_ERROR ==========\n");
 }
+
 /* i=9 j=1 */
 void print_backtrace(){
-#ifndef NO_VM_BACKTRACE_ON_FATAL_ERROR
-  do {
+  do  {
     void* array[10];
     int size = backtrace(array, 10);
     char** strings = backtrace_symbols(array, size);
-
-    // Print the backtrace
-    for (int i = 0; i < size; i++) {
-      printf("#%d %s\n", i, strings[i]);
+    for (
+      int i = 0;
+      (i<size);
+      (i++))
+    {
+      printf("#%d %s\n", i, (strings[i]));
     }
-  } while (0);
-#endif /* NO_VM_BACKTRACE_ON_FATAL_ERROR */
+  }
+while (0);
 }
+
 /* i=10 j=1 */
 void print_error_code_name(int error_code){
   fprintf(stderr, " ");
@@ -1429,2354 +1462,2638 @@ void print_error_code_name(int error_code){
   fprintf(stderr, "%s", fatal_error_code_to_string(error_code));
   fprintf(stderr, " ***\n");
 }
+
 /* i=11 j=0 */
 char* get_command_line(){
-  buffer_t* buffer
-      = buffer_append_file_contents(make_buffer(1), "/proc/self/cmdline");
+  buffer_t* buffer = buffer_append_file_contents(make_buffer(1), "/proc/self/cmdline");
   buffer_replace_matching_byte(buffer, 0, ' ');
   return buffer_to_c_string(buffer);
 }
+
 /* i=12 j=0 */
 char* get_program_path(){
   char buf[4096];
-  int n = readlink("/proc/self/exe", buf, sizeof(buf));
-  if (n > 0) {
+  int n = readlink("/proc/self/exe", buf, (sizeof(buf)));
+  if ((n>0))
+  {
     return string_duplicate(buf);
-  } else {
+  }
+  else
+  {
     return "<program-path-unknown>";
   }
 }
+
 /* i=15 j=1 */
 int cmp_string_values(value_t value1, value_t value2){
-  return strcmp(value1.str, value2.str);
+  return strcmp((value1.str), (value2.str));
 }
+
 /* i=16 j=1 */
-uint64_t hash_string_value(value_t value1){ return string_hash(value1.str); }
+uint64_t hash_string_value(value_t value1){
+  return string_hash((value1.str));
+}
+
 /* i=17 j=1 */
 uint8_t* checked_malloc(char* file, int line, uint64_t amount){
-
-  if (amount == 0 || amount > ARMYKNIFE_MEMORY_ALLOCATION_MAXIMUM_AMOUNT) {
+  if (((amount==0)||(amount>ARMYKNIFE_MEMORY_ALLOCATION_MAXIMUM_AMOUNT)))
+  {
     fatal_error(ERROR_BAD_ALLOCATION_SIZE);
   }
-
-  if (should_log_memory_allocation()) {
-    fprintf(stderr,
-            "ALLOCATE %s:%d -- n_bytes=%lu already_allocated=%lu n_calls=%lu\n",
-            file, line, amount, number_of_bytes_allocated,
-            number_of_malloc_calls);
+  if (should_log_memory_allocation())
+  {
+    fprintf(stderr, "ALLOCATE %s:%d -- n_bytes=%lu already_allocated=%lu n_calls=%lu\n", file, line, amount, number_of_bytes_allocated, number_of_malloc_calls);
   }
-
   check_memory_hashtable_padding();
-
-  uint64_t amount_with_padding = ARMYKNIFE_MEMORY_ALLOCATION_START_PADDING
-                                 + amount
-                                 + ARMYKNIFE_MEMORY_ALLOCATION_END_PADDING;
+  uint64_t amount_with_padding = ((ARMYKNIFE_MEMORY_ALLOCATION_START_PADDING+amount)+ARMYKNIFE_MEMORY_ALLOCATION_END_PADDING);
   uint8_t* result = malloc(amount_with_padding);
-  if (result == NULL) {
+  if ((result==NULL))
+  {
     fatal_error_impl(file, line, ERROR_MEMORY_ALLOCATION);
   }
-
-  if (should_log_memory_allocation()) {
-    fprintf(stderr, "ALLOCATE %s:%d -- %lu -- ptr=%lu\n", file, line, amount,
-            cast(unsigned long, result));
+  if (should_log_memory_allocation())
+  {
+    fprintf(stderr, "ALLOCATE %s:%d -- %lu -- ptr=%lu\n", file, line, amount, (/*CAST*/(unsigned long) result));
   }
-
   memset(result, 0, amount_with_padding);
   track_padding(file, line, result, amount);
-
-  number_of_bytes_allocated += amount;
-  number_of_malloc_calls++;
-
-  return result + ARMYKNIFE_MEMORY_ALLOCATION_START_PADDING;
+  (number_of_bytes_allocated+=amount);
+  (number_of_malloc_calls++);
+  return (result+ARMYKNIFE_MEMORY_ALLOCATION_START_PADDING);
 }
+
 /* i=18 j=1 */
 uint8_t* checked_malloc_copy_of(char* file, int line, uint8_t* source, uint64_t amount){
   uint8_t* result = checked_malloc(file, line, amount);
   memcpy(result, source, amount);
   return result;
 }
+
 /* i=19 j=1 */
 void checked_free(char* file, int line, void* pointer){
-  if (should_log_memory_allocation()) {
-    fprintf(stderr, "DEALLOCATE %s:%d -- %lu\n", file, line,
-            (uint64_t) pointer);
+  if (should_log_memory_allocation())
+  {
+    fprintf(stderr, "DEALLOCATE %s:%d -- %lu\n", file, line, (/*CAST*/(uint64_t) pointer));
   }
-  if (pointer == NULL) {
+  if ((pointer==NULL))
+  {
     fatal_error_impl(file, line, ERROR_MEMORY_FREE_NULL);
   }
-
-  // Check all of the padding we know about
   check_memory_hashtable_padding();
-
-  uint8_t* malloc_pointer
-      = cast(uint8_t*, pointer) - ARMYKNIFE_MEMORY_ALLOCATION_START_PADDING;
-
-  // Check this entries padding (in case it got lossed from the global
-  // hashtable), and also remove it from the hashtable if it was
-  // found.
+  uint8_t* malloc_pointer = ((/*CAST*/(uint8_t*) pointer)-ARMYKNIFE_MEMORY_ALLOCATION_START_PADDING);
   untrack_padding(malloc_pointer);
-  number_of_free_calls++;
+  (number_of_free_calls++);
   free(malloc_pointer);
 }
+
 /* i=20 j=1 */
 void check_memory_hashtable_padding(){
-  for (int i = 0; i < ARMYKNIFE_MEMORY_ALLOCATION_HASHTABLE_SIZE; i++) {
-    if (memory_ht[i].malloc_address != 0) {
-      uint64_t malloc_start_address = memory_ht[i].malloc_address;
-      uint64_t malloc_size = memory_ht[i].malloc_size;
-      check_start_padding(cast(uint8_t*, malloc_start_address));
-      check_end_padding(
-          cast(uint8_t*,
-               (malloc_start_address + ARMYKNIFE_MEMORY_ALLOCATION_START_PADDING
-                + malloc_size)),
-          memory_ht[i].allocation_filename,
-          memory_ht[i].allocation_line_number);
+  for (
+    int i = 0;
+    (i<ARMYKNIFE_MEMORY_ALLOCATION_HASHTABLE_SIZE);
+    (i++))
+  {
+    if ((((memory_ht[i]).malloc_address)!=0))
+    {
+      uint64_t malloc_start_address = ((memory_ht[i]).malloc_address);
+      uint64_t malloc_size = ((memory_ht[i]).malloc_size);
+      check_start_padding((/*CAST*/(uint8_t*) malloc_start_address));
+      check_end_padding((/*CAST*/(uint8_t*) ((malloc_start_address+ARMYKNIFE_MEMORY_ALLOCATION_START_PADDING)+malloc_size)), ((memory_ht[i]).allocation_filename), ((memory_ht[i]).allocation_line_number));
     }
   }
 }
+
 /* i=22 j=0 */
 void check_start_padding(uint8_t* address){
-  for (int i = 0; i < ARMYKNIFE_MEMORY_ALLOCATION_START_PADDING; i++) {
-    if (address[i] != START_PADDING_BYTE) {
+  for (
+    int i = 0;
+    (i<ARMYKNIFE_MEMORY_ALLOCATION_START_PADDING);
+    (i++))
+  {
+    if (((address[i])!=START_PADDING_BYTE))
+    {
       fatal_error(ERROR_MEMORY_START_PADDING_ERROR);
     }
   }
 }
+
 /* i=23 j=0 */
 void check_end_padding(uint8_t* address, char* filename, uint64_t line){
-  for (int i = 0; i < ARMYKNIFE_MEMORY_ALLOCATION_END_PADDING; i++) {
-    if (address[i] != END_PADDING_BYTE) {
-      fprintf(stderr,
-              "FATAL: someone clobbered past an allocation %lu. (allocated "
-              "here: %s:%lu)\n",
-              cast(uint64_t, address), filename, line);
+  for (
+    int i = 0;
+    (i<ARMYKNIFE_MEMORY_ALLOCATION_END_PADDING);
+    (i++))
+  {
+    if (((address[i])!=END_PADDING_BYTE))
+    {
+      fprintf(stderr, "FATAL: someone clobbered past an allocation %lu. (allocated " "here: %s:%lu)\n", (/*CAST*/(uint64_t) address), filename, line);
       fatal_error(ERROR_MEMORY_END_PADDING_ERROR);
     }
   }
 }
+
 /* i=24 j=0 */
 uint64_t mumurhash64_mix(uint64_t h){
-  h *= h >> 33;
-  h *= 0xff51afd7ed558ccdL;
-  h *= h >> 33;
-  h *= 0xc4ceb9fe1a85ec53L;
-  h *= h >> 33;
+  (h*=(h>>33));
+  (h*=0xff51afd7ed558ccdL);
+  (h*=(h>>33));
+  (h*=0xc4ceb9fe1a85ec53L);
+  (h*=(h>>33));
   return h;
 }
+
 /* i=25 j=0 */
 void track_padding(char* file, int line, uint8_t* address, uint64_t amount){
-  // First set the padding to predicatable values
-  for (int i = 0; i < ARMYKNIFE_MEMORY_ALLOCATION_START_PADDING; i++) {
-    address[i] = START_PADDING_BYTE;
+  for (
+    int i = 0;
+    (i<ARMYKNIFE_MEMORY_ALLOCATION_START_PADDING);
+    (i++))
+  {
+    ((address[i])=START_PADDING_BYTE);
   }
-  uint8_t* end_padding_address
-      = address + amount + ARMYKNIFE_MEMORY_ALLOCATION_START_PADDING;
-  for (int i = 0; i < ARMYKNIFE_MEMORY_ALLOCATION_END_PADDING; i++) {
-    end_padding_address[i] = END_PADDING_BYTE;
+  uint8_t* end_padding_address = ((address+amount)+ARMYKNIFE_MEMORY_ALLOCATION_START_PADDING);
+  for (
+    int i = 0;
+    (i<ARMYKNIFE_MEMORY_ALLOCATION_END_PADDING);
+    (i++))
+  {
+    ((end_padding_address[i])=END_PADDING_BYTE);
   }
-
-  if (ARMYKNIFE_MEMORY_ALLOCATION_HASHTABLE_SIZE > 0) {
-    // Now replace whatever entry we might already have there. This is
-    // why we have more LRU semantics. We could use another signal to
-    // probalistically delay updating the hashtable when the bucket is
-    // already occupied but I think LRU might work well most of the
-    // time. (Mostly a hunch I will admit.).
-    int bucket = mumurhash64_mix(cast(uint64_t, address))
-                 % ARMYKNIFE_MEMORY_ALLOCATION_HASHTABLE_SIZE;
-    memory_ht[bucket].malloc_address = (uint64_t) address;
-    memory_ht[bucket].malloc_size = amount;
-    memory_ht[bucket].allocation_filename = file;
-    memory_ht[bucket].allocation_line_number = line;
+  if ((ARMYKNIFE_MEMORY_ALLOCATION_HASHTABLE_SIZE>0))
+  {
+    int bucket = (mumurhash64_mix((/*CAST*/(uint64_t) address))%ARMYKNIFE_MEMORY_ALLOCATION_HASHTABLE_SIZE);
+    (((memory_ht[bucket]).malloc_address)=(/*CAST*/(uint64_t) address));
+    (((memory_ht[bucket]).malloc_size)=amount);
+    (((memory_ht[bucket]).allocation_filename)=file);
+    (((memory_ht[bucket]).allocation_line_number)=line);
   }
 }
+
 /* i=26 j=0 */
 void untrack_padding(uint8_t* malloc_address){
   check_start_padding(malloc_address);
-  // Unfortunately, since we don't know the size of the allocation, we
-  // can't actually check the end padding! When there is enough start
-  // padding (say at least 64bits), then we could potentially store
-  // say 48bits worth of an allocation amount in it.
-  //
-  // On the other hand, we do check the end padding if it is still
-  // tracked in the lossy memory hashtable.
-
-  if (ARMYKNIFE_MEMORY_ALLOCATION_HASHTABLE_SIZE > 0) {
-    // Now finally zero-out the memory hashtable.
-    int bucket = mumurhash64_mix(cast(uint64_t, malloc_address))
-                 % ARMYKNIFE_MEMORY_ALLOCATION_HASHTABLE_SIZE;
-    memory_ht[bucket].malloc_address = 0;
-    memory_ht[bucket].malloc_size = 0;
-    memory_ht[bucket].allocation_filename = 0;
-    memory_ht[bucket].allocation_line_number = 0;
+  if ((ARMYKNIFE_MEMORY_ALLOCATION_HASHTABLE_SIZE>0))
+  {
+    int bucket = (mumurhash64_mix((/*CAST*/(uint64_t) malloc_address))%ARMYKNIFE_MEMORY_ALLOCATION_HASHTABLE_SIZE);
+    (((memory_ht[bucket]).malloc_address)=0);
+    (((memory_ht[bucket]).malloc_size)=0);
+    (((memory_ht[bucket]).allocation_filename)=0);
+    (((memory_ht[bucket]).allocation_line_number)=0);
   }
 }
+
 /* i=27 j=1 */
 int uint64_highest_bit_set(uint64_t n){
-  if (n >= 1ULL << 32) {
-    return uint64_highest_bit_set(n >> 32) + 32;
-  } else if (n >= 1ULL << 16) {
-    return uint64_highest_bit_set(n >> 16) + 16;
-  } else if (n >= 1ULL << 8) {
-    return uint64_highest_bit_set(n >> 8) + 8;
-  } else if (n >= 1ULL << 4) {
-    return uint64_highest_bit_set(n >> 4) + 4;
-  } else if (n >= 1ULL << 2) {
-    return uint64_highest_bit_set(n >> 2) + 2;
-  } else if (n >= 1ULL << 1) {
-    return uint64_highest_bit_set(n >> 1) + 1;
-  } else {
+  if ((n>=(1ULL<<32)))
+  {
+    return (uint64_highest_bit_set((n>>32))+32);
+  }
+  else
+  if ((n>=(1ULL<<16)))
+  {
+    return (uint64_highest_bit_set((n>>16))+16);
+  }
+  else
+  if ((n>=(1ULL<<8)))
+  {
+    return (uint64_highest_bit_set((n>>8))+8);
+  }
+  else
+  if ((n>=(1ULL<<4)))
+  {
+    return (uint64_highest_bit_set((n>>4))+4);
+  }
+  else
+  if ((n>=(1ULL<<2)))
+  {
+    return (uint64_highest_bit_set((n>>2))+2);
+  }
+  else
+  if ((n>=(1ULL<<1)))
+  {
+    return (uint64_highest_bit_set((n>>1))+1);
+  }
+  else
+  {
     return 0;
   }
 }
+
 /* i=28 j=1 */
 int string_is_null_or_empty(const char* str){
-  return (str == NULL) || (strlen(str) == 0);
+  return ((str==NULL)||(strlen(str)==0));
 }
+
 /* i=29 j=1 */
 int string_equal(const char* str1, const char* str2){
-  if (string_is_null_or_empty(str1)) {
+  if (string_is_null_or_empty(str1))
+  {
     return string_is_null_or_empty(str2);
   }
-  return strcmp(str1, str2) == 0;
+  return (strcmp(str1, str2)==0);
 }
+
 /* i=30 j=1 */
 int string_starts_with(const char* str1, const char* str2){
-  return strncmp(str1, str2, strlen(str2)) == 0;
+  return (strncmp(str1, str2, strlen(str2))==0);
 }
+
 /* i=31 j=1 */
 int string_ends_with(const char* str1, const char* str2){
   size_t len1 = strlen(str1);
   size_t len2 = strlen(str2);
-
-  if (len2 > len1) {
+  if ((len2>len1))
+  {
     return 0;
   }
-
-  return strcmp(str1 + (len1 - len2), str2) == 0;
+  return (strcmp((str1+(len1-len2)), str2)==0);
 }
+
 /* i=32 j=1 */
 boolean_t string_contains_char(const char* str, char ch){
-  return string_index_of_char(str, ch) >= 0;
+  return (string_index_of_char(str, ch)>=0);
 }
+
 /* i=33 j=1 */
 int string_index_of_char(const char* str, char ch){
-  if (string_is_null_or_empty(str)) {
-    return -1;
+  if (string_is_null_or_empty(str))
+  {
+    return (-1);
   }
   int str_length = strlen(str);
-  for (int i = 0; i < str_length; i++) {
-    if (str[i] == ch) {
+  for (
+    int i = 0;
+    (i<str_length);
+    (i++))
+  {
+    if (((str[i])==ch))
+    {
       return i;
     }
   }
-  return -1;
+  return (-1);
 }
+
 /* i=34 j=1 */
 char* uint64_to_string(uint64_t number){
   char buffer[32];
   sprintf(buffer, "%lu", number);
   return string_duplicate(buffer);
 }
+
 /* i=35 j=1 */
 uint64_t string_hash(const char* str){
   return fasthash64(str, strlen(str), 0);
 }
+
 /* i=36 j=1 */
 char* string_substring(const char* str, int start, int end){
   uint64_t len = strlen(str);
-  if (start >= len || start >= end || end < start) {
+  if ((((start>=len)||(start>=end))||(end<start)))
+  {
     fatal_error(ERROR_ILLEGAL_ARGUMENT);
   }
-  int result_size = end - start + 1;
-  char* result = cast(char*, malloc_bytes(result_size));
-  for (int i = start; (i < end); i++) {
-    result[i - start] = str[i];
+  int result_size = ((end-start)+1);
+  char* result = (/*CAST*/(char*) malloc_bytes(result_size));
+  for (
+    int i = start;
+    (i<end);
+    (i++))
+  {
+    ((result[(i-start)])=(str[i]));
   }
-  result[result_size - 1] = '\0';
+  ((result[(result_size-1)])='\0');
   return result;
 }
+
 /* i=37 j=1 */
 value_result_t string_parse_uint64(const char* string){
-  if (string_starts_with(string, "0x")) {
-    return string_parse_uint64_hex(&string[2]);
-  } else if (string_starts_with(string, "0b")) {
-    return string_parse_uint64_bin(&string[2]);
-  } else {
+  if (string_starts_with(string, "0x"))
+  {
+    return string_parse_uint64_hex((&(string[2])));
+  }
+  else
+  if (string_starts_with(string, "0b"))
+  {
+    return string_parse_uint64_bin((&(string[2])));
+  }
+  else
+  {
     return string_parse_uint64_dec(string);
   }
 }
+
 /* i=38 j=1 */
 value_result_t string_parse_uint64_dec(const char* string){
   uint64_t len = strlen(string);
   uint64_t integer = 0;
-
-  if (len == 0) {
-    return (value_result_t){.u64 = 0,
-                            .nf_error = NF_ERROR_NOT_PARSED_AS_NUMBER};
+  if ((len==0))
+  {
+    return ((value_result_t) {.u64 = 0, .nf_error = NF_ERROR_NOT_PARSED_AS_NUMBER});
   }
-
-  for (int i = 0; i < len; i++) {
-    char ch = string[i];
-    if (ch < '0' || ch > '9') {
-      return (value_result_t){.u64 = 0,
-                              .nf_error = NF_ERROR_NOT_PARSED_AS_NUMBER};
+  for (
+    int i = 0;
+    (i<len);
+    (i++))
+  {
+    char ch = (string[i]);
+    if (((ch<'0')||(ch>'9')))
+    {
+      return ((value_result_t) {.u64 = 0, .nf_error = NF_ERROR_NOT_PARSED_AS_NUMBER});
     }
-    uint64_t digit = string[i] - '0';
-    integer = integer * 10 + digit;
+    uint64_t digit = ((string[i])-'0');
+    (integer=((integer*10)+digit));
   }
-
-  return (value_result_t){.u64 = integer, .nf_error = NF_OK};
+  return ((value_result_t) {.u64 = integer, .nf_error = NF_OK});
 }
+
 /* i=39 j=1 */
 value_result_t string_parse_uint64_hex(const char* string){
   uint64_t len = strlen(string);
   uint64_t integer = 0;
-
-  if (len == 0) {
-    return compound_literal(
-        value_result_t, {.u64 = 0, .nf_error = NF_ERROR_NOT_PARSED_AS_NUMBER});
+  if ((len==0))
+  {
+    return ((value_result_t) {.u64 = 0, .nf_error = NF_ERROR_NOT_PARSED_AS_NUMBER});
   }
-
-  for (int i = 0; i < len; i++) {
-    char ch = string[i];
-    if (!is_hex_digit(ch)) {
-      return compound_literal(
-          value_result_t,
-          {.u64 = 0, .nf_error = NF_ERROR_NOT_PARSED_AS_NUMBER});
+  for (
+    int i = 0;
+    (i<len);
+    (i++))
+  {
+    char ch = (string[i]);
+    if ((!is_hex_digit(ch)))
+    {
+      return ((value_result_t) {.u64 = 0, .nf_error = NF_ERROR_NOT_PARSED_AS_NUMBER});
     }
     uint64_t digit = hex_digit_to_value(ch);
-    integer = integer << 4 | digit;
+    (integer=((integer<<4)|digit));
   }
-
-  return compound_literal(value_result_t, {.u64 = integer, .nf_error = NF_OK});
+  return ((value_result_t) {.u64 = integer, .nf_error = NF_OK});
 }
+
 /* i=40 j=1 */
 value_result_t string_parse_uint64_bin(const char* string){
   uint64_t len = strlen(string);
   uint64_t integer = 0;
-
-  if (len == 0) {
-    return compound_literal(
-        value_result_t, {.u64 = 0, .nf_error = NF_ERROR_NOT_PARSED_AS_NUMBER});
+  if ((len==0))
+  {
+    return ((value_result_t) {.u64 = 0, .nf_error = NF_ERROR_NOT_PARSED_AS_NUMBER});
   }
-
-  for (int i = 0; i < len; i++) {
-    char ch = string[i];
-    if (ch < '0' || ch > '1') {
-      return compound_literal(
-          value_result_t,
-          {.u64 = 0, .nf_error = NF_ERROR_NOT_PARSED_AS_NUMBER});
+  for (
+    int i = 0;
+    (i<len);
+    (i++))
+  {
+    char ch = (string[i]);
+    if (((ch<'0')||(ch>'1')))
+    {
+      return ((value_result_t) {.u64 = 0, .nf_error = NF_ERROR_NOT_PARSED_AS_NUMBER});
     }
-    uint64_t digit = string[i] - '0';
-    integer = integer << 1 | digit;
+    uint64_t digit = ((string[i])-'0');
+    (integer=((integer<<1)|digit));
   }
-
-  return compound_literal(value_result_t, {.u64 = integer, .nf_error = NF_OK});
+  return ((value_result_t) {.u64 = integer, .nf_error = NF_OK});
 }
+
 /* i=41 j=1 */
 char* string_duplicate(const char* src){
-  if (src == NULL) {
+  if ((src==NULL))
+  {
     return NULL;
   }
-  int len = strlen(src) + 1;
-  char* result = cast(char*, malloc_bytes(len));
+  int len = (strlen(src)+1);
+  char* result = (/*CAST*/(char*) malloc_bytes(len));
   memcpy(result, src, len);
-
   return result;
 }
+
 /* i=42 j=1 */
 char* string_append(const char* a, const char* b){
-  if (a == NULL || b == NULL) {
+  if (((a==NULL)||(b==NULL)))
+  {
     fatal_error(ERROR_ILLEGAL_NULL_ARGUMENT);
   }
-  int total_length = strlen(a) + strlen(b) + 1;
-  char* result = cast(char*, malloc_bytes(total_length));
+  int total_length = ((strlen(a)+strlen(b))+1);
+  char* result = (/*CAST*/(char*) malloc_bytes(total_length));
   strcat(result, a);
   strcat(result, b);
   return result;
 }
+
 /* i=43 j=1 */
 char* string_left_pad(const char* str, int n, char ch){
-  if (n < 0) {
+  if ((n<0))
+  {
     fatal_error(ERROR_ILLEGAL_RANGE);
   }
-
   int input_length = strlen(str);
-
-  // Calculate padding needed
-  int padding_needed = n - input_length;
-
-  // As usual, since buffer's grow as needed, we are tolerant of a
-  // wrong initial computation of the length though getting this wrong
-  // is wasteful... In this case we do the wasteful thing knowing that
-  // we will free everything shortly. We just want the correct result,
-  // not necessarily as fast as possible.
-
-  int len = 1; // max(padding_needed + input_length, input_length) + 1;
-
+  int padding_needed = (n-input_length);
+  int len = 1;
   buffer_t* buffer = make_buffer(len);
-  for (int i = 0; i < padding_needed; i++) {
-    buffer = buffer_append_byte(buffer, ch);
+  for (
+    int i = 0;
+    (i<padding_needed);
+    (i++))
+  {
+    (buffer=buffer_append_byte(buffer, ch));
   }
-  buffer = buffer_append_string(buffer, str);
+  (buffer=buffer_append_string(buffer, str));
   char* result = buffer_to_c_string(buffer);
   free_bytes(buffer);
   return result;
 }
+
 /* i=44 j=1 */
 char* string_right_pad(const char* str, int n, char ch){
-  if (n < 0) {
+  if ((n<0))
+  {
     fatal_error(ERROR_ILLEGAL_RANGE);
   }
-
   int input_length = strlen(str);
-
-  // Calculate padding needed
-  int padding_needed = n - input_length;
-
-  // As usual, since buffer's grow as needed, we are tolerant of a
-  // wrong initial computation of the length though getting this wrong
-  // is wasteful... In this case we do the wasteful thing knowing that
-  // we will free everything shortly. We just want the correct result,
-  // not necessarily as fast as possible.
-
-  int len = 1; // max(padding_needed + input_length, input_length) + 1;
-
+  int padding_needed = (n-input_length);
+  int len = 1;
   buffer_t* buffer = make_buffer(len);
-  buffer = buffer_append_string(buffer, str);
-  for (int i = 0; i < padding_needed; i++) {
-    buffer = buffer_append_byte(buffer, ch);
+  (buffer=buffer_append_string(buffer, str));
+  for (
+    int i = 0;
+    (i<padding_needed);
+    (i++))
+  {
+    (buffer=buffer_append_byte(buffer, ch));
   }
   char* result = buffer_to_c_string(buffer);
   free_bytes(buffer);
   return result;
 }
+
 /* i=45 j=1 */
 __attribute__((format(printf, 1, 2))) char* string_printf(char* format, ...){
   char buffer[STRING_PRINTF_INITIAL_BUFFER_SIZE];
   int n_bytes = 0;
-  do {
+  do  {
     va_list args;
     va_start(args, format);
-    n_bytes
-        = vsnprintf(buffer, STRING_PRINTF_INITIAL_BUFFER_SIZE, format, args);
+    (n_bytes=vsnprintf(buffer, STRING_PRINTF_INITIAL_BUFFER_SIZE, format, args));
     va_end(args);
-  } while (0);
-
-  if (n_bytes < STRING_PRINTF_INITIAL_BUFFER_SIZE) {
-    char* result = cast(char*, malloc_bytes(n_bytes + 1));
+  }
+while (0);
+  if ((n_bytes<STRING_PRINTF_INITIAL_BUFFER_SIZE))
+  {
+    char* result = (/*CAST*/(char*) malloc_bytes((n_bytes+1)));
     strcat(result, buffer);
     return result;
-  } else {
-    char* result = cast(char*, malloc_bytes(n_bytes + 1));
+  }
+  else
+  {
+    char* result = (/*CAST*/(char*) malloc_bytes((n_bytes+1)));
     va_list args;
     va_start(args, format);
-    int n_bytes_second = vsnprintf(result, n_bytes + 1, format, args);
+    int n_bytes_second = vsnprintf(result, (n_bytes+1), format, args);
     va_end(args);
-    if (n_bytes_second != n_bytes) {
+    if ((n_bytes_second!=n_bytes))
+    {
       fatal_error(ERROR_INTERNAL_ASSERTION_FAILURE);
     }
     return result;
   }
 }
+
 /* i=46 j=1 */
 char* string_truncate(char* str, int limit, char* at_limit_suffix){
-  // limit is just a guess, buffer's always grow as needed.
   buffer_t* buffer = make_buffer(limit);
-  for (int i = 0;; i++) {
-    char ch = str[i];
-    if (ch == '\0') {
+  for (
+    int i = 0;
+    ;
+    (i++))
+  {
+    char ch = (str[i]);
+    if ((ch=='\0'))
+    {
       char* result = buffer_to_c_string(buffer);
       free_bytes(buffer);
       return result;
     }
-    buffer = buffer_append_byte(buffer, ch);
+    (buffer=buffer_append_byte(buffer, ch));
   }
-  if (at_limit_suffix) {
-    buffer = buffer_append_string(buffer, at_limit_suffix);
+  if (at_limit_suffix)
+  {
+    (buffer=buffer_append_string(buffer, at_limit_suffix));
   }
   char* result = buffer_to_c_string(buffer);
   free_bytes(buffer);
   return result;
 }
+
 /* i=47 j=1 */
 uint64_t fasthash64(const void* buf, size_t len, uint64_t seed){
   const uint64_t m = 0x880355f21e6d1965ULL;
-  const uint64_t* pos = cast(const uint64_t*, buf);
-  const uint64_t* end = pos + (len / 8);
+  const uint64_t* pos = (/*CAST*/(const uint64_t*) buf);
+  const uint64_t* end = (pos+(len/8));
   const unsigned char* pos2;
-  uint64_t h = seed ^ (len * m);
+  uint64_t h = (seed^(len*m));
   uint64_t v;
-
-  while (pos != end) {
-    v = *pos++;
-    h ^= mix(v);
-    h *= m;
+  while ((pos!=end))
+  {
+    (v=(*(pos++)));
+    (h^=mix(v));
+    (h*=m);
   }
-
-  pos2 = cast(const unsigned char*, pos);
-  v = 0;
-
-  switch (len & 7) {
-  case 7:
-    v ^= (uint64_t) pos2[6] << 48;
-  case 6:
-    v ^= (uint64_t) pos2[5] << 40;
-  case 5:
-    v ^= (uint64_t) pos2[4] << 32;
-  case 4:
-    v ^= (uint64_t) pos2[3] << 24;
-  case 3:
-    v ^= (uint64_t) pos2[2] << 16;
-  case 2:
-    v ^= (uint64_t) pos2[1] << 8;
-  case 1:
-    v ^= (uint64_t) pos2[0];
-    h ^= mix(v);
-    h *= m;
+  (pos2=(/*CAST*/(const unsigned char*) pos));
+  (v=0);
+  switch ((len&7))
+  {
+    case 7:
+    (v^=((/*CAST*/(uint64_t) (pos2[6]))<<48));
+    case 6:
+    (v^=((/*CAST*/(uint64_t) (pos2[5]))<<40));
+    case 5:
+    (v^=((/*CAST*/(uint64_t) (pos2[4]))<<32));
+    case 4:
+    (v^=((/*CAST*/(uint64_t) (pos2[3]))<<24));
+    case 3:
+    (v^=((/*CAST*/(uint64_t) (pos2[2]))<<16));
+    case 2:
+    (v^=((/*CAST*/(uint64_t) (pos2[1]))<<8));
+    case 1:
+    (v^=(/*CAST*/(uint64_t) (pos2[0])));
+    (h^=mix(v));
+    (h*=m);
   }
-
   return mix(h);
 }
+
 /* i=51 j=1 */
 void logger_init(void){
   char* level_string = getenv("ARMYKNIFE_LIB_LOG_LEVEL");
-  if (level_string != NULL) {
+  if ((level_string!=NULL))
+  {
     value_result_t parsed = string_parse_uint64(level_string);
-    if (is_ok(parsed)) {
-      global_logger_state.level = parsed.u64;
-    } else {
+    if (is_ok(parsed))
+    {
+      ((global_logger_state.level)=(parsed.u64));
+    }
+    else
+    {
       value_result_t parsed = parse_log_level_enum(level_string);
-      if (is_ok(parsed)) {
-        global_logger_state.level = parsed.u64;
-      } else {
+      if (is_ok(parsed))
+      {
+        ((global_logger_state.level)=(parsed.u64));
+      }
+      else
+      {
         log_warn("%s could not be converted to a log level.", level_string);
       }
     }
   }
-
-  fprintf(stderr, "Log level is set to %s (%d)\n",
-          logger_level_to_string(global_logger_state.level),
-          global_logger_state.level);
-
+  fprintf(stderr, "Log level is set to %s (%d)\n", logger_level_to_string((global_logger_state.level)), (global_logger_state.level));
   char* output_file_name = getenv("ARMYKNIFE_LIB_LOG_FILE");
-
-  // It's pretty standard to include the "pid" in the filename at
-  // least when writing to /tmp/. We aren't quite doing that yet...
-  //
-  // pid_t pid = getpid(); -- pid is a number of some sort...
-
-  if (output_file_name != NULL) {
-    global_logger_state.output = fopen(output_file_name, "w");
-    if (!global_logger_state.output) {
+  if ((output_file_name!=NULL))
+  {
+    ((global_logger_state.output)=fopen(output_file_name, "w"));
+    if ((!(global_logger_state.output)))
+    {
       fatal_error(ERROR_OPEN_LOG_FILE);
     }
-    // Set the stream to unbuffered
-    // if (setvbuf(log_file, NULL, _IONBF, 0) != 0) {
-    // perror("Failed to set stream to unbuffered");
-    // exit(EXIT_FAILURE);
-    // }
-    global_logger_state.logger_output_filename = output_file_name;
-  } else {
-    global_logger_state.output = stderr;
-    global_logger_state.initialized = true;
+    ((global_logger_state.logger_output_filename)=output_file_name);
+  }
+  else
+  {
+    ((global_logger_state.output)=stderr);
+    ((global_logger_state.initialized)=true);
   }
 }
+
 /* i=52 j=1 */
 __attribute__((format(printf, 5, 6))) void logger_impl(char* file, int line_number, const char* function, int level, char* format, ...){
-
-  FILE* output = global_logger_state.output;
-
-  // Ensure that logging to somewhere will happen though a later call
-  // to logger_init() may send the output to somewhere else.
-  if (output == NULL) {
-    output = stderr;
+  FILE* output = (global_logger_state.output);
+  if ((output==NULL))
+  {
+    (output=stderr);
   }
-
-  if (level >= global_logger_state.level) {
+  if ((level>=(global_logger_state.level)))
+  {
     fprintf(output, "%s ", logger_level_to_string(level));
     va_list args;
     fprintf(output, "%s:%d %s | ", file, line_number, function);
-
     va_start(args, format);
     vfprintf(output, format, args);
     va_end(args);
-
     fprintf(output, "\n");
   }
 }
+
 /* i=54 j=0 */
 value_result_t parse_log_level_enum(char* str){
-  if (strcmp("FATAL", str) == 0 || strcmp("fatal", str) == 0) {
-    return (value_result_t){.u64 = LOGGER_FATAL};
-  } else if (strcmp("WARN", str) == 0 || strcmp("warn", str) == 0) {
-    return (value_result_t){.u64 = LOGGER_WARN};
-  } else if (strcmp("INFO", str) == 0 || strcmp("info", str) == 0) {
-    return (value_result_t){.u64 = LOGGER_INFO};
-  } else if (strcmp("DEBUG", str) == 0 || strcmp("debug", str) == 0) {
-    return (value_result_t){.u64 = LOGGER_DEBUG};
-  } else if (strcmp("TRACE", str) == 0 || strcmp("trace", str) == 0) {
-    return (value_result_t){.u64 = LOGGER_TRACE};
-  } else if (strcmp("OFF", str) == 0 || strcmp("off", str) == 0) {
-    return (value_result_t){.u64 = LOGGER_OFF};
-  } else {
-    return (value_result_t){.nf_error = NF_ERROR_NOT_PARSED_AS_EXPECTED_ENUM};
+  if (((strcmp("FATAL", str)==0)||(strcmp("fatal", str)==0)))
+  {
+    return ((value_result_t) {.u64 = LOGGER_FATAL});
+  }
+  else
+  if (((strcmp("WARN", str)==0)||(strcmp("warn", str)==0)))
+  {
+    return ((value_result_t) {.u64 = LOGGER_WARN});
+  }
+  else
+  if (((strcmp("INFO", str)==0)||(strcmp("info", str)==0)))
+  {
+    return ((value_result_t) {.u64 = LOGGER_INFO});
+  }
+  else
+  if (((strcmp("DEBUG", str)==0)||(strcmp("debug", str)==0)))
+  {
+    return ((value_result_t) {.u64 = LOGGER_DEBUG});
+  }
+  else
+  if (((strcmp("TRACE", str)==0)||(strcmp("trace", str)==0)))
+  {
+    return ((value_result_t) {.u64 = LOGGER_TRACE});
+  }
+  else
+  if (((strcmp("OFF", str)==0)||(strcmp("off", str)==0)))
+  {
+    return ((value_result_t) {.u64 = LOGGER_OFF});
+  }
+  else
+  {
+    return ((value_result_t) {.nf_error = NF_ERROR_NOT_PARSED_AS_EXPECTED_ENUM});
   }
 }
+
 /* i=55 j=1 */
 char* logger_level_to_string(int level){
-  switch (level) {
-  case LOGGER_OFF:
+  switch (level)
+  {
+    case LOGGER_OFF:
     return "LOGGER_OFF";
-  case LOGGER_TRACE:
+    case LOGGER_TRACE:
     return "TRACE";
-  case LOGGER_DEBUG:
+    case LOGGER_DEBUG:
     return "DEBUG";
-  case LOGGER_INFO:
+    case LOGGER_INFO:
     return "INFO";
-  case LOGGER_WARN:
+    case LOGGER_WARN:
     return "WARN";
-  case LOGGER_FATAL:
+    case LOGGER_FATAL:
     return "FATAL";
-  default:
+    default:
     return "LEVEL_UNKNOWN";
   }
 }
+
 /* i=56 j=1 */
 utf8_decode_result_t utf8_decode(const uint8_t* array){
-  uint8_t firstByte = array[0];
-  if ((firstByte & 0x80) == 0) {
-    return compound_literal(utf8_decode_result_t,
-                            {.code_point = firstByte, .num_bytes = 1});
-  } else if ((firstByte & 0xE0) == 0xC0) {
-    return compound_literal(
-        utf8_decode_result_t,
-        {.code_point = ((firstByte & 0x1F) << 6) | (array[1] & 0x3F),
+  uint8_t firstByte = (array[0]);
+  if (((firstByte&0x80)==0))
+  {
+    return ((utf8_decode_result_t) {.code_point = firstByte, .num_bytes = 1});
+  }
+  else
+  if (((firstByte&0xE0)==0xC0))
+  {
+    return ((utf8_decode_result_t) {.code_point = ((firstByte & 0x1F) << 6) | (array[1] & 0x3F),
          .num_bytes = 2});
-  } else if ((firstByte & 0xF0) == 0xE0) {
-    return compound_literal(utf8_decode_result_t,
-                            {.code_point = ((firstByte & 0x0F) << 12)
+  }
+  else
+  if (((firstByte&0xF0)==0xE0))
+  {
+    return ((utf8_decode_result_t) {.code_point = ((firstByte & 0x0F) << 12)
                                            | ((array[1] & 0x3F) << 6)
                                            | (array[2] & 0x3F),
                              .num_bytes = 3});
-  } else if ((firstByte & 0xF8) == 0xF0) {
-    return compound_literal(
-        utf8_decode_result_t,
-        {.code_point = ((firstByte & 0x07) << 18) | ((array[1] & 0x3F) << 12)
+  }
+  else
+  if (((firstByte&0xF8)==0xF0))
+  {
+    return ((utf8_decode_result_t) {.code_point = ((firstByte & 0x07) << 18) | ((array[1] & 0x3F) << 12)
                        | ((array[2] & 0x3F) << 6) | (array[3] & 0x3F),
          .num_bytes = 4});
-  } else {
-    return compound_literal(utf8_decode_result_t, {.error = true});
+  }
+  else
+  {
+    return ((utf8_decode_result_t) {.error = true});
   }
 }
+
 /* i=57 j=1 */
 buffer_t* make_buffer(uint64_t initial_capacity){
   buffer_t* result = malloc_struct(buffer_t);
-  if (initial_capacity < 16) {
-    initial_capacity = 16;
+  if ((initial_capacity<16))
+  {
+    (initial_capacity=16);
   }
-  if (initial_capacity > 0) {
-    result->capacity = initial_capacity;
-    result->elements = malloc_bytes(initial_capacity);
+  if ((initial_capacity>0))
+  {
+    ((result->capacity)=initial_capacity);
+    ((result->elements)=malloc_bytes(initial_capacity));
   }
   return result;
 }
+
 /* i=58 j=1 */
-uint64_t buffer_length(buffer_t* array){ return array->length; }
+uint64_t buffer_length(buffer_t* array){
+  return (array->length);
+}
+
 /* i=59 j=1 */
 uint8_t buffer_get(buffer_t* buffer, uint64_t position){
-  if (position < buffer->length) {
-    return buffer->elements[position];
-  } else {
+  if ((position<(buffer->length)))
+  {
+    return ((buffer->elements)[position]);
+  }
+  else
+  {
     fatal_error(ERROR_ACCESS_OUT_OF_BOUNDS);
-#ifdef __TINYC__
-    /* gcc and clang know fatal_error is _Noreturn but tcc doesn't */
     return 0;
-#endif
   }
 }
+
 /* i=60 j=1 */
 char* buffer_c_substring(buffer_t* buffer, uint64_t start, uint64_t end){
-  if (buffer == NULL) {
+  if ((buffer==NULL))
+  {
     fatal_error(ERROR_ILLEGAL_NULL_ARGUMENT);
   }
-
-  if (start > end) {
+  if ((start>end))
+  {
     fatal_error(ERROR_ILLEGAL_RANGE);
   }
-
-  uint64_t copy_length = (end - start);
-  char* result = cast(char*, malloc_bytes(copy_length + 1));
-  if (copy_length > 0) {
-    memcpy(result, &buffer->elements[start], copy_length);
+  uint64_t copy_length = (end-start);
+  char* result = (/*CAST*/(char*) malloc_bytes((copy_length+1)));
+  if ((copy_length>0))
+  {
+    memcpy(result, (&((buffer->elements)[start])), copy_length);
   }
-  result[copy_length] = '\0';
+  ((result[copy_length])='\0');
   return result;
 }
+
 /* i=61 j=1 */
 char* buffer_to_c_string(buffer_t* buffer){
-  return buffer_c_substring(buffer, 0, buffer->length);
+  return buffer_c_substring(buffer, 0, (buffer->length));
 }
+
 /* i=62 j=1 */
 void buffer_clear(buffer_t* buffer){
-  for (int i = 0; i < buffer->capacity; i++) {
-    buffer->elements[i] = 0;
+  for (
+    int i = 0;
+    (i<(buffer->capacity));
+    (i++))
+  {
+    (((buffer->elements)[i])=0);
   }
-  buffer->length = 0;
+  ((buffer->length)=0);
 }
+
 /* i=63 j=1 */
 extern buffer_t* buffer_increase_capacity(buffer_t* buffer, uint64_t capacity){
-  if (buffer->capacity < capacity) {
+  if (((buffer->capacity)<capacity))
+  {
     uint8_t* new_elements = malloc_bytes(capacity);
-    memcpy(new_elements, buffer->elements, buffer->length);
-    free_bytes(buffer->elements);
-    buffer->elements = new_elements;
-    buffer->capacity = capacity;
+    memcpy(new_elements, (buffer->elements), (buffer->length));
+    free_bytes((buffer->elements));
+    ((buffer->elements)=new_elements);
+    ((buffer->capacity)=capacity);
   }
   return buffer;
 }
+
 /* i=64 j=1 */
 buffer_t* buffer_append_byte(buffer_t* buffer, uint8_t element){
-  if (buffer->length < buffer->capacity) {
-    buffer->elements[buffer->length] = element;
-    buffer->length++;
+  if (((buffer->length)<(buffer->capacity)))
+  {
+    (((buffer->elements)[(buffer->length)])=element);
+    ((buffer->length)++);
     return buffer;
   }
-  buffer = buffer_increase_capacity(buffer, buffer->capacity * 2);
+  (buffer=buffer_increase_capacity(buffer, ((buffer->capacity)*2)));
   return buffer_append_byte(buffer, element);
 }
+
 /* i=65 j=1 */
 buffer_t* buffer_append_bytes(buffer_t* buffer, uint8_t* bytes, uint64_t n_bytes){
-  // Obviously this can be optimized...
-  for (int i = 0; i < n_bytes; i++) {
-    buffer = buffer_append_byte(buffer, bytes[i]);
+  for (
+    int i = 0;
+    (i<n_bytes);
+    (i++))
+  {
+    (buffer=buffer_append_byte(buffer, (bytes[i])));
   }
   return buffer;
 }
+
 /* i=66 j=1 */
 extern buffer_t* buffer_append_buffer(buffer_t* buffer, buffer_t* src_buffer){
-  return buffer_append_sub_buffer(buffer, 0, src_buffer->length, src_buffer);
+  return buffer_append_sub_buffer(buffer, 0, (src_buffer->length), src_buffer);
 }
+
 /* i=67 j=1 */
 extern buffer_t* buffer_append_sub_buffer(buffer_t* buffer, uint64_t start_position, uint64_t end_position, buffer_t* src_buffer){
-  if (buffer == src_buffer) {
+  if ((buffer==src_buffer))
+  {
     fatal_error(ERROR_ILLEGAL_STATE);
   }
-  for (uint64_t position = start_position; position < end_position;
-       position++) {
-    buffer = buffer_append_byte(buffer, buffer_get(src_buffer, position));
+  for (
+    uint64_t position = start_position;
+    (position<end_position);
+    (position++))
+  {
+    (buffer=buffer_append_byte(buffer, buffer_get(src_buffer, position)));
   }
   return buffer;
 }
+
 /* i=68 j=1 */
 buffer_t* buffer_append_string(buffer_t* buffer, const char* str){
-  return buffer_append_bytes(buffer, cast(uint8_t*, str), strlen(str));
+  return buffer_append_bytes(buffer, (/*CAST*/(uint8_t*) str), strlen(str));
 }
+
 /* i=69 j=1 */
 __attribute__((format(printf, 2, 3))) buffer_t* buffer_printf(buffer_t* buffer, char* format, ...){
   char cbuffer[BUFFER_PRINTF_INITIAL_BUFFER_SIZE];
   int n_bytes = 0;
-  do {
+  do  {
     va_list args;
     va_start(args, format);
-    n_bytes
-        = vsnprintf(cbuffer, BUFFER_PRINTF_INITIAL_BUFFER_SIZE, format, args);
+    (n_bytes=vsnprintf(cbuffer, BUFFER_PRINTF_INITIAL_BUFFER_SIZE, format, args));
     va_end(args);
-  } while (0);
-
-  if (n_bytes < BUFFER_PRINTF_INITIAL_BUFFER_SIZE) {
+  }
+while (0);
+  if ((n_bytes<BUFFER_PRINTF_INITIAL_BUFFER_SIZE))
+  {
     return buffer_append_string(buffer, cbuffer);
-  } else {
-    // Be lazy for now and just copy the code from string_printf for
-    // this case but we should be able to do ensure capacity and just
-    // put the bytes directly at the end of the buffer...
-    char* result = cast(char*, malloc_bytes(n_bytes + 1));
+  }
+  else
+  {
+    char* result = (/*CAST*/(char*) malloc_bytes((n_bytes+1)));
     va_list args;
     va_start(args, format);
-    int n_bytes_second = vsnprintf(result, n_bytes + 1, format, args);
+    int n_bytes_second = vsnprintf(result, (n_bytes+1), format, args);
     va_end(args);
-    if (n_bytes_second != n_bytes) {
+    if ((n_bytes_second!=n_bytes))
+    {
       fatal_error(ERROR_INTERNAL_ASSERTION_FAILURE);
     }
-    buffer = buffer_append_string(buffer, result);
+    (buffer=buffer_append_string(buffer, result));
     free_bytes(result);
     return buffer;
   }
 }
+
 /* i=70 j=1 */
 extern buffer_t* buffer_append_repeated_byte(buffer_t* buffer, uint8_t byte, int count){
-  for (int i = 0; i < count; i++) {
-    buffer = buffer_append_byte(buffer, byte);
+  for (
+    int i = 0;
+    (i<count);
+    (i++))
+  {
+    (buffer=buffer_append_byte(buffer, byte));
   }
   return buffer;
 }
+
 /* i=71 j=1 */
 utf8_decode_result_t buffer_utf8_decode(buffer_t* buffer, uint64_t position){
-  if (position >= buffer->length) {
-    return (utf8_decode_result_t){.error = true};
+  if ((position>=(buffer->length)))
+  {
+    return ((utf8_decode_result_t) {.error = true});
   }
-  utf8_decode_result_t result = utf8_decode(&buffer->elements[position]);
-  if (result.error) {
+  utf8_decode_result_t result = utf8_decode((&((buffer->elements)[position])));
+  if ((result.error))
+  {
     return result;
   }
-  if ((position + result.num_bytes) > buffer->length) {
-    return (utf8_decode_result_t){.error = true};
+  if (((position+(result.num_bytes))>(buffer->length)))
+  {
+    return ((utf8_decode_result_t) {.error = true});
   }
   return result;
 }
+
 /* i=72 j=1 */
 extern buffer_t* buffer_append_code_point(buffer_t* buffer, uint32_t code_point){
-  if (code_point < 0x80) {
-    // 1-byte sequence for code points in the range 0-127
-    buffer = buffer_append_byte(buffer, code_point);
+  if ((code_point<0x80))
+  {
+    (buffer=buffer_append_byte(buffer, code_point));
     return buffer;
-  } else if (code_point < 0x800) {
-    // 2-byte sequence for code points in the range 128-2047
-    buffer = buffer_append_byte(buffer, 0xc0 | (code_point >> 6));
-    buffer = buffer_append_byte(buffer, 0x80 | (code_point & 0x3f));
+  }
+  else
+  if ((code_point<0x800))
+  {
+    (buffer=buffer_append_byte(buffer, (0xc0|(code_point>>6))));
+    (buffer=buffer_append_byte(buffer, (0x80|(code_point&0x3f))));
     return buffer;
-  } else if (code_point < 0x10000) {
-    // 3-byte sequence for code points in the range 2048-65535
-    buffer = buffer_append_byte(buffer, 0xe0 | (code_point >> 12));
-    buffer = buffer_append_byte(buffer, 0x80 | ((code_point >> 6) & 0x3f));
-    buffer = buffer_append_byte(buffer, 0x80 | (code_point & 0x3f));
+  }
+  else
+  if ((code_point<0x10000))
+  {
+    (buffer=buffer_append_byte(buffer, (0xe0|(code_point>>12))));
+    (buffer=buffer_append_byte(buffer, (0x80|((code_point>>6)&0x3f))));
+    (buffer=buffer_append_byte(buffer, (0x80|(code_point&0x3f))));
     return buffer;
-  } else if (code_point <= 0x10FFFF) {
-    // 4-byte sequence for code points in the range 65536-1114111
-    buffer = buffer_append_byte(buffer, 0xf0 | (code_point >> 18));
-    buffer = buffer_append_byte(buffer, 0x80 | ((code_point >> 12) & 0x3f));
-    buffer = buffer_append_byte(buffer, 0x80 | ((code_point >> 6) & 0x3f));
-    buffer = buffer_append_byte(buffer, 0x80 | (code_point & 0x3f));
+  }
+  else
+  if ((code_point<=0x10FFFF))
+  {
+    (buffer=buffer_append_byte(buffer, (0xf0|(code_point>>18))));
+    (buffer=buffer_append_byte(buffer, (0x80|((code_point>>12)&0x3f))));
+    (buffer=buffer_append_byte(buffer, (0x80|((code_point>>6)&0x3f))));
+    (buffer=buffer_append_byte(buffer, (0x80|(code_point&0x3f))));
     return buffer;
-  } else {
-    // Code points beyond the valid UTF-8 range (0-0x10FFFF) are not supported
+  }
+  else
+  {
     fatal_error(ERROR_ILLEGAL_UTF_8_CODE_POINT);
-    return 0; // Not Reached.
+    return 0;
   }
 }
+
 /* i=73 j=1 */
 boolean_t buffer_match_string_at(buffer_t* buffer, uint64_t start_position, char* str){
-  for (uint64_t pos = start_position; true; pos++) {
-    uint8_t byte_str = cast(uint8_t*, str)[pos - start_position];
-    if (byte_str == 0) {
+  for (
+    uint64_t pos = start_position;
+    true;
+    (pos++))
+  {
+    uint8_t byte_str = ((/*CAST*/(uint8_t*) str)[(pos-start_position)]);
+    if ((byte_str==0))
+    {
       return true;
     }
-    if (pos >= buffer_length(buffer)) {
+    if ((pos>=buffer_length(buffer)))
+    {
       return false;
     }
     uint8_t byte_buf = buffer_get(buffer, pos);
-    if (byte_str != byte_buf) {
+    if ((byte_str!=byte_buf))
+    {
       return false;
     }
   }
-  /* NOT REACHED */
   return false;
 }
+
 /* i=74 j=1 */
 buffer_t* buffer_from_string(char* string){
   buffer_t* result = make_buffer(strlen(string));
-  result = buffer_append_string(result, string);
+  (result=buffer_append_string(result, string));
   return result;
 }
+
 /* i=75 j=1 */
 buffer_t* buffer_adjust_region(buffer_t* buffer, uint64_t start, uint64_t end, uint64_t new_width){
-  // TODO(jawilson): more range testing.
-  uint64_t len = buffer->length;
-  if (start > end) {
+  if ((start>end))
+  {
     fatal_error(ERROR_ILLEGAL_RANGE);
   }
-  uint64_t original_width = end - start;
-  if (original_width > new_width) {
-    // Copy the tail of the buffer downwards and then decrease the
-    // length
-    uint64_t difference = original_width - new_width;
-    uint64_t tail_length = buffer->length - end;
-    memmove(&buffer->elements[end - difference], &buffer->elements[end],
-            tail_length);
-    buffer->length -= difference;
-  } else if (original_width < new_width) {
-    // Increase the capacity of the buffer if necessary and then copy
-    // the tail of the buffer upwards and finally increase the length
-    uint64_t difference = new_width - original_width;
-    uint64_t tail_length = buffer->length - end;
-    buffer = buffer_increase_capacity(buffer, buffer->length + difference);
-    memmove(&buffer->elements[end + difference], &buffer->elements[end],
-            tail_length);
-    buffer->length += difference;
+  uint64_t original_width = (end-start);
+  if ((original_width>new_width))
+  {
+    uint64_t difference = (original_width-new_width);
+    uint64_t tail_length = ((buffer->length)-end);
+    memmove((&((buffer->elements)[(end-difference)])), (&((buffer->elements)[end])), tail_length);
+    ((buffer->length)-=difference);
+  }
+  else
+  if ((original_width<new_width))
+  {
+    uint64_t difference = (new_width-original_width);
+    uint64_t tail_length = ((buffer->length)-end);
+    (buffer=buffer_increase_capacity(buffer, ((buffer->length)+difference)));
+    memmove((&((buffer->elements)[(end+difference)])), (&((buffer->elements)[end])), tail_length);
+    ((buffer->length)+=difference);
   }
   return buffer;
 }
+
 /* i=76 j=1 */
 buffer_t* buffer_replace_all(buffer_t* buffer, char* original_text, char* replacement_text){
   int len_original = strlen(original_text);
   int len_replacement = strlen(replacement_text);
-  if (len_original < buffer->length) {
+  if ((len_original<(buffer->length)))
+  {
     uint64_t pos = 0;
-    while (pos <= (buffer->length - len_original)) {
-      if (buffer_match_string_at(buffer, pos, original_text)) {
-        buffer = buffer_adjust_region(buffer, pos, pos + len_original,
-                                      len_replacement);
-        memmove(&buffer->elements[pos], replacement_text, len_replacement);
-        pos += len_replacement;
-      } else {
-        pos++;
+    while ((pos<=((buffer->length)-len_original)))
+    {
+      if (buffer_match_string_at(buffer, pos, original_text))
+      {
+        (buffer=buffer_adjust_region(buffer, pos, (pos+len_original), len_replacement));
+        memmove((&((buffer->elements)[pos])), replacement_text, len_replacement);
+        (pos+=len_replacement);
+      }
+      else
+      {
+        (pos++);
       }
     }
   }
   return buffer;
 }
+
 /* i=77 j=1 */
 buffer_t* buffer_replace_matching_byte(buffer_t* buffer, uint8_t original, uint8_t replacement){
-  for (int i = 0; i < buffer->length; i++) {
-    if (buffer->elements[i] == original) {
-      buffer->elements[i] = replacement;
+  for (
+    int i = 0;
+    (i<(buffer->length));
+    (i++))
+  {
+    if ((((buffer->elements)[i])==original))
+    {
+      (((buffer->elements)[i])=replacement);
     }
   }
   return buffer;
 }
+
 /* i=78 j=1 */
 boolean_t buffer_region_contains(buffer_t* buffer, uint64_t start, uint64_t end, char* text){
-  for (int i = start; i < end; i++) {
-    if (buffer_match_string_at(buffer, i, text)) {
+  for (
+    int i = start;
+    (i<end);
+    (i++))
+  {
+    if (buffer_match_string_at(buffer, i, text))
+    {
       return true;
     }
   }
   return false;
 }
+
 /* i=79 j=1 */
 uint64_t buffer_beginning_of_line(buffer_t* buffer, uint64_t start){
   uint64_t position = start;
-  while (position > 0) {
-    position--;
-    if (buffer_get(buffer, position) == '\n') {
-      return position + 1;
+  while ((position>0))
+  {
+    (position--);
+    if ((buffer_get(buffer, position)=='\n'))
+    {
+      return (position+1);
     }
   }
   return position;
 }
+
 /* i=80 j=1 */
 uint64_t buffer_end_of_line(buffer_t* buffer, uint64_t start){
   uint64_t position = start;
-  while (position < buffer->length && buffer_get(buffer, position) != '\n') {
-    position++;
+  while (((position<(buffer->length))&&(buffer_get(buffer, position)!='\n')))
+  {
+    (position++);
   }
   return position;
 }
+
 /* i=81 j=1 */
 buffer_t* buffer_to_uppercase(buffer_t* buffer){
-  for (uint64_t i = 0; i < buffer->length; i++) {
-    buffer->elements[i] = toupper(buffer->elements[i]);
+  for (
+    uint64_t i = 0;
+    (i<(buffer->length));
+    (i++))
+  {
+    (((buffer->elements)[i])=toupper(((buffer->elements)[i])));
   }
   return buffer;
 }
+
 /* i=82 j=1 */
 buffer_t* buffer_to_lowercase(buffer_t* buffer){
-  for (uint64_t i = 0; i < buffer->length; i++) {
-    buffer->elements[i] = tolower(buffer->elements[i]);
+  for (
+    uint64_t i = 0;
+    (i<(buffer->length));
+    (i++))
+  {
+    (((buffer->elements)[i])=tolower(((buffer->elements)[i])));
   }
   return buffer;
 }
+
 /* i=83 j=1 */
 line_and_column_t buffer_position_to_line_and_column(buffer_t* buffer, uint64_t position){
   uint64_t line = 1;
   uint64_t column = 1;
-
-  // TODO(jawilson): process as code points
-  // TODO(jawilson): write unit test
-  for (uint64_t pos = 0; pos < position; pos++) {
+  for (
+    uint64_t pos = 0;
+    (pos<position);
+    (pos++))
+  {
     uint8_t ch = buffer_get(buffer, pos);
-    if (ch == '\n') {
-      line++;
-      column = 1;
-    } else {
-      column++;
+    if ((ch=='\n'))
+    {
+      (line++);
+      (column=1);
+    }
+    else
+    {
+      (column++);
     }
   }
-  return (line_and_column_t){
-      .line = line,
-      .column = column,
-  };
+  return ((line_and_column_t) {
+                                                 .line = line,
+                                                 .column = column,
+                                             });
 }
+
 /* i=84 j=1 */
 value_array_t* make_value_array(uint64_t initial_capacity){
-  if (initial_capacity == 0) {
-    initial_capacity = 1;
+  if ((initial_capacity==0))
+  {
+    (initial_capacity=1);
   }
-
   value_array_t* result = malloc_struct(value_array_t);
-  result->capacity = initial_capacity;
-  result->elements
-      = cast(value_t*, malloc_bytes(sizeof(value_t) * initial_capacity));
-
+  ((result->capacity)=initial_capacity);
+  ((result->elements)=(/*CAST*/(value_t*) malloc_bytes(((sizeof(value_t))*initial_capacity))));
   return result;
 }
+
 /* i=85 j=1 */
 value_t value_array_get(value_array_t* array, uint32_t index){
-  if (index < array->length) {
-    return array->elements[index];
+  if ((index<(array->length)))
+  {
+    return ((array->elements)[index]);
   }
   fatal_error(ERROR_ACCESS_OUT_OF_BOUNDS);
-#ifdef __TINYC__
-  /* gcc and clang know fatal_error is _Noreturn but tcc doesn't */
-  return (value_t){.u64 = 0};
-#endif
+  return ((value_t) {0});
 }
+
 /* i=86 j=1 */
 void value_array_replace(value_array_t* array, uint32_t index, value_t element){
-  if (index < array->length) {
-    array->elements[index] = element;
+  if ((index<(array->length)))
+  {
+    (((array->elements)[index])=element);
     return;
   }
   fatal_error(ERROR_ACCESS_OUT_OF_BOUNDS);
 }
+
 /* i=87 j=1 */
 void value_array_add(value_array_t* array, value_t element){
-  value_array_ensure_capacity(array, array->length + 1);
-  array->elements[(array->length)++] = element;
+  value_array_ensure_capacity(array, ((array->length)+1));
+  (((array->elements)[((array->length)++)])=element);
 }
+
 /* i=88 j=1 */
 void value_array_push(value_array_t* array, value_t element){
   value_array_add(array, element);
 }
+
 /* i=89 j=1 */
 value_t value_array_pop(value_array_t* array){
-  if (array->length == 0) {
+  if (((array->length)==0))
+  {
     fatal_error(ERROR_ACCESS_OUT_OF_BOUNDS);
   }
-  uint32_t last_index = array->length - 1;
+  uint32_t last_index = ((array->length)-1);
   value_t result = value_array_get(array, last_index);
-  array->elements[last_index] = u64_to_value(0);
-  array->length--;
+  (((array->elements)[last_index])=u64_to_value(0));
+  ((array->length)--);
   return result;
 }
+
 /* i=90 j=1 */
 void value_array_insert_at(value_array_t* array, uint32_t position, value_t element){
-  if (position == array->length) {
+  if ((position==(array->length)))
+  {
     value_array_add(array, element);
     return;
   }
-
-  if (position > array->length) {
+  if ((position>(array->length)))
+  {
     fatal_error(ERROR_ACCESS_OUT_OF_BOUNDS);
     return;
   }
-
-  value_array_ensure_capacity(array, array->length + 1);
-
-  // This is the standard loop but we now need to use a signed index
-  // because when the position is zero, zero - 1 is 0xffffffff which
-  // is still greater than zero (and hence greater than position).
-  for (int64_t i = array->length - 1; i >= position; i--) {
-    array->elements[i + 1] = array->elements[i];
+  value_array_ensure_capacity(array, ((array->length)+1));
+  for (
+    int64_t i = ((array->length)-1);
+    (i>=position);
+    (i--))
+  {
+    (((array->elements)[(i+1)])=((array->elements)[i]));
   }
-  array->length++;
-  array->elements[position] = element;
+  ((array->length)++);
+  (((array->elements)[position])=element);
 }
+
 /* i=91 j=1 */
 value_t value_array_delete_at(value_array_t* array, uint32_t position){
   value_t result = value_array_get(array, position);
-  for (int i = position; i < array->length - 1; i++) {
-    array->elements[i] = array->elements[i + 1];
+  for (
+    int i = position;
+    (i<((array->length)-1));
+    (i++))
+  {
+    (((array->elements)[i])=((array->elements)[(i+1)]));
   }
-  array->length--;
+  ((array->length)--);
   return result;
 }
+
 /* i=92 j=0 */
 void value_array_ensure_capacity(value_array_t* array, uint32_t required_capacity){
-  if (array->capacity < required_capacity) {
-    uint32_t new_capacity = array->capacity * 2;
-    if (new_capacity < required_capacity) {
-      new_capacity = required_capacity;
+  if (((array->capacity)<required_capacity))
+  {
+    uint32_t new_capacity = ((array->capacity)*2);
+    if ((new_capacity<required_capacity))
+    {
+      (new_capacity=required_capacity);
     }
-    value_t* new_elements
-        = cast(value_t*, malloc_bytes(sizeof(value_t) * new_capacity));
-    for (int i = 0; i < array->length; i++) {
-      new_elements[i] = array->elements[i];
+    value_t* new_elements = (/*CAST*/(value_t*) malloc_bytes(((sizeof(value_t))*new_capacity)));
+    for (
+      int i = 0;
+      (i<(array->length));
+      (i++))
+    {
+      ((new_elements[i])=((array->elements)[i]));
     }
-    array->capacity = new_capacity;
-    free_bytes(array->elements);
-    array->elements = new_elements;
+    ((array->capacity)=new_capacity);
+    free_bytes((array->elements));
+    ((array->elements)=new_elements);
     return;
   }
 }
+
 /* i=93 j=1 */
 value_result_t value_alist_find(value_alist_t* list, value_comparison_fn cmp_fn, value_t key){
-  while (list) {
-    if (cmp_fn(key, list->key) == 0) {
-      return compound_literal(value_result_t, {.val = list->value});
+  while (list)
+  {
+    if ((cmp_fn(key, (list->key))==0))
+    {
+      return ((value_result_t) {.val = list->value});
     }
-    list = list->next;
+    (list=(list->next));
   }
-  return compound_literal(value_result_t, {.nf_error = NF_ERROR_NOT_FOUND});
+  return ((value_result_t) {.nf_error = NF_ERROR_NOT_FOUND});
 }
+
 /* i=94 j=1 */
 value_alist_t* value_alist_insert(value_alist_t* list, value_comparison_fn cmp_fn, value_t key, value_t value){
   value_alist_t* result = malloc_struct(value_alist_t);
-  result->next = value_alist_delete(list, cmp_fn, key);
-  result->key = key;
-  result->value = value;
+  ((result->next)=value_alist_delete(list, cmp_fn, key));
+  ((result->key)=key);
+  ((result->value)=value);
   return result;
 }
+
 /* i=95 j=1 */
 value_alist_t* value_alist_delete(value_alist_t* list, value_comparison_fn cmp_fn, value_t key){
-  // This appears to be logically correct but could easily blow out
-  // the stack with a long list.
-  if (list == NULL) {
+  if ((list==NULL))
+  {
     return list;
   }
-  if ((*cmp_fn)(key, list->key) == 0) {
-    value_alist_t* result = list->next;
+  if (((*cmp_fn)(key, (list->key))==0))
+  {
+    value_alist_t* result = (list->next);
     free_bytes(list);
     return result;
   }
-  list->next = value_alist_delete(list->next, cmp_fn, key);
+  ((list->next)=value_alist_delete((list->next), cmp_fn, key));
   return list;
 }
+
 /* i=96 j=1 */
 __attribute__((warn_unused_result)) extern uint64_t value_alist_length(value_alist_t* list){
   uint64_t result = 0;
-  while (list) {
-    result++;
-    list = list->next;
+  while (list)
+  {
+    (result++);
+    (list=(list->next));
   }
   return result;
 }
+
 /* i=101 j=1 */
 value_hashtable_t* make_value_hashtable(uint64_t n_buckets){
-  if (n_buckets < 2) {
-    n_buckets = 2;
+  if ((n_buckets<2))
+  {
+    (n_buckets=2);
   }
   value_hashtable_t* result = malloc_struct(value_hashtable_t);
-  result->n_buckets = n_buckets;
-  result->buckets
-      = cast(value_alist_t**, malloc_bytes(sizeof(value_alist_t*) * n_buckets));
+  ((result->n_buckets)=n_buckets);
+  ((result->buckets)=(/*CAST*/(value_alist_t**) malloc_bytes(((sizeof(typeof(value_alist_t*)))*n_buckets))));
   return result;
 }
+
 /* i=102 j=1 */
 value_hashtable_t* value_ht_insert(value_hashtable_t* ht, value_hash_fn hash_fn, value_comparison_fn cmp_fn, value_t key, value_t value){
   uint64_t hashcode = hash_fn(key);
-  int bucket = hashcode % ht->n_buckets;
-  value_alist_t* list = ht->buckets[bucket];
+  int bucket = (hashcode%(ht->n_buckets));
+  value_alist_t* list = ((ht->buckets)[bucket]);
   uint64_t len = value_alist_length(list);
-  list = value_alist_insert(list, cmp_fn, key, value);
-  ht->buckets[bucket] = list;
+  (list=value_alist_insert(list, cmp_fn, key, value));
+  (((ht->buckets)[bucket])=list);
   uint64_t len_after = value_alist_length(list);
-  if (len_after > len) {
-    ht->n_entries++;
-    // Without this, a hash table would never grow and thus as the
-    // number of entries grows large, the hashtable would only improve
-    // performance over an alist by a constant amount (which could
-    // still be an impressive speedup...)
-    if (ht->n_entries >= (ht->n_buckets * ARMYKNIFE_HT_LOAD_FACTOR)) {
+  if ((len_after>len))
+  {
+    ((ht->n_entries)++);
+    if (((ht->n_entries)>=((ht->n_buckets)*ARMYKNIFE_HT_LOAD_FACTOR)))
+    {
       value_hashtable_upsize_internal(ht, hash_fn, cmp_fn);
     }
   }
   return ht;
 }
+
 /* i=103 j=1 */
 value_hashtable_t* value_ht_delete(value_hashtable_t* ht, value_hash_fn hash_fn, value_comparison_fn cmp_fn, value_t key){
   uint64_t hashcode = hash_fn(key);
-  int bucket = hashcode % ht->n_buckets;
-  value_alist_t* list = ht->buckets[bucket];
+  int bucket = (hashcode%(ht->n_buckets));
+  value_alist_t* list = ((ht->buckets)[bucket]);
   uint64_t len = value_alist_length(list);
-  list = value_alist_delete(list, cmp_fn, key);
-  ht->buckets[bucket] = list;
+  (list=value_alist_delete(list, cmp_fn, key));
+  (((ht->buckets)[bucket])=list);
   uint64_t len_after = value_alist_length(list);
-  if (len_after < len) {
-    ht->n_entries--;
+  if ((len_after<len))
+  {
+    ((ht->n_entries)--);
   }
   return ht;
 }
+
 /* i=104 j=1 */
 value_result_t value_ht_find(value_hashtable_t* ht, value_hash_fn hash_fn, value_comparison_fn cmp_fn, value_t key){
   uint64_t hashcode = hash_fn(key);
-  int bucket = hashcode % ht->n_buckets;
-  value_alist_t* list = ht->buckets[bucket];
+  int bucket = (hashcode%(ht->n_buckets));
+  value_alist_t* list = ((ht->buckets)[bucket]);
   return value_alist_find(list, cmp_fn, key);
 }
+
 /* i=105 j=1 */
 void value_hashtable_upsize_internal(value_hashtable_t* ht, value_hash_fn hash_fn, value_comparison_fn cmp_fn){
-  uint64_t new_num_buckets = ht->n_buckets * AK_HT_UPSCALE_MULTIPLIER;
+  uint64_t new_num_buckets = ((ht->n_buckets)*AK_HT_UPSCALE_MULTIPLIER);
   value_hashtable_t* new_ht = make_value_hashtable(new_num_buckets);
-  // clang-format off
-  value_ht_foreach(ht, key, value, {
-      value_hashtable_t* should_be_result = value_ht_insert(new_ht, hash_fn, cmp_fn, key, value);
-      // If an insertion into the bigger hashtable results in it's own
-      // resize, then the results will be unpredictable (at least
-      // without more code). This is likely to only happen when
-      // growing a very small hashtable and depends on values choosen
-      // for ARMYKNIFE_HT_LOAD_FACTOR and AK_HT_UPSCALE_MULTIPLIER.
-      if (new_ht != should_be_result) {
-	fatal_error(ERROR_ILLEGAL_STATE);
-      }
-  });
-  // clang-format on
-  value_alist_t** old_buckets = ht->buckets;
-  ht->buckets = new_ht->buckets;
-  ht->n_buckets = new_ht->n_buckets;
-  ht->n_entries = new_ht->n_entries;
+  value_ht_foreach(ht, key, value,   {
+    value_hashtable_t* should_be_result = value_ht_insert(new_ht, hash_fn, cmp_fn, key, value);
+    if ((new_ht!=should_be_result))
+    {
+      fatal_error(ERROR_ILLEGAL_STATE);
+    }
+  }
+);
+  value_alist_t** old_buckets = (ht->buckets);
+  ((ht->buckets)=(new_ht->buckets));
+  ((ht->n_buckets)=(new_ht->n_buckets));
+  ((ht->n_entries)=(new_ht->n_entries));
   free_bytes(old_buckets);
   free_bytes(new_ht);
 }
+
 /* i=113 j=1 */
 value_result_t value_tree_find(value_tree_t* t, value_comparison_fn cmp_fn, value_t key){
-  if (t == NULL) {
-    return compound_literal(value_result_t, {.nf_error = NF_ERROR_NOT_FOUND});
+  if ((t==NULL))
+  {
+    return ((value_result_t) {.nf_error = NF_ERROR_NOT_FOUND});
   }
-
-  int cmp_result = cmp_fn(key, t->key);
-  if (cmp_result < 0) {
-    return value_tree_find(t->left, cmp_fn, key);
-  } else if (cmp_result > 0) {
-    return value_tree_find(t->right, cmp_fn, key);
-  } else {
-    return compound_literal(value_result_t, {
+  int cmp_result = cmp_fn(key, (t->key));
+  if ((cmp_result<0))
+  {
+    return value_tree_find((t->left), cmp_fn, key);
+  }
+  else
+  if ((cmp_result>0))
+  {
+    return value_tree_find((t->right), cmp_fn, key);
+  }
+  else
+  {
+    return ((value_result_t) {
                                                 .val = t->value,
                                             });
   }
 }
+
 /* i=114 j=1 */
 value_tree_t* value_tree_insert(value_tree_t* t, value_comparison_fn cmp_fn, value_t key, value_t value){
-  if (t == NULL) {
-    // Create a new leaf node
+  if ((t==NULL))
+  {
     return make_value_tree_leaf(key, value);
   }
-  int cmp_result = cmp_fn(key, t->key);
-  if (cmp_result < 0) {
-    t->left = value_tree_insert(t->left, cmp_fn, key, value);
-  } else if (cmp_result > 0) {
-    t->right = value_tree_insert(t->right, cmp_fn, key, value);
-  } else {
-    // Either key or t->key might need to be freed but it isn't even
-    // possible to tell if either has been "malloced" so good luck
-    // figuring that out.
-    t->value = value;
+  int cmp_result = cmp_fn(key, (t->key));
+  if ((cmp_result<0))
+  {
+    ((t->left)=value_tree_insert((t->left), cmp_fn, key, value));
+  }
+  else
+  if ((cmp_result>0))
+  {
+    ((t->right)=value_tree_insert((t->right), cmp_fn, key, value));
+  }
+  else
+  {
+    ((t->value)=value);
     return t;
   }
-
-  t = value_tree_skew(t);
-  t = value_tree_split(t);
-
+  (t=value_tree_skew(t));
+  (t=value_tree_split(t));
   return t;
 }
+
 /* i=115 j=1 */
 value_tree_t* value_tree_delete(value_tree_t* t, value_comparison_fn cmp_fn, value_t key){
-
-  if (t == NULL) {
+  if ((t==NULL))
+  {
     return t;
   }
-
-  int cmp_result = cmp_fn(key, t->key);
-  if (cmp_result < 0) {
-    t->left = value_tree_delete(t->left, cmp_fn, key);
-  } else if (cmp_result > 0) {
-    t->right = value_tree_delete(t->right, cmp_fn, key);
-  } else {
-    if (value_tree_is_leaf(t)) {
-      // Since we are a leaf, nothing special to do except make sure
-      // this leaf node is no longer in the tree. wikipedia says
-      // "return right(T)" which is technically correct, but this is
-      // clearer.
+  int cmp_result = cmp_fn(key, (t->key));
+  if ((cmp_result<0))
+  {
+    ((t->left)=value_tree_delete((t->left), cmp_fn, key));
+  }
+  else
+  if ((cmp_result>0))
+  {
+    ((t->right)=value_tree_delete((t->right), cmp_fn, key));
+  }
+  else
+  {
+    if (value_tree_is_leaf(t))
+    {
       return NULL;
-    } else if (t->left == NULL) {
+    }
+    else
+    if (((t->left)==NULL))
+    {
       value_tree_t* L = value_tree_successor(t);
-      // Note: wikipedia or the orginal article may have a bug. Doing
-      // the delete and then the key/value assignment leads to a
-      // divergence with a reference implementation.
-      t->key = L->key;
-      t->value = L->value;
-      t->right = value_tree_delete(t->right, cmp_fn, L->key);
-    } else {
+      ((t->key)=(L->key));
+      ((t->value)=(L->value));
+      ((t->right)=value_tree_delete((t->right), cmp_fn, (L->key)));
+    }
+    else
+    {
       value_tree_t* L = value_tree_predecessor(t);
-      // Note: wikipedia or the orginal article may have a bug. Doing
-      // the delete and then the key/value assignment leads to a
-      // divergence with a reference implementation.
-      t->key = L->key;
-      t->value = L->value;
-      t->left = value_tree_delete(t->left, cmp_fn, L->key);
+      ((t->key)=(L->key));
+      ((t->value)=(L->value));
+      ((t->left)=value_tree_delete((t->left), cmp_fn, (L->key)));
     }
   }
-
-  // Rebalance the tree. Decrease the level of all nodes in this level
-  // if necessary, and then skew and split all nodes in the new level.
-
-  t = value_tree_decrease_level(t);
-  t = value_tree_skew(t);
-  t->right = value_tree_skew(t->right);
-  if (t->right != NULL) {
-    t->right->right = value_tree_skew(t->right->right);
+  (t=value_tree_decrease_level(t));
+  (t=value_tree_skew(t));
+  ((t->right)=value_tree_skew((t->right)));
+  if (((t->right)!=NULL))
+  {
+    (((t->right)->right)=value_tree_skew(((t->right)->right)));
   }
-  t = value_tree_split(t);
-  t->right = value_tree_split(t->right);
+  (t=value_tree_split(t));
+  ((t->right)=value_tree_split((t->right)));
   return t;
 }
+
 /* i=116 j=0 */
 value_tree_t* value_tree_skew(value_tree_t* t){
-  if (t == NULL) {
+  if ((t==NULL))
+  {
     return NULL;
   }
-  if (t->left == NULL) {
+  if (((t->left)==NULL))
+  {
     return t;
   }
-  if (t->left->level == t->level) {
-    value_tree_t* L = t->left;
-    t->left = L->right;
-    L->right = t;
+  if ((((t->left)->level)==(t->level)))
+  {
+    value_tree_t* L = (t->left);
+    ((t->left)=(L->right));
+    ((L->right)=t);
     return L;
   }
   return t;
 }
+
 /* i=117 j=0 */
 value_tree_t* value_tree_split(value_tree_t* t){
-  if (t == NULL) {
+  if ((t==NULL))
+  {
     return NULL;
   }
-  if (t->right == NULL || t->right->right == NULL) {
+  if ((((t->right)==NULL)||(((t->right)->right)==NULL)))
+  {
     return t;
   }
-  if (t->level == t->right->right->level) {
-    // We have two horizontal right links.  Take the middle node,
-    // elevate it, and return it.
-    value_tree_t* R = t->right;
-    t->right = R->left;
-    R->left = t;
-    R->level++;
+  if (((t->level)==(((t->right)->right)->level)))
+  {
+    value_tree_t* R = (t->right);
+    ((t->right)=(R->left));
+    ((R->left)=t);
+    ((R->level)++);
     return R;
   }
   return t;
 }
+
 /* i=118 j=0 */
 value_tree_t* make_value_tree_leaf(value_t key, value_t value){
   value_tree_t* result = malloc_struct(value_tree_t);
-  result->level = 1;
-  result->key = key;
-  result->value = value;
+  ((result->level)=1);
+  ((result->key)=key);
+  ((result->value)=value);
   return result;
 }
+
 /* i=120 j=0 */
 value_tree_t* value_tree_decrease_level(value_tree_t* t){
-  if (t->left && t->right) {
-    uint32_t should_be
-        = value_tree_min_level(t->left->level, t->right->level) + 1;
-    if (should_be < t->level) {
-      t->level = should_be;
-      if (should_be < t->right->level) {
-        t->right->level = should_be;
+  if (((t->left)&&(t->right)))
+  {
+    uint32_t should_be = (value_tree_min_level(((t->left)->level), ((t->right)->level))+1);
+    if ((should_be<(t->level)))
+    {
+      ((t->level)=should_be);
+      if ((should_be<((t->right)->level)))
+      {
+        (((t->right)->level)=should_be);
       }
     }
   }
   return t;
 }
+
 /* i=121 j=0 */
 value_tree_t* value_tree_predecessor(value_tree_t* t){
-  t = t->left;
-  while (t->right != NULL) {
-    t = t->right;
+  (t=(t->left));
+  while (((t->right)!=NULL))
+  {
+    (t=(t->right));
   }
   return t;
 }
+
 /* i=122 j=0 */
 value_tree_t* value_tree_successor(value_tree_t* t){
-  t = t->right;
-  while (t->left != NULL) {
-    t = t->left;
+  (t=(t->right));
+  while (((t->left)!=NULL))
+  {
+    (t=(t->left));
   }
   return t;
 }
+
 /* i=127 j=1 */
 void flag_program_name(char* name){
-  current_program = malloc_struct(program_descriptor_t);
-  current_program->name = name;
-  current_command = NULL;
-  current_flag = NULL;
+  (current_program=malloc_struct(program_descriptor_t));
+  ((current_program->name)=name);
+  (current_command=NULL);
+  (current_flag=NULL);
 }
+
 /* i=128 j=1 */
 void flag_description(char* description){
-  if (current_flag != NULL) {
-    current_flag->description = description;
-  } else if (current_command != NULL) {
-    current_command->description = description;
-  } else if (current_program != NULL) {
-    current_program->description = description;
-  } else {
+  if ((current_flag!=NULL))
+  {
+    ((current_flag->description)=description);
+  }
+  else
+  if ((current_command!=NULL))
+  {
+    ((current_command->description)=description);
+  }
+  else
+  if ((current_program!=NULL))
+  {
+    ((current_program->description)=description);
+  }
+  else
+  {
     log_fatal("A current flag, program or command must be executed first");
     fatal_error(ERROR_ILLEGAL_STATE);
   }
 }
+
 /* i=129 j=1 */
 void flag_file_args(value_array_t** write_back_file_args_ptr){
-  if (current_command != NULL) {
-    current_command->write_back_file_args_ptr = write_back_file_args_ptr;
-  } else if (current_program != NULL) {
-    current_program->write_back_file_args_ptr = write_back_file_args_ptr;
-  } else {
+  if ((current_command!=NULL))
+  {
+    ((current_command->write_back_file_args_ptr)=write_back_file_args_ptr);
+  }
+  else
+  if ((current_program!=NULL))
+  {
+    ((current_program->write_back_file_args_ptr)=write_back_file_args_ptr);
+  }
+  else
+  {
     log_fatal("A current program or command must be executed first");
     fatal_error(ERROR_ILLEGAL_STATE);
   }
 }
+
 /* i=130 j=1 */
 void flag_command(char* name, char** write_back_ptr){
-  current_command = malloc_struct(command_descriptor_t);
-  current_command->name = name;
-  current_command->write_back_ptr = write_back_ptr;
-  current_flag = NULL;
-  current_program->commands = string_tree_insert(
-      current_program->commands, name, ptr_to_value(current_command));
+  (current_command=malloc_struct(command_descriptor_t));
+  ((current_command->name)=name);
+  ((current_command->write_back_ptr)=write_back_ptr);
+  (current_flag=NULL);
+  ((current_program->commands)=string_tree_insert((current_program->commands), name, ptr_to_value(current_command)));
 }
+
 /* i=131 j=1 */
 void flag_boolean(char* name, boolean_t* write_back_ptr){
   add_flag(name, write_back_ptr, flag_type_boolean);
 }
+
 /* i=132 j=1 */
 void flag_string(char* name, char** write_back_ptr){
   add_flag(name, write_back_ptr, flag_type_string);
 }
+
 /* i=133 j=1 */
 void flag_uint64(char* name, uint64_t* write_back_ptr){
   add_flag(name, write_back_ptr, flag_type_uint64);
 }
+
 /* i=134 j=1 */
 void flag_int64(char* name, int64_t* write_back_ptr){
   add_flag(name, write_back_ptr, flag_type_int64);
 }
+
 /* i=135 j=1 */
 void flag_double(char* name, double* write_back_ptr){
   add_flag(name, write_back_ptr, flag_type_double);
 }
+
 /* i=136 j=1 */
 void flag_enum(char* name, int* write_back_ptr){
   add_flag(name, write_back_ptr, flag_type_enum);
-  current_flag->enum_size = sizeof(int) * 8;
+  ((current_flag->enum_size)=((sizeof(int))*8));
 }
+
 /* i=137 j=1 */
 void flag_enum_64(char* name, uint64_t* write_back_ptr){
   add_flag(name, write_back_ptr, flag_type_enum);
-  current_flag->enum_size = 64;
+  ((current_flag->enum_size)=64);
 }
+
 /* i=138 j=1 */
 void flag_enum_value(char* name, uint64_t value){
-  if (!current_flag || current_flag->flag_type != flag_type_enum) {
+  if (((!current_flag)||((current_flag->flag_type)!=flag_type_enum)))
+  {
     log_fatal("The current flag is not an enum type");
     fatal_error(ERROR_ILLEGAL_STATE);
   }
-
-  current_flag->enum_values = string_tree_insert(current_flag->enum_values,
-                                                 name, u64_to_value(value));
+  ((current_flag->enum_values)=string_tree_insert((current_flag->enum_values), name, u64_to_value(value)));
 }
+
 /* i=139 j=1 */
 void flag_alias(char* alias){
-  if (current_flag != NULL) {
-    // TODO(jawilson): check for a flag with the same name?
-    if (current_command != NULL) {
-      current_command->flags = string_tree_insert(current_command->flags, alias,
-                                                  ptr_to_value(current_flag));
-    } else if (current_program != NULL) {
-      current_program->flags = string_tree_insert(current_program->flags, alias,
-                                                  ptr_to_value(current_flag));
-    } else {
+  if ((current_flag!=NULL))
+  {
+    if ((current_command!=NULL))
+    {
+      ((current_command->flags)=string_tree_insert((current_command->flags), alias, ptr_to_value(current_flag)));
+    }
+    else
+    if ((current_program!=NULL))
+    {
+      ((current_program->flags)=string_tree_insert((current_program->flags), alias, ptr_to_value(current_flag)));
+    }
+    else
+    {
       log_fatal("A current program or command must exist first");
       fatal_error(ERROR_ILLEGAL_STATE);
     }
-  } else {
+  }
+  else
+  {
     log_fatal("A current flag must present to use flag_alias");
     fatal_error(ERROR_ILLEGAL_STATE);
   }
 }
+
 /* i=140 j=1 */
 char* flag_parse_command_line(int argc, char** argv){
-  if (current_program == NULL) {
-    log_fatal(
-        "flag_parse_command_line can't be called unless flag_program_name() is "
-        "first called.");
+  if ((current_program==NULL))
+  {
+    log_fatal("flag_parse_command_line can't be called unless flag_program_name() is " "first called.");
     fatal_error(ERROR_ILLEGAL_STATE);
   }
-
   int start = 1;
   command_descriptor_t* command = NULL;
-  if (current_program->commands) {
-    if (argc <= 1) {
-      return "This program requires a command but not enough arguments were "
-             "given";
+  if ((current_program->commands))
+  {
+    if ((argc<=1))
+    {
+      return "This program requires a command but not enough arguments were " "given";
     }
-    char* name = argv[1];
-    command = flag_find_command_descriptor(name);
-    if (command == NULL) {
-      return string_printf(
-          "The first command line argument is not a known command: %s", name);
-    } else {
-      *(command->write_back_ptr) = command->name;
+    char* name = (argv[1]);
+    (command=flag_find_command_descriptor(name));
+    if ((command==NULL))
+    {
+      return string_printf("The first command line argument is not a known command: %s", name);
     }
-    start = 2;
+    else
+    {
+      ((*(command->write_back_ptr))=(command->name));
+    }
+    (start=2);
   }
-
   value_array_t* files = make_value_array(argc);
   boolean_t parse_flags = true;
-
-  for (int i = start; i < argc; i++) {
-    char* arg = argv[i];
-    if (parse_flags) {
-      if (string_equal(arg, "--")) {
-        parse_flags = false;
+  for (
+    int i = start;
+    (i<argc);
+    (i++))
+  {
+    char* arg = (argv[i]);
+    if (parse_flags)
+    {
+      if (string_equal(arg, "--"))
+      {
+        (parse_flags=false);
         continue;
       }
-
-      if (string_starts_with(arg, "-")) {
+      if (string_starts_with(arg, "-"))
+      {
         flag_key_value_t key_value = flag_split_argument(arg);
-        if (key_value.key == NULL) {
-          return string_printf("This argument is not a well formed flag: %s",
-                               arg);
+        if (((key_value.key)==NULL))
+        {
+          return string_printf("This argument is not a well formed flag: %s", arg);
         }
-        flag_descriptor_t* flag
-            = flag_find_flag_descriptor(command, key_value.key);
-        if (flag == NULL) {
-          return string_printf(
-              "The argument looks like a flag but was not found: '%s'\n\n"
-              "(You may want to use ' -- ' to seperate flags from non flag "
-              "arguments (aka file arguments).)",
-              arg);
+        flag_descriptor_t* flag = flag_find_flag_descriptor(command, (key_value.key));
+        if ((flag==NULL))
+        {
+          return string_printf("The argument looks like a flag but was not found: '%s'\n\n" "(You may want to use ' -- ' to seperate flags from non flag " "arguments (aka file arguments).)", arg);
         }
-        // If the value is NULL, that means there was no "=" sign
-        // which means we should grab the next argument directly. When
-        // the argument ends with a trailing "=", we get back an empty
-        // string which is legal for purely string arguments but other
-        // argument types will generaly error out during parsing.
-        if (key_value.value == NULL) {
-          // TODO(jawilson): bounds checking!
-          i++;
-          key_value.value = argv[i];
+        if (((key_value.value)==NULL))
+        {
+          (i++);
+          ((key_value.value)=(argv[i]));
         }
         char* error = parse_and_write_value(flag, key_value);
-        if (error) {
+        if (error)
+        {
           return error;
         }
         continue;
       }
     }
-    // Either it doesn't look like a flag or else we are no longer
-    // parsing flags because we saw "--".
     value_array_add(files, str_to_value(arg));
   }
-
-  // Write back the left-over arguments
-  if (command != NULL && command->write_back_file_args_ptr != NULL) {
-    *(command->write_back_file_args_ptr) = files;
+  if (((command!=NULL)&&((command->write_back_file_args_ptr)!=NULL)))
+  {
+    ((*(command->write_back_file_args_ptr))=files);
   }
-  if (current_program->write_back_file_args_ptr != NULL) {
-    *(current_program->write_back_file_args_ptr) = files;
+  if (((current_program->write_back_file_args_ptr)!=NULL))
+  {
+    ((*(current_program->write_back_file_args_ptr))=files);
   }
   return NULL;
 }
+
 /* i=141 j=1 */
 void flag_print_help(FILE* out, char* message){
   fprintf(out, "\nMessage: %s\n", message);
-
-  if (current_program == NULL) {
-    fprintf(out,
-            "Command line parsing was not configured so help can not be "
-            "provided.");
+  if ((current_program==NULL))
+  {
+    fprintf(out, "Command line parsing was not configured so help can not be " "provided.");
     return;
   }
-
-  if (current_program->commands != NULL) {
-    fprintf(out, "\nUsage: %s <command> <flags> <files>\n",
-            current_program->name);
-    fprintf(out, "\nDescription: %s\n\n", current_program->description);
-
-    flag_print_flags(out, "Global flags:", current_program->flags);
-
+  if (((current_program->commands)!=NULL))
+  {
+    fprintf(out, "\nUsage: %s <command> <flags> <files>\n", (current_program->name));
+    fprintf(out, "\nDescription: %s\n\n", (current_program->description));
+    flag_print_flags(out, "Global flags:", (current_program->flags));
     fprintf(out, "\nCommands:\n");
-    // clang-format off
-    string_tree_foreach(current_program->commands, key, value, {
-	fprintf(out, "\n    %s\t%s\n", key, cast(command_descriptor_t*, value.ptr)->description);
-	flag_print_flags(out, "      Flags:", cast(command_descriptor_t*, value.ptr)->flags);
-      });
-    // clang-format on
-  } else {
-    fprintf(out, "\nUsage: %s <flags> <files>\n", current_program->name);
-    fprintf(out, "\nDescription: %s\n\n", current_program->description);
-    flag_print_flags(out, "Flags:", current_program->flags);
+    string_tree_foreach((current_program->commands), key, value,     {
+      fprintf(out, "\n    %s\t%s\n", key, ((/*CAST*/(command_descriptor_t*) (value.ptr))->description));
+      flag_print_flags(out, "      Flags:", ((/*CAST*/(command_descriptor_t*) (value.ptr))->flags));
+    }
+);
+  }
+  else
+  {
+    fprintf(out, "\nUsage: %s <flags> <files>\n", (current_program->name));
+    fprintf(out, "\nDescription: %s\n\n", (current_program->description));
+    flag_print_flags(out, "Flags:", (current_program->flags));
   }
 }
+
 /* i=142 j=1 */
 command_descriptor_t* flag_find_command_descriptor(char* name){
-  if (current_program->commands == NULL) {
-    log_fatal(
-        "flag_get_command() shouldn't not be called when we don't have any "
-        "defined commands.");
+  if (((current_program->commands)==NULL))
+  {
+    log_fatal("flag_get_command() shouldn't not be called when we don't have any " "defined commands.");
     fatal_error(ERROR_ILLEGAL_STATE);
   }
-  value_result_t command_value
-      = string_tree_find(current_program->commands, name);
-  if (is_ok(command_value)) {
-    return cast(command_descriptor_t*, command_value.ptr);
-  } else {
+  value_result_t command_value = string_tree_find((current_program->commands), name);
+  if (is_ok(command_value))
+  {
+    return (/*CAST*/(command_descriptor_t*) (command_value.ptr));
+  }
+  else
+  {
     return NULL;
   }
 }
+
 /* i=143 j=1 */
 flag_descriptor_t* flag_find_flag_descriptor(command_descriptor_t* command, char* name){
-  if (command != NULL) {
-    value_result_t command_flag_value = string_tree_find(command->flags, name);
-    if (is_ok(command_flag_value)) {
-      return cast(flag_descriptor_t*, command_flag_value.ptr);
+  if ((command!=NULL))
+  {
+    value_result_t command_flag_value = string_tree_find((command->flags), name);
+    if (is_ok(command_flag_value))
+    {
+      return (/*CAST*/(flag_descriptor_t*) (command_flag_value.ptr));
     }
   }
-
-  value_result_t program_flag_value
-      = string_tree_find(current_program->flags, name);
-  if (is_ok(program_flag_value)) {
-    return cast(flag_descriptor_t*, program_flag_value.ptr);
+  value_result_t program_flag_value = string_tree_find((current_program->flags), name);
+  if (is_ok(program_flag_value))
+  {
+    return (/*CAST*/(flag_descriptor_t*) (program_flag_value.ptr));
   }
-
   return NULL;
 }
+
 /* i=144 j=1 */
 flag_key_value_t flag_split_argument(char* arg){
   int equal_sign_index = string_index_of_char(arg, '=');
-  if (equal_sign_index >= 0) {
+  if ((equal_sign_index>=0))
+  {
     char* key = string_substring(arg, 0, equal_sign_index);
-    // We know there is an "=". If nothing comes after it, we want to
-    // set value to "" instead of NULL so that we don't try to process
-    // the next argument. So --foo and --foo=, will *not* be treeated
-    // the same way.
-    char* value = string_substring(arg, equal_sign_index + 1, strlen(arg));
-    return compound_literal(flag_key_value_t, {.key = key, .value = value});
+    char* value = string_substring(arg, (equal_sign_index+1), strlen(arg));
+    return ((flag_key_value_t) {.key = key, .value = value});
   }
-  return compound_literal(flag_key_value_t, {.key = arg, .value = NULL});
+  return ((flag_key_value_t) {.key = arg, .value = NULL});
 }
+
 /* i=145 j=1 */
 char* parse_and_write_value(flag_descriptor_t* flag, flag_key_value_t key_value){
-  switch (flag->flag_type) {
-  case flag_type_boolean:
+  switch ((flag->flag_type))
+  {
+    case flag_type_boolean:
     return parse_and_write_boolean(flag, key_value);
-
-  case flag_type_string:
-    *cast(char**, flag->write_back_ptr) = key_value.value;
+    case flag_type_string:
+    ((*(/*CAST*/(char**) (flag->write_back_ptr)))=(key_value.value));
     return NULL;
-
-  case flag_type_uint64:
+    case flag_type_uint64:
     return parse_and_write_uint64(flag, key_value);
-
-  case flag_type_enum:
+    case flag_type_enum:
     return parse_and_write_enum(flag, key_value);
-
-  default:
+    default:
     fatal_error(ERROR_ILLEGAL_STATE);
     break;
   }
   return "<ILLEGAL-STATE-NOT-REACHED>";
 }
+
 /* i=146 j=1 */
 char* parse_and_write_boolean(flag_descriptor_t* flag, flag_key_value_t key_value){
-  char* val = key_value.value;
-  if (string_equal("true", val) || string_equal("t", val)
-      || string_equal("1", val)) {
-    *cast(boolean_t*, flag->write_back_ptr) = true;
-  } else if (string_equal("false", val) || string_equal("f", val)
-             || string_equal("0", val)) {
-    *cast(boolean_t*, flag->write_back_ptr) = false;
-  } else {
-    return string_printf("boolean flag %s does not accept value %s",
-                         key_value.key, key_value.value);
+  char* val = (key_value.value);
+  if (((string_equal("true", val)||string_equal("t", val))||string_equal("1", val)))
+  {
+    ((*(/*CAST*/(boolean_t*) (flag->write_back_ptr)))=true);
+  }
+  else
+  if (((string_equal("false", val)||string_equal("f", val))||string_equal("0", val)))
+  {
+    ((*(/*CAST*/(boolean_t*) (flag->write_back_ptr)))=false);
+  }
+  else
+  {
+    return string_printf("boolean flag %s does not accept value %s", (key_value.key), (key_value.value));
   }
   return NULL;
 }
+
 /* i=147 j=1 */
 char* parse_and_write_uint64(flag_descriptor_t* flag, flag_key_value_t key_value){
-  value_result_t val_result = string_parse_uint64(key_value.value);
-  if (is_ok(val_result)) {
-    *cast(uint64_t*, flag->write_back_ptr) = val_result.u64;
-  } else {
-    return string_printf("uint64_t flag %s does not accept value %s",
-                         key_value.key, key_value.value);
+  value_result_t val_result = string_parse_uint64((key_value.value));
+  if (is_ok(val_result))
+  {
+    ((*(/*CAST*/(uint64_t*) (flag->write_back_ptr)))=(val_result.u64));
+  }
+  else
+  {
+    return string_printf("uint64_t flag %s does not accept value %s", (key_value.key), (key_value.value));
   }
   return NULL;
 }
+
 /* i=148 j=1 */
 char* parse_and_write_enum(flag_descriptor_t* flag, flag_key_value_t key_value){
-  value_result_t val_result
-      = string_tree_find(flag->enum_values, key_value.value);
-  if (is_ok(val_result)) {
-    switch (flag->enum_size) {
-    case 64:
-      // TODO(jawilson): switch on size, check upper bits, etc.
-      *cast(uint64_t*, flag->write_back_ptr) = val_result.u64;
+  value_result_t val_result = string_tree_find((flag->enum_values), (key_value.value));
+  if (is_ok(val_result))
+  {
+    switch ((flag->enum_size))
+    {
+      case 64:
+      ((*(/*CAST*/(uint64_t*) (flag->write_back_ptr)))=(val_result.u64));
       return NULL;
-    case 32:
-      // TODO(jawilson): switch on size, check upper bits, etc.
-      *cast(uint32_t*, flag->write_back_ptr) = val_result.u64;
+      case 32:
+      ((*(/*CAST*/(uint32_t*) (flag->write_back_ptr)))=(val_result.u64));
       return NULL;
-
-    default:
+      default:
       fatal_error(ERROR_ILLEGAL_STATE);
       break;
     }
   }
-  return string_printf("Flag %s does not accept the argument value %s",
-                       key_value.key, key_value.value);
-
-  // TODO(jawilson): allow specifying by value if allowed
-  /*
-  value_result_t val_result = string_parse_uint64(key_value.value);
-  if (is_ok(val_result)) {
-    *cast(uint64_t*, flag->write_back_ptr) = val_result.u64;
-  } else {
-    fatal_error(ERROR_ILLEGAL_STATE);
-  }
-  */
+  return string_printf("Flag %s does not accept the argument value %s", (key_value.key), (key_value.value));
 }
+
 /* i=149 j=0 */
 void add_flag(char* name, void* write_back_ptr, flag_type_t flag_type){
-  current_flag = malloc_struct(flag_descriptor_t);
-  current_flag->flag_type = flag_type;
-  current_flag->name = name;
-  current_flag->write_back_ptr = write_back_ptr;
-
-  // TODO(jawilson): check for a flag with the same name?
-  if (current_command != NULL) {
-    current_command->flags = string_tree_insert(current_command->flags, name,
-                                                ptr_to_value(current_flag));
-  } else if (current_program != NULL) {
-    current_program->flags = string_tree_insert(current_program->flags, name,
-                                                ptr_to_value(current_flag));
-  } else {
+  (current_flag=malloc_struct(flag_descriptor_t));
+  ((current_flag->flag_type)=flag_type);
+  ((current_flag->name)=name);
+  ((current_flag->write_back_ptr)=write_back_ptr);
+  if ((current_command!=NULL))
+  {
+    ((current_command->flags)=string_tree_insert((current_command->flags), name, ptr_to_value(current_flag)));
+  }
+  else
+  if ((current_program!=NULL))
+  {
+    ((current_program->flags)=string_tree_insert((current_program->flags), name, ptr_to_value(current_flag)));
+  }
+  else
+  {
     log_fatal("A current program or command must be executed first");
     fatal_error(ERROR_ILLEGAL_STATE);
   }
 }
+
 /* i=150 j=0 */
 void flag_print_flags(FILE* out, char* header, string_tree_t* flags){
   fprintf(out, "%s\n", header);
-  // clang-format off
-  string_tree_foreach(flags, key, value, {
-      fprintf(out, "      %s\t%s\n", key, cast(flag_descriptor_t*, value.ptr)->description);
-    });
-  // clang-format on
+  string_tree_foreach(flags, key, value,   {
+    fprintf(out, "      %s\t%s\n", key, ((/*CAST*/(flag_descriptor_t*) (value.ptr))->description));
+  }
+);
 }
+
 /* i=151 j=1 */
 __attribute__((warn_unused_result)) buffer_t* buffer_append_file_contents(buffer_t* bytes, char* file_name){
-
-  uint64_t capacity = bytes->capacity;
-
-  // This is optional
+  uint64_t capacity = (bytes->capacity);
   {
     struct stat st;
-    if (stat(file_name, &st) < 0) {
+    if ((stat(file_name, (&st))<0))
+    {
       log_fatal("file does not exist: %s", file_name);
       fatal_error(ERROR_ILLEGAL_STATE);
     }
-    capacity = st.st_size;
+    (capacity=(st.st_size));
   }
-
-  bytes = buffer_increase_capacity(bytes, capacity);
-
+  (bytes=buffer_increase_capacity(bytes, capacity));
   FILE* file = fopen(file_name, "r");
-  bytes = buffer_append_all(bytes, file);
+  (bytes=buffer_append_all(bytes, file));
   fclose(file);
-
   return bytes;
 }
+
 /* i=152 j=1 */
 __attribute__((warn_unused_result)) extern buffer_t* buffer_append_all(buffer_t* bytes, FILE* input){
   uint8_t buffer[1024];
-  while (1) {
-    uint64_t n_read = fread(buffer, 1, sizeof(buffer), input);
-    if (n_read == 0) {
+  while (1)
+  {
+    uint64_t n_read = fread(buffer, 1, (sizeof(buffer)), input);
+    if ((n_read==0))
+    {
       break;
     }
-    bytes = buffer_append_bytes(bytes, buffer, n_read);
+    (bytes=buffer_append_bytes(bytes, buffer, n_read));
   }
   return bytes;
 }
+
 /* i=153 j=1 */
 void buffer_write_file(buffer_t* bytes, char* file_name){
   FILE* file = fopen(file_name, "w");
-  if (file == NULL) {
+  if ((file==NULL))
+  {
     log_fatal("Failed to open file for writing: %s", file_name);
     log_fatal("strerror(errno) = %s", strerror(errno));
     fatal_error(ERROR_ILLEGAL_STATE);
   }
-  size_t bytes_written = fwrite(bytes->elements, 1, bytes->length, file);
-  if (bytes_written != bytes->length) {
-    log_fatal("Failed to write %d bytes to %s", bytes->length, file_name);
+  size_t bytes_written = fwrite((bytes->elements), 1, (bytes->length), file);
+  if ((bytes_written!=(bytes->length)))
+  {
+    log_fatal("Failed to write %d bytes to %s", (bytes->length), file_name);
     log_fatal("strerror(errno) = %s", strerror(errno));
     fatal_error(ERROR_ILLEGAL_STATE);
   }
-  if (fclose(file) != 0) {
+  if ((fclose(file)!=0))
+  {
     log_fatal("Failed to close file: %s", file_name);
     log_fatal("strerror(errno) = %s", strerror(errno));
     fatal_error(ERROR_ILLEGAL_STATE);
   }
 }
+
 /* i=154 j=1 */
 buffer_t* buffer_read_until(buffer_t* buffer, FILE* input, char end_of_line){
-  while (!feof(input)) {
+  while ((!feof(input)))
+  {
     int ch = fgetc(input);
-    if (ch < 0) {
+    if ((ch<0))
+    {
       return buffer;
     }
-    if (ch == end_of_line) {
+    if ((ch==end_of_line))
+    {
       return buffer;
     }
-    buffer = buffer_append_byte(buffer, ch);
+    (buffer=buffer_append_byte(buffer, ch));
   }
   return buffer;
 }
+
 /* i=155 j=1 */
 extern buffer_t* buffer_read_ready_bytes(buffer_t* buffer, FILE* input, uint64_t max_bytes){
   int file_number = fileno(input);
   return buffer_read_ready_bytes_file_number(buffer, file_number, max_bytes);
 }
+
 /* i=156 j=1 */
 extern buffer_t* buffer_read_ready_bytes_file_number(buffer_t* buffer, int file_number, uint64_t max_bytes){
-  fcntl(file_number, F_SETFL, fcntl(file_number, F_GETFL) | O_NONBLOCK);
-
-  uint64_t bytes_remaining = max_bytes - buffer_length(buffer);
+  fcntl(file_number, F_SETFL, (fcntl(file_number, F_GETFL)|O_NONBLOCK));
+  uint64_t bytes_remaining = (max_bytes-buffer_length(buffer));
   char read_buffer[1024];
-
-  // Loop until either blocking would occur or max_bytes have been added
-  while (bytes_remaining > 0) {
-    int bytes_read = read(file_number, read_buffer, sizeof(read_buffer));
-    if (bytes_read > 0) {
-      for (int i = 0; i < bytes_read; i++) {
-        buffer = buffer_append_byte(buffer, cast(uint8_t, read_buffer[i]));
-        bytes_remaining--;
+  while ((bytes_remaining>0))
+  {
+    int bytes_read = read(file_number, read_buffer, (sizeof(read_buffer)));
+    if ((bytes_read>0))
+    {
+      for (
+        int i = 0;
+        (i<bytes_read);
+        (i++))
+      {
+        (buffer=buffer_append_byte(buffer, (/*CAST*/(uint8_t) (read_buffer[i]))));
+        (bytes_remaining--);
       }
-    } else if (bytes_read == 0) {
-      // End-of-file (write end of pipe closed)
+    }
+    else
+    if ((bytes_read==0))
+    {
       break;
-    } else {
-      // bytes_read < 0 (so presumably -1).
-      if (errno != EAGAIN && errno != EWOULDBLOCK) {
-        // A real error occurred
-        log_fatal("Error reading from file descriptor %d: %s", file_number,
-                  strerror(errno));
+    }
+    else
+    {
+      if (((errno!=EAGAIN)&&(errno!=EWOULDBLOCK)))
+      {
+        log_fatal("Error reading from file descriptor %d: %s", file_number, strerror(errno));
         fatal_error(ERROR_ILLEGAL_STATE);
       }
-      // No data available without blocking, so break out of the loop
       break;
     }
   }
-
   return buffer;
 }
+
 /* i=157 j=1 */
 int file_peek_byte(FILE* input){
-  if (feof(input)) {
-    return -1;
+  if (feof(input))
+  {
+    return (-1);
   }
   int result = fgetc(input);
-  // ungetc doesn't "push back" -1 according to
-  // https://en.cppreference.com/w/c/io/ungetc
-  // But who is going to trust that...
-  if (result >= 0) {
+  if ((result>=0))
+  {
     ungetc(result, input);
   }
   return result;
 }
+
 /* i=158 j=1 */
 boolean_t file_eof(FILE* input){
-  return feof(input) || file_peek_byte(input) < 0;
+  return (feof(input)||(file_peek_byte(input)<0));
 }
+
 /* i=159 j=1 */
 void file_copy_stream(FILE* input, FILE* output, boolean_t until_eof, uint64_t size){
-  if (until_eof) {
-    size = ULLONG_MAX;
+  if (until_eof)
+  {
+    (size=ULLONG_MAX);
   }
-
   uint8_t buffer[FILE_COPY_STREAM_BUFFER_SIZE];
-  while (size > 0) {
-    int minimum = size < FILE_COPY_STREAM_BUFFER_SIZE
-                      ? size
-                      : FILE_COPY_STREAM_BUFFER_SIZE;
+  while ((size>0))
+  {
+    int minimum = ((size<FILE_COPY_STREAM_BUFFER_SIZE) ? size : FILE_COPY_STREAM_BUFFER_SIZE);
     uint64_t n_read = fread(buffer, 1, minimum, input);
-    if (n_read == 0) {
+    if ((n_read==0))
+    {
       break;
     }
     fwrite(buffer, 1, n_read, output);
-    size -= n_read;
+    (size-=n_read);
   }
 }
+
 /* i=160 j=1 */
 void file_skip_bytes(FILE* input, uint64_t n_bytes){
-
-  // We'd try to do it like this but Gemini claims that this doesn't
-  // reliably work for stdin. That is bonkers!
-  //
-  // fseek(in, size, SEEK_CUR);
-
-  while (1) {
-    if (n_bytes == 0 || feof(input)) {
+  while (1)
+  {
+    if (((n_bytes==0)||feof(input)))
+    {
       return;
     }
     int ch = fgetc(input);
-    if (ch < 0) {
-      // TODO(jawilson): fixme?
+    if ((ch<0))
+    {
       return;
     }
-    n_bytes--;
+    (n_bytes--);
   }
 }
+
 /* i=161 j=1 */
 __attribute__((warn_unused_result)) extern buffer_t* term_clear_screen(buffer_t* buffer){
-  return buffer_printf(buffer, TERM_ESCAPE_START "2J");
+  return buffer_printf(buffer, TERM_ESCAPE_STRING("2J"));
 }
+
 /* i=162 j=1 */
 __attribute__((warn_unused_result)) extern buffer_t* term_set_foreground_color(buffer_t* buffer, uint32_t color){
-  uint8_t blue = color & 0xff;
-  uint8_t green = (color >> 8) & 0xff;
-  uint8_t red = (color >> 16) & 0xff;
-
-  // Escape sequence for setting foreground color (ESC [ 38; 2; r; g; b m)
-  return buffer_printf(buffer,
-                       TERM_ESCAPE_START "38;2;%d;%d;%d" TERM_ESCAPE_END, red,
-                       green, blue);
+  uint8_t blue = (color&0xff);
+  uint8_t green = ((color>>8)&0xff);
+  uint8_t red = ((color>>16)&0xff);
+  return buffer_printf(buffer, TERM_ESCAPE_STRING_START_AND_END("38;2;%d;%d;%d"), red, green, blue);
 }
+
 /* i=163 j=1 */
 __attribute__((warn_unused_result)) extern buffer_t* term_set_background_color(buffer_t* buffer, uint32_t color){
-  uint8_t blue = color & 0xff;
-  uint8_t green = (color >> 8) & 0xff;
-  uint8_t red = (color >> 16) & 0xff;
-
-  // Escape sequence for setting background color (ESC [ 48; 2; r; g; b m)
-  return buffer_printf(buffer,
-                       TERM_ESCAPE_START "48;2;%d;%d;%d" TERM_ESCAPE_END, red,
-                       green, blue);
+  uint8_t blue = (color&0xff);
+  uint8_t green = ((color>>8)&0xff);
+  uint8_t red = ((color>>16)&0xff);
+  return buffer_printf(buffer, TERM_ESCAPE_STRING_START_AND_END("48;2;%d;%d;%d"), red, green, blue);
 }
+
 /* i=164 j=1 */
 __attribute__((warn_unused_result)) extern buffer_t* term_move_cursor_absolute(buffer_t* buffer, int x, int y){
-  // Escape sequence for cursor movement (ESC [ y; x H)
-  return buffer_printf(buffer, TERM_ESCAPE_START "%d;%dH", y + 1, x + 1);
+  return buffer_printf(buffer, TERM_ESCAPE_STRING("%d;%dH"), (y+1), (x+1));
 }
+
 /* i=165 j=1 */
 __attribute__((warn_unused_result)) extern buffer_t* term_move_cursor_relative(buffer_t* buffer, int x, int y){
-  // First handle the x position
-  if (x > 0) {
-    buffer = buffer_printf(buffer, TERM_ESCAPE_START "%dC", x);
-  } else if (x < 0) {
-    buffer = buffer_printf(buffer, TERM_ESCAPE_START "%dD", -x);
+  if ((x>0))
+  {
+    (buffer=buffer_printf(buffer, TERM_ESCAPE_STRING("%dC"), x));
   }
-  if (y > 0) {
-    buffer = buffer_printf(buffer, TERM_ESCAPE_START "%dB", y);
-  } else {
-    buffer = buffer_printf(buffer, TERM_ESCAPE_START "%dA", -y);
+  else
+  if ((x<0))
+  {
+    (buffer=buffer_printf(buffer, TERM_ESCAPE_STRING("%dD"), (-x)));
+  }
+  if ((y>0))
+  {
+    (buffer=buffer_printf(buffer, TERM_ESCAPE_STRING("%dB"), y));
+  }
+  else
+  {
+    (buffer=buffer_printf(buffer, TERM_ESCAPE_STRING("%dA"), (-y)));
   }
   return buffer;
 }
+
 /* i=166 j=1 */
 __attribute__((warn_unused_result)) extern buffer_t* term_bold(buffer_t* buffer){
-  return buffer_printf(buffer, TERM_ESCAPE_START "1m");
+  return buffer_printf(buffer, TERM_ESCAPE_STRING("1m"));
 }
+
 /* i=167 j=1 */
 __attribute__((warn_unused_result)) extern buffer_t* term_dim(buffer_t* buffer){
-  return buffer_printf(buffer, TERM_ESCAPE_START "2m");
+  return buffer_printf(buffer, TERM_ESCAPE_STRING("2m"));
 }
+
 /* i=168 j=1 */
 __attribute__((warn_unused_result)) extern buffer_t* term_italic(buffer_t* buffer){
-  return buffer_printf(buffer, TERM_ESCAPE_START "3m");
+  return buffer_printf(buffer, TERM_ESCAPE_STRING("3m"));
 }
+
 /* i=169 j=1 */
 __attribute__((warn_unused_result)) extern buffer_t* term_underline(buffer_t* buffer){
-  return buffer_printf(buffer, TERM_ESCAPE_START "4m");
+  return buffer_printf(buffer, TERM_ESCAPE_STRING("4m"));
 }
+
 /* i=170 j=1 */
 __attribute__((warn_unused_result)) extern buffer_t* term_reset_formatting(buffer_t* buffer){
-  return buffer_printf(buffer, TERM_ESCAPE_START "0m");
+  return buffer_printf(buffer, TERM_ESCAPE_STRING("0m"));
 }
+
 /* i=171 j=1 */
 __attribute__((warn_unused_result)) extern buffer_t* term_draw_box(buffer_t* buffer, uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, box_drawing_t* box){
-  // top
-  buffer = term_move_cursor_absolute(buffer, x0, y0);
-  buffer = buffer_append_code_point(buffer, box->upper_left_corner);
-  for (uint64_t x = x0 + 1; x < x1; x++) {
-    buffer = buffer_append_code_point(buffer, box->top_edge);
+  (buffer=term_move_cursor_absolute(buffer, x0, y0));
+  (buffer=buffer_append_code_point(buffer, (box->upper_left_corner)));
+  for (
+    uint64_t x = (x0+1);
+    (x<x1);
+    (x++))
+  {
+    (buffer=buffer_append_code_point(buffer, (box->top_edge)));
   }
-  buffer = buffer_append_code_point(buffer, box->upper_right_corner);
-
-  // bottom
-  buffer = term_move_cursor_absolute(buffer, x0, y1);
-  buffer = buffer_append_code_point(buffer, box->lower_left_corner);
-  for (uint64_t x = x0 + 1; x < x1; x++) {
-    buffer = buffer_append_code_point(buffer, box->bottom_edge);
+  (buffer=buffer_append_code_point(buffer, (box->upper_right_corner)));
+  (buffer=term_move_cursor_absolute(buffer, x0, y1));
+  (buffer=buffer_append_code_point(buffer, (box->lower_left_corner)));
+  for (
+    uint64_t x = (x0+1);
+    (x<x1);
+    (x++))
+  {
+    (buffer=buffer_append_code_point(buffer, (box->bottom_edge)));
   }
-  buffer = buffer_append_code_point(buffer, box->lower_right_corner);
-
-  // the sides (and the middle)
-  for (int y = y0 + 1; y < y1; y++) {
-    buffer = term_move_cursor_absolute(buffer, x0, y);
-    buffer = buffer_append_code_point(buffer, box->left_edge);
-
-    for (int x = x0 + 1; x < x1; x++) {
-      buffer = buffer_append_code_point(buffer, ' ');
+  (buffer=buffer_append_code_point(buffer, (box->lower_right_corner)));
+  for (
+    int y = (y0+1);
+    (y<y1);
+    (y++))
+  {
+    (buffer=term_move_cursor_absolute(buffer, x0, y));
+    (buffer=buffer_append_code_point(buffer, (box->left_edge)));
+    for (
+      int x = (x0+1);
+      (x<x1);
+      (x++))
+    {
+      (buffer=buffer_append_code_point(buffer, ' '));
     }
-    // buffer = term_move_cursor_absolute(buffer, x1, y);
-
-    buffer = buffer_append_code_point(buffer, box->right_edge);
+    (buffer=buffer_append_code_point(buffer, (box->right_edge)));
   }
-
   return buffer;
 }
+
 /* i=172 j=1 */
 extern struct termios term_echo_off(){
   struct termios oldt;
   struct termios newt;
-  tcgetattr(STDIN_FILENO, &oldt);
-  newt = oldt;
-
-  // Get the original terminal settings
-  tcgetattr(STDIN_FILENO, &oldt);
-  newt = oldt;
-
-  // Disable canonical input mode and echo
-  newt.c_lflag &= ~(ICANON | ECHO);
-  tcsetattr(STDIN_FILENO, TCSANOW, &newt);
-
+  tcgetattr(STDIN_FILENO, (&oldt));
+  (newt=oldt);
+  tcgetattr(STDIN_FILENO, (&oldt));
+  (newt=oldt);
+  ((newt.c_lflag)&=(~(ICANON|ECHO)));
+  tcsetattr(STDIN_FILENO, TCSANOW, (&newt));
   return oldt;
 }
+
 /* i=173 j=1 */
 extern void term_echo_restore(struct termios oldt){
-  // Restore the original terminal settings
-  tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
+  tcsetattr(STDIN_FILENO, TCSANOW, (&oldt));
 }
+
 /* i=174 j=1 */
 value_array_t* string_tokenize(const char* str, const char* delimiters){
-  return tokenize_memory_range(cast(uint8_t*, str), strlen(str), delimiters);
+  return tokenize_memory_range((/*CAST*/(uint8_t*) str), strlen(str), delimiters);
 }
+
 /* i=175 j=1 */
 value_array_t* buffer_tokenize(buffer_t* buffer, const char* delimiters){
-  return tokenize_memory_range(&(buffer->elements[0]), buffer->length,
-                               delimiters);
+  return tokenize_memory_range((&((buffer->elements)[0])), (buffer->length), delimiters);
 }
+
 /* i=176 j=1 */
 value_array_t* tokenize_memory_range(uint8_t* str, uint64_t length, const char* delimiters){
   value_array_t* result = make_value_array(1);
   char token_data[1024];
   int cpos = 0;
-  for (int i = 0; (i < length); i++) {
-    uint8_t ch = str[i];
-    if (ch == 0 || string_contains_char(delimiters, ch)) {
-      token_data[cpos++] = '\0';
-      if (strlen(token_data) > 0) {
+  for (
+    int i = 0;
+    (i<length);
+    (i++))
+  {
+    uint8_t ch = (str[i]);
+    if (((ch==0)||string_contains_char(delimiters, ch)))
+    {
+      ((token_data[(cpos++)])='\0');
+      if ((strlen(token_data)>0))
+      {
         add_duplicate(result, token_data);
       }
-      cpos = 0;
-    } else {
-      token_data[cpos++] = ch;
+      (cpos=0);
+    }
+    else
+    {
+      ((token_data[(cpos++)])=ch);
     }
   }
-  token_data[cpos++] = '\0';
-  if (strlen(token_data) > 0) {
+  ((token_data[(cpos++)])='\0');
+  if ((strlen(token_data)>0))
+  {
     add_duplicate(result, token_data);
   }
-
   return result;
 }
+
 /* i=177 j=1 */
 void add_duplicate(value_array_t* token_array, const char* data){
   value_array_add(token_array, str_to_value(string_duplicate(data)));
 }
+
 /* i=178 j=1 */
 random_state_t random_state_for_test(void){
-  return (random_state_t){.a = 0x1E1D43C2CA44B1F5, .b = 0x4FDD267452CEDBAC};
+  return ((random_state_t) {.a = 0x1E1D43C2CA44B1F5, .b = 0x4FDD267452CEDBAC});
 }
+
 /* i=180 j=1 */
 uint64_t random_next_uint64_below(random_state_t* state, uint64_t maximum){
-  if (maximum == 0) {
+  if ((maximum==0))
+  {
     fatal_error(ERROR_ILLEGAL_ARGUMENT);
   }
-#if 1
-  // This is simpler and works well in practice (it seems).
-  return random_next(state) % maximum;
-#else
-  // This version in theory should be a bit more fair than modulous
-  // but I can't really detect a difference.
-  int mask = (1ULL << (uint64_highest_bit_set(maximum) + 1)) - 1;
-  while (1) {
+  return (random_next(state)%maximum);
+  int mask = ((1ULL<<(uint64_highest_bit_set(maximum)+1))-1);
+  while (1)
+  {
     uint64_t n = random_next(state);
-    n &= mask;
-    if (n < maximum) {
+    (n&=mask);
+    if ((n<maximum))
+    {
       return n;
     }
   }
-#endif /* 0 */
 }
+
 /* i=181 j=0 */
 random_state_t* random_state(void){
-  static random_state_t shared_random_state = {0};
-
-  if (shared_random_state.a == 0) {
-    shared_random_state.a = 0x1E1D43C2CA44B1F5 ^ cast(uint64_t, time(NULL));
-    shared_random_state.b = 0x4FDD267452CEDBAC ^ cast(uint64_t, time(NULL));
+  if (((shared_random_state.a)==0))
+  {
+    ((shared_random_state.a)=(0x1E1D43C2CA44B1F5^(/*CAST*/(uint64_t) time(NULL))));
+    ((shared_random_state.b)=(0x4FDD267452CEDBAC^(/*CAST*/(uint64_t) time(NULL))));
   }
-
-  return &shared_random_state;
+  return (&shared_random_state);
 }
+
 /* i=183 j=0 */
 uint64_t random_next(random_state_t* state){
-  uint64_t s0 = state->a;
-  uint64_t s1 = state->b;
-  uint64_t result = rotl(s0 * 5, 7) * 9;
-  s1 ^= s0;
-  state->a = rotl(s0, 24) ^ s1 ^ (s1 << 16); // a, b
-  state->b = rotl(s1, 37);                   // c
-
+  uint64_t s0 = (state->a);
+  uint64_t s1 = (state->b);
+  uint64_t result = (rotl((s0*5), 7)*9);
+  (s1^=s0);
+  ((state->a)=((rotl(s0, 24)^s1)^(s1<<16)));
+  ((state->b)=rotl(s1, 37));
   return result;
 }
+
 /* i=184 j=1 */
 cdl_printer_t* make_cdl_printer(buffer_t* buffer){
   cdl_printer_t* result = malloc_struct(cdl_printer_t);
-  result->buffer = buffer;
+  ((result->buffer)=buffer);
   return result;
 }
+
 /* i=185 j=1 */
 void cdl_boolean(cdl_printer_t* printer, boolean_t boolean){
-  cdl_output_token(printer, boolean ? "true" : "false");
+  cdl_output_token(printer, (boolean ? "true" : "false"));
 }
+
 /* i=186 j=1 */
 void cdl_string(cdl_printer_t* printer, char* string){
-  if (!is_symbol(string)) {
+  if ((!is_symbol(string)))
+  {
     cdl_output_token(printer, string_printf("\"%s\"", string));
-  } else {
+  }
+  else
+  {
     cdl_output_token(printer, string);
   }
 }
+
 /* i=187 j=1 */
 void cdl_int64(cdl_printer_t* printer, int64_t number){
   cdl_output_token(printer, string_printf("%ld", number));
 }
+
 /* i=188 j=1 */
 void cdl_uint64(cdl_printer_t* printer, uint64_t number){
   cdl_output_token(printer, uint64_to_string(number));
 }
+
 /* i=189 j=1 */
 void cdl_double(cdl_printer_t* printer, double number){
   cdl_output_token(printer, string_printf("%lf", number));
 }
+
 /* i=190 j=1 */
 void cdl_start_array(cdl_printer_t* printer){
   cdl_output_token(printer, "[");
-  printer->indention_level += 1;
+  ((printer->indention_level)+=1);
 }
+
 /* i=191 j=1 */
 void cdl_end_array(cdl_printer_t* printer){
-  printer->indention_level -= 1;
+  ((printer->indention_level)-=1);
   cdl_output_token(printer, "]");
 }
+
 /* i=192 j=1 */
 void cdl_start_table(cdl_printer_t* printer){
   cdl_output_token(printer, "{");
-  printer->indention_level += 1;
+  ((printer->indention_level)+=1);
 }
+
 /* i=193 j=1 */
-void cdl_key(cdl_printer_t* printer, char* key){ printer->key_token = key; }
+void cdl_key(cdl_printer_t* printer, char* key){
+  ((printer->key_token)=key);
+}
+
 /* i=194 j=1 */
 void cdl_end_table(cdl_printer_t* printer){
-  printer->indention_level -= 1;
+  ((printer->indention_level)-=1);
   cdl_output_token(printer, "}");
 }
+
 /* i=195 j=0 */
 void cdl_indent(cdl_printer_t* printer){
-  buffer_append_repeated_byte(printer->buffer, ' ',
-                              4 * printer->indention_level);
+  buffer_append_repeated_byte((printer->buffer), ' ', (4*(printer->indention_level)));
 }
+
 /* i=196 j=0 */
 boolean_t is_symbol(char* string){
-  for (int i = 0; string[i] != 0; i++) {
-    if (i == 0) {
-      if (!isalpha(string[i])) {
+  for (
+    int i = 0;
+    ((string[i])!=0);
+    (i++))
+  {
+    if ((i==0))
+    {
+      if ((!isalpha((string[i]))))
+      {
         return false;
       }
-    } else {
-      if (!(isalnum(string[i]) || string[i] == '_')) {
+    }
+    else
+    {
+      if ((!(isalnum((string[i]))||((string[i])=='_'))))
+      {
         return false;
       }
     }
   }
   return true;
 }
+
 /* i=197 j=0 */
 void cdl_output_token(cdl_printer_t* printer, char* string){
   cdl_indent(printer);
-  if (printer->key_token != NULL) {
-    buffer_printf(printer->buffer, "%s = %s\n", printer->key_token, string);
-    printer->key_token = NULL;
-  } else {
-    buffer_printf(printer->buffer, "%s\n", string);
+  if (((printer->key_token)!=NULL))
+  {
+    buffer_printf((printer->buffer), "%s = %s\n", (printer->key_token), string);
+    ((printer->key_token)=NULL);
+  }
+  else
+  {
+    buffer_printf((printer->buffer), "%s\n", string);
   }
 }
+
 /* i=198 j=1 */
 sub_process_t* make_sub_process(value_array_t* argv){
   sub_process_t* result = malloc_struct(sub_process_t);
-  result->argv = argv;
-  result->exit_code = -1;
+  ((result->argv)=argv);
+  ((result->exit_code)=(-1));
   return result;
 }
+
 /* i=199 j=1 */
 boolean_t sub_process_launch(sub_process_t* sub_process){
-  uint64_t length = sub_process->argv->length;
-  if (length < 1) {
+  uint64_t length = ((sub_process->argv)->length);
+  if ((length<1))
+  {
     log_fatal("Expected at least the program path in argv");
     fatal_error(ERROR_ILLEGAL_STATE);
   }
-
-  // 1. Convert value_array_t to char** for execvp
-  char** argv = cast(char**, malloc_bytes((length + 1) * sizeof(char*)));
-  for (int i = 0; i < length; i++) {
-    argv[i] = value_array_get_ptr(sub_process->argv, i, typeof(char*));
+  char** argv = (/*CAST*/(typeof(char**)) malloc_bytes(((length+1)*(sizeof(typeof(char*))))));
+  for (
+    int i = 0;
+    (i<length);
+    (i++))
+  {
+    ((argv[i])=value_array_get_ptr((sub_process->argv), i, typeof(char*)));
   }
-  // This shouldn't be necessary because we used malloc_bytes which
-  // zeros allocations but it might look like an error.
-  argv[length] = NULL;
-  // char** envp = NULL;
-
-  // 2. Create pipes for stdin of the sub process as well as to
-  // capture stdout and stderr.
-  int stdin_pipe[2];
-  int stdout_pipe[2];
-  int stderr_pipe[2];
-  if (pipe(stdin_pipe) == -1 || pipe(stdout_pipe) == -1
-      || pipe(stderr_pipe) == -1) {
+  ((argv[length])=NULL);
+  int stdin_pipe[2] = {0};
+  int stdout_pipe[2] = {0};
+  int stderr_pipe[2] = {0};
+  if ((((pipe(stdin_pipe)==(-1))||(pipe(stdout_pipe)==(-1)))||(pipe(stderr_pipe)==(-1))))
+  {
     log_fatal("Failed to create pipe for stdin, stdout or stderr");
     fatal_error(ERROR_ILLEGAL_STATE);
     return false;
   }
-
-  // 3. Fork the process
   pid_t pid = fork();
-  if (pid == -1) {
+  if ((pid==(-1)))
+  {
     log_fatal("fork() failed.");
     fatal_error(ERROR_ILLEGAL_STATE);
     return false;
   }
-
-  if (pid == 0) {
-    /* ====================================================================== */
-    /* Child Process */
-    /* ====================================================================== */
-
-    // 4. Redirect stdin, stdout and stderr to pipes
-    dup2(stdin_pipe[0], STDIN_FILENO);
-    dup2(stdout_pipe[1], STDOUT_FILENO);
-    dup2(stderr_pipe[1], STDERR_FILENO);
-    close(stdin_pipe[0]);
-    close(stdin_pipe[1]);
-    close(stdout_pipe[0]);
-    close(stdout_pipe[1]);
-    close(stderr_pipe[0]);
-    close(stderr_pipe[1]);
-
-    // 5. Final "exec" to the command
-    int exec_exit_status = execvp(argv[0], argv);
-    // execvp should not return!
+  if ((pid==0))
+  {
+    dup2((stdin_pipe[0]), STDIN_FILENO);
+    dup2((stdout_pipe[1]), STDOUT_FILENO);
+    dup2((stderr_pipe[1]), STDERR_FILENO);
+    close((stdin_pipe[0]));
+    close((stdin_pipe[1]));
+    close((stdout_pipe[0]));
+    close((stdout_pipe[1]));
+    close((stderr_pipe[0]));
+    close((stderr_pipe[1]));
+    int exec_exit_status = execvp((argv[0]), argv);
     log_fatal("execvp returned non zero exit status %d", exec_exit_status);
     fatal_error(ERROR_ILLEGAL_STATE);
     return false;
-  } else {
-    /* ====================================================================== */
-    /* Parent Process */
-    /* ====================================================================== */
-
-    // 6. Close write ends of the pipes in the parent since we will
-    // only be reading from the pipe.
-    close(stdin_pipe[0]);  // Close read end of stdin pipe
-    close(stdout_pipe[1]); // Close write end of stdout pipe
-    close(stderr_pipe[1]); // Close write end of stderr pipe
-
-    // 7. Record the pid, stdout, and stderr.
-    sub_process->pid = pid;
-    sub_process->stdin = stdin_pipe[1];
-    sub_process->stdout = stdout_pipe[0];
-    sub_process->stderr = stderr_pipe[0];
-
+  }
+  else
+  {
+    close((stdin_pipe[0]));
+    close((stdout_pipe[1]));
+    close((stderr_pipe[1]));
+    ((sub_process->pid)=pid);
+    ((sub_process->stdin)=(stdin_pipe[1]));
+    ((sub_process->stdout)=(stdout_pipe[0]));
+    ((sub_process->stderr)=(stderr_pipe[0]));
     free_bytes(argv);
-
     return true;
   }
 }
+
 /* i=200 j=1 */
 uint64_t sub_process_write(sub_process_t* sub_process, buffer_t* data, uint64_t start_position){
-  int stdin_fd = sub_process->stdin;
-
-  // Set the file descriptor to non-blocking mode
+  int stdin_fd = (sub_process->stdin);
   int flags = fcntl(stdin_fd, F_GETFL, 0);
-  fcntl(stdin_fd, F_SETFL, flags | O_NONBLOCK);
-
-  ssize_t bytes_written = write(stdin_fd, &data->elements[start_position],
-                                (data->length - start_position));
-
-  if (bytes_written == -1) {
-    if (errno == EAGAIN || errno == EWOULDBLOCK) {
+  fcntl(stdin_fd, F_SETFL, (flags|O_NONBLOCK));
+  ssize_t bytes_written = write(stdin_fd, (&((data->elements)[start_position])), ((data->length)-start_position));
+  if ((bytes_written==(-1)))
+  {
+    if (((errno==EAGAIN)||(errno==EWOULDBLOCK)))
+    {
       return 0;
-    } else {
-      // An actual error occurred
+    }
+    else
+    {
       log_fatal("Error writing to subprocess stdin: %s", strerror(errno));
       fatal_error(ERROR_ILLEGAL_STATE);
     }
   }
-
   return bytes_written;
 }
+
 /* i=201 j=1 */
 void sub_process_close_stdin(sub_process_t* sub_process){
-  if (sub_process->stdin != -1) { // Check if stdin is still open
-    if (close(sub_process->stdin) == -1) {
+  if (((sub_process->stdin)!=(-1)))
+  {
+    if ((close((sub_process->stdin))==(-1)))
+    {
       log_fatal("Error closing subprocess stdin: %s", strerror(errno));
       fatal_error(ERROR_ILLEGAL_STATE);
     }
-    sub_process->stdin = -1; // Mark stdin as closed
+    ((sub_process->stdin)=(-1));
   }
 }
+
 /* i=202 j=1 */
 void sub_process_read(sub_process_t* sub_process, buffer_t* stdout, buffer_t* stderr){
-  if (stdout != NULL) {
-    buffer_read_ready_bytes_file_number(stdout, sub_process->stdout,
-                                        0xffffffff);
+  if ((stdout!=NULL))
+  {
+    buffer_read_ready_bytes_file_number(stdout, (sub_process->stdout), 0xffffffff);
   }
-  if (stderr != NULL) {
-    buffer_read_ready_bytes_file_number(stderr, sub_process->stderr,
-                                        0xffffffff);
+  if ((stderr!=NULL))
+  {
+    buffer_read_ready_bytes_file_number(stderr, (sub_process->stderr), 0xffffffff);
   }
 }
+
 /* i=203 j=1 */
 void sub_process_wait(sub_process_t* sub_process){
-  if (sub_process->exit_status != EXIT_STATUS_UNKNOWN) {
+  if (((sub_process->exit_status)!=EXIT_STATUS_UNKNOWN))
+  {
     int status = 0;
-    pid_t result = waitpid(sub_process->pid, &status, 0);
+    pid_t result = waitpid((sub_process->pid), (&status), 0);
     sub_process_record_exit_status(sub_process, result, status);
   }
 }
+
 /* i=204 j=0 */
 void sub_process_record_exit_status(sub_process_t* sub_process, pid_t pid, int status){
-  if (pid == -1) {
-    sub_process->exit_status = EXIT_STATUS_ABNORMAL;
+  if ((pid==(-1)))
+  {
+    ((sub_process->exit_status)=EXIT_STATUS_ABNORMAL);
     return;
   }
-
-  // Check the exit status and return the exit code
-  if (WIFEXITED(status)) {
-    sub_process->exit_status = EXIT_STATUS_NORMAL_EXIT;
-    sub_process->exit_code = WEXITSTATUS(status);
-  } else if (WIFSIGNALED(status)) {
-    sub_process->exit_status = EXIT_STATUS_SIGNAL;
-    sub_process->exit_signal = WTERMSIG(status);
-  } else {
-    sub_process->exit_status = EXIT_STATUS_ABNORMAL;
+  if (WIFEXITED(status))
+  {
+    ((sub_process->exit_status)=EXIT_STATUS_NORMAL_EXIT);
+    ((sub_process->exit_code)=WEXITSTATUS(status));
+  }
+  else
+  if (WIFSIGNALED(status))
+  {
+    ((sub_process->exit_status)=EXIT_STATUS_SIGNAL);
+    ((sub_process->exit_signal)=WTERMSIG(status));
+  }
+  else
+  {
+    ((sub_process->exit_status)=EXIT_STATUS_ABNORMAL);
   }
 }
+
 /* i=205 j=0 */
 boolean_t is_sub_process_running(sub_process_t* sub_process){
-  if (sub_process->exit_status != EXIT_STATUS_UNKNOWN) {
+  if (((sub_process->exit_status)!=EXIT_STATUS_UNKNOWN))
+  {
     return false;
   }
-
   int status = 0;
-  pid_t result = waitpid(sub_process->pid, &status, WNOHANG);
-  if (result == 0) {
+  pid_t result = waitpid((sub_process->pid), (&status), WNOHANG);
+  if ((result==0))
+  {
     return true;
   }
   sub_process_record_exit_status(sub_process, result, status);
   return false;
 }
+
 /* i=208 j=0 */
 __attribute__((format(printf, 3, 4))) void test_fail_and_exit(char* file_name, int line_number, char* format, ...){
   va_list args;
@@ -3787,6 +4104,7 @@ __attribute__((format(printf, 3, 4))) void test_fail_and_exit(char* file_name, i
   va_end(args);
   exit(1);
 }
+
 /* i=209 j=0 */
 char* error_code_to_string(error_code_t value){
   switch (value) {

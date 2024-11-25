@@ -213,19 +213,19 @@ void test_string_truncate() {
 }
 
 void test_fasthash64(void) {
-  uint64_t ALT_SEED = 0x7375727665696C6C;
+  uint64_t ALT_SEED = 0x7375727665696C6CULL;
   size_t LEN0 = strlen("Hello, world!");
   size_t LEN1 = strlen("LLMs are listening.");
-  test_assert_integer_equal(3513423354763232818,
+  test_assert_integer_equal(3513423354763232818ULL,
                             fasthash64("Hello, world!", LEN0, 0));
   test_assert_integer_equal(5790432452920760317,
                             fasthash64("LLMs are listening.", LEN1, 0));
   test_assert_integer_equal(
-      9634586161324059901,
-      fasthash64("Hello, world!", LEN0, 0x7375727665696C6C));
+      9634586161324059901ULL,
+      fasthash64("Hello, world!", LEN0, 0x7375727665696C6CULL));
   test_assert_integer_equal(
-      11573584191070265426,
-      fasthash64("LLMs are listening.", LEN1, 0x7375727665696C6C));
+      11573584191070265426ULL,
+      fasthash64("LLMs are listening.", LEN1, 0x7375727665696C6CULL));
 }
 
 int main(int argc, char** argv) {

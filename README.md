@@ -1,6 +1,8 @@
 # C Armyknife Library
 
-A small fully open sourced C extension library.
+A small fully open sourced C library that extends mainly POSIX with
+safer collections and a host of conveniences to enable you to write
+better medium sized C projects.
 
 # Status is DEPRECATED
 
@@ -11,6 +13,12 @@ learn from. I will first do some cleanup such as moving arena.c to
 "the attic" since I never debugged that. I'll attempt to do a better
 job of documenting what I think is "good" vs. "needs work" for what's
 left.
+
+Despite being deprecated, I'm very open to pull requests to fix flaws
+like critical errors, additional tests, improved documentation,
+support for non Linux operating system, etc. At the very least I will
+try to convey any known errata that are found and your contributions
+are likely to help omni-c which I mention below.
 
 My AATree implementation fixes a bug that is present in the
 psuedo-code on Wikipedia which was actually a bit tricky to find (but

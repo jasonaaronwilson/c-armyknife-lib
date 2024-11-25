@@ -2,6 +2,39 @@
 
 A small fully open sourced C extension library.
 
+# Status is DEPRECATED
+
+Due to lack of interest in this library (zero stars on GitHub though
+one "person" is watching, I guess that's something...), I am going to
+stop maintaining this library in 2025 but leave it here for others to
+learn from. I will first do some cleanup such as moving arena.c to
+"the attic" since I never debugged that. I'll attempt to do a better
+job of documenting what I think is "good" vs. "needs work" for what's
+left.
+
+My AATree implementation fixes a bug that is present in the
+psuedo-code on Wikipedia which was actually a bit tricky to find (but
+luckily I use psuedo random "large" tests (wih "knobs" to scale up)
+for tricky stuff like trees or I wouldn't have noticed for quite a
+long time as the bug only appears in pretty big trees.
+
+The LRU memory-padding based bounds-checker surprisingly found bugs
+that valgrind didn't. The truth is that once I debugged this library
+and used it "religiously" within omni-c (you won't find many raw C
+arrays in omni-c), I haven't needed it so much.
+
+This library has been used to develop several tools though the primary
+goal was always writing
+["omni-c"](https://github.com/jasonaaronwilson/omni-c) my personal
+take on a non OOP successor to C with an implementation strategy
+similar to the original C++ "cfront" compiler (aka transpilation -
+eventually to very old C variants for you retro-computing
+enthusists). Eventually those tools or libraries will be written in
+omni-c (which means you can still use them from C or C++ -- the same
+calling conventions and such). I'm not sure omni-c will ever be
+popular though pushing the C language farther might supply ideas to
+the C standards committee.
+
 ## Features
 
 * an extremely easy to use command line parser
@@ -15,7 +48,8 @@ A small fully open sourced C extension library.
 
 * a fail fast fatal error mechanism.
 
-* our allocator always zeros on allocation
+* our allocator always zeros on allocation - less undefined behavior
+  (similar to Go BTW)
 
 * enhanced or at least more readable C utf-8 string operations:
   string_append, string_hash, encoding/decoding UTF-8 strings to code
@@ -36,21 +70,26 @@ A small fully open sourced C extension library.
 * cross-platform *deterministic* random. (Useful for unit tests for
   one thing.)
 
-* a test suite
+* a decent test suite - there are too many blobs of code on github
+  without test suites
 
 * a [companion documentation
   project](https://github.com/jasonaaronwilson/c-javadoc-extractor)
   so you can write your Javadoc style documentation in markdown and
   extract them to simple markdown files.
 
+  NOTE: this functionality will eventually be folded into omni-c and
+  do a much better job.
+
 * a non-Posix sub_process facility which I hope already works on MacOS
   and can be ported to Windows.
 
-## Use Cases
-
-This is the library I'm using to "self-host" a C like compiler,
-omni-c, my retro-futuristic version of the C language. You don't have
-to buy into that vision to use c-armyknife-lib.
+* a highly readable JSON "alternative" I call CDL (C Data Language)
+  though you might prefer to call is JASON (Just Another Simple Object
+  Notation). Once we transition this library to omni-c, either CDL or
+  JSON output format will be available for either input or output just
+  by setting a flag (I'm pretty certain I can auto-detect on reads...)
+  and because 
 
 ## Links
 
@@ -87,16 +126,8 @@ tcc version 0.9.27 (x86_64 Linux)
 
 ## Status
 
-This library is under active development as of 2024-11-10. The
-[TODO](TODO.md) file in this directory has a small road-map to help
-get to version 1.0 so you can see a bit about what I'm thinking.
-
-`make test` coverage will increase over time (especially once I figure
-out how to actually measure coverage...).
-
-I'm experimenting on the development side by having no header files
-though as a user you don't have to care about this: the result of
-"make" is a "single header file library" which is one of the few sane
-ways to distribute C software right now unless your library is a
-standard part of common linux distributions.
-
+As noted above, pending cleanup, this library will receive minimal
+updates though if you do encounter a bug, I may be very motivated to
+help fix it since this library will form the basis of the omni-c
+compiler which has been in the works as a hobby project for longer
+than a year.

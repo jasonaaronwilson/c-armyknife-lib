@@ -32,4 +32,5 @@ SRC_C := \
 	random.c \
 	cdl-printer.c \
 	sub-process.c \
+	splitjoin.c \
 	test.c

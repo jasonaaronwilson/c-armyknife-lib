@@ -100,7 +100,8 @@ TESTS := \
 	./logger-test.sh \
 	./terminal-test.sh \
 	./cdl-printer-test.sh \
-	./sub-process-test.sh
+	./sub-process-test.sh \
+	./splitjoin-test.sh
 
 test:
 	(cd tests && mkdir -p build && ../run-tests.sh ${TESTS})

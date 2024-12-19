@@ -59,9 +59,34 @@ void test_sub_process_write(void) {
   printf("%s\n\n", buffer_to_c_string(buffer_in));
 }
 
+void test_sub_process_launch_and_wait() {
+  char* inline_script
+      = "echo 'This goes to stdout'\n"
+        "echo 'This goes to stderr' >&2\n"
+        // "head -c 10\n"
+        "cat\n"
+        "exit 0";
+  value_array_t* argv = make_value_array(1);
+  value_array_add(argv, str_to_value("bash"));
+  value_array_add(argv, str_to_value("-c"));
+  value_array_add(argv, str_to_value(inline_script));
+  sub_process_t* sub_process = make_sub_process(argv);
+
+  buffer_t* buffer_stdin
+      = buffer_from_string("This is additional stuff sent to stdout.\n");
+  buffer_t* buffer_child_stdout = make_buffer(1);
+  buffer_t* buffer_child_stderr = make_buffer(1);
+  sub_process_launch_and_wait(sub_process, buffer_stdin, buffer_child_stdout,
+                              buffer_child_stderr);
+
+  printf("%s\n\n", buffer_to_c_string(buffer_child_stdout));
+  printf("%s\n\n", buffer_to_c_string(buffer_child_stderr));
+}
+
 
 int main(int argc, char** argv) {
   test_sub_process_read();
   test_sub_process_write();
+  test_sub_process_launch_and_wait();
   exit(0);
 }

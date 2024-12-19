@@ -52,6 +52,10 @@ void sub_process_read(sub_process_t* sub_process, buffer_t* stdout,
 
 void sub_process_wait(sub_process_t* sub_process);
 
+void sub_process_launch_and_wait(sub_process_t* sub_process,
+                                 buffer_t* child_stdin, buffer_t* child_stdout,
+                                 buffer_t* child_stderr);
+
 #endif /* _SUB_PROCESS_H_ */
 
 #include <errno.h>
@@ -261,4 +265,33 @@ void sub_process_wait(sub_process_t* sub_process) {
     pid_t result = waitpid(sub_process->pid, &status, 0);
     sub_process_record_exit_status(sub_process, result, status);
   }
+}
+
+/**
+ * @function sub_process_launch_and_wait
+ *
+ * Make it much more convenient to use sub-processes in the common
+ * case where all you want to do is (possibly) send the contents of a
+ * buffer to the sub-processes stdin, collect the sub-processes stdout
+ * and stderr until all is collected and the sub-processes has exited.
+ *
+ * Note that buffers may be NULL in which case that data is ignored.
+ */
+void sub_process_launch_and_wait(sub_process_t* sub_process,
+                                 buffer_t* child_stdin, buffer_t* child_stdout,
+                                 buffer_t* child_stderr) {
+  sub_process_launch(sub_process);
+  uint64_t written = 0;
+  do {
+    if (child_stdin != NULL && written < child_stdin->length) {
+      written += sub_process_write(sub_process, child_stdin, written);
+      if (written >= child_stdin->length) {
+        sub_process_close_stdin(sub_process);
+      }
+    }
+    sub_process_read(sub_process, child_stdout, child_stderr);
+    usleep(5);
+  } while (is_sub_process_running(sub_process));
+  sub_process_read(sub_process, child_stdout, child_stderr);
+  sub_process_wait(sub_process);
 }

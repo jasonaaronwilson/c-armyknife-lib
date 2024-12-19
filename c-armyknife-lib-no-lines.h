@@ -1755,13 +1755,18 @@ void sub_process_read(sub_process_t* sub_process, buffer_t* stdout,
 
 void sub_process_wait(sub_process_t* sub_process);
 
+void sub_process_launch_and_wait(sub_process_t* sub_process,
+                                 buffer_t* child_stdin, buffer_t* child_stdout,
+                                 buffer_t* child_stderr);
+
 #endif /* _SUB_PROCESS_H_ */
 // SSCF generated file from: splitjoin.c
 
 #ifndef _SPLITJOIN_H_
 #define _SPLITJOIN_H_
 
-buffer_t* join_array_of_strings(value_array_t* array_of_strings, char* separator);
+buffer_t* join_array_of_strings(value_array_t* array_of_strings,
+                                char* separator);
 
 #endif /* _SPLITJOIN_H_ */
 // SSCF generated file from: test.c
@@ -7523,6 +7528,10 @@ void sub_process_read(sub_process_t* sub_process, buffer_t* stdout,
 
 void sub_process_wait(sub_process_t* sub_process);
 
+void sub_process_launch_and_wait(sub_process_t* sub_process,
+                                 buffer_t* child_stdin, buffer_t* child_stdout,
+                                 buffer_t* child_stderr);
+
 #endif /* _SUB_PROCESS_H_ */
 
 #include <errno.h>
@@ -7734,10 +7743,40 @@ void sub_process_wait(sub_process_t* sub_process) {
   }
 }
 
+/**
+ * @function sub_process_launch_and_wait
+ *
+ * Make it much more convenient to use sub-processes in the common
+ * case where all you want to do is (possibly) send the contents of a
+ * buffer to the sub-processes stdin, collect the sub-processes stdout
+ * and stderr until all is collected and the sub-processes has exited.
+ *
+ * Note that buffers may be NULL in which case that data is ignored.
+ */
+void sub_process_launch_and_wait(sub_process_t* sub_process,
+                                 buffer_t* child_stdin, buffer_t* child_stdout,
+                                 buffer_t* child_stderr) {
+  sub_process_launch(sub_process);
+  uint64_t written = 0;
+  do {
+    if (child_stdin != NULL && written < child_stdin->length) {
+      written += sub_process_write(sub_process, child_stdin, written);
+      if (written >= child_stdin->length) {
+        sub_process_close_stdin(sub_process);
+      }
+    }
+    sub_process_read(sub_process, child_stdout, child_stderr);
+    usleep(5);
+  } while (is_sub_process_running(sub_process));
+  sub_process_read(sub_process, child_stdout, child_stderr);
+  sub_process_wait(sub_process);
+}
+
 #ifndef _SPLITJOIN_H_
 #define _SPLITJOIN_H_
 
-buffer_t* join_array_of_strings(value_array_t* array_of_strings, char* separator);
+buffer_t* join_array_of_strings(value_array_t* array_of_strings,
+                                char* separator);
 
 #endif /* _SPLITJOIN_H_ */
 
@@ -7758,7 +7797,8 @@ buffer_t* join_array_of_strings(value_array_t* array_of_strings, char* separator
  * Join an array of strings placing separator (which may be an empty
  * string but not NULL) between strings.
  */
-buffer_t* join_array_of_strings(value_array_t* array_of_strings, char* separator) {
+buffer_t* join_array_of_strings(value_array_t* array_of_strings,
+                                char* separator) {
   buffer_t* result = make_buffer(1);
   for (int i = 0; i < array_of_strings->length; i++) {
     if (i > 0) {
@@ -7772,7 +7812,6 @@ buffer_t* join_array_of_strings(value_array_t* array_of_strings, char* separator
 // TODO(jawilson): add split_buffer_to_array_of_strings - this is
 // similar to string_tokenize except instead of splitting on a
 // character set it should split on a string.
-
 /**
  * @file test.c
  *
